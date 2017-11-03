@@ -1,0 +1,10 @@
+vtk8 (8.0.1+dfsg1-1) UNRELEASED; urgency=medium
+
+  [ Gert Wollny ]
+  * Initial release. (Closes: #XXXXXX)
+    Thanks: Nico Schloemer for initial work and python3 packaging
+
+  [ Johannes Schauer ]
+  * foo
+
+ -- Johannes Schauer <josch@debian.org>  Fri, 03 Nov 2017 19:59:42 +0100

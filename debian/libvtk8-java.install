@@ -1,0 +1,3 @@
+usr/bin/vtkParseJava-8.0                    usr/bin
+usr/bin/vtkWrapJava-8.0                     usr/bin
+usr/lib/*/vtk8.jar                          usr/share/java

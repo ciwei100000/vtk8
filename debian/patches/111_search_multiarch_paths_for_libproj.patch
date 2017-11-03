@@ -1,0 +1,12 @@
+Description: Also search multiarch paths for libproj
+
+--- vtk8-8.0.1+dfsg1.orig/CMake/FindLIBPROJ4.cmake
++++ vtk8-8.0.1+dfsg1/CMake/FindLIBPROJ4.cmake
+@@ -24,7 +24,6 @@ if ( NOT LIBPROJ4_INCLUDE_DIR OR NOT LIB
+       ${CMAKE_INSTALL_PREFIX}/lib
+       /usr/local/lib
+       /usr/lib
+-    NO_DEFAULT_PATH
+   )
+ 
+   find_path( LIBPROJ4_INCLUDE_DIR

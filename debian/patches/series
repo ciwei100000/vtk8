@@ -1,0 +1,17 @@
+10_allpatches.patch
+20_soversion-sharedlib.patch
+30_matplotlib.patch
+40_use_system_sqlite.patch
+50_use_system_utf8.patch
+60_use_system_mpi4py.patch
+70_fix_ftbfs_gcc49.patch
+80_fix_arm_compilation.patch
+100_javac-heap.patch
+101_java_install_path.patch
+105_unforce_embedded_glew.patch
+106_install_doxygen_scripts_in_nodoc_build.patch
+107_gl2ps_1.4.0.patch
+108_Doxygen-use-mathjax.patch
+109_use_parallel_hdf5.patch
+110_do_not_link_against_socket.patch
+111_search_multiarch_paths_for_libproj.patch

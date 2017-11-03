@@ -1,0 +1,23 @@
+# add doxygen docs
+# to get paraview debian/build properly on top of vtk we now add this as a symlink 
+# in the python3-vtk8 package 
+# /usr/lib/*/python3.6/site-packages/vtk/*
+CMake/TopologicalSort.cmake usr/lib/cmake/vtk-8.0/
+CMake/vtkGroups.cmake usr/lib/cmake/vtk-8.0/
+CMake/vtkTesting*.cmake	usr/lib/cmake/vtk-8.0/
+Common/DataModel/vtkMarchingCubesTriangleCases.h usr/include/vtk-8.0/
+Filters/Statistics/vtkStatisticsAlgorithmPrivate.h usr/include/vtk-8.0/
+IO/Import/vtk3DS.h usr/include/vtk-8.0/
+Testing/Core/vtkTestDriver.h usr/include/vtk-8.0
+Testing/Core/vtkTestUtilities.h usr/include/vtk-8.0/
+Testing/Core/vtkTesting*.h usr/include/vtk-8.0
+Testing/Rendering/vtkRegressionTestImage.h usr/include/vtk-8.0/
+Testing/Rendering/vtkTesting*.h usr/include/vtk-8.0
+Wrapping/Java/JavaDependencies.cmake.in usr/lib/cmake/vtk-8.0/
+debian/build/ThirdParty/netcdf/vtk_netcdf.h usr/include/vtk-8.0/
+debian/build/ThirdParty/netcdfcpp/vtk_netcdfcpp.h usr/include/vtk-8.0/
+debian/build/lib/cmake/vtk-8.0/Modules/*-Headers.cmake	usr/lib/cmake/vtk-8.0/Modules/
+usr/include/vtk-8.0                    usr/include
+usr/lib/*/*.so
+usr/lib/cmake/vtk-8.0
+usr/share/doc/vtk-8.0/doxygen/* /usr/share/vtk-8.0/doxygen/

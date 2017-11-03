@@ -1,0 +1,16 @@
+Description: Remove the FORCE from the use_system_glew=off option
+ The embedded version of GLEW seems to be older than the version
+ provided by Debian, so I assume that the fixes have been applied. 
+Author: Gert Wollny <gw.fossdev@gmail.com> 
+
+--- a/Rendering/OpenGL2/CMakeLists.txt
++++ b/Rendering/OpenGL2/CMakeLists.txt
+@@ -341,7 +341,7 @@ vtk_module_library(${vtk-module} ${Modul
+ vtk_opengl_link(${vtk-module})
+ if(VTK_USE_X)
+   vtk_module_link_libraries(${vtk-module}
+-    LINK_PUBLIC ${X11_LIBRARIES} ${X11_Xt_LIB})
++    LINK_PUBLIC ${GLEW_LIBRARY} ${X11_LIBRARIES} ${X11_Xt_LIB})
+ elseif(VTK_USE_COCOA)
+   vtk_module_link_libraries(${vtk-module} LINK_PUBLIC "-framework Cocoa")
+ endif()

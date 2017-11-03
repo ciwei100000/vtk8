@@ -1,0 +1,308 @@
+Source: vtk8
+Maintainer: Debian Science Team <debian-science-maintainers@lists.alioth.debian.org>
+Uploaders: Anton Gladky <gladk@debian.org>,
+           Gert Wollny <gewo@debian.org>,
+           Nico Schlömer <nico.schloemer@gmail.com>
+Section: graphics
+Testsuite: autopkgtest
+Priority: optional
+Build-Depends-Arch: debhelper (>= 9),
+                    cmake (>= 3.2.0),
+                    javahelper,
+Build-Depends: chrpath,
+               default-jdk,
+               default-libmysqlclient-dev, 
+               dh-python,
+               ftgl-dev,
+               hdf5-tools,
+               libalglib-dev,
+               libavcodec-dev,
+               libavformat-dev,
+               libavutil-dev,
+               libboost-all-dev,
+               libdigest-md5-perl,
+               libexpat-dev,
+               libfreetype6-dev,
+               libfontconfig1-dev,
+               libgdal-dev,
+               libgl1-mesa-dev | libgl-dev,
+               libgl2ps-dev (>= 1.4.0),
+               libglew-dev,
+               libglu1-mesa-dev | libglu-dev,
+               libhdf5-openmpi-dev,
+               libjpeg-dev,
+               libjsoncpp-dev,
+               libmrmpi-dev,
+               libnetcdf-dev,
+               libnetcdf-cxx-legacy-dev,
+               libogg-dev,
+               libosmesa6-dev,
+               libpng-dev,
+               libpq-dev,
+               libproj-dev,
+               libqt5opengl5-dev,
+               libqt5webkit5-dev,
+               libqt5x11extras5-dev,
+               libsqlite3-dev,
+               libswscale-dev,
+               libtheora-dev,
+               libtiff-dev,
+               libutfcpp-dev,
+               libx11-dev,
+               libxml2-dev,
+               libxpm-dev,
+               libxt-dev,
+               mpi-default-dev,
+               pkg-config,
+               python3-all-dev,
+               python3-autobahn,
+               python3-matplotlib,
+               python3-mpi4py,
+               python3-six,
+               python3-twisted,
+               qtbase5-dev,
+               qttools5-private-dev,
+               r-base,
+               r-base-core,
+               r-base-dev,
+               tcl-dev,
+               tk-dev,
+               x11proto-core-dev,
+               xauth,
+               xvfb,
+               zlib1g-dev
+Build-Depends-Indep: doxygen-latex,
+                     texlive-binaries,
+                     graphviz,
+                     ghostscript,
+                     libjs-mathjax,
+                     gnuplot-nox
+Standards-Version: 4.0.0
+Vcs-Browser: https://anonscm.debian.org/cgit/debian-science/packages/vtk8.git
+Vcs-Git: https://anonscm.debian.org/git/debian-science/packages/vtk8.git
+Homepage: http://www.vtk.org/
+X-Python3-Version: current
+
+Package: libvtk8-dev
+Architecture: any
+Section: libdevel
+Depends: default-libmysqlclient-dev, 
+         libavcodec-dev,
+         libavformat-dev,
+         libavutil-dev,
+         libc6-dev,
+         libeigen3-dev,
+         libexpat-dev,
+         libfreetype6-dev,
+         libgdal-dev,
+         libgl1-mesa-dev | libgl-dev,
+         libgl2ps-dev,
+         libglu1-mesa-dev | libglu-dev,
+         libhdf5-mpi-dev,
+         libjpeg-dev,
+         libjsoncpp-dev,
+         libnetcdf-dev,
+         libnetcdf-cxx-legacy-dev,
+         libogg-dev,
+         libpng-dev,
+         libpq-dev,
+         libproj-dev,
+         libpython3-dev,
+         libswscale-dev,
+         libtheora-dev,
+         libtiff-dev,
+         libvtk8 (= ${binary:Version}),
+         libvtk8-java (= ${binary:Version}),
+         libx11-dev,
+         libxft-dev,
+         libxml2-dev,
+         libxss-dev,
+         libxt-dev,
+         mpi-default-dev,
+         python3-vtk8 (= ${binary:Version}),
+         python3-zope.interface,
+         tcl-dev,
+         tcl-vtk8 (= ${binary:Version}),
+         tk-dev,
+         vtk8 (= ${binary:Version}),
+         x11proto-core-dev,
+         zlib1g-dev,
+         ${misc:Depends},
+         ${shlibs:Depends}
+Suggests: vtk8-doc,
+          vtk8-examples
+Conflicts: libvtk5-dev
+Replaces: libvtk5-dev
+Description: VTK header files
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides the VTK header files required to compile
+ C++ programs that use VTK to do 3D visualisation.
+
+Package: libvtk8-qt-dev
+Architecture: any
+Section: libdevel
+Depends: libvtk8-dev (= ${binary:Version}),
+         libvtk8-qt (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends},
+         qtbase5-dev,
+         qttools5-private-dev,
+         libqt5opengl5-dev,
+         libqt5webkit5-dev
+Description: VTK header files, containing Qt files
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides the VTK header files required to compile
+ C++ programs that use VTK to do 3D visualisation. Qt files
+
+Package: libvtk8
+Architecture: any
+Section: libs
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Suggests: mpi-default-bin,
+          vtk8-doc,
+          vtk8-examples
+Replaces: libvtk5.8,
+          libvtk7.1
+Description: VTK libraries
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides the shared libraries needed to run C++ programs
+ that use VTK.
+
+Package: libvtk8-qt
+Architecture: any
+Section: libs
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: VTK libraries, Qt files
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides the shared libraries needed to run C++ programs
+ that use VTK. Qt files
+
+Package: libvtk8-jni
+Architecture: any
+Section: java
+Depends: ${java:Depends},
+         ${misc:Depends},
+         ${shlibs:Depends}
+Breaks: libvtk6-jni
+Replaces: libvtk6-jni
+Description: Visualization Toolkit - A high level 3D visualization library - java
+ The Visualization Toolkit (VTK) is an object oriented, high level
+ library that allows one to easily write C++ programs, Tcl, Python and
+ Java scripts that do 3D visualization.
+ .
+ This package provides the VTK Java language support.
+
+Package: libvtk8-java
+Architecture: any
+Section: java
+Depends: libvtk8-jni (= ${binary:Version}),
+         ${java:Depends},
+         ${misc:Depends},
+         ${shlibs:Depends}
+Suggests: java-virtual-machine,
+          libvtk8-dev (= ${binary:Version}),
+          vtk8-doc,
+          vtk8-examples
+Replaces: libvtk6-java
+Breaks: libvtk6-java
+Description: Visualization Toolkit - A high level 3D visualization library - java
+ The Visualization Toolkit (VTK) is an object oriented, high level
+ library that allows one to easily write C++ programs, Tcl, Python and
+ Java scripts that do 3D visualization.
+ .
+ This package provides the VTK Java language support.
+
+Package: python3-vtk8
+Architecture: any
+Section: python
+Depends: libvtk8 (= ${binary:Version}),
+         libvtk8-qt (= ${binary:Version}),
+         python3-autobahn,
+         python3-mpi4py,
+         python3-six,
+         python3-twisted,
+         python3-zope.interface,
+         ${misc:Depends},
+         ${python:Depends},
+         ${shlibs:Depends}
+Suggests: mayavi2,
+          vtk8-doc,
+          vtk8-examples
+Breaks: python3-vtk6
+Replaces: python3-vtk6
+Description: Python bindings for VTK
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides the python3 bindings for VTK.
+
+Package: tcl-vtk8
+Architecture: any
+Section: interpreters
+Depends: libvtk8 (= ${binary:Version}),
+         libvtk8-qt (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Suggests: vtk8-doc,
+          vtk8-examples
+Description: Tcl bindings for VTK
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides the shared libraries and executable that enable 
+ one to use VTK from Tcl/Tk scripts.
+
+Package: vtk8
+Architecture: any
+Section: interpreters
+Depends: libvtk8 (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Suggests: vtk8-doc,
+          vtk8-examples
+Description: Binaries for VTK8
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides binaries for VTK8
+
+Package: vtk8-doc
+Architecture: all
+Section: doc
+Depends: doc-base,
+         libjs-jquery,
+	 libjs-mathjax,
+         ${misc:Depends}
+Suggests: libvtk8-dev,
+          vtk8-examples
+Description: VTK class reference documentation
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides documentation for VTK8
+
+Package: vtk8-examples
+Architecture: all
+Section: graphics
+Depends: ${misc:Depends}
+Suggests: libvtk8-dev,
+          python3,
+          python3-vtk8,
+          tcl-vtk8,
+          tclsh,
+          vtk8-doc
+Description: VTK examples
+ The Visualization Toolkit (VTK) is an open-source software system
+ for 3D computer graphics, image processing, and visualization.
+ .
+ This package provides examples for VTK8

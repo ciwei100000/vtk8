@@ -1,0 +1,13 @@
+Description: check for hdf5/openmpi/hdf5.h instead of hdf5.h
+
+--- vtk8-8.0.1+dfsg1.orig/ThirdParty/hdf5/module.cmake
++++ vtk8-8.0.1+dfsg1/ThirdParty/hdf5/module.cmake
+@@ -8,7 +8,7 @@ if(VTK_USE_SYSTEM_HDF5)
+   if(NOT HDF5_IS_PARALLEL)
+     include(CheckSymbolExists)
+     set(CMAKE_REQUIRED_INCLUDES ${HDF5_INCLUDE_DIRS})
+-    check_symbol_exists(H5_HAVE_PARALLEL hdf5.h HDF5_IS_PARALLEL)
++    check_symbol_exists(H5_HAVE_PARALLEL hdf5/openmpi/hdf5.h HDF5_IS_PARALLEL)
+     unset(CMAKE_REQUIRED_INCLUDES)
+   endif()
+   if (HDF5_IS_PARALLEL)

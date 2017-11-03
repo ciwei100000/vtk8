@@ -1,0 +1,3 @@
+Tests: buildBoolean buildPoint buildVTU buildDistance buildPNG buildVTP
+Depends: libvtk8-dev, build-essential, cmake
+Restrictions: allow-stderr

@@ -1,0 +1,13 @@
+Description: Do not try linking with -lsocket
+
+--- vtk8-8.0.1+dfsg1.orig/CMake/VTKParallelCMakeTests.cmake
++++ vtk8-8.0.1+dfsg1/CMake/VTKParallelCMakeTests.cmake
+@@ -6,7 +6,7 @@ CHECK_LIBRARY_EXISTS("socket" getsocknam
+ 
+ IF(NOT DEFINED VTK_HAVE_GETSOCKNAME_WITH_SOCKLEN_T)
+   IF(VTK_HAVE_LIBSOCKET)
+-    SET(VTK_GETSOCKNAME_LIBS "socket")
++    SET(VTK_GETSOCKNAME_LIBS)
+   ELSE()
+     SET(VTK_GETSOCKNAME_LIBS)
+   ENDIF()

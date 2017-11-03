@@ -1,0 +1,5 @@
+Description: Fix GDAL 2.0 compatibility.
+ Based on gdal2.patch from ArchLinux, improved to support both GDAL 1.x & 2.x.
+Origin: https://projects.archlinux.org/svntogit/community.git/tree/trunk/gdal2.patch?h=packages/vtk
+Bug: http://www.vtk.org/Bug/view.php?id=15692
+
