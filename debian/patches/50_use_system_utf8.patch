@@ -27,7 +27,7 @@ Last-Update: <YYYY-MM-DD>
 
 --- a/Common/Core/vtkUnicodeString.cxx
 +++ b/Common/Core/vtkUnicodeString.cxx
-@@ -41,7 +41,7 @@ vtkUnicodeString::const_iterator::const_
+@@ -39,7 +39,7 @@
  
  vtkUnicodeString::value_type vtkUnicodeString::const_iterator::operator*() const
  {
@@ -36,7 +36,7 @@ Last-Update: <YYYY-MM-DD>
  }
  
  bool vtkUnicodeString::const_iterator::operator==(const const_iterator& rhs) const
-@@ -56,27 +56,27 @@ bool vtkUnicodeString::const_iterator::o
+@@ -54,27 +54,27 @@
  
  vtkUnicodeString::const_iterator& vtkUnicodeString::const_iterator::operator++()
  {
@@ -68,7 +68,7 @@ Last-Update: <YYYY-MM-DD>
    return result;
  }
  
-@@ -134,7 +134,7 @@ vtkUnicodeString::vtkUnicodeString(const
+@@ -130,7 +130,7 @@
  vtkUnicodeString::vtkUnicodeString(size_type count, value_type character)
  {
    for(size_type i = 0; i != count; ++i)
@@ -77,7 +77,7 @@ Last-Update: <YYYY-MM-DD>
  }
  
  vtkUnicodeString::vtkUnicodeString(const_iterator first, const_iterator last) :
-@@ -149,7 +149,7 @@ bool vtkUnicodeString::is_utf8(const cha
+@@ -145,7 +145,7 @@
  
  bool vtkUnicodeString::is_utf8(const std::string& value)
  {
@@ -86,7 +86,7 @@ Last-Update: <YYYY-MM-DD>
  }
  
  vtkUnicodeString vtkUnicodeString::from_utf8(const char* value)
-@@ -160,7 +160,7 @@ vtkUnicodeString vtkUnicodeString::from_
+@@ -156,7 +156,7 @@
  vtkUnicodeString vtkUnicodeString::from_utf8(const char* begin, const char* end)
  {
    vtkUnicodeString result;
@@ -95,7 +95,7 @@ Last-Update: <YYYY-MM-DD>
    {
      result.Storage = std::string(begin, end);
    }
-@@ -174,7 +174,7 @@ vtkUnicodeString vtkUnicodeString::from_
+@@ -170,7 +170,7 @@
  vtkUnicodeString vtkUnicodeString::from_utf8(const std::string& value)
  {
    vtkUnicodeString result;
@@ -104,7 +104,7 @@ Last-Update: <YYYY-MM-DD>
    {
      result.Storage = value;
    }
-@@ -197,9 +197,9 @@ vtkUnicodeString vtkUnicodeString::from_
+@@ -193,9 +193,9 @@
  
      try
      {
@@ -116,7 +116,7 @@ Last-Update: <YYYY-MM-DD>
      {
        vtkGenericWarningMacro(<< "vtkUnicodeString::from_utf16(): not a valid UTF-16 string.");
      }
-@@ -233,15 +233,15 @@ vtkUnicodeString::value_type vtkUnicodeS
+@@ -229,15 +229,15 @@
      throw std::out_of_range("character out-of-range");
  
    std::string::const_iterator iterator = this->Storage.begin();
@@ -136,7 +136,7 @@ Last-Update: <YYYY-MM-DD>
  }
  
  const char* vtkUnicodeString::utf8_str() const
-@@ -257,14 +257,14 @@ void vtkUnicodeString::utf8_str(std::str
+@@ -253,14 +253,14 @@
  std::vector<vtkTypeUInt16> vtkUnicodeString::utf16_str() const
  {
    std::vector<vtkTypeUInt16> result;
@@ -153,7 +153,7 @@ Last-Update: <YYYY-MM-DD>
  }
  
  vtkUnicodeString::size_type vtkUnicodeString::byte_count() const
-@@ -274,7 +274,7 @@ vtkUnicodeString::size_type vtkUnicodeSt
+@@ -270,7 +270,7 @@
  
  vtkUnicodeString::size_type vtkUnicodeString::character_count() const
  {
@@ -162,7 +162,7 @@ Last-Update: <YYYY-MM-DD>
  }
  
  bool vtkUnicodeString::empty() const
-@@ -300,9 +300,9 @@ void vtkUnicodeString::push_back(value_t
+@@ -296,9 +296,9 @@
  {
    try
    {
@@ -174,7 +174,7 @@ Last-Update: <YYYY-MM-DD>
    {
      vtkGenericWarningMacro("vtkUnicodeString::push_back(): " << character << "is not a valid Unicode code point");
    }
-@@ -319,7 +319,7 @@ void vtkUnicodeString::append(size_type
+@@ -315,7 +315,7 @@
    {
      this->Storage.append(vtkUnicodeString(count, character).Storage);
    }
@@ -183,7 +183,7 @@ Last-Update: <YYYY-MM-DD>
    {
      vtkGenericWarningMacro("vtkUnicodeString::append(): " << character << "is not a valid Unicode code point");
    }
-@@ -345,7 +345,7 @@ void vtkUnicodeString::assign(size_type
+@@ -341,7 +341,7 @@
    {
      this->Storage.assign(vtkUnicodeString(count, character).Storage);
    }
@@ -192,7 +192,7 @@ Last-Update: <YYYY-MM-DD>
    {
      vtkGenericWarningMacro("vtkUnicodeString::assign(): " << character << "is not a valid Unicode code point");
    }
-@@ -415,11 +415,11 @@ vtkUnicodeString vtkUnicodeString::subst
+@@ -411,11 +411,11 @@
    std::string::const_iterator last = this->Storage.end();
  
    while(from != last && offset--)
@@ -208,7 +208,7 @@ Last-Update: <YYYY-MM-DD>
  }
 --- a/IO/Core/vtkUTF8TextCodec.cxx
 +++ b/IO/Core/vtkUTF8TextCodec.cxx
-@@ -124,7 +124,7 @@ vtkUnicodeString::value_type vtkUTF8Text
+@@ -124,7 +124,7 @@
      throw(std::string("End of Input"));
    }
  
@@ -217,7 +217,7 @@ Last-Update: <YYYY-MM-DD>
  
    if (0 == getSize)
      throw(std::string("Not enough space"));
-@@ -138,7 +138,7 @@ vtkUnicodeString::value_type vtkUTF8Text
+@@ -138,7 +138,7 @@
  
    istream::char_type* c1 = c;
  

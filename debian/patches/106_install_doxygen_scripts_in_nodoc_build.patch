@@ -1,6 +1,6 @@
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -525,9 +525,7 @@ endif()
+@@ -118,9 +118,7 @@
  
  # The doxygen documentation needs to be aware of all modules.
  option(BUILD_DOCUMENTATION "Build the VTK documentation" OFF)

@@ -1,6 +1,6 @@
 --- a/CMake/vtkModuleMacros.cmake
 +++ b/CMake/vtkModuleMacros.cmake
-@@ -424,8 +424,8 @@ endfunction()
+@@ -439,8 +439,8 @@
  function(vtk_target_name _name)
    get_property(_type TARGET ${_name} PROPERTY TYPE)
    if(NOT "${_type}" STREQUAL EXECUTABLE AND NOT VTK_JAVA_INSTALL)
@@ -13,7 +13,7 @@
      set(_vtk "")
 --- a/Rendering/Tk/CMakeLists.txt
 +++ b/Rendering/Tk/CMakeLists.txt
-@@ -118,7 +118,7 @@ if(TK_FOUND AND VTK_USE_TK)
+@@ -82,7 +82,7 @@
      vtk_target_install(vtkRenderingPythonTkWidgets)
  
      set_property(TARGET vtkRenderingPythonTkWidgets PROPERTY OUTPUT_NAME
