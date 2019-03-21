@@ -57,7 +57,7 @@ class VTKRENDERINGANNOTATION_EXPORT vtkLeaderActor2D : public vtkActor2D
 {
 public:
   vtkTypeMacro(vtkLeaderActor2D,vtkActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate object.
@@ -169,9 +169,9 @@ public:
    * if a curved leader is being generated, the angle in degrees between the
    * two points.
    */
-  vtkSetMacro(AutoLabel,int);
-  vtkGetMacro(AutoLabel,int);
-  vtkBooleanMacro(AutoLabel,int);
+  vtkSetMacro(AutoLabel,vtkTypeBool);
+  vtkGetMacro(AutoLabel,vtkTypeBool);
+  vtkBooleanMacro(AutoLabel,vtkTypeBool);
   //@}
 
   //@{
@@ -195,22 +195,22 @@ public:
   /**
    * Methods required by vtkProp and vtkActor2D superclasses.
    */
-  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport* viewport) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport *) VTK_OVERRIDE {return 0;}
+  int RenderOverlay(vtkViewport* viewport) override;
+  int RenderOpaqueGeometry(vtkViewport* viewport) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport *) override {return 0;}
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
+  void ShallowCopy(vtkProp *prop) override;
 
 protected:
   vtkLeaderActor2D();
-  ~vtkLeaderActor2D() VTK_OVERRIDE;
+  ~vtkLeaderActor2D() override;
 
   // Internal helper methods
   virtual void BuildLeader(vtkViewport *viewport);
@@ -228,7 +228,7 @@ protected:
   double Length;
   double Angle;
 
-  int              AutoLabel;
+  vtkTypeBool              AutoLabel;
   char            *LabelFormat;
   char            *Label;
   double           LabelFactor;
@@ -257,8 +257,8 @@ protected:
   vtkTimeStamp  BuildTime;
 
 private:
-  vtkLeaderActor2D(const vtkLeaderActor2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkLeaderActor2D&) VTK_DELETE_FUNCTION;
+  vtkLeaderActor2D(const vtkLeaderActor2D&) = delete;
+  void operator=(const vtkLeaderActor2D&) = delete;
 };
 
 

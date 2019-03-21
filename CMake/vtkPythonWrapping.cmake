@@ -164,6 +164,19 @@ function(_vtk_add_python_module name)
       # when building shared on Windows, the python module files need to be
       # named as *.pyd
       set_target_properties(${name} PROPERTIES SUFFIX ".pyd")
+      if (PYTHON_DEBUG_LIBRARY)
+        set_target_properties(${name} PROPERTIES OUTPUT_NAME_DEBUG "${name}_d")
+      endif()
+    endif()
+    # build python module libraries under the ${VTK_BUILD_PYTHON_MODULES_DIR} dir.
+    set_target_properties(${name}
+      PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${VTK_BUILD_PYTHON_MODULES_DIR}/vtkmodules)
+    if (NOT VTK_INSTALL_NO_RUNTIME)
+      install(TARGETS ${name}
+        RUNTIME DESTINATION ${VTK_INSTALL_PYTHON_MODULES_DIR}/vtkmodules COMPONENT RuntimeLibraries
+        LIBRARY DESTINATION ${VTK_INSTALL_PYTHON_MODULES_DIR}/vtkmodules COMPONENT RuntimeLibraries
+        ARCHIVE DESTINATION ${VTK_INSTALL_ARCHIVE_DIR} COMPONENT Development
+        )
     endif()
   else ()
     # when building statically, the module targets need to be exported since
@@ -215,7 +228,7 @@ endfunction()
 
 #------------------------------------------------------------------------------
 # create init header for all python wrapped modules.
-# this uses VTK_PYTHON_WRAPPED global property which is filled with every pyhton
+# this uses VTK_PYTHON_WRAPPED global property which is filled with every python
 # module.
 # Usage: vtk_write_python_modules_header_for_wrapped_modules(
 #           <filename> <out_variable>)

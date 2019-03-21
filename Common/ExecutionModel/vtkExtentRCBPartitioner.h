@@ -34,7 +34,7 @@ class VTKCOMMONEXECUTIONMODEL_EXPORT vtkExtentRCBPartitioner : public vtkObject
   public:
     static vtkExtentRCBPartitioner *New();
     vtkTypeMacro(vtkExtentRCBPartitioner,vtkObject);
-    void PrintSelf(ostream &oss, vtkIndent indent ) VTK_OVERRIDE;
+    void PrintSelf(ostream &oss, vtkIndent indent ) override;
 
     //@{
     /**
@@ -74,9 +74,9 @@ class VTKCOMMONEXECUTIONMODEL_EXPORT vtkExtentRCBPartitioner : public vtkObject
     /**
      * On/Off DuplicateNodes between partitions. Default is On.
      */
-    vtkSetMacro(DuplicateNodes,int);
-    vtkGetMacro(DuplicateNodes,int);
-    vtkBooleanMacro(DuplicateNodes,int);
+    vtkSetMacro(DuplicateNodes,vtkTypeBool);
+    vtkGetMacro(DuplicateNodes,vtkTypeBool);
+    vtkBooleanMacro(DuplicateNodes,vtkTypeBool);
     //@}
 
     //@{
@@ -106,7 +106,7 @@ class VTKCOMMONEXECUTIONMODEL_EXPORT vtkExtentRCBPartitioner : public vtkObject
 
   protected:
     vtkExtentRCBPartitioner();
-   ~vtkExtentRCBPartitioner() VTK_OVERRIDE;
+   ~vtkExtentRCBPartitioner() override;
 
     //@{
     /**
@@ -209,7 +209,7 @@ class VTKCOMMONEXECUTIONMODEL_EXPORT vtkExtentRCBPartitioner : public vtkObject
      int NumberOfPartitions;
      int NumExtents;
 
-     int DuplicateNodes; // indicates whether nodes are duplicated between
+     vtkTypeBool DuplicateNodes; // indicates whether nodes are duplicated between
                          // partitions, so that they are abutting. This is
                          // set to true by default. If disabled, the resulting
                          // partitions will have gaps.
@@ -219,8 +219,8 @@ class VTKCOMMONEXECUTIONMODEL_EXPORT vtkExtentRCBPartitioner : public vtkObject
      std::vector<int> PartitionExtents;
 
   private:
-    vtkExtentRCBPartitioner( const vtkExtentRCBPartitioner& ) VTK_DELETE_FUNCTION;
-    void operator=( const vtkExtentRCBPartitioner& ) VTK_DELETE_FUNCTION;
+    vtkExtentRCBPartitioner( const vtkExtentRCBPartitioner& ) = delete;
+    void operator=( const vtkExtentRCBPartitioner& ) = delete;
 };
 
 #endif /* VTKEXTENTRCBPARTITIONER_H_ */

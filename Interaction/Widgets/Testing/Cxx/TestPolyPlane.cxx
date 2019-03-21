@@ -61,7 +61,7 @@ public:
     return new vtkTestPolyPlaneCallback;
   }
 
-  void Execute(vtkObject *caller, unsigned long, void*) VTK_OVERRIDE
+  void Execute(vtkObject *caller, unsigned long, void*) override
   {
     vtkContourWidget *widget = reinterpret_cast<vtkContourWidget*>(caller);
     vtkContourRepresentation *rep = vtkContourRepresentation::
@@ -87,7 +87,7 @@ public:
   }
 
 
-  vtkTestPolyPlaneCallback() : PolyPlane(0),Cutter(0) {};
+  vtkTestPolyPlaneCallback() : PolyPlane(nullptr),Cutter(nullptr) {};
   vtkPolyPlane * PolyPlane;
   vtkCutter    * Cutter;
 };
@@ -107,7 +107,7 @@ int TestPolyPlane( int argc, char *argv[] )
 
   delete [] fname;
 
-  // Resample (left incase, we want to subsample, supersample)
+  // Resample (left in case, we want to subsample, supersample)
 
   vtkSmartPointer<vtkImageResample>  resample =
     vtkSmartPointer<vtkImageResample>::New();
@@ -280,7 +280,7 @@ int TestPolyPlane( int argc, char *argv[] )
   contourWidget->SetWidgetState(vtkContourWidget::Manipulate);
 
   // Execute the cut
-  cb->Execute(contourWidget,0,NULL);
+  cb->Execute(contourWidget,0,nullptr);
 
   vtkXMLPolyDataWriter *pWriter = vtkXMLPolyDataWriter::New();
   pWriter->SetInputConnection(cutter->GetOutputPort());

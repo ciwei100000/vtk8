@@ -42,7 +42,7 @@ class VTKRENDERINGFREETYPEFONTCONFIG_EXPORT vtkFontConfigFreeTypeTools:
 {
 public:
   vtkTypeMacro(vtkFontConfigFreeTypeTools, vtkFreeTypeTools);
-  virtual void PrintSelf(ostream &os, vtkIndent indent);
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   /**
    * Creates a new object of this type, but it is not preferred to use this
@@ -67,11 +67,11 @@ protected:
   /**
    * Reimplemented from Superclass to use the FontConfig face lookup callback.
    */
-  FT_Error CreateFTCManager();
+  FT_Error CreateFTCManager() override;
 
 private:
-  vtkFontConfigFreeTypeTools(const vtkFontConfigFreeTypeTools &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFontConfigFreeTypeTools &) VTK_DELETE_FUNCTION;
+  vtkFontConfigFreeTypeTools(const vtkFontConfigFreeTypeTools &) = delete;
+  void operator=(const vtkFontConfigFreeTypeTools &) = delete;
 };
 
 #endif //vtkFontConfigFreeTypeTools_h

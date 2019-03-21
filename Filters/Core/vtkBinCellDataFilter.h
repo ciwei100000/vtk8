@@ -36,21 +36,26 @@
 
 #include "vtkContourValues.h" // Needed for inline methods
 
-class vtkCellLocator;
+class vtkAbstractCellLocator;
 
 class VTKFILTERSCORE_EXPORT vtkBinCellDataFilter : public vtkDataSetAlgorithm
 {
 public:
   typedef vtkContourValues vtkBinValues;
 
-  vtkTypeMacro(vtkBinCellDataFilter,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
-
   /**
    * Construct object with initial range (VTK_DOUBLE_MIN, VTK_DOUBLE_MAX) and
    * a single bin.
    */
   static vtkBinCellDataFilter *New();
+
+  //@{
+  /**
+   * Standard methods for type and printing.
+   */
+  vtkTypeMacro(vtkBinCellDataFilter,vtkDataSetAlgorithm);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
+  //@}
 
   //@{
   /**
@@ -96,9 +101,9 @@ public:
    * m of n is requested for update by the user, then only n of m needs to
    * be requested of the source.
    */
-  vtkSetMacro(SpatialMatch, int);
-  vtkGetMacro(SpatialMatch, int);
-  vtkBooleanMacro(SpatialMatch, int);
+  vtkSetMacro(SpatialMatch, vtkTypeBool);
+  vtkGetMacro(SpatialMatch, vtkTypeBool);
+  vtkBooleanMacro(SpatialMatch, vtkTypeBool);
   //@}
 
   //@{
@@ -169,17 +174,17 @@ public:
   //@{
   /**
    * Set/Get a spatial locator for speeding the search process. By
-   * default an instance of vtkCellLocator is used.
+   * default an instance of vtkStaticCellLocator is used.
    */
-  virtual void SetCellLocator(vtkCellLocator *cellLocator);
-  vtkGetObjectMacro(CellLocator,vtkCellLocator);
+  virtual void SetCellLocator(vtkAbstractCellLocator *cellLocator);
+  vtkGetObjectMacro(CellLocator,vtkAbstractCellLocator);
   //@}
 
 protected:
   vtkBinCellDataFilter();
-  ~vtkBinCellDataFilter() VTK_OVERRIDE;
+  ~vtkBinCellDataFilter() override;
 
-  int SpatialMatch;
+  vtkTypeBool SpatialMatch;
 
   bool StoreNumberOfNonzeroBins;
   double Tolerance;
@@ -188,22 +193,21 @@ protected:
   int CellOverlapMethod;
 
   vtkBinValues *BinValues;
-  vtkCellLocator *CellLocator;
+  vtkAbstractCellLocator *CellLocator;
+  virtual void CreateDefaultLocator();
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-                  vtkInformationVector *) VTK_OVERRIDE;
+                  vtkInformationVector *) override;
   int RequestInformation(vtkInformation *, vtkInformationVector **,
-                         vtkInformationVector *) VTK_OVERRIDE;
+                         vtkInformationVector *) override;
   int RequestUpdateExtent(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
-
-  virtual void CreateDefaultLocator();
+                          vtkInformationVector *) override;
 
   char* NumberOfNonzeroBinsArrayName;
 
 private:
-  vtkBinCellDataFilter(const vtkBinCellDataFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBinCellDataFilter&) VTK_DELETE_FUNCTION;
+  vtkBinCellDataFilter(const vtkBinCellDataFilter&) = delete;
+  void operator=(const vtkBinCellDataFilter&) = delete;
 };
 
 /**

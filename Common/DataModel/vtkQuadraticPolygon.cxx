@@ -63,10 +63,10 @@ vtkCell *vtkQuadraticPolygon::GetEdge(int edgeId)
 }
 
 //----------------------------------------------------------------------------
-int vtkQuadraticPolygon::EvaluatePosition(double* x,
-                                          double* closestPoint,
+int vtkQuadraticPolygon::EvaluatePosition(const double x[3],
+                                          double closestPoint[3],
                                           int& subId, double pcoords[3],
-                                          double& minDist2, double *weights)
+                                          double& minDist2, double weights[])
 {
   this->InitializePolygon();
   int result = this->Polygon->EvaluatePosition(x, closestPoint, subId, pcoords,
@@ -76,7 +76,7 @@ int vtkQuadraticPolygon::EvaluatePosition(double* x,
 }
 
 //----------------------------------------------------------------------------
-void vtkQuadraticPolygon::EvaluateLocation(int& subId, double pcoords[3],
+void vtkQuadraticPolygon::EvaluateLocation(int& subId, const double pcoords[3],
                                            double x[3], double *weights)
 {
   this->InitializePolygon();
@@ -85,7 +85,7 @@ void vtkQuadraticPolygon::EvaluateLocation(int& subId, double pcoords[3],
 }
 
 //----------------------------------------------------------------------------
-int vtkQuadraticPolygon::CellBoundary(int subId, double pcoords[3],
+int vtkQuadraticPolygon::CellBoundary(int subId, const double pcoords[3],
                                       vtkIdList *pts)
 {
   this->InitializePolygon();
@@ -136,8 +136,8 @@ void vtkQuadraticPolygon::Clip(double value, vtkDataArray* cellScalars,
 }
 
 //----------------------------------------------------------------------------
-int vtkQuadraticPolygon::IntersectWithLine(double* p1,
-                                           double* p2,
+int vtkQuadraticPolygon::IntersectWithLine(const double* p1,
+                                           const double* p2,
                                            double tol,
                                            double& t,
                                            double* x,
@@ -175,7 +175,7 @@ int vtkQuadraticPolygon::NonDegenerateTriangulate(vtkIdList *outTris)
 }
 
 //----------------------------------------------------------------------------
-void vtkQuadraticPolygon::InterpolateFunctions(double x[3],
+void vtkQuadraticPolygon::InterpolateFunctions(const double x[3],
                                                double *weights)
 {
   this->InitializePolygon();
@@ -268,8 +268,8 @@ int vtkQuadraticPolygon::IntersectConvex2DCells(vtkCell *cell1, vtkCell *cell2,
                                                 double tol, double p0[3],
                                                 double p1[3])
 {
-  vtkPolygon *convertedCell1 = 0;
-  vtkPolygon *convertedCell2 = 0;
+  vtkPolygon *convertedCell1 = nullptr;
+  vtkPolygon *convertedCell2 = nullptr;
 
   vtkQuadraticPolygon *qp1 = dynamic_cast<vtkQuadraticPolygon*>(cell1);
   if (qp1)
@@ -484,8 +484,8 @@ void vtkQuadraticPolygon::ConvertFromPolygon(vtkIdList *ids)
 
 //----------------------------------------------------------------------------
 void vtkQuadraticPolygon::Derivatives(int vtkNotUsed(subId),
-                                      double vtkNotUsed(pcoords)[3],
-                                      double *vtkNotUsed(values),
+                                      const double vtkNotUsed(pcoords)[3],
+                                      const double *vtkNotUsed(values),
                                       int vtkNotUsed(dim),
                                       double *vtkNotUsed(derivs))
 {

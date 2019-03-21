@@ -46,7 +46,7 @@ class VTKINTERACTIONWIDGETS_EXPORT vtkScalarBarWidget : public vtkBorderWidget
 public:
   static vtkScalarBarWidget *New();
   vtkTypeMacro(vtkScalarBarWidget, vtkBorderWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Specify an instance of vtkWidgetRepresentation used to represent this
@@ -76,31 +76,31 @@ public:
 
    * TODO: This functionality should probably be moved to the superclass.
    */
-  vtkSetMacro(Repositionable, int);
-  vtkGetMacro(Repositionable, int);
-  vtkBooleanMacro(Repositionable, int);
+  vtkSetMacro(Repositionable, vtkTypeBool);
+  vtkGetMacro(Repositionable, vtkTypeBool);
+  vtkBooleanMacro(Repositionable, vtkTypeBool);
   //@}
 
   /**
    * Create the default widget representation if one is not set.
    */
-  void CreateDefaultRepresentation() VTK_OVERRIDE;
+  void CreateDefaultRepresentation() override;
 
 protected:
   vtkScalarBarWidget();
-  ~vtkScalarBarWidget() VTK_OVERRIDE;
+  ~vtkScalarBarWidget() override;
 
-  int Repositionable;
+  vtkTypeBool Repositionable;
 
   // Handle the case of Repositionable == 0
   static void MoveAction(vtkAbstractWidget*);
 
   // set the cursor to the correct shape based on State argument
-  void SetCursor(int State) VTK_OVERRIDE;
+  void SetCursor(int State) override;
 
 private:
-  vtkScalarBarWidget(const vtkScalarBarWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkScalarBarWidget&) VTK_DELETE_FUNCTION;
+  vtkScalarBarWidget(const vtkScalarBarWidget&) = delete;
+  void operator=(const vtkScalarBarWidget&) = delete;
 };
 
 #endif

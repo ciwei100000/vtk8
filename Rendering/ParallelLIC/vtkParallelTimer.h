@@ -24,11 +24,11 @@
  *  The log works as an event stack. EventStart pushes the
  *  event identifier and its start time onto the stack. EventEnd
  *  pops the most recent event time and identifier computes the
- *  ellapsed time and adds an entry to the log recording the
- *  event, it's start and end times, and its ellapsed time.
+ *  elapsed time and adds an entry to the log recording the
+ *  event, it's start and end times, and its elapsed time.
  *  EndEventSynch includes a barrier before the measurement.
  *
- *  The log class implements the singleton patern so that it
+ *  The log class implements the singleton pattern so that it
  *  may be shared across class boundaries. If the log instance
  *  doesn't exist then one is created. It will be automatically
  *  destroyed at exit by the signleton destructor. It can be
@@ -57,7 +57,7 @@ class VTKRENDERINGPARALLELLIC_EXPORT vtkParallelTimer : public vtkObject
 public:
   static vtkParallelTimer *New();
   vtkTypeMacro(vtkParallelTimer,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -109,8 +109,8 @@ public:
    * The log works as an event stack. EventStart pushes the
    * event identifier and its start time onto the stack. EventEnd
    * pops the most recent event time and identifier computes the
-   * ellapsed time and adds an entry to the log recording the
-   * event, it's start and end times, and its ellapsed time.
+   * elapsed time and adds an entry to the log recording the
+   * event, it's start and end times, and its elapsed time.
    * EndEventSynch includes a barrier before the measurement.
    */
   void StartEvent(const char *event);
@@ -160,7 +160,7 @@ public:
   int Write();
 
   /**
-   * The log class implements the singleton patern so that it
+   * The log class implements the singleton pattern so that it
    * may be shared across class boundaries. If the log instance
    * doesn't exist then one is created. It will be automatically
    * destroyed at exit by the signleton destructor. It can be
@@ -196,8 +196,8 @@ protected:
   virtual ~vtkParallelTimer();
 
 private:
-  vtkParallelTimer(const vtkParallelTimer&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkParallelTimer&) VTK_DELETE_FUNCTION;
+  vtkParallelTimer(const vtkParallelTimer&) = delete;
+  void operator=(const vtkParallelTimer&) = delete;
 
   /**
    * A class responsible for delete'ing the global instance of the log.

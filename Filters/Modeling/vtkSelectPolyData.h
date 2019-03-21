@@ -100,7 +100,7 @@ public:
   static vtkSelectPolyData *New();
 
   vtkTypeMacro(vtkSelectPolyData,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -110,9 +110,9 @@ public:
    * If off, the filter outputs the cells laying inside the loop, and
    * does not generate scalars.
    */
-  vtkSetMacro(GenerateSelectionScalars,int);
-  vtkGetMacro(GenerateSelectionScalars,int);
-  vtkBooleanMacro(GenerateSelectionScalars,int);
+  vtkSetMacro(GenerateSelectionScalars,vtkTypeBool);
+  vtkGetMacro(GenerateSelectionScalars,vtkTypeBool);
+  vtkBooleanMacro(GenerateSelectionScalars,vtkTypeBool);
   //@}
 
   //@{
@@ -120,9 +120,9 @@ public:
    * Set/Get the InsideOut flag. When off, the mesh within the loop is
    * extracted. When on, the mesh outside the loop is extracted.
    */
-  vtkSetMacro(InsideOut,int);
-  vtkGetMacro(InsideOut,int);
-  vtkBooleanMacro(InsideOut,int);
+  vtkSetMacro(InsideOut,vtkTypeBool);
+  vtkGetMacro(InsideOut,vtkTypeBool);
+  vtkBooleanMacro(InsideOut,vtkTypeBool);
   //@}
 
   //@{
@@ -163,9 +163,9 @@ public:
    * Control whether a second output is generated. The second output
    * contains the polygonal data that's not been selected.
    */
-  vtkSetMacro(GenerateUnselectedOutput,int);
-  vtkGetMacro(GenerateUnselectedOutput,int);
-  vtkBooleanMacro(GenerateUnselectedOutput,int);
+  vtkSetMacro(GenerateUnselectedOutput,vtkTypeBool);
+  vtkGetMacro(GenerateUnselectedOutput,vtkTypeBool);
+  vtkBooleanMacro(GenerateUnselectedOutput,vtkTypeBool);
   //@}
 
   /**
@@ -180,27 +180,27 @@ public:
   vtkPolyData *GetSelectionEdges();
 
   // Overload GetMTime() because we depend on Loop
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkSelectPolyData();
-  ~vtkSelectPolyData() VTK_OVERRIDE;
+  ~vtkSelectPolyData() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-  int GenerateSelectionScalars;
-  int InsideOut;
+  vtkTypeBool GenerateSelectionScalars;
+  vtkTypeBool InsideOut;
   vtkPoints *Loop;
   int SelectionMode;
   double ClosestPoint[3];
-  int GenerateUnselectedOutput;
+  vtkTypeBool GenerateUnselectedOutput;
 
 private:
   vtkPolyData *Mesh;
   void GetPointNeighbors (vtkIdType ptId, vtkIdList *nei);
 private:
-  vtkSelectPolyData(const vtkSelectPolyData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSelectPolyData&) VTK_DELETE_FUNCTION;
+  vtkSelectPolyData(const vtkSelectPolyData&) = delete;
+  void operator=(const vtkSelectPolyData&) = delete;
 };
 
 //@{

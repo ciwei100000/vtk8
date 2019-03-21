@@ -4,12 +4,7 @@ set(Module_SRCS
   vtkFunctionParser.cxx
   vtkHeap.cxx
   vtkPolygonBuilder.cxx
-  )
-
-set_source_files_properties(
-  vtkErrorCode.cxx
-  vtkPolygonBuilder.cxx
-  WRAP_EXCLUDE
+  vtkResourceFileLocator.cxx
   )
 
 vtk_module_library(vtkCommonMisc ${Module_SRCS})

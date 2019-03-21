@@ -84,7 +84,7 @@ class VTKFILTERSFLOWPATHS_EXPORT vtkLagrangianBasicIntegrationModel :
 {
 public:
   vtkTypeMacro(vtkLagrangianBasicIntegrationModel, vtkFunctionSet);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   typedef enum SurfaceType
   {
@@ -111,7 +111,7 @@ public:
    * in found this will call
    * FunctionValues(vtkDataSet* detaSet, vtkIdType cellId, double* x, double* f)
    */
-  int FunctionValues(double* x, double* f) VTK_OVERRIDE;
+  int FunctionValues(double* x, double* f) override;
 
   //@{
   /**
@@ -122,6 +122,14 @@ public:
    */
   virtual void SetLocator(vtkAbstractCellLocator* locator);
   vtkGetObjectMacro(Locator, vtkAbstractCellLocator);
+  //@}
+
+  //@{
+  /**
+   * Get the state of the current locators
+   */
+  vtkGetMacro(LocatorsBuilt, bool);
+  vtkSetMacro(LocatorsBuilt, bool);
   //@}
 
   /**
@@ -162,14 +170,14 @@ public:
 
   //@{
   /**
-   * Get the tolerance to use with this model
+   * Get the tolerance to use with this model.
    */
   vtkGetMacro(Tolerance, double);
   //@}
 
   /**
    * Interact the current particle with a surfaces
-   * Return a particle to record as interaction point if not NULL
+   * Return a particle to record as interaction point if not nullptr
    * Uses SurfaceType array from the intersected surface cell
    * to compute the interaction.
    * MODEL :
@@ -189,7 +197,7 @@ public:
     unsigned int& interactedSurfaceFlatIndex, PassThroughParticlesType& passThroughParticles);
 
   /**
-   * Set a input array to process at a specific index, indentified by a port,
+   * Set a input array to process at a specific index, identified by a port,
    * connection, fieldAssociation and a name.
    * Each inherited class can specify their own input array to process
    */
@@ -202,7 +210,7 @@ public:
    * containing the point x. return false if out of domain,
    * return true and data to recover the cell if in domain.
    * does not filter out ghost cells.
-   * convienence method with less outputs.
+   * convenience method with less outputs.
    */
   virtual bool FindInLocators(double* x, vtkDataSet*& dataset, vtkIdType& cellId,
     vtkAbstractCellLocator*& loc, double*& weights);
@@ -222,25 +230,50 @@ public:
 
   /**
    * Empty method to be reimplemented if necessary in inherited classes.
-   * Allows a inherited class to create
-   * Specific array in the output point data
+   * Allows a inherited class to create specific array in the output point data
    * for filling point data with variables.
    */
   virtual void InsertVariablesParticleData(vtkLagrangianParticle* vtkNotUsed(particle),
     vtkPointData* vtkNotUsed(particleData), int vtkNotUsed(stepEnum)) {}
 
   /**
-   * Initialize a particle by setting user variables
-   * and perform any user model specific operation
-   * empty in basic implementation
+   * Empty method to be reimplemented if necessary in inherited classes.
+   * Allows an inherited class to create specific array in the outputs
+   * field data associated with each particle path.
+   */
+  virtual void InitializeModelPathData(vtkFieldData* vtkNotUsed(data)) {}
+
+  /**
+   * Empty method to be reimplemented if necessary in inherited classes.
+   * Allows a inherited class to insert data in initialized
+   * array in the outputs field data associated with each particle path.
+   */
+  virtual void InsertModelPathData(vtkLagrangianParticle* vtkNotUsed(particle),
+    vtkFieldData* vtkNotUsed(data)) {}
+
+  /**
+   * Initialize a particle by setting user variables and perform any user
+   * model specific operation. empty in basic implementation.
    */
   virtual void InitializeParticle(vtkLagrangianParticle* vtkNotUsed(particle)){}
 
   /**
-   * Empty method to be reimplemented if necessary in inherited classes.
+   * Method to be reimplemented if needed in inherited classes.
+   * Allows a inherited class to check if adaptive step reintegration
+   * should be done or not, this method is called just before
+   * potentially performing adaptative step reintegration,
+   * the current particle is passed as an argument.
+   * This method always returns true in this basis class.
+   */
+  virtual bool CheckAdaptiveStepReintegration(
+    vtkLagrangianParticle* vtkNotUsed(particle)){return true;}
+
+  /**
+   * Method to be reimplemented if needed in inherited classes.
    * Allows a inherited class to check if a particle
    * should be terminated only based on particle parameters.
-   * This method return true if the particle must be terminated, false otherwise.
+   * This method should return true if the particle must be terminated, false otherwise.
+   * It always returns false in this basis class.
    */
   virtual bool CheckFreeFlightTermination(
     vtkLagrangianParticle* vtkNotUsed(particle)){return false;}
@@ -346,7 +379,7 @@ public:
 
   /**
    * Enable model post process on output
-   * Return true if sucessful, false otherwise
+   * Return true if successful, false otherwise
    * Empty and Always return true with basic model
    */
   virtual bool FinalizeOutputs(vtkPolyData* vtkNotUsed(particlePathsOutput),
@@ -365,7 +398,7 @@ public:
 
 protected:
   vtkLagrangianBasicIntegrationModel();
-  ~vtkLagrangianBasicIntegrationModel() VTK_OVERRIDE;
+  ~vtkLagrangianBasicIntegrationModel() override;
 
   /**
    * Actually compute the integration model velocity field
@@ -428,7 +461,7 @@ protected:
 
   /**
    * Given a particle, check if it perforate a surface cell
-   * ie : interact with next step after interracting with it
+   * ie : interact with next step after interacting with it
    */
   virtual bool CheckSurfacePerforation(vtkLagrangianParticle* particle,
     vtkDataSet*  surface, vtkIdType cellId);
@@ -458,7 +491,7 @@ protected:
   /**
    * Methods used by ParaView surface helper to get default
    * values for each leaf of each dataset of surface
-   * nComponents could be retrived with arrayName but is
+   * nComponents could be retrieved with arrayName but is
    * given for simplication purposes.
    * it is your responsibility to initialize all components of
    * defaultValues[nComponent]
@@ -467,6 +500,7 @@ protected:
                                              int nComponent, double* defaultValues);
 
   vtkAbstractCellLocator* Locator;
+  bool LocatorsBuilt;
   vtkAbstractCellLocator* LastLocator;
   vtkLocatorsType* Locators;
 
@@ -515,8 +549,8 @@ protected:
   vtkWeakPointer<vtkLagrangianParticleTracker> Tracker;
 
 private:
-  vtkLagrangianBasicIntegrationModel(const vtkLagrangianBasicIntegrationModel&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkLagrangianBasicIntegrationModel&) VTK_DELETE_FUNCTION;
+  vtkLagrangianBasicIntegrationModel(const vtkLagrangianBasicIntegrationModel&) = delete;
+  void operator=(const vtkLagrangianBasicIntegrationModel&) = delete;
 };
 
 #endif

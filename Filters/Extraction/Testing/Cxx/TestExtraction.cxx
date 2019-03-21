@@ -23,27 +23,28 @@
 #include "vtkTestUtilities.h"
 #include "vtkRegressionTestImage.h"
 
+#include <vtkActor.h>
+#include <vtkCamera.h>
+#include <vtkCell.h>
+#include <vtkCellData.h>
+#include <vtkDataSetMapper.h>
+#include <vtkDoubleArray.h>
+#include <vtkFloatArray.h>
+#include <vtkIdList.h>
+#include <vtkIdTypeArray.h>
 #include <vtkImageData.h>
+#include <vtkInteractorStyleRubberBandPick.h>
+#include <vtkPointData.h>
+#include <vtkPoints.h>
+#include <vtkPolyDataWriter.h>
+#include <vtkProperty.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
+#include <vtkThreshold.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridWriter.h>
 #include <vtkXMLDataSetWriter.h>
-#include <vtkPolyDataWriter.h>
-#include <vtkPoints.h>
-#include <vtkPointData.h>
-#include <vtkCellData.h>
-#include <vtkIdTypeArray.h>
-#include <vtkDoubleArray.h>
-#include <vtkCell.h>
-#include <vtkDataSetMapper.h>
-#include <vtkActor.h>
-#include <vtkProperty.h>
-#include <vtkRenderer.h>
-#include <vtkCamera.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkInteractorStyleRubberBandPick.h>
-#include <vtkIdList.h>
-#include <vtkThreshold.h>
 
 #include <vtkInformation.h>
 #include <vtkSelection.h>
@@ -54,9 +55,11 @@
 #define YCELLS 3
 #define ZCELLS 3
 
-static vtkRenderer *renderer = NULL;
-static vtkImageData *sampleData = NULL;
+static vtkRenderer *renderer = nullptr;
+static vtkImageData *sampleData = nullptr;
 static int DrawSampleData = 0;
+
+namespace {
 
 enum {COLORBYCELL, COLORBYPOINT};
 
@@ -114,6 +117,7 @@ void showMe(vtkDataSet *result, int X, int Y, int CellOrPoint, vtkDataArray *arr
   }
 }
 
+template<typename ExtractionFilter>
 int TestExtraction(int argc, char *argv[])
 {
   int DoWrite = 0;
@@ -156,7 +160,7 @@ int TestExtraction(int argc, char *argv[])
   sampleData->SetSpacing(1.0,1.0,1.0);
   sampleData->SetOrigin(0.0,0.0,0.0);
   sampleData->SetDimensions(XCELLS+1,YCELLS+1,ZCELLS+1);
-  sampleData->AllocateScalars(VTK_DOUBLE, 1);
+  sampleData->AllocateScalars(VTK_FLOAT, 1);
 
   vtkIdTypeArray *pia = vtkIdTypeArray::New();
   pia->SetNumberOfComponents(1);
@@ -173,17 +177,17 @@ int TestExtraction(int argc, char *argv[])
   piaR->SetName("Reverse Point Ids");
   sampleData->GetPointData()->AddArray(piaR);
 
-  vtkDoubleArray *pxa = vtkDoubleArray::New();
+  vtkFloatArray *pxa = vtkFloatArray::New();
   pxa->SetNumberOfComponents(1);
   pxa->SetName("Point X");
   sampleData->GetPointData()->AddArray(pxa);
 
-  vtkDoubleArray *pya = vtkDoubleArray::New();
+  vtkFloatArray *pya = vtkFloatArray::New();
   pya->SetNumberOfComponents(1);
   pya->SetName("Point Y");
   sampleData->GetPointData()->AddArray(pya);
 
-  vtkDoubleArray *pza = vtkDoubleArray::New();
+  vtkFloatArray *pza = vtkFloatArray::New();
   pza->SetNumberOfComponents(1);
   pza->SetName("Point Z");
   sampleData->GetPointData()->AddArray(pza);
@@ -314,7 +318,7 @@ int TestExtraction(int argc, char *argv[])
   vtkSelection *selection = vtkSelection::New();
   vtkSelectionNode *sel = vtkSelectionNode::New();
   selection->AddNode(sel);
-  vtkExtractSelection *ext = vtkExtractSelection::New();
+  ExtractionFilter *ext = ExtractionFilter::New();
   ext->SetInputData(0, sampleData);
   ext->SetInputData(1, selection);
   ext->PreserveTopologyOff();
@@ -326,11 +330,12 @@ int TestExtraction(int argc, char *argv[])
 
   //-------------------------------------------------------------------------
   //Test extract GLOBALIDS filter on cells
-  vtkIdTypeArray *cellIds = NULL;
+  vtkIdTypeArray *cellIds = nullptr;
 
   sel->Initialize();
   sel->GetProperties()->Set(
     vtkSelectionNode::CONTENT_TYPE(), vtkSelectionNode::GLOBALIDS);
+  sel->SetFieldType(vtkSelectionNode::CELL);
   cellIds = vtkIdTypeArray::New();
   cellIds->SetNumberOfComponents(1);
   cellIds->SetNumberOfTuples(5);
@@ -378,7 +383,7 @@ int TestExtraction(int argc, char *argv[])
 
   //-------------------------------------------------------------------------
   //Test extract GLOBALIDS filter on points
-  vtkIdTypeArray *pointIds = NULL;
+  vtkIdTypeArray *pointIds = nullptr;
 
   sel->Initialize();
   ext->PreserveTopologyOff();
@@ -467,6 +472,7 @@ int TestExtraction(int argc, char *argv[])
   ext->PreserveTopologyOff();
   sel->GetProperties()->Set(
     vtkSelectionNode::CONTENT_TYPE(), vtkSelectionNode::INDICES);
+  sel->SetFieldType(vtkSelectionNode::CELL);
   cellIds = vtkIdTypeArray::New();
   cellIds->SetNumberOfComponents(1);
   cellIds->SetNumberOfTuples(5);
@@ -601,6 +607,7 @@ int TestExtraction(int argc, char *argv[])
   ext->PreserveTopologyOff();
   sel->GetProperties()->Set(
     vtkSelectionNode::CONTENT_TYPE(), vtkSelectionNode::VALUES);
+  sel->SetFieldType(vtkSelectionNode::CELL);
   cellIds = vtkIdTypeArray::New();
   cellIds->SetName("Reverse Cell Ids");
   cellIds->SetNumberOfComponents(1);
@@ -737,11 +744,12 @@ int TestExtraction(int argc, char *argv[])
   ext->PreserveTopologyOff();
   sel->GetProperties()->Set(
     vtkSelectionNode::CONTENT_TYPE(), vtkSelectionNode::THRESHOLDS);
+  sel->SetFieldType(vtkSelectionNode::CELL);
   vtkDoubleArray *cellThresh = vtkDoubleArray::New();
-  cellThresh->SetNumberOfComponents(1);
-  cellThresh->SetNumberOfTuples(2);
-  cellThresh->SetTuple1(0, 1.9); //the nine rightmost(+X) cells are in here
-  cellThresh->SetTuple1(1, 3.1);
+  cellThresh->SetNumberOfComponents(2);
+  cellThresh->SetNumberOfTuples(1);
+  cellThresh->SetComponent(0, 0, 1.9); //the nine rightmost(+X) cells are in here
+  cellThresh->SetComponent(0, 1, 3.1);
   sel->SetSelectionList(cellThresh);
   cellThresh->Delete();
 
@@ -787,10 +795,10 @@ int TestExtraction(int argc, char *argv[])
     vtkSelectionNode::CONTENT_TYPE(), vtkSelectionNode::THRESHOLDS);
   sel->GetProperties()->Set(vtkSelectionNode::FIELD_TYPE(), vtkSelectionNode::POINT);
   vtkDoubleArray *pointThresh = vtkDoubleArray::New();
-  pointThresh->SetNumberOfComponents(1);
-  pointThresh->SetNumberOfTuples(2);
-  pointThresh->SetTuple1(0, 0.9);  //the 18 leftmost cells have points in here
-  pointThresh->SetTuple1(1, 1.1);
+  pointThresh->SetNumberOfComponents(2);
+  pointThresh->SetNumberOfTuples(1);
+  pointThresh->SetComponent(0, 0, 0.9);  //the 18 leftmost cells have points in here
+  pointThresh->SetComponent(0, 1, 1.1);
   sel->SetSelectionList(pointThresh);
   pointThresh->Delete();
 
@@ -863,6 +871,7 @@ int TestExtraction(int argc, char *argv[])
   ext->PreserveTopologyOff();
   sel->GetProperties()->Set(
     vtkSelectionNode::CONTENT_TYPE(), vtkSelectionNode::LOCATIONS);
+  sel->SetFieldType(vtkSelectionNode::CELL);
   vtkDoubleArray *cellLocs = vtkDoubleArray::New();
   cellLocs->SetNumberOfComponents(3);
   cellLocs->SetNumberOfTuples(4);
@@ -991,6 +1000,7 @@ int TestExtraction(int argc, char *argv[])
   ext->PreserveTopologyOff();
   sel->GetProperties()->Set(
     vtkSelectionNode::CONTENT_TYPE(), vtkSelectionNode::FRUSTUM);
+  sel->SetFieldType(vtkSelectionNode::CELL);
   vtkDoubleArray *frustcorners = vtkDoubleArray::New();
   frustcorners->SetNumberOfComponents(4);
   frustcorners->SetNumberOfTuples(8);
@@ -1162,4 +1172,11 @@ int TestExtraction(int argc, char *argv[])
   rwi->Delete();
 
   return !retVal;
+}
+
+}
+
+int TestExtraction(int argc, char *argv[])
+{
+  return TestExtraction<vtkExtractSelection>(argc, argv);
 }

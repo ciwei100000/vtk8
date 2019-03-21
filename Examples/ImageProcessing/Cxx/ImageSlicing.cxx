@@ -49,8 +49,8 @@ public:
 
   vtkImageInteractionCallback() {
     this->Slicing = 0;
-    this->ImageReslice = 0;
-    this->Interactor = 0; };
+    this->ImageReslice = nullptr;
+    this->Interactor = nullptr; };
 
   void SetImageReslice(vtkImageReslice *reslice) {
     this->ImageReslice = reslice; };
@@ -64,7 +64,7 @@ public:
   vtkRenderWindowInteractor *GetInteractor() {
     return this->Interactor; };
 
-  void Execute(vtkObject *, unsigned long event, void *) VTK_OVERRIDE
+  void Execute(vtkObject *, unsigned long event, void *) override
   {
     vtkRenderWindowInteractor *interactor = this->GetInteractor();
 

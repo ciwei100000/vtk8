@@ -41,7 +41,7 @@
   #include <netdb.h>
   #include <unistd.h>
   #include <sys/time.h>
-  #include <errno.h>
+  #include <cerrno>
   #include <cstring>
   #include <cstdio>
 #endif
@@ -227,7 +227,7 @@ int vtkSocket::Accept(int socketdescriptor)
 
   int newDescriptor;
   vtkRestartInterruptedSystemCallMacro(
-    accept(socketdescriptor, 0, 0), newDescriptor);
+    accept(socketdescriptor, nullptr, nullptr), newDescriptor);
   if (newDescriptor == vtkSocketErrorReturnMacro)
   {
     vtkSocketErrorMacro(vtkErrnoMacro, "Socket error in call to accept.");
@@ -281,7 +281,7 @@ int vtkSocket::SelectSocket(int socketdescriptor, unsigned long msec)
   do
   {
     struct timeval tval;
-    struct timeval* tvalptr = 0;
+    struct timeval* tvalptr = nullptr;
     if (msec>0)
     {
       tval.tv_sec = msec / 1000;
@@ -293,7 +293,7 @@ int vtkSocket::SelectSocket(int socketdescriptor, unsigned long msec)
     FD_SET(socketdescriptor, &rset);
 
     // block until socket is readable.
-    res = select(socketdescriptor+1, &rset, 0, 0, tvalptr);
+    res = select(socketdescriptor+1, &rset, nullptr, nullptr, tvalptr);
   }
   while ((res == vtkSocketErrorReturnMacro)
     && (vtkErrnoMacro == vtkSocketErrorIdMacro(EINTR)));
@@ -303,15 +303,13 @@ int vtkSocket::SelectSocket(int socketdescriptor, unsigned long msec)
     // time out
     return 0;
   }
-  else
-  if (res == vtkSocketErrorReturnMacro)
+  else if (res == vtkSocketErrorReturnMacro)
   {
     // error in the call
     vtkSocketErrorMacro(vtkErrnoMacro, "Socket error in call to select.");
     return -1;
   }
-  else
-  if (!FD_ISSET(socketdescriptor, &rset))
+  else if (!FD_ISSET(socketdescriptor, &rset))
   {
      vtkErrorMacro("Socket error in select. Descriptor not selected.");
      return -1;
@@ -348,11 +346,11 @@ int vtkSocket::SelectSockets(const int* sockets_to_select, int size,
   do
   {
     struct timeval tval;
-    struct timeval* tvalptr = 0;
+    struct timeval* tvalptr = nullptr;
     if (msec>0)
     {
       tval.tv_sec = msec / 1000;
-      tval.tv_usec = msec % 1000;
+      tval.tv_usec = (msec % 1000)*1000;
       tvalptr = &tval;
     }
 
@@ -365,7 +363,7 @@ int vtkSocket::SelectSockets(const int* sockets_to_select, int size,
     }
 
     // block until one socket is ready to read.
-    res = select(max_fd + 1, &rset, 0, 0, tvalptr);
+    res = select(max_fd + 1, &rset, nullptr, nullptr, tvalptr);
   }
   while ((res == vtkSocketErrorReturnMacro)
     && (vtkErrnoMacro == vtkSocketErrorIdMacro(EINTR)));
@@ -375,8 +373,7 @@ int vtkSocket::SelectSockets(const int* sockets_to_select, int size,
     // time out
     return 0;
   }
-  else
-  if (res == vtkSocketErrorReturnMacro)
+  else if (res == vtkSocketErrorReturnMacro)
   {
     // error in the call
     vtkSocketGenericErrorMacro("Socket error in call to select.");
@@ -465,8 +462,7 @@ int vtkSocket::Connect(int socketdescriptor, const char* hostName, int port)
           vtkErrnoMacro, "Socket error in call to getsockopt.");
         return -1;
       }
-      else
-      if (pendingErr)
+      else if (pendingErr)
       {
         vtkSocketErrorMacro(
           pendingErr, "Socket error pending from call to connect.");
@@ -474,8 +470,7 @@ int vtkSocket::Connect(int socketdescriptor, const char* hostName, int port)
       }
     }
   }
-  else
-  if (iErr == vtkSocketErrorReturnMacro)
+  else if (iErr == vtkSocketErrorReturnMacro)
   {
     vtkSocketErrorMacro(
       vtkErrnoMacro, "Socket error in call to connect.");
@@ -594,7 +589,7 @@ int vtkSocket::Receive(void* data, int length, int readFully/*=1*/)
   }
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
-  int trys = 0;
+  int tries = 0;
 #endif
 
   char* buffer = reinterpret_cast<char*>(data);
@@ -618,7 +613,7 @@ int vtkSocket::Receive(void* data, int length, int readFully/*=1*/)
     {
       // On long messages, Windows recv sometimes fails with WSAENOBUFS, but
       // will work if you try again.
-      if ((trys++ < 1000))
+      if ((tries++ < 1000))
       {
         Sleep(1);
         continue;

@@ -26,6 +26,11 @@
 #include "vtkIncrementalPointLocator.h"
 #include "vtkInformation.h"
 #include "vtkInformationVector.h"
+#include "vtkLagrangeCurve.h"
+#include "vtkLagrangeHexahedron.h"
+#include "vtkLagrangeQuadrilateral.h"
+#include "vtkLagrangeTriangle.h"
+#include "vtkLagrangeTetra.h"
 #include "vtkMergePoints.h"
 #include "vtkObjectFactory.h"
 #include "vtkPentagonalPrism.h"
@@ -203,14 +208,14 @@ public:
   // Default constructor.
   vtkPoolManager()
   {
-      this->Chunks=0;
+      this->Chunks=nullptr;
       this->ChunkSize=VTK_DEFAULT_CHUNK_SIZE;
   }
 
   // Initialize the pool with a set of empty chunks.
   void Init()
   {
-      if(this->Chunks==0)
+      if(this->Chunks==nullptr)
       {
         this->Chunks=new std::vector<std::vector<G> *>();
         this->Chunks->reserve(VTK_DEFAULT_NUMBER_OF_CHUNKS);
@@ -220,7 +225,7 @@ public:
   // Is the pool initialized?
   int IsInitialized()
   {
-      return this->Chunks!=0;
+      return this->Chunks!=nullptr;
   }
 
   // Return a new `G' object.
@@ -228,7 +233,7 @@ public:
   G *Allocate()
   {
       assert("pre: is_initialized" && this->IsInitialized());
-      G *result=0;
+      G *result=nullptr;
       size_t c=this->Chunks->size();
       if(c==0) // first Allocate()
       {
@@ -272,7 +277,7 @@ public:
   // Destructor.
   ~vtkPoolManager()
   {
-      if(this->Chunks!=0)
+      if(this->Chunks!=nullptr)
       {
         size_t c=this->Chunks->size();
         size_t i=0;
@@ -312,15 +317,19 @@ protected:
   unsigned int ChunkSize;
 };
 
-// The 2D cell with the maximum number of points is VTK_BIQUADRATIC_QUAD
-const int VTK_MAXIMUM_NUMBER_OF_POINTS=9;
-
 //-----------------------------------------------------------------------------
 // Surface element: face of a 3D cell.
 //  As this is internal use only, we put variables as public.
 class vtkSurfel
 {
 public:
+
+  ~vtkSurfel()
+  {
+    delete[] Points;
+    Points = nullptr;
+  }
+
   // 2D cell type:
   // VTK_TRIANGLE,
   // VTK_POLYGON,
@@ -331,10 +340,12 @@ public:
   // VTK_BIQUADRATIC_QUAD,
   // VTK_BIQUADRATIC_TRIANGLE
   // VTK_QUADRATIC_LINEAR_QUAD
+  // VTK_LAGRANGE_TRIANGLE
+  // VTK_LAGRANGE_QUADRILATERAL
   vtkIdType Type;
 
   // Dataset point Ids that form the surfel.
-  vtkIdType Points[VTK_MAXIMUM_NUMBER_OF_POINTS];
+  vtkIdType* Points;
 
   // Number of points defining the cell.
   // For cells with a fixed number of points like triangle, it looks redundant.
@@ -354,6 +365,9 @@ public:
   // A surfel is also an element of a one-way linked list: in the hashtable,
   // each key entry is a one-way linked list of Surfels.
   vtkSurfel *Next;
+
+  vtkSurfel(const vtkSurfel &) = default;
+  vtkSurfel() = default;
 };
 
 //-----------------------------------------------------------------------------
@@ -372,7 +386,7 @@ public:
     :HashTable(numberOfPoints)
   {
       assert("pre: positive_number" && numberOfPoints>0);
-      assert("pre: pool_exists" && pool!=0);
+      assert("pre: pool_exists" && pool!=nullptr);
       assert("pre: initialized_pool" && pool->IsInitialized());
 
       this->Pool=pool;
@@ -380,26 +394,37 @@ public:
       int c=numberOfPoints;
       while(i<c)
       {
-        this->HashTable[i]=0;
+        this->HashTable[i]=nullptr;
         ++i;
       }
   }
   std::vector<vtkSurfel *> HashTable;
 
-  // Add a face defined by its cell type `faceType', its number of points,
+  // Add faces of cell type FaceType
+  template<typename CellType, int FirstFace, int LastFace, int NumPoints, int FaceType>
+  void InsertFaces(vtkIdType* pts, vtkIdType cellId)
+  {
+    vtkIdType points[NumPoints];
+    for(int face = FirstFace; face < LastFace; ++face)
+    {
+      int* faceIndices = CellType::GetFaceArray(face);
+      for(int pt = 0; pt < NumPoints; ++pt)
+      {
+        points[pt] = pts[faceIndices[pt]];
+      }
+      this->InsertFace(cellId,FaceType,NumPoints,points);
+    }
+  }
+
+  // Add a face defined by its cell type 'faceType', its number of points,
   // its list of points and the cellId of the 3D cell it belongs to.
-  // \pre valid_range: numberOfPoints>=0 && numberOfPoints<=VTK_MAXIMUM_NUMBER_OF_POINTS
+  // \pre positive number of points
   void InsertFace(vtkIdType cellId,
                   vtkIdType faceType,
                   int numberOfPoints,
-                  vtkIdType points[VTK_MAXIMUM_NUMBER_OF_POINTS])
+                  vtkIdType* points)
   {
-      assert("pre: valid_range" && numberOfPoints>=0 && numberOfPoints<=VTK_MAXIMUM_NUMBER_OF_POINTS);
-
-      // Compute the smallest id among the corner points.
-      int smallestIdx;
-      vtkIdType smallestId;
-      int i;
+      assert("pre: positive number of points" && numberOfPoints>=0);
 
       int numberOfCornerPoints;
 
@@ -407,11 +432,13 @@ public:
       {
         case VTK_QUADRATIC_TRIANGLE:
         case VTK_BIQUADRATIC_TRIANGLE:
+        case VTK_LAGRANGE_TRIANGLE:
           numberOfCornerPoints=3;
           break;
         case VTK_QUADRATIC_QUAD:
         case VTK_QUADRATIC_LINEAR_QUAD:
         case VTK_BIQUADRATIC_QUAD:
+        case VTK_LAGRANGE_QUADRILATERAL:
           numberOfCornerPoints=4;
           break;
         default:
@@ -419,17 +446,16 @@ public:
           break;
       }
 
-      smallestIdx=0;
-      smallestId=points[smallestIdx];
-      i=1;
-      while(i<numberOfCornerPoints)
+      // Compute the smallest id among the corner points.
+      int smallestIdx=0;
+      vtkIdType smallestId=points[smallestIdx];
+      for(int i=1; i<numberOfCornerPoints; ++i)
       {
         if(points[i]<smallestId)
         {
           smallestIdx=i;
           smallestId=points[i];
         }
-        ++i;
       }
 
       // Compute the hashkey/code
@@ -439,7 +465,7 @@ public:
       // same hashcode). This is the first element in the list.
       vtkSurfel *first=this->HashTable[key];
       vtkSurfel *surfel;
-      if(first==0)
+      if(first==nullptr)
       {
         // empty list.
         surfel=this->Pool->Allocate();
@@ -452,7 +478,7 @@ public:
         int found=0;
         vtkSurfel *current=first;
         vtkSurfel *previous=current;
-        while(!found && current!=0)
+        while(!found && current!=nullptr)
         {
           found=current->Type==faceType;
           if(found)
@@ -460,7 +486,7 @@ public:
             if(faceType==VTK_QUADRATIC_LINEAR_QUAD)
             {
               // weird case
-              // the following for combinations are equivalent
+              // the following four combinations are equivalent
               // 01 23, 45, smallestIdx=0, go->
               // 10 32, 45, smallestIdx=1, go<-
               // 23 01, 54, smallestIdx=2, go->
@@ -495,12 +521,12 @@ public:
             }
             else
             {
-              // If the face is already from another cell. The the first
+              // If the face is already from another cell. The first
               // corner point with smallest id will match.
 
               // The other corner points
               // will be given in reverse order (opposite orientation)
-              i=0;
+              int i=0;
               while(found && i<numberOfCornerPoints)
               {
                 // we add numberOfPoints before modulo. Modulo does not work
@@ -510,7 +536,7 @@ public:
                 ++i;
               }
 
-              // Check for other kind of points for none linear faces.
+              // Check for other kind of points for nonlinear faces.
               switch(faceType)
               {
                 case VTK_QUADRATIC_TRIANGLE:
@@ -542,6 +568,10 @@ public:
                     ++i;
                   }
                   break;
+                case VTK_LAGRANGE_TRIANGLE:
+                  found &= (current->NumberOfPoints == numberOfPoints);
+                  // TODO: Compare all higher order points.
+                  break;
                 case VTK_QUADRATIC_QUAD:
                   // the mid-edge points
                   i=0;
@@ -569,6 +599,10 @@ public:
                     ++i;
                   }
                   break;
+                case VTK_LAGRANGE_QUADRILATERAL:
+                  found &= (current->NumberOfPoints == numberOfPoints);
+                  // TODO: Compare all higher order points.
+                  break;
                 default: // other faces are linear: we are done.
                   break;
               }
@@ -580,7 +614,7 @@ public:
         if(found)
         {
           previous->Cell3DId=-1;
-          surfel=0;
+          surfel=nullptr;
         }
         else
         {
@@ -588,18 +622,17 @@ public:
           previous->Next=surfel;
         }
       }
-      if(surfel!=0)
+      if(surfel!=nullptr)
       {
-        surfel->Next=0;
+        surfel->Next=nullptr;
         surfel->Type=faceType;
         surfel->NumberOfPoints=numberOfPoints;
+        surfel->Points=new vtkIdType[numberOfPoints];
         surfel->SmallestIdx=smallestIdx;
         surfel->Cell3DId=cellId;
-        i=0;
-        while(i<numberOfPoints)
+        for (int i=0; i<numberOfPoints; ++i)
         {
           surfel->Points[i]=points[i];
-          ++i;
         }
       }
   }
@@ -616,7 +649,7 @@ public:
   // \pre table_exists: table!=0
   void Init(vtkHashTableOfSurfels *table)
   {
-      assert("pre: table_exists" && table!=0);
+      assert("pre: table_exists" && table!=nullptr);
       this->Table=table;
       this->AtEnd=1;
   }
@@ -626,14 +659,14 @@ public:
   void Start()
   {
       this->CurrentKey=0;
-      this->CurrentSurfel=0;
+      this->CurrentSurfel=nullptr;
 
       size_t c=Table->HashTable.size();
       int done=this->CurrentKey>=c;
       if(!done)
       {
         this->CurrentSurfel=this->Table->HashTable[this->CurrentKey];
-        done=this->CurrentSurfel!=0;
+        done=this->CurrentSurfel!=nullptr;
       }
       while(!done)
       {
@@ -642,14 +675,14 @@ public:
         if(!done)
         {
           this->CurrentSurfel=this->Table->HashTable[this->CurrentKey];
-          done=this->CurrentSurfel!=0;
+          done=this->CurrentSurfel!=nullptr;
         }
       }
-      this->AtEnd=this->CurrentSurfel==0;
+      this->AtEnd=this->CurrentSurfel==nullptr;
   }
 
   // Is the cursor at the end of the table? (ie. no more surfel?)
-  int IsAtEnd()
+  vtkTypeBool IsAtEnd()
   {
       return this->AtEnd;
   }
@@ -668,14 +701,14 @@ public:
       assert("pre: not_at_end"&& !IsAtEnd());
       CurrentSurfel=CurrentSurfel->Next;
       size_t c=Table->HashTable.size();
-      if(this->CurrentSurfel==0)
+      if(this->CurrentSurfel==nullptr)
       {
         ++this->CurrentKey;
         int done=this->CurrentKey>=c;
         if(!done)
         {
           this->CurrentSurfel=this->Table->HashTable[this->CurrentKey];
-          done=this->CurrentSurfel!=0;
+          done=this->CurrentSurfel!=nullptr;
         }
         while(!done)
         {
@@ -684,10 +717,10 @@ public:
           if(!done)
           {
             this->CurrentSurfel=this->Table->HashTable[this->CurrentKey];
-            done=this->CurrentSurfel!=0;
+            done=this->CurrentSurfel!=nullptr;
           }
         }
-        this->AtEnd=this->CurrentSurfel==0;
+        this->AtEnd=this->CurrentSurfel==nullptr;
       }
   }
 
@@ -722,13 +755,13 @@ vtkUnstructuredGridGeometryFilter::vtkUnstructuredGridGeometryFilter()
 
   this->PassThroughCellIds = 0;
   this->PassThroughPointIds = 0;
-  this->OriginalCellIdsName = NULL;
-  this->OriginalPointIdsName = NULL;
+  this->OriginalCellIdsName = nullptr;
+  this->OriginalPointIdsName = nullptr;
 
   this->Merging = 1;
-  this->Locator = NULL;
+  this->Locator = nullptr;
 
-  this->HashTable=0;
+  this->HashTable=nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -737,11 +770,11 @@ vtkUnstructuredGridGeometryFilter::~vtkUnstructuredGridGeometryFilter()
   if ( this->Locator )
   {
     this->Locator->UnRegister(this);
-    this->Locator = NULL;
+    this->Locator = nullptr;
   }
 
-  this->SetOriginalCellIdsName(NULL);
-  this->SetOriginalPointIdsName(NULL);
+  this->SetOriginalCellIdsName(nullptr);
+  this->SetOriginalPointIdsName(nullptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -831,13 +864,13 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
 //  vtkCellArray *conn=vtkCellArray::New();
 //  conn->Allocate(numCells);
 
-  unsigned char *cellGhostLevels = 0;
-  vtkDataArray *temp = 0;
-  if (cd != 0)
+  unsigned char *cellGhostLevels = nullptr;
+  vtkDataArray *temp = nullptr;
+  if (cd != nullptr)
   {
     temp = cd->GetArray(vtkDataSetAttributes::GhostArrayName());
   }
-  if (temp != 0 && temp->GetDataType() == VTK_UNSIGNED_CHAR &&
+  if (temp != nullptr && temp->GetDataType() == VTK_UNSIGNED_CHAR &&
       temp->GetNumberOfComponents() == 1)
   {
     cellGhostLevels = static_cast<vtkUnsignedCharArray*>(temp)->GetPointer(0);
@@ -850,21 +883,15 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
   // Visibility of cells.
   char *cellVis;
   int allVisible=(!this->CellClipping) && (!this->PointClipping) &&
-    (!this->ExtentClipping) &&(cellGhostLevels==0);
+    (!this->ExtentClipping) &&(cellGhostLevels==nullptr);
   if(allVisible)
   {
-    cellVis=NULL;
+    cellVis=nullptr;
   }
   else
   {
     cellVis=new char[numCells];
   }
-
-  vtkIdType cellId;
-  vtkIdType npts=0;
-  vtkIdType *pts=0;
-  int i;
-  double x[3];
 
   // Loop over the cells determining what's visible
   if(!allVisible)
@@ -872,10 +899,10 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
     for (cellIter->InitTraversal(); !cellIter->IsDoneWithTraversal();
          cellIter->GoToNextCell())
     {
-      cellId = cellIter->GetCellId();
-      npts = cellIter->GetNumberOfPoints();
-      pts = cellIter->GetPointIds()->GetPointer(0);
-      if((cellGhostLevels != 0 &&
+      vtkIdType cellId = cellIter->GetCellId();
+      vtkIdType npts = cellIter->GetNumberOfPoints();
+      vtkIdType* pts = cellIter->GetPointIds()->GetPointer(0);
+      if((cellGhostLevels != nullptr &&
          (cellGhostLevels[cellId] & vtkDataSetAttributes::DUPLICATECELL) &&
          this->DuplicateGhostCellClipping) ||
          (this->CellClipping && (cellId < this->CellMinimum ||
@@ -886,7 +913,8 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
       }
       else
       {
-        i=0;
+        double x[3];
+        int i = 0;
         cellVis[cellId] = 1;
         while(i<npts && cellVis[cellId])
         {
@@ -908,14 +936,13 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
     }//for all cells
   }//if not all visible
 
-  vtkIdList *cellIds=vtkIdList::New();
-
-
+  vtkIdList *cellIds = vtkIdList::New();
   vtkPoints *newPts = vtkPoints::New();
   newPts->Allocate(numPts);
   output->Allocate(numCells);
   outputPD->CopyAllocate(pd,numPts,numPts/2);
   vtkSmartPointer<vtkIdTypeArray> originalPointIds;
+
   if (this->PassThroughPointIds)
   {
     originalPointIds = vtkSmartPointer<vtkIdTypeArray>::New();
@@ -934,11 +961,11 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
     originalCellIds->Allocate(numCells, numCells/2);
   }
 
-  vtkIdType *pointMap=0;
+  vtkIdType *pointMap=nullptr;
 
   if(this->Merging)
   {
-    if(this->Locator==0)
+    if(this->Locator==nullptr)
     {
       this->CreateDefaultLocator();
     }
@@ -947,7 +974,7 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
   else
   {
     pointMap=new vtkIdType[numPts];
-    for (i=0; i<numPts; i++)
+    for (int i=0; i<numPts; ++i)
     {
       pointMap[i]=-1; //initialize as unused
     }
@@ -955,23 +982,19 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
 
   // Traverse cells to extract geometry
   int progressCount = 0;
-  int abort=0;
+  int abort = 0;
   vtkIdType progressInterval = numCells/20 + 1;
 
-  vtkPoolManager<vtkSurfel> *pool=new vtkPoolManager<vtkSurfel>;
+  vtkPoolManager<vtkSurfel> *pool = new vtkPoolManager<vtkSurfel>;
   pool->Init();
-  this->HashTable=new vtkHashTableOfSurfels(numPts,pool);
-
-  vtkIdType ptId;
-  vtkIdType newPtId;
-  vtkIdType newCellId;
+  this->HashTable = new vtkHashTableOfSurfels(numPts,pool);
 
   for (cellIter->InitTraversal(); !cellIter->IsDoneWithTraversal() && !abort;
        cellIter->GoToNextCell())
   {
-    cellId = cellIter->GetCellId();
+    vtkIdType cellId = cellIter->GetCellId();
     //Progress and abort method support
-    if ( progressCount >= progressInterval )
+    if (progressCount >= progressInterval)
     {
       vtkDebugMacro(<<"Process cell #" << cellId);
       this->UpdateProgress ((double)cellId/numCells);
@@ -980,11 +1003,9 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
     }
     progressCount++;
 
-    vtkIdType points[VTK_MAXIMUM_NUMBER_OF_POINTS];
-
-    npts = cellIter->GetNumberOfPoints();
-    pts = cellIter->GetPointIds()->GetPointer(0);
-    if ( allVisible || cellVis[cellId] )
+    vtkIdType npts = cellIter->GetNumberOfPoints();
+    vtkIdType* pts = cellIter->GetPointIds()->GetPointer(0);
+    if (allVisible || cellVis[cellId])
     {
       int cellType = cellIter->GetCellType();
       if((cellType>=VTK_EMPTY_CELL && cellType<=VTK_QUAD)
@@ -994,18 +1015,23 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
          ||(cellType==VTK_BIQUADRATIC_TRIANGLE)
          ||(cellType==VTK_CUBIC_LINE)
          ||(cellType==VTK_QUADRATIC_POLYGON)
+         ||(cellType==VTK_LAGRANGE_CURVE)
+         ||(cellType==VTK_LAGRANGE_QUADRILATERAL)
+         ||(cellType==VTK_LAGRANGE_TRIANGLE)
         )
       {
         vtkDebugMacro(<<"not 3D cell. type="<<cellType);
         // not 3D: just copy it
         cellIds->Reset();
-        if ( this->Merging )
+        if (this->Merging)
         {
-          for (i=0; i < npts; i++)
+          double x[3];
+          for (int i = 0; i < npts; ++i)
           {
-            ptId =pts[i]; // cell->PointIds->GetId(i);
+            vtkIdType ptId = pts[i];
             input->GetPoint(ptId, x);
-            if ( this->Locator->InsertUniquePoint(x, newPtId) )
+            vtkIdType newPtId;
+            if (this->Locator->InsertUniquePoint(x, newPtId))
             {
               outputPD->CopyData(pd,ptId,newPtId);
               if (this->PassThroughPointIds)
@@ -1018,13 +1044,13 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
         }//merging coincident points
         else
         {
-          for (i=0; i < npts; i++)
+          for (int i = 0; i < npts; ++i)
           {
-            ptId = pts[i]; // cell->PointIds->GetId(i);
-            if ( pointMap[ptId] < 0 )
+            vtkIdType ptId = pts[i];
+            if (pointMap[ptId] < 0)
             {
-              newPtId=newPts->InsertNextPoint(inPts->GetPoint(ptId));
-              pointMap[ptId]=newPtId;
+              vtkIdType newPtId = newPts->InsertNextPoint(inPts->GetPoint(ptId));
+              pointMap[ptId] = newPtId;
               outputPD->CopyData(pd, ptId, newPtId);
               if (this->PassThroughPointIds)
               {
@@ -1035,7 +1061,7 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
           }
         }//keeping original point list
 
-        newCellId = output->InsertNextCell(cellType,cellIds);
+        vtkIdType newCellId = output->InsertNextCell(cellType,cellIds);
         outputCD->CopyData(cd, cellId, newCellId);
         if (this->PassThroughCellIds)
         {
@@ -1045,358 +1071,95 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
       else // added the faces to the hashtable
       {
         vtkDebugMacro(<<"3D cell. type="<<cellType);
-        int *faceIndices;
-        int face;
-        int pt;
         switch(cellType)
         {
           case VTK_TETRA:
-            face=0;
-            while(face<4)
-            {
-              faceIndices=vtkTetra::GetFaceArray(face);
-              pt=0;
-              while(pt<3)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_TRIANGLE,3,points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkTetra, 0, 4, 3, VTK_TRIANGLE>(pts, cellId);
             break;
           case VTK_VOXEL:
             // note, faces are PIXEL not QUAD. We don't need to convert
             //  to QUAD because PIXEL exist in an UnstructuredGrid.
-            face=0;
-            while(face<6)
-            {
-              faceIndices=vtkVoxel::GetFaceArray(face);
-              pt=0;
-              while(pt<4)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_PIXEL,4,points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkVoxel, 0, 6, 4, VTK_PIXEL>(pts, cellId);
             break;
           case VTK_HEXAHEDRON:
-            face=0;
-            while(face<6)
-            {
-              faceIndices=vtkHexahedron::GetFaceArray(face);
-              pt=0;
-              while(pt<4)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUAD,4,points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkHexahedron, 0, 6, 4, VTK_QUAD>(pts, cellId);
             break;
           case VTK_WEDGE:
-            face=0;
-            while(face<2)
-            {
-              faceIndices=vtkWedge::GetFaceArray(face);
-              pt=0;
-              while(pt<3)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_TRIANGLE,3,points);
-              ++face;
-            }
-            while(face<5)
-            {
-              faceIndices=vtkWedge::GetFaceArray(face);
-              pt=0;
-              while(pt<4)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUAD,4,points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkWedge, 0, 2, 3, VTK_TRIANGLE>(pts, cellId);
+            this->HashTable->InsertFaces<vtkWedge, 2, 5, 4, VTK_QUAD>(pts, cellId);
             break;
           case VTK_PYRAMID:
-            faceIndices=vtkPyramid::GetFaceArray(0);
-            pt=0;
-            while(pt<4)
-            {
-              points[pt]=pts[faceIndices[pt]];
-              ++pt;
-            }
-            this->HashTable->InsertFace(cellId,VTK_QUAD,4,points);
-            face=1;
-            while(face<5)
-            {
-              faceIndices=vtkPyramid::GetFaceArray(face);
-              pt=0;
-              while(pt<3)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_TRIANGLE,3,points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkPyramid, 0, 1, 4, VTK_QUAD>(pts, cellId);
+            this->HashTable->InsertFaces<vtkPyramid, 1, 5, 3, VTK_TRIANGLE>(pts, cellId);
             break;
           case VTK_PENTAGONAL_PRISM:
-            face=0;
-            while(face<2)
-            {
-              faceIndices=vtkPentagonalPrism::GetFaceArray(face);
-              pt=0;
-              while(pt<5)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_POLYGON,5,points);
-              ++face;
-            }
-            while(face<7)
-            {
-              faceIndices=vtkPentagonalPrism::GetFaceArray(face);
-              pt=0;
-              while(pt<4)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUAD,4,points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkPentagonalPrism, 0, 2, 5, VTK_POLYGON>(pts, cellId);
+            this->HashTable->InsertFaces<vtkPentagonalPrism, 2, 7, 4, VTK_QUAD>(pts, cellId);
             break;
           case VTK_HEXAGONAL_PRISM:
-            face=0;
-            while(face<2)
-            {
-              faceIndices=vtkHexagonalPrism::GetFaceArray(face);
-              pt=0;
-              while(pt<6)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_POLYGON,6,points);
-              ++face;
-            }
-            while(face<8)
-            {
-              faceIndices=vtkHexagonalPrism::GetFaceArray(face);
-              pt=0;
-              while(pt<4)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUAD,4,points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkHexagonalPrism, 0, 2, 6, VTK_POLYGON>(pts, cellId);
+            this->HashTable->InsertFaces<vtkHexagonalPrism, 2, 8, 4, VTK_QUAD>(pts, cellId);
             break;
           case VTK_QUADRATIC_TETRA:
-            face=0;
-            while(face<4)
-            {
-              faceIndices=vtkQuadraticTetra::GetFaceArray(face);
-              pt=0;
-              while(pt<6)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_TRIANGLE,6,
-                                          points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkQuadraticTetra, 0, 4, 6, VTK_QUADRATIC_TRIANGLE>(pts, cellId);
             break;
           case VTK_QUADRATIC_HEXAHEDRON:
-            face=0;
-            while(face<6)
-            {
-              faceIndices=vtkQuadraticHexahedron::GetFaceArray(face);
-              pt=0;
-              while(pt<8)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_QUAD,8,
-                                          points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkQuadraticHexahedron, 0, 6, 8, VTK_QUADRATIC_QUAD>(pts, cellId);
             break;
           case VTK_QUADRATIC_WEDGE:
-            face=0;
-            while(face<2)
-            {
-              faceIndices=vtkQuadraticWedge::GetFaceArray(face);
-              pt=0;
-              while(pt<6)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_TRIANGLE,6,
-                                          points);
-              ++face;
-            }
-            while(face<5)
-            {
-              faceIndices=vtkQuadraticWedge::GetFaceArray(face);
-              pt=0;
-              while(pt<8)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_QUAD,8,
-                                          points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkQuadraticWedge, 0, 2, 6, VTK_QUADRATIC_TRIANGLE>(pts, cellId);
+            this->HashTable->InsertFaces<vtkQuadraticWedge, 2, 5, 8, VTK_QUADRATIC_QUAD>(pts, cellId);
             break;
           case VTK_QUADRATIC_PYRAMID:
-            faceIndices=vtkQuadraticPyramid::GetFaceArray(0);
-            pt=0;
-            while(pt<8)
-            {
-              points[pt]=pts[faceIndices[pt]];
-              ++pt;
-            }
-            this->HashTable->InsertFace(cellId,VTK_QUADRATIC_QUAD,8,points);
-            face=1;
-            while(face<5)
-            {
-              faceIndices=vtkQuadraticPyramid::GetFaceArray(face);
-              pt=0;
-              while(pt<6)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_TRIANGLE,6,points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkQuadraticPyramid, 0, 1, 8, VTK_QUADRATIC_QUAD>(pts, cellId);
+            this->HashTable->InsertFaces<vtkQuadraticPyramid, 1, 5, 6, VTK_QUADRATIC_TRIANGLE>(pts, cellId);
             break;
           case VTK_TRIQUADRATIC_HEXAHEDRON:
-            face=0;
-            while(face<6)
-            {
-              faceIndices=vtkTriQuadraticHexahedron::GetFaceArray(face);
-              pt=0;
-              while(pt<9)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_BIQUADRATIC_QUAD,9,
-                                          points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkTriQuadraticHexahedron, 0, 6, 9, VTK_BIQUADRATIC_QUAD>(pts, cellId);
             break;
           case VTK_QUADRATIC_LINEAR_WEDGE:
-            face=0;
-            while(face<2)
-            {
-              faceIndices=vtkQuadraticLinearWedge::GetFaceArray(face);
-              pt=0;
-              while(pt<6)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_TRIANGLE,6,
-                                          points);
-              ++face;
-            }
-            while(face<5)
-            {
-              faceIndices=vtkQuadraticLinearWedge::GetFaceArray(face);
-              pt=0;
-              while(pt<6)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_LINEAR_QUAD,6,
-                                          points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkQuadraticLinearWedge, 0, 2, 6, VTK_QUADRATIC_TRIANGLE>(pts, cellId);
+            this->HashTable->InsertFaces<vtkQuadraticLinearWedge, 2, 5, 6, VTK_QUADRATIC_LINEAR_QUAD>(pts, cellId);
             break;
           case VTK_BIQUADRATIC_QUADRATIC_WEDGE:
-            face=0;
-            while(face<2)
-            {
-              faceIndices=vtkBiQuadraticQuadraticWedge::GetFaceArray(face);
-              pt=0;
-              while(pt<6)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_TRIANGLE,6,
-                                          points);
-              ++face;
-            }
-            while(face<5)
-            {
-              faceIndices=vtkBiQuadraticQuadraticWedge::GetFaceArray(face);
-              pt=0;
-              while(pt<9)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_BIQUADRATIC_QUAD,9,
-                                          points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkBiQuadraticQuadraticWedge, 0, 2, 6, VTK_QUADRATIC_TRIANGLE>(pts, cellId);
+            this->HashTable->InsertFaces<vtkBiQuadraticQuadraticWedge, 2, 5, 9, VTK_BIQUADRATIC_QUAD>(pts, cellId);
             break;
           case VTK_BIQUADRATIC_QUADRATIC_HEXAHEDRON:
-            face=0;
-            while(face<4)
-            {
-              faceIndices=vtkBiQuadraticQuadraticHexahedron::GetFaceArray(face);
-              pt=0;
-              while(pt<9)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_BIQUADRATIC_QUAD,9,
-                                          points);
-              ++face;
-            }
-            while(face<6)
-            {
-              faceIndices=vtkBiQuadraticQuadraticHexahedron::GetFaceArray(face);
-              pt=0;
-              while(pt<8)
-              {
-                points[pt]=pts[faceIndices[pt]];
-                ++pt;
-              }
-              this->HashTable->InsertFace(cellId,VTK_QUADRATIC_QUAD,8,
-                                          points);
-              ++face;
-            }
+            this->HashTable->InsertFaces<vtkBiQuadraticQuadraticHexahedron, 0, 4, 9, VTK_BIQUADRATIC_QUAD>(pts, cellId);
+            this->HashTable->InsertFaces<vtkBiQuadraticQuadraticHexahedron, 4, 6, 8, VTK_QUADRATIC_QUAD>(pts, cellId);
             break;
           case VTK_POLYHEDRON:
           {
             vtkIdList* faces = cellIter->GetFaces();
-            vtkIdType nbFaces = cellIter->GetNumberOfFaces();
-            for (vtkIdType f = 0, fptr = 1; f < nbFaces; f++)
+            int nFaces = cellIter->GetNumberOfFaces();
+            for (int face = 0, fptr = 1; face<nFaces; ++face)
             {
-              pt = faces->GetId(fptr++);
+              int pt = static_cast<int>(faces->GetId(fptr++));
               this->HashTable->InsertFace(cellId, VTK_POLYGON, pt, faces->GetPointer(fptr));
               fptr += pt;
+            }
+            break;
+          }
+          case VTK_LAGRANGE_TETRAHEDRON:
+          case VTK_LAGRANGE_HEXAHEDRON:
+          case VTK_LAGRANGE_WEDGE:
+          {
+            vtkNew<vtkGenericCell> genericCell;
+            cellIter->GetCell(genericCell);
+            int nFaces = genericCell->GetNumberOfFaces();
+            for(int face=0; face<nFaces; ++face)
+            {
+              vtkCell* faceCell = genericCell->GetFace(face);
+              vtkIdType nPoints = faceCell->GetPointIds()->GetNumberOfIds();
+              vtkIdType* points = new vtkIdType[nPoints];
+              for(int pt=0; pt<nPoints; ++pt)
+              {
+                points[pt]=faceCell->GetPointIds()->GetId(pt);
+              }
+              this->HashTable->InsertFace(cellId,faceCell->GetCellType(),nPoints,
+                                          points);
+              delete[] points;
             }
             break;
           }
@@ -1411,29 +1174,30 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
   } //for all cells
 
   // Loop over visible surfel (coming from a unique cell) in the hashtable:
-
   vtkHashTableOfSurfelsCursor cursor;
   cursor.Init(this->HashTable);
   cursor.Start();
   while(!cursor.IsAtEnd() && !abort)
   {
-    vtkSurfel *surfel=cursor.GetCurrentSurfel();
-    cellId=surfel->Cell3DId;
-    if(cellId>=0) // on dataset boundary
+    vtkSurfel *surfel = cursor.GetCurrentSurfel();
+    vtkIdType cellId = surfel->Cell3DId;
+    if(cellId >= 0) // on dataset boundary
     {
-      vtkIdType cellType=surfel->Type;
-      npts=surfel->NumberOfPoints;
+      vtkIdType cellType = surfel->Type;
+      vtkIdType npts = surfel->NumberOfPoints;
       // Dataset point Ids that form the surfel.
-      pts=surfel->Points;
+      vtkIdType* pts = surfel->Points;
 
       cellIds->Reset();
-      if ( this->Merging )
+      if (this->Merging)
       {
-        for (i=0; i < npts; i++)
+        double x[3];
+        for (int i = 0; i < npts; ++i)
         {
-          ptId = pts[i];
+          vtkIdType ptId = pts[i];
           input->GetPoint(ptId, x);
-          if ( this->Locator->InsertUniquePoint(x, newPtId) )
+          vtkIdType newPtId;
+          if (this->Locator->InsertUniquePoint(x, newPtId))
           {
             outputPD->CopyData(pd,ptId,newPtId);
             if (this->PassThroughPointIds)
@@ -1446,13 +1210,13 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
       }//merging coincident points
       else
       {
-        for (i=0; i < npts; i++)
+        for (int i = 0; i < npts; ++i)
         {
-          ptId = pts[i];
-          if ( pointMap[ptId] < 0 )
+          vtkIdType ptId = pts[i];
+          if (pointMap[ptId] < 0)
           {
-            newPtId=newPts->InsertNextPoint(inPts->GetPoint(ptId));
-            pointMap[ptId]=newPtId;
+            vtkIdType newPtId = newPts->InsertNextPoint(inPts->GetPoint(ptId));
+            pointMap[ptId] = newPtId;
             outputPD->CopyData(pd, ptId, newPtId);
             if (this->PassThroughPointIds)
             {
@@ -1463,7 +1227,7 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
         }
       }//keeping original point list
 
-      newCellId = output->InsertNextCell(cellType,cellIds);
+      vtkIdType newCellId = output->InsertNextCell(cellType,cellIds);
       outputCD->CopyData(cd, cellId, newCellId);
       if (this->PassThroughCellIds)
       {
@@ -1476,16 +1240,14 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
   {
     delete[] pointMap;
   }
+
   cellIds->Delete();
   delete this->HashTable;
   delete pool;
 
-
   // Set the output.
   output->SetPoints(newPts);
   newPts->Delete();
-
-//  output->SetCells(types,locs,conn);
 
   if (this->PassThroughPointIds)
   {
@@ -1500,10 +1262,6 @@ int vtkUnstructuredGridGeometryFilter::RequestData(
   {
     this->Locator->Initialize();
   }
-
-//  types->Delete();
-//  locs->Delete();
-//  conn->Delete();
 
   output->Squeeze();
   delete [] cellVis;
@@ -1522,7 +1280,7 @@ void vtkUnstructuredGridGeometryFilter::SetLocator(vtkIncrementalPointLocator *l
   if ( this->Locator )
   {
     this->Locator->UnRegister(this);
-    this->Locator = NULL;
+    this->Locator = nullptr;
   }
   if ( locator )
   {
@@ -1535,7 +1293,7 @@ void vtkUnstructuredGridGeometryFilter::SetLocator(vtkIncrementalPointLocator *l
 //-----------------------------------------------------------------------------
 void vtkUnstructuredGridGeometryFilter::CreateDefaultLocator()
 {
-  if ( this->Locator == NULL )
+  if ( this->Locator == nullptr )
   {
     this->Locator = vtkMergePoints::New();
   }
@@ -1595,7 +1353,7 @@ vtkMTimeType vtkUnstructuredGridGeometryFilter::GetMTime()
   vtkMTimeType mTime=this->Superclass::GetMTime();
   vtkMTimeType time;
 
-  if ( this->Locator != NULL )
+  if ( this->Locator != nullptr )
   {
     time = this->Locator->GetMTime();
     mTime = ( time > mTime ? time : mTime );

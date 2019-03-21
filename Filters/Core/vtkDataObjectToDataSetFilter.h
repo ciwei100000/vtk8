@@ -83,7 +83,7 @@ class VTKFILTERSCORE_EXPORT vtkDataObjectToDataSetFilter : public vtkDataSetAlgo
 public:
   static vtkDataObjectToDataSetFilter *New();
   vtkTypeMacro(vtkDataObjectToDataSetFilter,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get the input to the filter.
@@ -113,7 +113,7 @@ public:
    * Get the output in different forms. The particular method invoked
    * should be consistent with the SetDataSetType() method. (Note:
    * GetOutput() will always return a type consistent with
-   * SetDataSetType(). Also, GetOutput() will return NULL if the filter
+   * SetDataSetType(). Also, GetOutput() will return nullptr if the filter
    * aborted due to inconsistent data.)
    */
   vtkDataSet *GetOutput();
@@ -138,9 +138,9 @@ public:
    * provided which does not require setting the (min,max) component range or
    * the normalize flag (normalize is set to DefaulatNormalize value).
    */
-  void SetPointComponent(int comp, char *arrayName, int arrayComp,
+  void SetPointComponent(int comp, const char *arrayName, int arrayComp,
                          int min, int max, int normalize);
-  void SetPointComponent(int comp, char *arrayName, int arrayComp)
+  void SetPointComponent(int comp, const char *arrayName, int arrayComp)
     {this->SetPointComponent(comp, arrayName, arrayComp, -1, -1, this->DefaultNormalize);};
   const char *GetPointComponentArrayName(int comp);
   int GetPointComponentArrayComponent(int comp);
@@ -159,29 +159,29 @@ public:
    * points per cell, and then the cell connectivity. (This is the vtk file
    * format described in in the textbook or User's Guide.)
    */
-  void SetVertsComponent(char *arrayName, int arrayComp, int min, int max);
-  void SetVertsComponent(char *arrayName, int arrayComp)
+  void SetVertsComponent(const char *arrayName, int arrayComp, int min, int max);
+  void SetVertsComponent(const char *arrayName, int arrayComp)
     {this->SetVertsComponent(arrayName, arrayComp, -1, -1);};
   const char *GetVertsComponentArrayName();
   int GetVertsComponentArrayComponent();
   int GetVertsComponentMinRange();
   int GetVertsComponentMaxRange();
-  void SetLinesComponent(char *arrayName, int arrayComp, int min, int max);
-  void SetLinesComponent(char *arrayName, int arrayComp)
+  void SetLinesComponent(const char *arrayName, int arrayComp, int min, int max);
+  void SetLinesComponent(const char *arrayName, int arrayComp)
     {this->SetLinesComponent(arrayName, arrayComp, -1, -1);};
   const char *GetLinesComponentArrayName();
   int GetLinesComponentArrayComponent();
   int GetLinesComponentMinRange();
   int GetLinesComponentMaxRange();
-  void SetPolysComponent(char *arrayName, int arrayComp, int min, int max);
-  void SetPolysComponent(char *arrayName, int arrayComp)
+  void SetPolysComponent(const char *arrayName, int arrayComp, int min, int max);
+  void SetPolysComponent(const char *arrayName, int arrayComp)
     {this->SetPolysComponent(arrayName, arrayComp, -1, -1);};
   const char *GetPolysComponentArrayName();
   int GetPolysComponentArrayComponent();
   int GetPolysComponentMinRange();
   int GetPolysComponentMaxRange();
-  void SetStripsComponent(char *arrayName, int arrayComp, int min, int max);
-  void SetStripsComponent(char *arrayName, int arrayComp)
+  void SetStripsComponent(const char *arrayName, int arrayComp, int min, int max);
+  void SetStripsComponent(const char *arrayName, int arrayComp)
     {this->SetStripsComponent(arrayName, arrayComp, -1, -1);};
   const char *GetStripsComponentArrayName();
   int GetStripsComponentArrayComponent();
@@ -199,17 +199,17 @@ public:
    * then the cell connectivity. (This is the vtk file format described in
    * in the textbook or User's Guide.)
    */
-  void SetCellTypeComponent(char *arrayName, int arrayComp,
+  void SetCellTypeComponent(const char *arrayName, int arrayComp,
                             int min, int max);
-  void SetCellTypeComponent(char *arrayName, int arrayComp)
+  void SetCellTypeComponent(const char *arrayName, int arrayComp)
     {this->SetCellTypeComponent(arrayName, arrayComp, -1, -1);};
   const char *GetCellTypeComponentArrayName();
   int GetCellTypeComponentArrayComponent();
   int GetCellTypeComponentMinRange();
   int GetCellTypeComponentMaxRange();
-  void SetCellConnectivityComponent(char *arrayName, int arrayComp,
+  void SetCellConnectivityComponent(const char *arrayName, int arrayComp,
                                     int min, int max);
-  void SetCellConnectivityComponent(char *arrayName, int arrayComp)
+  void SetCellConnectivityComponent(const char *arrayName, int arrayComp)
     {this->SetCellConnectivityComponent(arrayName, arrayComp, -1, -1);};
   const char *GetCellConnectivityComponentArrayName();
   int GetCellConnectivityComponentArrayComponent();
@@ -222,9 +222,9 @@ public:
    * Set the default Normalize() flag for those methods setting a default
    * Normalize value (e.g., SetPointComponent).
    */
-  vtkSetMacro(DefaultNormalize,int);
-  vtkGetMacro(DefaultNormalize,int);
-  vtkBooleanMacro(DefaultNormalize,int);
+  vtkSetMacro(DefaultNormalize,vtkTypeBool);
+  vtkGetMacro(DefaultNormalize,vtkTypeBool);
+  vtkBooleanMacro(DefaultNormalize,vtkTypeBool);
   //@}
 
   //@{
@@ -262,27 +262,27 @@ public:
    * the component of the array, and the range of the array (min,max). These methods
    * will override the information given by the previous methods.
    */
-  void SetDimensionsComponent(char *arrayName, int arrayComp, int min, int max);
-  void SetDimensionsComponent(char *arrayName, int arrayComp)
+  void SetDimensionsComponent(const char *arrayName, int arrayComp, int min, int max);
+  void SetDimensionsComponent(const char *arrayName, int arrayComp)
     {this->SetDimensionsComponent(arrayName, arrayComp, -1, -1);};
-  void SetSpacingComponent(char *arrayName, int arrayComp, int min, int max);
-  void SetSpacingComponent(char *arrayName, int arrayComp)
+  void SetSpacingComponent(const char *arrayName, int arrayComp, int min, int max);
+  void SetSpacingComponent(const char *arrayName, int arrayComp)
     {this->SetSpacingComponent(arrayName, arrayComp, -1, -1);};
-  void SetOriginComponent(char *arrayName, int arrayComp, int min, int max);
-  void SetOriginComponent(char *arrayName, int arrayComp)
+  void SetOriginComponent(const char *arrayName, int arrayComp, int min, int max);
+  void SetOriginComponent(const char *arrayName, int arrayComp)
     {this->SetOriginComponent(arrayName, arrayComp, -1, -1);};
   //@}
 
 protected:
   vtkDataObjectToDataSetFilter();
-  ~vtkDataObjectToDataSetFilter() VTK_OVERRIDE;
+  ~vtkDataObjectToDataSetFilter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE; //generate output data
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override; //generate output data
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
   int RequestDataObject(vtkInformation *, vtkInformationVector **,
-                                vtkInformationVector *) VTK_OVERRIDE;
+                                vtkInformationVector *) override;
 
   char Updating;
 
@@ -331,7 +331,7 @@ protected:
                                    vtkIdType compRange[2]);
 
   // Default value for normalization
-  int DefaultNormalize;
+  vtkTypeBool DefaultNormalize;
 
   // Couple of different ways to specify dimensions, spacing, and origin.
   int Dimensions[3];
@@ -355,8 +355,8 @@ protected:
   void ConstructOrigin(vtkDataObject *input);
 
 private:
-  vtkDataObjectToDataSetFilter(const vtkDataObjectToDataSetFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataObjectToDataSetFilter&) VTK_DELETE_FUNCTION;
+  vtkDataObjectToDataSetFilter(const vtkDataObjectToDataSetFilter&) = delete;
+  void operator=(const vtkDataObjectToDataSetFilter&) = delete;
 };
 
 #endif

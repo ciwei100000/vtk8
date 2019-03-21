@@ -194,7 +194,7 @@ vtkPCANormalEstimation::vtkPCANormalEstimation()
 //----------------------------------------------------------------------------
 vtkPCANormalEstimation::~vtkPCANormalEstimation()
 {
-  this->SetLocator(NULL);
+  this->SetLocator(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -238,6 +238,7 @@ int vtkPCANormalEstimation::RequestData(
   vtkFloatArray *normals = vtkFloatArray::New();
   normals->SetNumberOfComponents(3);
   normals->SetNumberOfTuples(numPts);
+  normals->SetName("PCANormals");
   float *n = static_cast<float*>(normals->GetVoidPointer(0));
 
   void *inPtr = input->GetPoints()->GetVoidPointer(0);
@@ -247,7 +248,7 @@ int vtkPCANormalEstimation::RequestData(
        this->NormalOrientation, this->OrientationPoint, this->FlipNormals));
   }
 
-  // Orient the normals in a consistent fashion (if requested). This requires a traveral
+  // Orient the normals in a consistent fashion (if requested). This requires a traversal
   // across the point cloud, traversing neighbors that are in close proximity.
   if ( this->NormalOrientation == vtkPCANormalEstimation::GRAPH_TRAVERSAL )
   {
@@ -333,8 +334,6 @@ TraverseAndFlip (vtkPoints *inPts, float *normals, char *pointMap,
   } //while wave is not empty
 
   neighborPointIds->Delete();
-
-  return;
 }
 
 //----------------------------------------------------------------------------

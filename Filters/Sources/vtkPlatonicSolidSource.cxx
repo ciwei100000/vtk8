@@ -100,13 +100,13 @@ int vtkPlatonicSolidSource::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
   int i;
-  double *pptr, *solidPoints=NULL, solidScale=1.0;
-  vtkIdType *cptr, numPts=0, numCells=0, cellSize=0, *solidVerts=NULL;
+  double *pptr, *solidPoints=nullptr, solidScale=1.0;
+  vtkIdType *cptr, numPts=0, numCells=0, cellSize=0, *solidVerts=nullptr;
 
   vtkDebugMacro(<<"Creating Platonic solid");
 

@@ -39,7 +39,7 @@ class VTKIOAMR_EXPORT vtkAMRBaseParticlesReader :
 {
 public:
   vtkTypeMacro( vtkAMRBaseParticlesReader, vtkMultiBlockDataSetAlgorithm );
-  void PrintSelf(ostream &os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent ) override;
 
   //@{
   /**
@@ -61,9 +61,9 @@ public:
   /**
    * Set & Get for filter location and boolean macro
    */
-  vtkSetMacro(FilterLocation,int);
-  vtkGetMacro(FilterLocation,int);
-  vtkBooleanMacro(FilterLocation,int);
+  vtkSetMacro(FilterLocation,vtkTypeBool);
+  vtkGetMacro(FilterLocation,vtkTypeBool);
+  vtkBooleanMacro(FilterLocation,vtkTypeBool);
   //@}
 
 
@@ -131,7 +131,7 @@ public:
 
 protected:
   vtkAMRBaseParticlesReader();
-  ~vtkAMRBaseParticlesReader() VTK_OVERRIDE;
+  ~vtkAMRBaseParticlesReader() override;
 
   /**
    * Reads the metadata, e.g., the number of blocks in the file.
@@ -150,7 +150,7 @@ protected:
   /**
    * Filters particles by their location. If FilterLocation is ON, this
    * method returns whether or not the particle with the supplied xyz
-   * coordiantes flass within the bouning box spefixied by the user using
+   * coordinates class within the bounding box specified by the user using
    * the SetMinLocation & SetMaxLocation.
    */
   bool CheckLocation( const double x, const double y, const double z );
@@ -215,13 +215,13 @@ protected:
    */
   int RequestData( vtkInformation *request,
       vtkInformationVector **inputVector,
-      vtkInformationVector *outputVector ) VTK_OVERRIDE;
-  int FillOutputPortInformation( int port, vtkInformation *info ) VTK_OVERRIDE;
+      vtkInformationVector *outputVector ) override;
+  int FillOutputPortInformation( int port, vtkInformation *info ) override;
   //@}
 
   int NumberOfBlocks;
 
-  int FilterLocation;
+  vtkTypeBool FilterLocation;
   double MinLocation[3];
   double MaxLocation[3];
 
@@ -233,8 +233,8 @@ protected:
   char *FileName;
 
 private:
-  vtkAMRBaseParticlesReader( const vtkAMRBaseParticlesReader& ) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAMRBaseParticlesReader& ) VTK_DELETE_FUNCTION;
+  vtkAMRBaseParticlesReader( const vtkAMRBaseParticlesReader& ) = delete;
+  void operator=(const vtkAMRBaseParticlesReader& ) = delete;
 };
 
 #endif /* vtkAMRBaseParticlesReader_h */

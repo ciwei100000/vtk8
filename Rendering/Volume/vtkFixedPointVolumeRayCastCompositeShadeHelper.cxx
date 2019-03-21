@@ -30,14 +30,10 @@
 vtkStandardNewMacro(vtkFixedPointVolumeRayCastCompositeShadeHelper);
 
 // Construct a new vtkFixedPointVolumeRayCastCompositeShadeHelper with default values
-vtkFixedPointVolumeRayCastCompositeShadeHelper::vtkFixedPointVolumeRayCastCompositeShadeHelper()
-{
-}
+vtkFixedPointVolumeRayCastCompositeShadeHelper::vtkFixedPointVolumeRayCastCompositeShadeHelper() = default;
 
 // Destruct a vtkFixedPointVolumeRayCastCompositeShadeHelper - clean up any memory used
-vtkFixedPointVolumeRayCastCompositeShadeHelper::~vtkFixedPointVolumeRayCastCompositeShadeHelper()
-{
-}
+vtkFixedPointVolumeRayCastCompositeShadeHelper::~vtkFixedPointVolumeRayCastCompositeShadeHelper() = default;
 
 
 // This method is used when the interpolation type is nearest neighbor and
@@ -243,7 +239,7 @@ void vtkFixedPointCompositeShadeHelperGenerateImageFourDependentNN( T *data,
 // then lookup the color/opacity for each component and combine them according
 // to the weighting value for each component. We composite this resulting
 // color into the color already accumulated for this ray, and we check
-// wether we can terminate here (if the accumulated opacity exceeds some
+// whether we can terminate here (if the accumulated opacity exceeds some
 // threshold). Finally we increment to the next sample on the ray.
 //
 // TODO: short circuit calculations when opacity is 0
@@ -813,7 +809,7 @@ void vtkFixedPointVolumeRayCastCompositeShadeHelper::GenerateImage(
         }
       }
     }
-    // Indepedent components (more than one)
+    // Independent components (more than one)
     else if ( vol->GetProperty()->GetIndependentComponents() )
     {
       switch ( scalarType )

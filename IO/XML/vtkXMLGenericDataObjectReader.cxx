@@ -15,7 +15,6 @@
 #include "vtkXMLGenericDataObjectReader.h"
 
 #include "vtkHierarchicalBoxDataSet.h"
-#include "vtkHyperOctree.h"
 #include "vtkImageData.h"
 #include "vtkInformation.h"
 #include "vtkInformationVector.h"
@@ -29,7 +28,6 @@
 #include "vtkStructuredGrid.h"
 #include "vtkUnstructuredGrid.h"
 #include "vtkXMLFileReadTester.h"
-#include "vtkXMLHyperOctreeReader.h"
 #include "vtkXMLImageDataReader.h"
 #include "vtkXMLMultiBlockDataReader.h"
 #include "vtkXMLPImageDataReader.h"
@@ -51,13 +49,13 @@ vtkStandardNewMacro(vtkXMLGenericDataObjectReader);
 // ---------------------------------------------------------------------------
 vtkXMLGenericDataObjectReader::vtkXMLGenericDataObjectReader()
 {
-  this->Reader=0;
+  this->Reader=nullptr;
 }
 
 // ---------------------------------------------------------------------------
 vtkXMLGenericDataObjectReader::~vtkXMLGenericDataObjectReader()
 {
-  if(this->Reader!=0)
+  if(this->Reader!=nullptr)
   {
     this->Reader->Delete();
   }
@@ -78,7 +76,7 @@ int vtkXMLGenericDataObjectReader::ReadOutputType(const char *name,
   if(tester->TestReadFile())
   {
     char *cfileDataType=tester->GetFileDataType();
-    if(cfileDataType!=0)
+    if(cfileDataType!=nullptr)
     {
       std::string fileDataType(cfileDataType);
       if(fileDataType.compare("HierarchicalBoxDataSet")==0 ||
@@ -93,10 +91,6 @@ int vtkXMLGenericDataObjectReader::ReadOutputType(const char *name,
       if (fileDataType.compare("vtkNonOverlappingAMR") == 0)
       {
         return VTK_NON_OVERLAPPING_AMR;
-      }
-      if(fileDataType.compare("HyperOctree")==0)
-      {
-        return VTK_HYPER_OCTREE;
       }
       if(fileDataType.compare("ImageData")==0)
       {
@@ -168,13 +162,13 @@ int vtkXMLGenericDataObjectReader::RequestDataObject(
     return 0;
   }
 
-  if(this->Reader!=0)
+  if(this->Reader!=nullptr)
   {
     this->Reader->Delete();
-    this->Reader=0;
+    this->Reader=nullptr;
   }
 
-  vtkDataObject *output=0;
+  vtkDataObject *output=nullptr;
 
   // Create reader.
   bool parallel=false;
@@ -191,10 +185,6 @@ int vtkXMLGenericDataObjectReader::RequestDataObject(
     case VTK_NON_OVERLAPPING_AMR:
       this->Reader = vtkXMLUniformGridAMRReader::New();
       output = vtkNonOverlappingAMR::New();
-      break;
-    case VTK_HYPER_OCTREE:
-      this->Reader=vtkXMLHyperOctreeReader::New();
-      output=vtkHyperOctree::New();
       break;
     case VTK_IMAGE_DATA:
       if(parallel)
@@ -256,10 +246,10 @@ int vtkXMLGenericDataObjectReader::RequestDataObject(
       output=vtkUnstructuredGrid::New();
       break;
     default:
-      this->Reader=0;
+      this->Reader=nullptr;
   }
 
-  if(this->Reader!=0)
+  if(this->Reader!=nullptr)
   {
     this->Reader->SetFileName(this->GetFileName());
 //    this->Reader->SetStream(this->GetStream());
@@ -281,7 +271,7 @@ int vtkXMLGenericDataObjectReader::RequestDataObject(
       outInfo->Set(vtkDataObject::DATA_OBJECT(), output);
 
 //      outInfo->Set(vtkDataObject::DATA_OBJECT(),output);
-      if(output!=0)
+      if(output!=nullptr)
       {
         output->Delete();
       }
@@ -301,7 +291,7 @@ int vtkXMLGenericDataObjectReader::RequestInformation(
   vtkInformationVector *outputVector)
 {
   // reader is created in RequestDataObject.
-  if(this->Reader!=0)
+  if(this->Reader!=nullptr)
   {
     // RequestInformation() would be more appropriate but it is protected.
     return this->Reader->ProcessRequest(request, inputVector, outputVector);
@@ -319,7 +309,7 @@ int vtkXMLGenericDataObjectReader::RequestUpdateExtent(
   vtkInformationVector *outputVector)
 {
   // reader is created in RequestDataObject.
-  if(this->Reader!=0)
+  if(this->Reader!=nullptr)
   {
     // RequestUpdateExtent() would be more appropriate but it is protected.
     return this->Reader->ProcessRequest(request, inputVector, outputVector);
@@ -337,7 +327,7 @@ int vtkXMLGenericDataObjectReader::RequestData(
   vtkInformationVector *outputVector)
 {
   // reader is created in RequestDataObject.
-  if(this->Reader!=0)
+  if(this->Reader!=nullptr)
   {
     // RequestData() would be more appropriate but it is protected.
     return this->Reader->ProcessRequest(request, inputVector, outputVector);
@@ -372,12 +362,6 @@ vtkHierarchicalBoxDataSet *
 vtkXMLGenericDataObjectReader::GetHierarchicalBoxDataSetOutput()
 {
   return vtkHierarchicalBoxDataSet::SafeDownCast(this->GetOutput());
-}
-
-// ---------------------------------------------------------------------------
-vtkHyperOctree *vtkXMLGenericDataObjectReader::GetHyperOctreeOutput()
-{
-  return vtkHyperOctree::SafeDownCast(this->GetOutput());
 }
 
 // ---------------------------------------------------------------------------

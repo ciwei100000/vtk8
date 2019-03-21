@@ -40,9 +40,7 @@ vtkExtractSelectedTree::vtkExtractSelectedTree()
   this->SetNumberOfInputPorts(2);
 }
 
-vtkExtractSelectedTree::~vtkExtractSelectedTree()
-{
-}
+vtkExtractSelectedTree::~vtkExtractSelectedTree() = default;
 
 //----------------------------------------------------------------------------
 void vtkExtractSelectedTree::SetSelectionConnection(vtkAlgorithmOutput* in)
@@ -144,7 +142,7 @@ int vtkExtractSelectedTree::RequestData(
   // Convert the selection to an INDICES selection
   vtkSmartPointer<vtkSelection> converted;
   converted.TakeReference(vtkConvertSelection::ToIndexSelection(selection, inputTree));
-  if (!converted.GetPointer())
+  if (!converted)
   {
     vtkErrorMacro("Selection conversion to INDICES failed.");
     return 0;
@@ -230,10 +228,10 @@ int vtkExtractSelectedTree::RequestData(
 
   vtkNew<vtkMutableDirectedGraph> builder;
   // build the tree recursively
-  this->BuildTree(inputTree, selectedVerticesList.GetPointer(), builder.GetPointer());
+  this->BuildTree(inputTree, selectedVerticesList, builder);
 
   // Copy the structure into the output.
-  if (!outputTree->CheckedShallowCopy(builder.GetPointer()))
+  if (!outputTree->CheckedShallowCopy(builder))
   {
     vtkErrorMacro( <<"Invalid tree structure." << outputTree->GetNumberOfVertices());
     return 0;

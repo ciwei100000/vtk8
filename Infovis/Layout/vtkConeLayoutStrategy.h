@@ -57,7 +57,7 @@ public:
   static vtkConeLayoutStrategy *New();
 
   vtkTypeMacro(vtkConeLayoutStrategy, vtkGraphLayoutStrategy);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -79,9 +79,9 @@ public:
    * actually the spanning tree of a graph.  For "real" trees,
    * non-compressed layout is best, and is the default.
    */
-  vtkSetMacro(Compression, int);
-  vtkGetMacro(Compression, int);
-  vtkBooleanMacro(Compression, int);
+  vtkSetMacro(Compression, vtkTypeBool);
+  vtkGetMacro(Compression, vtkTypeBool);
+  vtkBooleanMacro(Compression, vtkTypeBool);
   //@}
 
   //@{
@@ -100,11 +100,11 @@ public:
   /**
    * Perform the layout.
    */
-  void Layout() VTK_OVERRIDE;
+  void Layout() override;
 
 protected:
   vtkConeLayoutStrategy();
-  ~vtkConeLayoutStrategy() VTK_OVERRIDE;
+  ~vtkConeLayoutStrategy() override;
 
   /**
    * Helper operations for tree layout.  Layout is performed
@@ -124,7 +124,7 @@ protected:
     double level );      // derived from level.
 
   float Compactness;     // factor used in mapping layer to Z
-  int   Compression;     // force a compact layout?
+  vtkTypeBool   Compression;     // force a compact layout?
   float Spacing;         // Scale vertical spacing of cones.
 
   // Values accumulated for possible statistical use
@@ -134,8 +134,8 @@ protected:
   double SumOfRadii;
 
 private:
-  vtkConeLayoutStrategy(const vtkConeLayoutStrategy&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkConeLayoutStrategy&) VTK_DELETE_FUNCTION;
+  vtkConeLayoutStrategy(const vtkConeLayoutStrategy&) = delete;
+  void operator=(const vtkConeLayoutStrategy&) = delete;
 };
 
 #endif

@@ -69,10 +69,10 @@ double vtkTriangle::ComputeArea()
 
 //----------------------------------------------------------------------------
 // Create a new cell and copy this triangle's information into the cell.
-// Returns a poiner to the new cell created.
-int vtkTriangle::EvaluatePosition(double x[3], double* closestPoint,
+// Returns a pointer to the new cell created.
+int vtkTriangle::EvaluatePosition(const double x[3], double closestPoint[3],
                                  int& subId, double pcoords[3],
-                                 double& dist2, double *weights)
+                                 double& dist2, double weights[])
 {
   int i, j;
   double pt1[3], pt2[3], pt3[3], n[3], fabsn;
@@ -262,7 +262,7 @@ int vtkTriangle::EvaluatePosition(double x[3], double* closestPoint,
 }
 
 //----------------------------------------------------------------------------
-void vtkTriangle::EvaluateLocation(int& vtkNotUsed(subId), double pcoords[3],
+void vtkTriangle::EvaluateLocation(int& vtkNotUsed(subId), const double pcoords[3],
                                    double x[3], double *weights)
 {
   double u3;
@@ -288,7 +288,7 @@ void vtkTriangle::EvaluateLocation(int& vtkNotUsed(subId), double pcoords[3],
 //----------------------------------------------------------------------------
 // Compute iso-parametric interpolation functions
 //
-void vtkTriangle::InterpolationFunctions(double pcoords[3], double sf[3])
+void vtkTriangle::InterpolationFunctions(const double pcoords[3], double sf[3])
 {
   sf[0] = 1. - pcoords[0] - pcoords[1];
   sf[1] = pcoords[0];
@@ -296,7 +296,7 @@ void vtkTriangle::InterpolationFunctions(double pcoords[3], double sf[3])
 }
 
 //----------------------------------------------------------------------------
-void vtkTriangle::InterpolationDerivs(double *, double derivs[6])
+void vtkTriangle::InterpolationDerivs(const double *, double derivs[6])
 {
   //r-derivatives
   derivs[0] = -1;
@@ -310,7 +310,7 @@ void vtkTriangle::InterpolationDerivs(double *, double derivs[6])
 }
 
 //----------------------------------------------------------------------------
-int vtkTriangle::CellBoundary(int vtkNotUsed(subId), double pcoords[3],
+int vtkTriangle::CellBoundary(int vtkNotUsed(subId), const double pcoords[3],
                               vtkIdList *pts)
 {
   double t1=pcoords[0]-pcoords[1];
@@ -392,7 +392,7 @@ void vtkTriangle::Contour(double value, vtkDataArray *cellScalars,
                           vtkCellData *inCd, vtkIdType cellId,
                           vtkCellData *outCd)
 {
-  static int CASE_MASK[3] = {1,2,4};
+  static const int CASE_MASK[3] = {1,2,4};
   LINE_CASES *lineCase;
   EDGE_LIST  *edge;
   int i, j, index, *vert;
@@ -462,7 +462,10 @@ void vtkTriangle::Contour(double value, vtkDataArray *cellScalars,
     if ( pts[0] != pts[1] )
     {
       newCellId = offset + lines->InsertNextCell(2,pts);
-      outCd->CopyData(inCd,cellId,newCellId);
+      if (outCd)
+      {
+        outCd->CopyData(inCd, cellId, newCellId);
+      }
     }
   }
 }
@@ -488,7 +491,7 @@ vtkCell *vtkTriangle::GetEdge(int edgeId)
 //----------------------------------------------------------------------------
 // Plane intersection plus in/out test on triangle. The in/out test is
 // performed using tol as the tolerance.
-int vtkTriangle::IntersectWithLine(double p1[3], double p2[3], double tol,
+int vtkTriangle::IntersectWithLine(const double p1[3], const double p2[3], double tol,
                                   double& t, double x[3], double pcoords[3],
                                   int& subId)
 {
@@ -593,8 +596,8 @@ int vtkTriangle::Triangulate(int vtkNotUsed(index), vtkIdList *ptIds,
 //----------------------------------------------------------------------------
 // Used a staged computation: first compute derivatives in local x'-y'
 // coordinate system; then convert into x-y-z modelling system.
-void vtkTriangle::Derivatives(int vtkNotUsed(subId), double vtkNotUsed(pcoords)[3],
-                              double *values, int dim, double *derivs)
+void vtkTriangle::Derivatives(int vtkNotUsed(subId), const double vtkNotUsed(pcoords)[3],
+                              const double *values, int dim, double *derivs)
 {
   double v0[2], v1[2], v2[2], v[3], v10[3], v20[3], lenX;
   double x0[3], x1[3], x2[3], n[3];
@@ -636,7 +639,7 @@ void vtkTriangle::Derivatives(int vtkNotUsed(subId), double vtkNotUsed(pcoords)[
   v2[1] = vtkMath::Dot(v,v20);
 
   // Compute interpolation function derivatives
-  vtkTriangle::InterpolationDerivs(NULL,functionDerivs);
+  vtkTriangle::InterpolationDerivs(nullptr,functionDerivs);
 
   // Compute Jacobian: Jacobian is constant for a triangle.
   J[0] = J0; J[1] = J1;
@@ -864,7 +867,7 @@ void vtkTriangle::Clip(double value, vtkDataArray *cellScalars,
                        vtkCellData *inCd, vtkIdType cellId, vtkCellData *outCd,
                        int insideOut)
 {
-  static int CASE_MASK[3] = {1,2,4};
+  static const int CASE_MASK[3] = {1,2,4};
   TRIANGLE_CASES *triangleCase;
   TRIANGLE_EDGE_LIST  *edge;
   int i, j, index, *vert;
@@ -1011,7 +1014,7 @@ int CoplanarTrianglesIntersect(double p1[2], double q1[2], double r1[2],
                                double p2[2], double q2[2], double r2[2])
 {
   // Determine whether or not triangle T1 = (p1,q1,r1) intersects triangle
-  // T2 = (p2,q2,r2), assumming that they are coplanar. This method is adapted
+  // T2 = (p2,q2,r2), assuming that they are coplanar. This method is adapted
   // from Olivier Devillers, Philippe Guigue. Faster Triangle-Triangle
   // Intersection Tests. RR-4488, IN-RIA. 2002. <inria-00072100>
 
@@ -1053,22 +1056,42 @@ int CoplanarTrianglesIntersect(double p1[2], double q1[2], double r1[2],
     return 1;
   }
 
-  // If we have reached this point, then either
-  // 1. Two orientations are counterclockwise and one is clockwise, or
-  // 2. Two orientations are clockwise and one is counterclockwise.
+  // If we have reached this point, then
+  // 1.  Two orientations are counterclockwise and one is clockwise, or
+  // 2.a Two orientations are clockwise and one is counterclockwise, or
+  // 2.b One orientation is counterclockwise, one is clockwise and one colinear.
   // Equivalently, from "Faster Triangle-Triangle Intersection Tests":
-  // 1. p1 belongs to region R1
-  // 2. p1 belongs to region R2
-  // We permute T2 so that we have the following orienatation pattern:
-  // (counterclockwise, either orientation, clockwise).
-  // This orientation corresponds to p1 lying in either region R1 or R2
+  // 1.  p1 belongs to region R1
+  // 2.a p1 belongs to region R2
+  // 2.b p1 belongs to boundary of R2
+  // We permute T2 so that we have the following orientation pattern:
+  // (counterclockwise, either orientation, clockwise/colinear).
+  // This orientation corresponds to p1 lying in either region R1 or R2/boundary
   int index;
   for (index = 0; index < 3; index++)
   {
-    if (p1Orientation[index] == Counterclockwise &&
-        p1Orientation[(index+2)%3] == Clockwise)
+    if (p1Orientation[index] == Counterclockwise)
     {
-      break;
+      if (p1Orientation[(index+1)%3] == Counterclockwise &&
+          p1Orientation[(index+2)%3] == Clockwise)
+      {
+        break; // R1 ++-
+      }
+      if (p1Orientation[(index+1)%3] == Clockwise &&
+          p1Orientation[(index+2)%3] == Clockwise)
+      {
+        break; // R2 +--
+      }
+      if (p1Orientation[(index+1)%3] == Colinear &&
+          p1Orientation[(index+2)%3] == Clockwise)
+      {
+        break; // R2 boundary +0-
+      }
+      if (p1Orientation[(index+1)%3] == Clockwise &&
+          p1Orientation[(index+2)%3] == Colinear)
+      {
+        break; // R2 boundary +-0
+      }
     }
   }
 
@@ -1171,8 +1194,11 @@ int CoplanarTrianglesIntersect(double p1[2], double q1[2], double r1[2],
           }
           else
           {
-            // The paper has an error here.
-            if (Orientation( p1, p2, r1 ) == Clockwise) // Test V.a
+             // The paper has an error here.
+            // Paper: if (Orientation( r2, p2, r1 ) == Clockwise) // Test V.a
+            // Fix 1: if (Orientation( p1, p2, r1 ) == Clockwise) // Test V.a
+            // Fix 2:
+            if (Orientation( p2, q1, r1 ) == Clockwise) // Test V.a
             {
               return 0;
             }
@@ -1286,7 +1312,7 @@ int vtkTriangle::TrianglesIntersect(double p1[3], double q1[3], double r1[3],
     int index = 0;
     for (int i=1;i<3;i++)
     {
-      if (std::abs( normal[index] ) > std::abs( normal[i] ))
+      if (std::abs( normal[index] ) < std::abs( normal[i] ))
       {
         index = i;
       }
@@ -1412,7 +1438,7 @@ int vtkTriangle::TrianglesIntersect(double p1[3], double q1[3], double r1[3],
   // the intersection of T1 and Pi2 and the intersection of T2 and Pi1 overlap.
   // This is done by checking the following predicate:
   // Determinant(p1,q1,p2,q2) <= 0. ^ Determinant(p1,r1,r2,p2) <= 0.
-  if ((Determinant( p1, q1, p2, q2 ) <= 0.) *
+  if ((Determinant( p1, q1, p2, q2 ) <= 0.) &&
       (Determinant( p1, r1, r2, p2 ) <= 0.))
   {
     return 1;
@@ -1478,7 +1504,7 @@ int vtkTriangle::PointInTriangle(double x[3], double p1[3], double p2[3],
 }
 
 //----------------------------------------------------------------------------
-double vtkTriangle::GetParametricDistance(double pcoords[3])
+double vtkTriangle::GetParametricDistance(const double pcoords[3])
 {
   int i;
   double pDist, pDistMax=0.0;

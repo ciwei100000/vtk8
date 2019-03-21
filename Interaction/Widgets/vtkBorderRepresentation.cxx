@@ -295,7 +295,7 @@ void vtkBorderRepresentation::NegotiateLayout()
   double size[2];
   this->GetSize(size);
 
-  // Update the initial border geoemtry
+  // Update the initial border geometry
   this->BWPoints->SetPoint(0, 0.0, 0.0, 0.0); //may be updated by the subclass
   this->BWPoints->SetPoint(1, size[0], 0.0, 0.0);
   this->BWPoints->SetPoint(2, size[0], size[1], 0.0);
@@ -407,7 +407,7 @@ void vtkBorderRepresentation::UpdateShowBorder()
     case 2:
     {
       vtkIdType npts = 0;
-      vtkIdType* pts = 0;
+      vtkIdType* pts = nullptr;
       this->BWPolyData->GetLines()->GetCell(0, npts, pts);
       assert(npts == 2);
       currentBorder = (pts[0] == 0 ? HorizontalBorder : VerticalBorder);
@@ -570,7 +570,7 @@ int vtkBorderRepresentation::RenderTranslucentPolygonalGeometry(vtkViewport *w)
 //-----------------------------------------------------------------------------
 // Description:
 // Does this prop have some translucent polygonal geometry?
-int vtkBorderRepresentation::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkBorderRepresentation::HasTranslucentPolygonalGeometry()
 {
   this->BuildRepresentation();
   if ( ! this->BWActor->GetVisibility() )

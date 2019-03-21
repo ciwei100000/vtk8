@@ -59,7 +59,7 @@ class VTKFILTERSGENERAL_EXPORT vtkMergeCells : public vtkObject
 {
 public:
   vtkTypeMacro(vtkMergeCells, vtkObject);
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   static vtkMergeCells *New();
 
@@ -124,9 +124,9 @@ public:
    * than MergeDuplicatePointsOff().
    */
 
-  vtkSetMacro(MergeDuplicatePoints, int);
-  vtkGetMacro(MergeDuplicatePoints, int);
-  vtkBooleanMacro(MergeDuplicatePoints, int);
+  vtkSetMacro(MergeDuplicatePoints, vtkTypeBool);
+  vtkGetMacro(MergeDuplicatePoints, vtkTypeBool);
+  vtkBooleanMacro(MergeDuplicatePoints, vtkTypeBool);
 
   /**
    * We need to know the number of different data sets that will
@@ -157,7 +157,7 @@ public:
 protected:
 
   vtkMergeCells();
-  ~vtkMergeCells() VTK_OVERRIDE;
+  ~vtkMergeCells() override;
 
 private:
 
@@ -190,7 +190,7 @@ private:
   void* GlobalCellIdArray;
 
   float PointMergeTolerance;
-  int MergeDuplicatePoints;
+  vtkTypeBool MergeDuplicatePoints;
 
   char InputIsUGrid;
   char InputIsPointSet;
@@ -205,7 +205,7 @@ private:
 
   int nextGrid;
 
-  vtkMergeCells(const vtkMergeCells&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMergeCells&) VTK_DELETE_FUNCTION;
+  vtkMergeCells(const vtkMergeCells&) = delete;
+  void operator=(const vtkMergeCells&) = delete;
 };
 #endif

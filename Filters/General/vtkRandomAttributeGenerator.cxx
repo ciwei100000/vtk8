@@ -28,6 +28,7 @@
 #include "vtkInformationVector.h"
 #include "vtkIntArray.h"
 #include "vtkLongArray.h"
+#include "vtkLongLongArray.h"
 #include "vtkMath.h"
 #include "vtkNew.h"
 #include "vtkObjectFactory.h"
@@ -35,6 +36,7 @@
 #include "vtkUnsignedCharArray.h"
 #include "vtkUnsignedIntArray.h"
 #include "vtkUnsignedLongArray.h"
+#include "vtkUnsignedLongLongArray.h"
 #include "vtkUnsignedShortArray.h"
 #include "vtkShortArray.h"
 #include "vtkSmartPointer.h"
@@ -142,7 +144,7 @@ void vtkRandomAttributeGenerator::GenerateRandomTuples(T *data,
   GenerateRandomTuple(data, 0, numComp, minComp, maxComp, min, max);
   for ( vtkIdType i=1; i < numTuples; i++ )
   {
-    // update progess and check for aborts
+    // update progress and check for aborts
     if ( ! (i % tenth) )
     {
       this->UpdateProgress(static_cast<double>(i)/total);
@@ -172,7 +174,7 @@ vtkDataArray *vtkRandomAttributeGenerator::GenerateData(int dataType,
                                                         double min,
                                                         double max)
 {
-  vtkDataArray *dataArray=NULL;
+  vtkDataArray *dataArray=nullptr;
 
   switch(dataType)
   {
@@ -260,6 +262,27 @@ vtkDataArray *vtkRandomAttributeGenerator::GenerateData(int dataType,
                                  minComp,maxComp,min,max);
     }
       break;
+    case VTK_LONG_LONG:
+    {
+      dataArray = vtkLongLongArray::New();
+      dataArray->SetNumberOfComponents(numComp);
+      dataArray->SetNumberOfTuples(numTuples);
+      long long* data = static_cast<vtkLongLongArray*>(dataArray)->GetPointer(0);
+      this->GenerateRandomTuples(data,numTuples,numComp,
+                                 minComp,maxComp,min,max);
+    }
+      break;
+    case VTK_UNSIGNED_LONG_LONG:
+    {
+      dataArray = vtkUnsignedLongLongArray::New();
+      dataArray->SetNumberOfComponents(numComp);
+      dataArray->SetNumberOfTuples(numTuples);
+      unsigned long long* data =
+        static_cast<vtkUnsignedLongLongArray*>(dataArray)->GetPointer(0);
+      this->GenerateRandomTuples(data,numTuples,numComp,
+                                 minComp,maxComp,min,max);
+    }
+      break;
     case VTK_FLOAT:
     {
       dataArray = vtkFloatArray::New();
@@ -302,7 +325,7 @@ vtkDataArray *vtkRandomAttributeGenerator::GenerateData(int dataType,
       GenerateRandomTupleBit (dataArray, 0, minComp, maxComp);
       for ( vtkIdType i=1; i < numTuples; i++ )
       {
-        // update progess and check for aborts
+        // update progress and check for aborts
         if ( ! (i % tenth) )
         {
           this->UpdateProgress(static_cast<double>(i)/total);
@@ -335,7 +358,7 @@ int vtkRandomAttributeGenerator::RequestData(
   vtkCompositeDataSet *input,
   vtkCompositeDataSet *output)
 {
-  if (input == 0 || output == 0)
+  if (input == nullptr || output == nullptr)
   {
     return 0;
   }

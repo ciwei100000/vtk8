@@ -46,6 +46,7 @@ vtkInformationKeyMacro(vtkSelectionNode,HIERARCHICAL_LEVEL,Integer);
 vtkInformationKeyMacro(vtkSelectionNode,HIERARCHICAL_INDEX,Integer);
 vtkInformationKeyMacro(vtkSelectionNode,FIELD_TYPE,Integer);
 vtkInformationKeyMacro(vtkSelectionNode,EPSILON,Double);
+vtkInformationKeyMacro(vtkSelectionNode,ZBUFFER_VALUE,Double);
 vtkInformationKeyMacro(vtkSelectionNode,CONTAINING_CELLS,Integer);
 vtkInformationKeyMacro(vtkSelectionNode,PIXEL_COUNT,Integer);
 vtkInformationKeyMacro(vtkSelectionNode,INVERSE,Integer);
@@ -57,7 +58,7 @@ vtkSelectionNode::vtkSelectionNode()
 {
   this->SelectionData = vtkDataSetAttributes::New();
   this->Properties = vtkInformation::New();
-  this->QueryString = 0;
+  this->QueryString = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -68,7 +69,7 @@ vtkSelectionNode::~vtkSelectionNode()
   {
     this->SelectionData->Delete();
   }
-  this->SetQueryString(0);
+  this->SetQueryString(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -89,7 +90,7 @@ vtkAbstractArray* vtkSelectionNode::GetSelectionList()
   {
     return this->SelectionData->GetAbstractArray(0);
   }
-  return 0;
+  return nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -135,6 +136,9 @@ void vtkSelectionNode::PrintSelf(ostream& os, vtkIndent indent)
     case BLOCKS:
       os << "BLOCKS";
       break;
+    case USER:
+      os << "USER";
+      break;
     default:
       os << "UNKNOWN";
       break;
@@ -176,7 +180,7 @@ void vtkSelectionNode::PrintSelf(ostream& os, vtkIndent indent)
   {
     this->SelectionData->PrintSelf(os, indent.GetNextIndent());
   }
-  os << indent << "QueryString: " << (this->QueryString ? this->QueryString : "NULL") << endl;
+  os << indent << "QueryString: " << (this->QueryString ? this->QueryString : "nullptr") << endl;
 }
 
 //----------------------------------------------------------------------------
@@ -342,7 +346,7 @@ void vtkSelectionNode::UnionSelectionList(vtkSelectionNode* other)
       for (int i = 0; i < fd1->GetNumberOfArrays(); i++)
       {
         vtkAbstractArray* aa1 = fd1->GetAbstractArray(i);
-        vtkAbstractArray* aa2 = 0;
+        vtkAbstractArray* aa2 = nullptr;
         if (i == 0 && type != VALUES && type != THRESHOLDS)
         {
           aa2 = fd2->GetAbstractArray(i);
@@ -388,6 +392,7 @@ void vtkSelectionNode::UnionSelectionList(vtkSelectionNode* other)
       break;
   }
   case FRUSTUM:
+  case USER:
   default:
   {
       vtkErrorMacro(<< "Do not know how to take the union of content type "
@@ -455,6 +460,7 @@ void vtkSelectionNode::SubtractSelectionList(vtkSelectionNode* other)
     case LOCATIONS:
     case THRESHOLDS:
     case VALUES:
+    case USER:
     default:
     {
       vtkErrorMacro(<< "Do not know how to subtract the given content type " << type << ".");

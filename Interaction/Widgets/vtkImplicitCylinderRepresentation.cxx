@@ -283,13 +283,13 @@ int vtkImplicitCylinderRepresentation::ComputeInteractionState(int X, int Y,
   // The second picker may need to be called. This is done because the cylinder
   // wraps around things that can be picked; thus the cylinder is the selection
   // of last resort.
-  if ( path == NULL )
+  if ( path == nullptr )
   {
     this->CylPicker->Pick(X, Y, 0., this->Renderer);
     path = this->CylPicker->GetPath();
   }
 
-  if ( path == NULL ) // Nothing picked
+  if ( path == nullptr ) // Nothing picked
   {
     this->SetRepresentationState(vtkImplicitCylinderRepresentation::Outside);
     this->InteractionState = vtkImplicitCylinderRepresentation::Outside;
@@ -558,7 +558,7 @@ int vtkImplicitCylinderRepresentation::RenderTranslucentPolygonalGeometry(
 }
 
 //-----------------------------------------------------------------------------
-int vtkImplicitCylinderRepresentation::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkImplicitCylinderRepresentation::HasTranslucentPolygonalGeometry()
 {
   int result=0;
   result |= this->OutlineActor->HasTranslucentPolygonalGeometry();
@@ -1169,7 +1169,7 @@ double vtkImplicitCylinderRepresentation::GetRadius()
 }
 
 //----------------------------------------------------------------------------
-void vtkImplicitCylinderRepresentation::SetDrawCylinder(int drawCyl)
+void vtkImplicitCylinderRepresentation::SetDrawCylinder(vtkTypeBool drawCyl)
 {
   if ( drawCyl == this->DrawCylinder )
   {
@@ -1182,7 +1182,7 @@ void vtkImplicitCylinderRepresentation::SetDrawCylinder(int drawCyl)
 }
 
 //----------------------------------------------------------------------------
-void vtkImplicitCylinderRepresentation::SetAlongXAxis (int var)
+void vtkImplicitCylinderRepresentation::SetAlongXAxis (vtkTypeBool var)
 {
   if (this->AlongXAxis != var)
   {
@@ -1197,7 +1197,7 @@ void vtkImplicitCylinderRepresentation::SetAlongXAxis (int var)
 }
 
 //----------------------------------------------------------------------------
-void vtkImplicitCylinderRepresentation::SetAlongYAxis (int var)
+void vtkImplicitCylinderRepresentation::SetAlongYAxis (vtkTypeBool var)
 {
   if (this->AlongYAxis != var)
   {
@@ -1212,7 +1212,7 @@ void vtkImplicitCylinderRepresentation::SetAlongYAxis (int var)
 }
 
 //----------------------------------------------------------------------------
-void vtkImplicitCylinderRepresentation::SetAlongZAxis (int var)
+void vtkImplicitCylinderRepresentation::SetAlongZAxis (vtkTypeBool var)
 {
   if (this->AlongZAxis != var)
   {
@@ -1235,7 +1235,7 @@ void vtkImplicitCylinderRepresentation::GetPolyData(vtkPolyData *pd)
 //----------------------------------------------------------------------------
 void vtkImplicitCylinderRepresentation::GetCylinder(vtkCylinder *cyl)
 {
-  if ( cyl == NULL )
+  if ( cyl == nullptr )
   {
     return;
   }
@@ -1286,7 +1286,7 @@ void vtkImplicitCylinderRepresentation::PushCylinder(double d)
 //----------------------------------------------------------------------------
 void vtkImplicitCylinderRepresentation::BuildRepresentation()
 {
-  if ( ! this->Renderer )
+  if ( !this->Renderer || !this->Renderer->GetRenderWindow() )
   {
     return;
   }
@@ -1302,7 +1302,8 @@ void vtkImplicitCylinderRepresentation::BuildRepresentation()
   this->SphereActor->SetPropertyKeys(info);
 
   if ( this->GetMTime() > this->BuildTime ||
-       this->Cylinder->GetMTime() > this->BuildTime )
+       this->Cylinder->GetMTime() > this->BuildTime ||
+       this->Renderer->GetRenderWindow()->GetMTime() > this->BuildTime)
   {
     double *center = this->Cylinder->GetCenter();
     double *axis = this->Cylinder->GetAxis();
@@ -1550,6 +1551,10 @@ void vtkImplicitCylinderRepresentation::BuildCylinder()
 //----------------------------------------------------------------------
 void vtkImplicitCylinderRepresentation::RegisterPickers()
 {
-  this->Renderer->GetRenderWindow()->GetInteractor()->
-    GetPickingManager()->AddPicker(this->Picker, this);
+  vtkPickingManager* pm = this->GetPickingManager();
+  if (!pm)
+  {
+    return;
+  }
+  pm->AddPicker(this->Picker, this);
 }

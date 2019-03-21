@@ -77,7 +77,7 @@ class VTKPARALLELCORE_EXPORT vtkMultiProcessController : public vtkObject
 {
 public:
   vtkTypeMacro(vtkMultiProcessController,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * This method is for setting up the processes.
@@ -162,7 +162,7 @@ public:
 
   /**
    * This convenience method returns the controller associated with the
-   * local process.  It returns NULL until the processes are spawned.
+   * local process.  It returns nullptr until the processes are spawned.
    * It is better if you hang on to the controller passed as an argument to the
    * SingleMethod or MultipleMethod functions.
    */
@@ -183,7 +183,7 @@ public:
    * this controller.  This operation is collective across all processes
    * defined in the group.  It is undefined what will happen if the group is not
    * the same on all processes.  This method must be called by all processes in
-   * the controller regardless of whether they are in the group.  NULL is
+   * the controller regardless of whether they are in the group.  nullptr is
    * returned on all process not in the group.
    */
   virtual vtkMultiProcessController *CreateSubController(
@@ -224,7 +224,7 @@ public:
   virtual int RemoveFirstRMI(int tag);
 
   /**
-   * Remove the  RMI matching the id. The id is the same id returned by
+   * Remove the RMI matching the id. The id is the same id returned by
    * AddRMI().
    */
   virtual int RemoveRMI(unsigned long id);
@@ -260,7 +260,7 @@ public:
   void TriggerRMI(int remoteProcessId, void *arg, int argLength, int tag);
 
   /**
-   * A conveniance method.  Called on process 0 to break "ProcessRMIs" loop
+   * A convenience method.  Called on process 0 to break "ProcessRMIs" loop
    * on all other processes.
    */
   void TriggerBreakRMIs();
@@ -276,7 +276,7 @@ public:
    * Convenience method when there is no argument.
    */
   void TriggerRMI(int remoteProcessId, int tag)
-    { this->TriggerRMI(remoteProcessId, NULL, 0, tag); }
+    { this->TriggerRMI(remoteProcessId, nullptr, 0, tag); }
 
   //@{
   /**
@@ -295,7 +295,7 @@ public:
   }
   void TriggerRMIOnAllChildren(int tag)
   {
-    this->TriggerRMIOnAllChildren(NULL, 0, tag);
+    this->TriggerRMIOnAllChildren(nullptr, 0, tag);
   }
   void BroadcastTriggerRMIOnAllChildren(void* arg, int argLength, int tag);
   //@}
@@ -531,7 +531,7 @@ public:
    * to the destination process.  The destination process receives the
    * messages and stores them in rank order.  The \c length argument
    * (which must be the same on all processes) is the length of the
-   * sendBuffers.  The \c recvBuffer (on te destination process) must be of
+   * sendBuffers.  The \c recvBuffer (on the destination process) must be of
    * length length*numProcesses.  Gather is the inverse operation of Scatter.
    */
   int Gather(const int *sendBuffer, int *recvBuffer,
@@ -1423,7 +1423,7 @@ public:
 
 protected:
   vtkMultiProcessController();
-  ~vtkMultiProcessController() VTK_OVERRIDE;
+  ~vtkMultiProcessController() override;
 
   /**
    * Implementation for TriggerRMI() provides subclasses an opportunity to
@@ -1474,8 +1474,8 @@ protected:
   vtkCommunicator* RMICommunicator;
 
 private:
-  vtkMultiProcessController(const vtkMultiProcessController&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMultiProcessController&) VTK_DELETE_FUNCTION;
+  vtkMultiProcessController(const vtkMultiProcessController&) = delete;
+  void operator=(const vtkMultiProcessController&) = delete;
 
   unsigned long RMICount;
 
@@ -1719,7 +1719,7 @@ inline vtkDataObject* vtkMultiProcessController::ReceiveDataObject(
   }
   else
   {
-    return 0;
+    return nullptr;
   }
 }
 

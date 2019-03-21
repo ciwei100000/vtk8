@@ -48,7 +48,7 @@ public:
    * Standard VTK methods.
    */
   vtkTypeMacro(vtkSeedRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -59,6 +59,7 @@ public:
    * number.
    */
   virtual void GetSeedWorldPosition( unsigned int seedNum, double pos[3] );
+  virtual void SetSeedWorldPosition( unsigned int seedNum, double pos[3] );
   virtual void SetSeedDisplayPosition( unsigned int seedNum, double pos[3] );
   virtual void GetSeedDisplayPosition( unsigned int seedNum, double pos[3] );
   //@}
@@ -118,6 +119,7 @@ public:
    * invoked from vtkSeedWidget.
    */
   virtual int GetActiveHandle();
+  virtual void SetActiveHandle( int handleId );
   // Returns the id of the seed created, -1 on failure. e is the display position.
   virtual int CreateHandle( double e[2] );
   // Delete last handle created
@@ -135,13 +137,13 @@ public:
   /**
    * These are methods that satisfy vtkWidgetRepresentation's API.
    */
-  void BuildRepresentation() VTK_OVERRIDE;
-  int ComputeInteractionState( int X, int Y, int modify = 0 ) VTK_OVERRIDE;
+  void BuildRepresentation() override;
+  int ComputeInteractionState( int X, int Y, int modify = 0 ) override;
   //@}
 
 protected:
   vtkSeedRepresentation();
-  ~vtkSeedRepresentation() VTK_OVERRIDE;
+  ~vtkSeedRepresentation() override;
 
   // The handle and the rep used to close the handles
   vtkHandleRepresentation  *HandleRepresentation;
@@ -154,8 +156,8 @@ protected:
   int ActiveHandle;
 
 private:
-  vtkSeedRepresentation(const vtkSeedRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSeedRepresentation&) VTK_DELETE_FUNCTION;
+  vtkSeedRepresentation(const vtkSeedRepresentation&) = delete;
+  void operator=(const vtkSeedRepresentation&) = delete;
 };
 
 #endif

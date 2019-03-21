@@ -57,18 +57,20 @@
 #include "vtkCellType.h"
 #include "vtkDataObject.h"
 #include "vtkDoubleArray.h"
-#include "vtkIdTypeArray.h"
-#include "vtkUnsignedCharArray.h"
 #include "vtkFloatArray.h"
-#include "vtkPoints.h"
+#include "vtkIdTypeArray.h"
 #include "vtkInformation.h"
 #include "vtkInformationDoubleVectorKey.h"
 #include "vtkInformationVector.h"
 #include "vtkMultiBlockDataSet.h"
 #include "vtkObjectFactory.h"
+#include "vtkPointData.h"
+#include "vtkPoints.h"
+#include "vtkSmartPointer.h"
 #include "vtkStreamingDemandDrivenPipeline.h"
+#include "vtkUnsignedCharArray.h"
 #include "vtkUnstructuredGrid.h"
-
+#include "vtkVectorOperators.h"
 
 vtkStandardNewMacro(vtkLSDynaReader);
 
@@ -88,7 +90,7 @@ vtkStandardNewMacro(vtkLSDynaReader);
 #define LS_ARRAYNAME_SPECIES_09         "Species09"
 #define LS_ARRAYNAME_SPECIES_10         "Species10"
 #define LS_ARRAYNAME_TEMPERATURE        "Temperature"
-#define LS_ARRAYNAME_DEFLECTION         "Deflection"
+#define LS_ARRAYNAME_DEFLECTION         "Deflected Coordinates"
 #define LS_ARRAYNAME_VELOCITY           "Velocity"
 #define LS_ARRAYNAME_ACCELERATION       "Acceleration"
 #define LS_ARRAYNAME_PRESSURE           "Pressure"
@@ -127,8 +129,9 @@ vtkStandardNewMacro(vtkLSDynaReader);
 #define LS_ARRAYNAME_VOLUME_FRACTION_FMT "VolumeFraction%02d"
 #define LS_ARRAYNAME_DOMINANT_GROUP     "DominantGroup"
 #define LS_ARRAYNAME_SPECIES_MASS_FMT   "SpeciesMass%02d"
+#define LS_ARRAYNAME_MATERIAL           "Material"
 
-// Possible material  options
+// Possible material options
 #define LS_MDLOPT_NONE 0
 #define LS_MDLOPT_POINT 1
 #define LS_MDLOPT_CELL 2
@@ -150,25 +153,6 @@ static const char* vtkLSDynaCellTypes[] =
   "Road Surface"
 };
 
-static void vtkLSGetLine( ifstream& deck, std::string& line )
-{
-#if !defined(_WIN32) && !defined(_MSC_VER) && !defined(__BORLANDC__)
-  // One line implementation for everyone but Windows (MSVC6 and BCC32 are the troublemakers):
-  std::getline( deck, line, '\n' );
-#else
-  // Feed Windows its food cut up into little pieces
-  int linechar;
-  line = "";
-  while ( deck.good() )
-  {
-    linechar = deck.get();
-    if ( linechar == '\r' || linechar == '\n' )
-      return;
-    line += linechar;
-  }
-#endif
-}
-
 // Read in lines until one that's
 // - not empty, and
 // - not a comment
@@ -178,7 +162,7 @@ static int vtkLSNextSignificantLine( ifstream& deck, std::string& line )
 {
   while ( deck.good() )
   {
-    vtkLSGetLine( deck, line );
+    std::getline( deck, line, '\n' );
     if ( ! line.empty() && line[0] != '$' )
     {
       return 1;
@@ -435,7 +419,7 @@ template<int wordSize,int cellLength>
     //This is a read RIGID_BODY and SHELL template specialization since it
     //has a weird weaving of cell types
     bool haveRigidMaterials = (p->Dict["MATTYP"] != 0) &&
-                              p->RigidMaterials.size();
+                              !p->RigidMaterials.empty();
 
     vtkIdType nc=0, j=0,matlId=0;
     vtkIdType numCellsToSkip=0, numCellsToSkipEnd=0, chunkSize=0;
@@ -529,16 +513,16 @@ vtkLSDynaReader::vtkLSDynaReader()
   this->DeformedMesh = 1;
   this->RemoveDeletedCells = 1;
   this->DeletedCellsAsGhostArray = 0;
-  this->InputDeck = 0;
-  this->Parts = NULL;
+  this->InputDeck = nullptr;
+  this->Parts = nullptr;
 }
 
 vtkLSDynaReader::~vtkLSDynaReader()
 {
   this->ResetPartsCache();
-  this->SetInputDeck(0);
+  this->SetInputDeck(nullptr);
   delete this->P;
-  this->P = 0;
+  this->P = nullptr;
 }
 
 void vtkLSDynaReader::PrintSelf( ostream &os, vtkIndent indent )
@@ -690,7 +674,7 @@ int vtkLSDynaReader::CanReadFile( const char* fname )
     if ( vtksys::SystemTools::Stat( fname, &st ) == 0 )
     {
       dbName.insert( 0, "/" );
-      p->Fam.SetDatabaseBaseName( dbName.c_str() );
+      p->Fam.SetDatabaseBaseName( dbName );
     }
     else
     {
@@ -739,7 +723,7 @@ void vtkLSDynaReader::SetDatabaseDirectory( const char* f )
     if ( ! this->P->Fam.GetDatabaseDirectory().empty() )
     { // no string => no database directory
       this->P->Reset();
-      this->SetInputDeck( 0 );
+      this->SetInputDeck( nullptr );
       this->ResetPartsCache();
       this->Modified();
     }
@@ -748,7 +732,7 @@ void vtkLSDynaReader::SetDatabaseDirectory( const char* f )
   if ( strcmp(this->P->Fam.GetDatabaseDirectory().c_str(), f) )
   {
     this->P->Reset();
-    this->SetInputDeck( 0 );
+    this->SetInputDeck( nullptr );
     this->P->Fam.SetDatabaseDirectory( std::string(f) );
     this->ResetPartsCache();
     this->Modified();
@@ -796,7 +780,7 @@ void vtkLSDynaReader::SetFileName( const char* f )
     if ( vtksys::SystemTools::Stat( f, &st ) == 0 )
     {
       dbName.insert( 0, "/" );
-      this->P->Fam.SetDatabaseBaseName( dbName.c_str() );
+      this->P->Fam.SetDatabaseBaseName( dbName );
     }
     else
     {
@@ -970,7 +954,7 @@ int vtkLSDynaReader::GetNumberOfPointArrays()
 const char* vtkLSDynaReader::GetPointArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->PointArrayNames.size() )
-    return 0;
+    return nullptr;
 
   return this->P->PointArrayNames[a].c_str();
 }
@@ -1016,7 +1000,7 @@ int vtkLSDynaReader::GetNumberOfCellArrays( int ct )
 const char* vtkLSDynaReader::GetCellArrayName( int ct, int a )
 {
   if ( a < 0 || a >= (int) this->P->CellArrayNames[ct].size() )
-    return 0;
+    return nullptr;
 
   return this->P->CellArrayNames[ct][a].c_str();
 }
@@ -1062,7 +1046,7 @@ int vtkLSDynaReader::GetNumberOfSolidArrays()
 const char* vtkLSDynaReader::GetSolidArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->CellArrayNames[LSDynaMetaData::SOLID].size() )
-    return 0;
+    return nullptr;
 
   return this->P->CellArrayNames[LSDynaMetaData::SOLID][a].c_str();
 }
@@ -1108,7 +1092,7 @@ int vtkLSDynaReader::GetNumberOfThickShellArrays()
 const char* vtkLSDynaReader::GetThickShellArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->CellArrayNames[LSDynaMetaData::THICK_SHELL].size() )
-    return 0;
+    return nullptr;
 
   return this->P->CellArrayNames[LSDynaMetaData::THICK_SHELL][a].c_str();
 }
@@ -1154,7 +1138,7 @@ int vtkLSDynaReader::GetNumberOfShellArrays()
 const char* vtkLSDynaReader::GetShellArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->CellArrayNames[LSDynaMetaData::SHELL].size() )
-    return 0;
+    return nullptr;
 
   return this->P->CellArrayNames[LSDynaMetaData::SHELL][a].c_str();
 }
@@ -1200,7 +1184,7 @@ int vtkLSDynaReader::GetNumberOfRigidBodyArrays()
 const char* vtkLSDynaReader::GetRigidBodyArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->CellArrayNames[LSDynaMetaData::RIGID_BODY].size() )
-    return 0;
+    return nullptr;
 
   return this->P->CellArrayNames[LSDynaMetaData::RIGID_BODY][a].c_str();
 }
@@ -1246,7 +1230,7 @@ int vtkLSDynaReader::GetNumberOfRoadSurfaceArrays()
 const char* vtkLSDynaReader::GetRoadSurfaceArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->CellArrayNames[LSDynaMetaData::ROAD_SURFACE].size() )
-    return 0;
+    return nullptr;
 
   return this->P->CellArrayNames[LSDynaMetaData::ROAD_SURFACE][a].c_str();
 }
@@ -1292,7 +1276,7 @@ int vtkLSDynaReader::GetNumberOfBeamArrays()
 const char* vtkLSDynaReader::GetBeamArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->CellArrayNames[LSDynaMetaData::BEAM].size() )
-    return 0;
+    return nullptr;
 
   return this->P->CellArrayNames[LSDynaMetaData::BEAM][a].c_str();
 }
@@ -1338,7 +1322,7 @@ int vtkLSDynaReader::GetNumberOfParticleArrays()
 const char* vtkLSDynaReader::GetParticleArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->CellArrayNames[LSDynaMetaData::PARTICLE].size() )
-    return 0;
+    return nullptr;
 
   return this->P->CellArrayNames[LSDynaMetaData::PARTICLE][a].c_str();
 }
@@ -1384,7 +1368,7 @@ int vtkLSDynaReader::GetNumberOfPartArrays()
 const char* vtkLSDynaReader::GetPartArrayName( int a )
 {
   if ( a < 0 || a >= (int) this->P->PartNames.size() )
-    return 0;
+    return nullptr;
 
   return this->P->PartNames[a].c_str();
 }
@@ -1419,7 +1403,7 @@ void vtkLSDynaReader::ResetPartsCache()
   if(this->Parts)
   {
     this->Parts->Delete();
-    this->Parts=NULL;
+    this->Parts=nullptr;
   }
 }
 
@@ -1485,7 +1469,7 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
   p->Dict[  "NCFDV1"] = p->Fam.GetNextWordAsInt();
   p->Dict[  "NCFDV2"] = p->Fam.GetNextWordAsInt();
   p->Dict[  "NADAPT"] = p->Fam.GetNextWordAsInt();
-  p->Fam.GetNextWordAsInt(); // BLANK
+  p->Dict[   "NMMAT"] = p->Fam.GetNextWordAsInt();
 
   // NUMFLUID: Total number of ALE fluid groups. Fluid density and
   // volume fractions output as history variables, and a flag
@@ -1692,15 +1676,15 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
   {
     if ( iddtmp & (static_cast<vtkIdType>(1)<<itmp) )
     {
-      sprintf( sname, LS_ARRAYNAME_SPECIES_FMT, itmp );
+      snprintf( sname, sizeof(sname), LS_ARRAYNAME_SPECIES_FMT, itmp );
       p->AddPointArray( sname, 1, 1 );
       p->StateSize += p->NumberOfNodes * p->Fam.GetWordSize();
-      sprintf( sname, "cfdSpec%02d", itmp );
+      snprintf( sname, sizeof(sname), "cfdSpec%02d", itmp );
       p->Dict[ sname ] = 1;
     }
     else
     {
-      sprintf( sname, "cfdSpec%02d", itmp );
+      snprintf( sname, sizeof(sname), "cfdSpec%02d", itmp );
       p->Dict[ sname ] = 0;
     }
   }
@@ -1858,8 +1842,12 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
   p->Fam.MarkSectionStart( curAdapt, LSDynaFamily::UserIdData );
   if ( p->Dict["NARBS"] != 0 )
   {
+    // For sequential material numbering
+    // NARBS = 10+NUMNP+NEL8+NEL2+NEL4+NELT+3*NMMAT   (even though the 3*NMMAT numbers are unused)
+    // For arbitrary material numbering (NSORT<0)
+    // NARBS = 16+NUMNP+NEL8+NEL2+NEL4+NELT+3*NMMAT   (Note 6 extra params)
+
     p->Fam.BufferChunk( LSDynaFamily::Int, 10 );
-    p->PreStateSize += 10*p->Fam.GetWordSize();
     p->Dict["NSORT"] = p->Fam.GetNextWordAsInt();
     p->Dict["NSRH"] = p->Fam.GetNextWordAsInt();
     p->Dict["NSRB"] = p->Fam.GetNextWordAsInt();
@@ -1870,25 +1858,20 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
     p->Dict["NSRBD"] = p->Fam.GetNextWordAsInt();
     p->Dict["NSRSD"] = p->Fam.GetNextWordAsInt();
     p->Dict["NSRTD"] = p->Fam.GetNextWordAsInt();
-    //iddtmp = (this->GetNumberOfNodes() + this->GetNumberOfContinuumCells())*p->Fam.GetWordSize();
+
     if ( p->Dict["NSORT"] < 0 )
     {
       p->Fam.BufferChunk( LSDynaFamily::Int, 6 );
-      p->PreStateSize += 6*p->Fam.GetWordSize();
       p->Dict["NSRMA"] = p->Fam.GetNextWordAsInt();
       p->Dict["NSRMU"] = p->Fam.GetNextWordAsInt();
       p->Dict["NSRMP"] = p->Fam.GetNextWordAsInt();
       p->Dict["NSRTM"] = p->Fam.GetNextWordAsInt();
       p->Dict["NUMRBS"] = p->Fam.GetNextWordAsInt();
       p->Dict["NMMAT"] = p->Fam.GetNextWordAsInt();
-      iddtmp += 3*p->Dict["NMMAT"]*p->Fam.GetWordSize();
     }
-    // FIXME!!! Why is NARBS larger than 10+NUMNP+NEL8+NEL2+NEL4+NELT?
-    // Obviously, NARBS is definitive, but what are the extra numbers at the end?
-    //iddtmp += (p->Dict["NARBS"]*p->Fam.GetWordSize() - iddtmp - 10*p->Fam.GetWordSize() - (p->Dict["NSORT"]<0 ? 6*p->Fam.GetWordSize() : 0));
-    //p->PreStateSize += iddtmp;
-    p->PreStateSize += p->Dict["NARBS"] * p->Fam.GetWordSize();
-    // should just skip forward iddtmp bytes here, but no easy way to do that with the fam
+
+    iddtmp = p->Dict["NARBS"] * p->Fam.GetWordSize();
+    p->PreStateSize += iddtmp;
     p->Fam.SkipToWord( LSDynaFamily::UserIdData, curAdapt, p->Dict["NARBS"] );
   }
   else
@@ -1979,6 +1962,19 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
   // FIXME: Is this true? Rigid bodies may be an exception, in which
   // case we need to check that the number of cells in the other 5 meshes sum to >0
 
+  // Total number of ALE fluid groups. Fluid density and
+  // volume fractions output as history variables, and a flag
+  // for the dominant group. If negative multi-material
+  // species mass for each group is also output. Order is: rho,
+  // vf1, … vfn, dvf flag, m1, … mn. Density is at position 8
+  // after the location for plastic strain. Any element material
+  // history variables are written before the Ale variables, and
+  // the six element strains components after these if
+  // ISTRN=1.
+  int numGroups = std::abs(static_cast<int>(p->Dict["NUMFLUID"]));
+  bool hasMass = (p->Dict["NUMFLUID"] < 0);
+  int numALEvalues = (numGroups > 0) ? 1 + numGroups + 1 + (hasMass? numGroups : 0) : 0;
+
   if ( p->Dict["NARBS"] )
   {
     p->AddPointArray( LS_ARRAYNAME_USERID, 1, 1 );
@@ -1986,8 +1982,10 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
 
   if ( p->NumberOfCells[ LSDynaMetaData::PARTICLE ] )
   {
-    //p->AddCellArray( LSDynaMetaData::PARTICLE, LS_ARRAYNAME_MATERIAL, 1, 1 );
-    //p->AddCellArray( LSDynaMetaData::PARTICLE, LS_ARRAYNAME_DEATH, 1, 1 );
+    // One value is always output which is the material number as a floating point number for each particle.
+    // If this value is negative then the particle has been deleted from the model.
+    p->AddCellArray( LSDynaMetaData::PARTICLE, LS_ARRAYNAME_MATERIAL, 1, 1 );
+    //p->AddCellArray( LSDynaMetaData::PARTICLE, LS_ARRAYNAME_DEATH, 1, 1 );  // There is no mention of this in manual... Was this the -ve Material case?
     if ( p->Dict["isphfg(2)"] == 1 )
     {
       p->AddCellArray( LSDynaMetaData::PARTICLE, LS_ARRAYNAME_RADIUSOFINFLUENCE, 1, 1 );
@@ -2049,8 +2047,8 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
     {
       p->AddCellArray( LSDynaMetaData::BEAM, LS_ARRAYNAME_SHEARSTRESS, 2, 1 );
       p->AddCellArray( LSDynaMetaData::BEAM, LS_ARRAYNAME_AXIALSTRESS, 1, 1 );
-      p->AddCellArray( LSDynaMetaData::BEAM, LS_ARRAYNAME_AXIALSTRAIN, 1, 1 );
       p->AddCellArray( LSDynaMetaData::BEAM, LS_ARRAYNAME_PLASTICSTRAIN, 1, 1 );
+      p->AddCellArray( LSDynaMetaData::BEAM, LS_ARRAYNAME_AXIALSTRAIN, 1, 1 );
     }
   }
 
@@ -2066,31 +2064,81 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
       p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_USERID, 1, 1 );
     }
     if ( p->Dict["IOSHL(1)"] )
+      p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_STRESS, 6, 1 );
+    if ( p->Dict["IOSHL(2)"] )
+      p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_EPSTRAIN, 1, 1 );
+
+    int neips = p->Dict["NEIPS"];
+    int extraValues = neips;
+    if (extraValues>0)
     {
-      if ( p->Dict["_MAXINT_"] >= 3 )
+      // Any element material history variables are written before the Ale variables, and the six element strains components after these if ISTRN=1
+      int materialValues = extraValues - numALEvalues;
+      if (materialValues > 0)
       {
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_STRESS, 6, 1 );
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_STRESS "InnerSurf", 6, 1 );
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_STRESS "OuterSurf", 6, 1 );
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_INTEGRATIONPOINT, materialValues, 1 );
+        extraValues -= materialValues;
       }
-      for ( itmp = 3; itmp < p->Dict["_MAXINT_"]; ++itmp )
+
+      if ( (numALEvalues > 0) && (extraValues>=numALEvalues) )
+      {
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_DENSITY, 1, 1 );
+        extraValues--;
+
+        for (int g=0; g < numGroups; ++g)
+        {
+          snprintf( ctmp, sizeof(ctmp), LS_ARRAYNAME_VOLUME_FRACTION_FMT, static_cast<int>(g+1) );
+          p->AddCellArray( LSDynaMetaData::SHELL, ctmp, 1, 1 );
+          extraValues--;
+        }
+
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_DOMINANT_GROUP, 1, 1 );
+        extraValues--;
+
+        for (int g=0; hasMass && (g < numGroups); ++g)
+        {
+          snprintf( ctmp, sizeof(ctmp), LS_ARRAYNAME_SPECIES_MASS_FMT, static_cast<int>(g+1) );
+          p->AddCellArray( LSDynaMetaData::SHELL, ctmp, 1, 1 );
+          extraValues--;
+        }
+      }
+    }
+
+    if ( p->Dict["_MAXINT_"] >= 2 )
+    {
+      if ( p->Dict["IOSHL(1)"] )
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_STRESS "InnerSurf", 6, 1 );
+      if ( p->Dict["IOSHL(2)"] )
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_EPSTRAIN "InnerSurf", 1, 1 );
+      if ( neips )
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_INTEGRATIONPOINT "InnerSurf", neips, 1 );
+    }
+    if ( p->Dict["_MAXINT_"] >= 3 )
+    {
+      if ( p->Dict["IOSHL(1)"] )
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_STRESS "OuterSurf", 6, 1 );
+      if ( p->Dict["IOSHL(2)"] )
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_EPSTRAIN "OuterSurf", 1, 1 );
+      if ( neips )
+        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_INTEGRATIONPOINT "OuterSurf", neips, 1 );
+    }
+
+    for ( itmp = 3; itmp < p->Dict["_MAXINT_"]; ++itmp )
+    {
+      if ( p->Dict["IOSHL(1)"] )
       {
         snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_STRESS, itmp + 1 );
         p->AddCellArray( LSDynaMetaData::SHELL, ctmp, 6, 1 );
       }
-    }
-    if ( p->Dict["IOSHL(2)"] )
-    {
-      if ( p->Dict["_MAXINT_"] >= 3 )
-      {
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_EPSTRAIN, 1, 1 );
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_EPSTRAIN "InnerSurf", 1, 1 );
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_EPSTRAIN "OuterSurf", 1, 1 );
-      }
-      for ( itmp = 3; itmp < p->Dict["_MAXINT_"]; ++itmp )
+      if ( p->Dict["IOSHL(2)"] )
       {
         snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_EPSTRAIN, itmp + 1 );
         p->AddCellArray( LSDynaMetaData::SHELL, ctmp, 1, 1 );
+      }
+      if ( neips )
+      {
+        snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_INTEGRATIONPOINT, itmp + 1 );
+        p->AddCellArray( LSDynaMetaData::SHELL, ctmp, neips, 1 );
       }
     }
     if ( p->Dict["IOSHL(3)"] )
@@ -2104,22 +2152,7 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
       p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_THICKNESS, 1, 1 );
       p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_ELEMENTMISC, 2, 1 );
     }
-    if ( p->Dict["NEIPS"] )
-    {
-      int neips = p->Dict["NEIPS"];
-      if ( p->Dict["_MAXINT_"] >= 3 )
-      {
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_INTEGRATIONPOINT, neips, 1 );
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_INTEGRATIONPOINT, neips, 1 );
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_INTEGRATIONPOINT "InnerSurf", neips, 1 );
-        p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_INTEGRATIONPOINT "OuterSurf", neips, 1 );
-      }
-      for ( itmp = 3; itmp < p->Dict["_MAXINT_"]; ++itmp )
-      {
-        snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_INTEGRATIONPOINT, itmp + 1 );
-        p->AddCellArray( LSDynaMetaData::SHELL, ctmp, 6, 1 );
-      }
-    }
+
     if ( p->Dict["ISTRN"] )
     {
         p->AddCellArray( LSDynaMetaData::SHELL, LS_ARRAYNAME_STRAIN "InnerSurf", 6, 1 );
@@ -2208,60 +2241,49 @@ int vtkLSDynaReader::ReadHeaderInformation( int curAdapt )
     p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_EPSTRAIN, 1, 1 );
 
     int extraValues = p->Dict["NEIPH"];
-    if ( p->Dict["ISTRN"] )
+    if (extraValues>0)
     {
-      extraValues -= 6; // last six values are strain.
-    }
-    assert(extraValues >= 0);
-    if ( std::abs(static_cast<int>(p->Dict["NUMFLUID"])) > 0 )
-    {
-      // Total number of ALE fluid groups. Fluid density and
-      // volume fractions output as history variables, and a flag
-      // for the dominant group. If negative multi-material
-      // species mass for each group is also output. Order is: rho,
-      // vf1, ... vfn, dvf flag, m1, ... mn. Density is at position 8
-      // after the location for plastic strain. Any element material
-      // history variables are written before the Ale variables, and
-      // the six element strains components after these if
-      // ISTRN=1.
-      vtkIdType numGroups = std::abs(static_cast<int>(p->Dict["NUMFLUID"]));
-      bool hasMass = (p->Dict["NUMFLUID"] < 0);
-      assert(extraValues >= (1 + numGroups + 1 + (hasMass? numGroups : 0)));
-      p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_DENSITY, 1, 1 );
-      extraValues--;
+      int strainValues = ( p->Dict["ISTRN"]==1 ) ? 6 : 0; // last six values are strain.
 
-      for (vtkIdType g=0; g < numGroups; ++g)
+      // Any element material history variables are written before the Ale variables, and the six element strains components after these if ISTRN=1
+      int materialValues = extraValues - (numALEvalues+strainValues);
+      if (materialValues > 0)
       {
-        snprintf( ctmp, sizeof(ctmp), LS_ARRAYNAME_VOLUME_FRACTION_FMT, static_cast<int>(g+1) );
-        p->AddCellArray( LSDynaMetaData::SOLID, ctmp, 1, 1 );
-        extraValues--;
+        p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_INTEGRATIONPOINT, materialValues, 1 );
+        extraValues -= materialValues;
       }
 
-      p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_DOMINANT_GROUP, 1, 1 );
-      extraValues--;
-
-      for (vtkIdType g=0; hasMass && (g < numGroups); ++g)
+      if ( (numALEvalues > 0) && (extraValues>=numALEvalues) )
       {
-        snprintf( ctmp, sizeof(ctmp), LS_ARRAYNAME_SPECIES_MASS_FMT, static_cast<int>(g+1) );
-        p->AddCellArray( LSDynaMetaData::SOLID, ctmp, 1, 1 );
+        p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_DENSITY, 1, 1 );
         extraValues--;
+
+        for (int g=0; g < numGroups; ++g)
+        {
+          snprintf( ctmp, sizeof(ctmp), LS_ARRAYNAME_VOLUME_FRACTION_FMT, static_cast<int>(g+1) );
+          p->AddCellArray( LSDynaMetaData::SOLID, ctmp, 1, 1 );
+          extraValues--;
+        }
+
+        p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_DOMINANT_GROUP, 1, 1 );
+        extraValues--;
+
+        for (int g=0; hasMass && (g < numGroups); ++g)
+        {
+          snprintf( ctmp, sizeof(ctmp), LS_ARRAYNAME_SPECIES_MASS_FMT, static_cast<int>(g+1) );
+          p->AddCellArray( LSDynaMetaData::SOLID, ctmp, 1, 1 );
+          extraValues--;
+        }
       }
-    }
-    assert(extraValues >= 0);
-    if (extraValues > 0)
-    {
-      // I am not sure if this is correct, but let's assume so, so that what
-      // every we were doing before we added support for ALE continues to work.
-      p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_INTEGRATIONPOINT, extraValues, 1 );
-    }
-    if ( p->Dict["ISTRN"] )
-    {
-      p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_STRAIN, 6, 1 );
+      if ( (strainValues > 0) && (extraValues>=strainValues))
+      {
+        p->AddCellArray( LSDynaMetaData::SOLID, LS_ARRAYNAME_STRAIN, strainValues, 1 );
+      }
     }
   }
 
   // Only try reading the keyword file if we don't have part names.
-  if ( curAdapt == 0 && p->PartNames.size() == 0 )
+  if ( curAdapt == 0 && p->PartNames.empty() )
   {
     this->ResetPartInfo();
 
@@ -2394,7 +2416,7 @@ int vtkLSDynaReader::RequestInformation( vtkInformation* vtkNotUsed(request),
     this->ScanDatabaseTimeSteps();
   }
 
-  if ( p->TimeValues.size() == 0 )
+  if ( p->TimeValues.empty() )
   {
     vtkErrorMacro( "No valid time steps in the LS-Dyna database" );
     return 0;
@@ -2443,7 +2465,7 @@ int vtkLSDynaReader::ReadTopology()
   {
     readTopology=true;
     this->Parts = vtkLSDynaPartCollection::New();
-    this->Parts->InitCollection(this->P,NULL,NULL);
+    this->Parts->InitCollection(this->P,nullptr,nullptr);
   }
   if(!readTopology)
   {
@@ -2487,22 +2509,18 @@ int vtkLSDynaReader::ReadNodes()
 {
   LSDynaMetaData* p = this->P;
 
-  // Skip reading coordinates if we are deflecting the mesh... they would be replaced anyway.
-  // The only exception is if the deflected coordinates are not included in the LS-Dyna output
-  // (i.e., when IU is 0).
+  // Always read geometry, even if the mesh will be deformed using deflected coordinates
+  // (LS_ARRAYNAME_DEFLECTION). That way, we can compute deflection array later on.
+  p->Fam.SkipToWord(LSDynaFamily::GeometryData, p->Fam.GetCurrentAdaptLevel(), 0);
+  this->Parts->ReadPointProperty(p->NumberOfNodes, p->Dimensionality, nullptr, false, true, false);
+
   // Note that in any event we still have to read the rigid road coordinates.
   // If the mesh is deformed each state will have the points so see ReadState
-  if ( ! this->DeformedMesh || ! p->Dict["IU"] )
-  {
-    p->Fam.SkipToWord( LSDynaFamily::GeometryData, p->Fam.GetCurrentAdaptLevel(), 0 );
-    this->Parts->ReadPointProperty(p->NumberOfNodes,p->Dimensionality,NULL,false,true,false);
-  }
-
   if ( p->ReadRigidRoadMvmt )
   {
     vtkIdType nnode = p->Dict["NNODE"];
     p->Fam.SkipToWord( LSDynaFamily::RigidSurfaceData, p->Fam.GetCurrentAdaptLevel(), 4 + nnode );
-    this->Parts->ReadPointProperty(nnode,3,NULL,false,false,true);
+    this->Parts->ReadPointProperty(nnode,3,nullptr,false,false,true);
   }
 
   return 0;
@@ -2774,14 +2792,13 @@ int vtkLSDynaReader::ReadNodeStateInfo( vtkIdType step )
   {
     for(size_t i=0; i < cmps.size(); i++)
     {
-      //special case if the user has said they want a deformed mesh
-      //we have to read in the deflection array
+      // Note, we don't do anything special when reading deflected coordinates here.
+      // See `ComputeDeflectionAndUpdateGeometry` for computing of deflection and
+      // updating for geometry if requested to be deformed.
       bool valid = this->GetPointArrayStatus( names[i].c_str() ) != 0;
-      bool isDeflectionArray = this->DeformedMesh &&
-                               strcmp(names[i].c_str(), LS_ARRAYNAME_DEFLECTION)==0;
-      this->Parts->ReadPointProperty(p->NumberOfNodes,cmps[i],names[i].c_str(),
-                                     valid,isDeflectionArray);
+      this->Parts->ReadPointProperty(p->NumberOfNodes, cmps[i], names[i].c_str(), valid);
     }
+
     //clear the buffer as it will be very large and not needed
     p->Fam.ClearBuffer();
   }
@@ -2793,176 +2810,45 @@ int vtkLSDynaReader::ReadCellStateInfo( vtkIdType vtkNotUsed(step) )
 {
 
   LSDynaMetaData* p = this->P;
-  int itmp;
-  char ctmp[128];
 
-#define VTK_LS_CELLARRAY(cond,celltype,arrayname,numComps)\
-  if ( (cond) && this->GetCellArrayStatus( celltype, arrayname ) ) \
-  { \
-    this->Parts->AddProperty(celltype,arrayname,startPos,numComps); \
-  } \
-  startPos+=(numComps);
+  // ENN (Total element data for state) = Sum of
+  //      NEL8  (# 8 node solid elems)           * NV3D
+  //      NELT  (# 8 node thick shell elems)     * NV3DT
+  //      NEL2  (# 2 node one-dimensional elems) * NV1D
+  //      NEL4  (# 4 node shells elems)          * NV2D
+  //      NMSPH (#of SPH Nodes)                  * NUM_SPH_VARS
+  // where:
+  //      NV3D = 7 + NEIPH  ( NEIPH = # ALE Data + # Strain Data)
+  //      NV2D = MAXINT* (6*IOSHL(1) + 1*IOSHL(2) + NEIPS) +8*IOSHL(3) + 4*IOSHL(4) + 12*ISTRN
+  //
 
-  // Solid element data========================================================
-  int startPos=0; //used to keep track of the startpos between calls to VTK_LS_CELLARRAY
+  // Instead of repeating the specification of what array values are read for each cell type here
+  // we can use the Property lists which we generated in ReadHeaderInformation().
 
-  VTK_LS_CELLARRAY(1,LSDynaMetaData::SOLID,LS_ARRAYNAME_STRESS,6);
-  VTK_LS_CELLARRAY(1,LSDynaMetaData::SOLID,LS_ARRAYNAME_EPSTRAIN,1);
-  int extraValues = p->Dict["NEIPH"];
-  if ( p->Dict["ISTRN"] )
+  LSDynaMetaData::LSDYNA_TYPES celltypes[] = {LSDynaMetaData::SOLID, LSDynaMetaData::THICK_SHELL, LSDynaMetaData::BEAM, LSDynaMetaData::SHELL};
+  vtkIdType cells[]    = {p->Dict["NEL8"], p->Dict["NELT"], p->Dict["NEL2"], p->Dict["NEL4"]};
+  vtkIdType cellVals[] = {p->Dict["NV3D"], p->Dict["NV3DT"], p->Dict["NV1D"], p->Dict["NV2D"]};
+
+  // Be careful to exclude arrays which are not part State data
+  unsigned int firstStateArrayNdx = (p->Dict["NARBS"]>0) ? 1 : 0;  // Skip first Array if it is UserIds
+
+  for (int i=0; i<4; i++)
   {
-    extraValues -= 6; // last six values are strain.
-  }
-  assert(extraValues >= 0);
-  if ( std::abs(static_cast<int>(p->Dict["NUMFLUID"])) > 0 )
-  {
-    vtkIdType numGroups = std::abs(static_cast<int>(p->Dict["NUMFLUID"]));
-    bool hasMass = (p->Dict["NUMFLUID"] < 0);
-    assert(extraValues >= (1 + numGroups + 1 + (hasMass? numGroups : 0)));
-    VTK_LS_CELLARRAY(1,LSDynaMetaData::SOLID, LS_ARRAYNAME_DENSITY, 1);
-    extraValues--;
-
-    for (vtkIdType g=0; g < numGroups; ++g)
+    if (cells[i]>0)
     {
-      snprintf( ctmp, sizeof(ctmp), LS_ARRAYNAME_VOLUME_FRACTION_FMT, static_cast<int>(g+1) );
-      VTK_LS_CELLARRAY(1, LSDynaMetaData::SOLID, ctmp, 1);
-      extraValues--;
-    }
-
-    VTK_LS_CELLARRAY(1, LSDynaMetaData::SOLID, LS_ARRAYNAME_DOMINANT_GROUP, 1);
-    extraValues--;
-
-    for (vtkIdType g=0; hasMass && (g < numGroups); ++g)
-    {
-      snprintf( ctmp, sizeof(ctmp), LS_ARRAYNAME_SPECIES_MASS_FMT, static_cast<int>(g+1) );
-      VTK_LS_CELLARRAY(1, LSDynaMetaData::SOLID, ctmp, 1);
-      extraValues--;
+      LSDynaMetaData::LSDYNA_TYPES celltype = celltypes[i];
+      int startPos = 0;
+      for (unsigned int a = firstStateArrayNdx; a < p->CellArrayNames[celltype].size(); a++ )
+      {
+        int numComps = this->GetNumberOfComponentsInCellArray(celltype, a);
+        //std::cout << setw(3) << numComps << " " << this->GetCellArrayName(celltype,a) << std::endl;
+        if (this->GetCellArrayStatus(celltype, a))
+          this->Parts->AddProperty(celltype,this->GetCellArrayName(celltype,a), startPos, numComps);
+         startPos += numComps;
+      }
+      this->ReadCellProperties(celltype, cellVals[i]);
     }
   }
-  assert(extraValues >= 0);
-  if (extraValues > 0)
-  {
-    VTK_LS_CELLARRAY(1, LSDynaMetaData::SOLID, LS_ARRAYNAME_INTEGRATIONPOINT, extraValues);
-  }
-  if (p->Dict["ISTRN"] == 1 && p->Dict["NEIPH"] >= 6)
-  {
-    VTK_LS_CELLARRAY(1, LSDynaMetaData::SOLID, LS_ARRAYNAME_STRAIN, 6);
-  }
-  this->ReadCellProperties(LSDynaMetaData::SOLID, p->Dict["NV3D"]);
-
-  // Thick Shell element data==================================================
-  startPos=0;
-  // Mid-surface data
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(1)"] != 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_STRESS,6);
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(2)"] != 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_EPSTRAIN,1);
-  VTK_LS_CELLARRAY(p->Dict["NEIPS"] > 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_INTEGRATIONPOINT,p->Dict["NEIPS"]);
-
-  // Inner surface data
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(1)"] != 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_STRESS "InnerSurf",6);
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(2)"] != 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_EPSTRAIN "InnerSurf",1);
-  VTK_LS_CELLARRAY(p->Dict["NEIPS"] > 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_INTEGRATIONPOINT "InnerSurf",p->Dict["NEIPS"]);
-
-  // Outer surface data
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(1)"] != 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_STRESS "OuterSurf",6);
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(2)"] != 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_EPSTRAIN "OuterSurf",1);
-  VTK_LS_CELLARRAY(p->Dict["NEIPS"] > 0,LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_INTEGRATIONPOINT "OuterSurf",p->Dict["NEIPS"]);
-
-  if(p->Dict["NV3DT"] > 21)
-  {
-    //in some use case the ISTRN is incorrectly calculated because the d3plot
-    //is unclear if the flag needs to be computed separately for
-    //NV2D and NV3DT
-
-    VTK_LS_CELLARRAY(p->Dict["ISTRN"],LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_STRAIN "InnerSurf",6);
-    VTK_LS_CELLARRAY(p->Dict["ISTRN"],LSDynaMetaData::THICK_SHELL,LS_ARRAYNAME_STRAIN "OuterSurf",6);
-
-    // If _MAXINT_ > 3, there will be additional fields. They are other
-    // integration point values. There are (_MAXINT_ - 3) extra
-    // integration points, each of which has a stress (6 vals),
-    // an effective plastic strain (1 val), and extra integration
-    // point values (NEIPS vals).
-    for ( itmp = 3; itmp < p->Dict["_MAXINT_"]; ++itmp )
-    {
-      snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_STRESS, itmp + 1 );
-      VTK_LS_CELLARRAY(p->Dict["IOSHL(1)"] != 0,LSDynaMetaData::THICK_SHELL,ctmp,6);
-
-      snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_EPSTRAIN, itmp + 1 );
-      VTK_LS_CELLARRAY(p->Dict["IOSHL(2)"] != 0,LSDynaMetaData::THICK_SHELL,ctmp,1);
-
-      snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_INTEGRATIONPOINT, itmp + 1 );
-      VTK_LS_CELLARRAY(p->Dict["NEIPS"] > 0,LSDynaMetaData::THICK_SHELL,ctmp,p->Dict["NEIPS"]);
-    }
-  }
-
-  this->ReadCellProperties(LSDynaMetaData::THICK_SHELL, p->Dict["NV3DT"]);
-
-
-  // Beam element data=========================================================
-  startPos=0;
-  VTK_LS_CELLARRAY(1,LSDynaMetaData::BEAM,LS_ARRAYNAME_AXIALFORCE,1);
-  VTK_LS_CELLARRAY(1,LSDynaMetaData::BEAM,LS_ARRAYNAME_SHEARRESULTANT,2);
-  VTK_LS_CELLARRAY(1,LSDynaMetaData::BEAM,LS_ARRAYNAME_BENDINGRESULTANT,2);
-  VTK_LS_CELLARRAY(1,LSDynaMetaData::BEAM,LS_ARRAYNAME_TORSIONRESULTANT,2);
-
-  VTK_LS_CELLARRAY(p->Dict["NV1D"] > 6,LSDynaMetaData::BEAM,LS_ARRAYNAME_SHEARSTRESS,2);
-  VTK_LS_CELLARRAY(p->Dict["NV1D"] > 6,LSDynaMetaData::BEAM,LS_ARRAYNAME_AXIALSTRESS,1);
-  VTK_LS_CELLARRAY(p->Dict["NV1D"] > 6,LSDynaMetaData::BEAM,LS_ARRAYNAME_AXIALSTRAIN,1);
-  VTK_LS_CELLARRAY(p->Dict["NV1D"] > 6,LSDynaMetaData::BEAM,LS_ARRAYNAME_PLASTICSTRAIN,1);
-  this->ReadCellProperties(LSDynaMetaData::BEAM, p->Dict["NV1D"]);
-
-
-  // Shell element data========================================================
-  startPos=0;
-
-  // Mid-surface data
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(1)"] != 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_STRESS,6);
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(2)"] != 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_EPSTRAIN,1);
-  VTK_LS_CELLARRAY(p->Dict["NEIPS"] > 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_INTEGRATIONPOINT,p->Dict["NEIPS"]);
-
-  // Inner surface data
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(1)"] != 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_STRESS "InnerSurf",6);
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(2)"] != 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_EPSTRAIN "InnerSurf",1);
-  VTK_LS_CELLARRAY(p->Dict["NEIPS"] > 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_INTEGRATIONPOINT "InnerSurf",p->Dict["NEIPS"]);
-
-  // Outer surface data
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(1)"] != 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_STRESS "OuterSurf",6);
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(2)"] != 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_EPSTRAIN "OuterSurf",1);
-  VTK_LS_CELLARRAY(p->Dict["NEIPS"] > 0,LSDynaMetaData::SHELL,LS_ARRAYNAME_INTEGRATIONPOINT "OuterSurf",p->Dict["NEIPS"]);
-
-  // If _MAXINT_ > 3, there will be additional fields. They are other
-  // integration point values. There are (_MAXINT_ - 3) extra
-  // integration points, each of which has a stress (6 vals),
-  // an effective plastic strain (1 val), and extra integration
-  // point values (NEIPS vals).
-  for ( itmp = 3; itmp < p->Dict["_MAXINT_"]; ++itmp )
-  {
-    snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_STRESS, itmp + 1 );
-    VTK_LS_CELLARRAY(p->Dict["IOSHL(1)"] != 0,LSDynaMetaData::SHELL,ctmp,6);
-
-    snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_EPSTRAIN, itmp + 1 );
-    VTK_LS_CELLARRAY(p->Dict["IOSHL(2)"] != 0,LSDynaMetaData::SHELL,ctmp,1);
-
-    snprintf( ctmp, sizeof(ctmp), "%sIntPt%d", LS_ARRAYNAME_INTEGRATIONPOINT, itmp + 1 );
-    VTK_LS_CELLARRAY(p->Dict["NEIPS"] > 0,LSDynaMetaData::SHELL,ctmp,p->Dict["NEIPS"]);
-  }
-
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(3)"],LSDynaMetaData::SHELL,LS_ARRAYNAME_BENDINGRESULTANT,3); // Bending Mx, My, Mxy
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(3)"],LSDynaMetaData::SHELL,LS_ARRAYNAME_SHEARRESULTANT,2); // Shear Qx, Qy
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(3)"],LSDynaMetaData::SHELL,LS_ARRAYNAME_NORMALRESULTANT,3); // Normal Nx, Ny, Nxy
-
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(4)"],LSDynaMetaData::SHELL,LS_ARRAYNAME_THICKNESS,1);
-  VTK_LS_CELLARRAY(p->Dict["IOSHL(4)"],LSDynaMetaData::SHELL,LS_ARRAYNAME_ELEMENTMISC,2);
-
-  VTK_LS_CELLARRAY(p->Dict["ISTRN"],LSDynaMetaData::SHELL,LS_ARRAYNAME_STRAIN "InnerSurf",6);
-  VTK_LS_CELLARRAY(p->Dict["ISTRN"],LSDynaMetaData::SHELL,LS_ARRAYNAME_STRAIN "OuterSurf",6);
-
-  //we use a temp boolean so that we have less of a chance of causing a bug.
-  //if you just insert the or conditions into the macro it becomes a || b && c
-  //when you really want (a ||b) && c
-  bool valid =(! p->Dict["ISTRN"] || (p->Dict["NV2D"] >= 45));
-  VTK_LS_CELLARRAY(valid,LSDynaMetaData::SHELL,LS_ARRAYNAME_INTERNALENERGY,1);
-
-  this->ReadCellProperties(LSDynaMetaData::SHELL, p->Dict["NV2D"]);
 
 #undef VTK_LS_CELLARRAY
   return 0;
@@ -3022,13 +2908,13 @@ int vtkLSDynaReader::ReadSPHState( vtkIdType vtkNotUsed(step) )
   { \
     this->Parts->AddProperty(celltype,arrayname,startPos,numComps); \
   } \
-  startPos+=(numComps);
+  if (cond) startPos+=(numComps);
 
   // Smooth Particle ========================================================
 
   // currently have a bug when reading SPH properties disabling for now
   int startPos=0; //used to keep track of the startpos between calls to VTK_LS_CELLARRAY
-  VTK_LS_SPHARRAY(               false,LSDynaMetaData::PARTICLE,LS_ARRAYNAME_DEATH,1); //always keep death off
+  VTK_LS_SPHARRAY(               true ,LSDynaMetaData::PARTICLE,LS_ARRAYNAME_MATERIAL,1); //always keep material id / death
   VTK_LS_SPHARRAY(p->Dict["isphfg(2)"],LSDynaMetaData::PARTICLE,LS_ARRAYNAME_RADIUSOFINFLUENCE,1);
   VTK_LS_SPHARRAY(p->Dict["isphfg(3)"],LSDynaMetaData::PARTICLE,LS_ARRAYNAME_PRESSURE,1);
   VTK_LS_SPHARRAY(p->Dict["isphfg(4)"],LSDynaMetaData::PARTICLE,LS_ARRAYNAME_STRESS,6);
@@ -3065,7 +2951,7 @@ int vtkLSDynaReader::ReadUserMaterialIds()
     vtkIdType skipIds = p->Dict["NUMNP"] + p->Dict["NEL8"] + p->Dict["NEL2"] + p->Dict["NEL4"] + p->Dict["NELT"];
     p->Fam.SkipToWord( LSDynaFamily::UserIdData, p->Fam.GetCurrentAdaptLevel(), 16 + skipIds );
 
-    //in some cases the number of materials in NMAT is incorrect since we are loading
+    //in some cases the number of materials in NMMAT is incorrect since we are loading
     //SPH materials.
     numMats = p->Dict["NMMAT"];
 
@@ -3165,7 +3051,7 @@ int vtkLSDynaReader::ReadPartTitlesFromRootFile()
 
     p->Fam.BufferChunk( LSDynaFamily::Char, nameWordSize);
     std::string name(p->Fam.GetNextWordAsChars(),72);
-    if(name.size() > 0 && name[0]!=' ')
+    if(!name.empty() && name[0]!=' ')
     {
       //strip the name to the subset that
       size_t found = name.find_last_not_of(' ');
@@ -3194,7 +3080,7 @@ void vtkLSDynaReader::ResetPartInfo()
   int i;
   int N;
   char partLabel[64];
-  int arbitraryMaterials = p->Dict["NMMAT"];
+  int arbitraryMaterials = p->Dict["NSORT"] < 0 ? 1 : 0;
 
 #define VTK_LSDYNA_PARTLABEL(dict,fmt) \
   N = p->Dict[dict]; \
@@ -3248,7 +3134,7 @@ int vtkLSDynaReader::ReadInputDeck()
   }
 
   std::string header;
-  vtkLSGetLine( deck, header );
+  std::getline( deck, header, '\n' );
   deck.seekg( 0, ios::beg );
   int retval;
   if ( vtksys::SystemTools::StringStartsWith( header.c_str(), "<?xml" ) )
@@ -3271,7 +3157,7 @@ int vtkLSDynaReader::ReadInputDeckXML( ifstream& deck )
   // We must be able to parse the file and end up with 1 part per material ID
   if ( ! parser->Parse() || this->P->GetTotalMaterialCount() != (int)this->P->PartNames.size() )
   {
-    // We had a problem identifying a part, give up and start over by reseting the parts
+    // We had a problem identifying a part, give up and start over by resetting the parts
     this->ResetPartInfo();
   }
   parser->Delete();
@@ -3317,11 +3203,11 @@ int vtkLSDynaReader::ReadInputDeckKeywords( ifstream& deck )
           if ( line[0] == '&' )
           {
             // found a reference. look it up.
-            partId = splits.size() ? parameters[splits[0]] : -1;
+            partId = !splits.empty() ? parameters[splits[0]] : -1;
           }
           else
           {
-            if ( splits.size() < 1 || sscanf( splits[0].c_str(), "%d", &partId ) <= 0 )
+            if ( splits.empty() || sscanf( splits[0].c_str(), "%d", &partId ) <= 0 )
             {
               partId = -1;
             }
@@ -3505,7 +3391,7 @@ int vtkLSDynaReader::RequestData(
   p->Fam.ClearBuffer();
   p->Fam.OpenFileHandles();
 
-  vtkMultiBlockDataSet* mbds = 0;
+  vtkMultiBlockDataSet* mbds = nullptr;
   vtkInformation* oi = oinfo->GetInformationObject(0);
   if ( ! oi )
   {
@@ -3590,13 +3476,15 @@ int vtkLSDynaReader::RequestData(
     if (this->Parts->IsActivePart(i))
     {
       vtkUnstructuredGrid *ug = this->Parts->GetGridForPart(i);
+      this->ComputeDeflectionAndUpdateGeometry(ug);
+
       mbds->SetBlock(i,ug);
       mbds->GetMetaData(i)->Set(vtkCompositeDataSet::NAME(),
         this->P->PartNames[i].c_str());
     }
     else
     {
-      mbds->SetBlock(i,NULL);
+      mbds->SetBlock(i,nullptr);
     }
   }
 
@@ -3682,12 +3570,12 @@ int vtkLSDynaReader::ReadConnectivityAndMaterial()
   this->Parts->InitCellInsertion();
   if(p->Fam.GetWordSize() == 8)
   {
-    vtkIdType *buf=NULL;
+    vtkIdType *buf=nullptr;
     return this->FillTopology<8>(buf);
   }
   else
   {
-    int *buf=NULL;
+    int *buf=nullptr;
     return this->FillTopology<4>(buf);
   }
 }
@@ -3705,7 +3593,7 @@ void vtkLSDynaReader::ReadBlockCellSizes()
   vtkIdType numCellsToSkip=0, numCellsToSkipEnd=0, chunkSize=0;
   const T fileNumWordsPerCell(numWordsPerCell * numWordsPerIdType);
   const T offsetToMatId(numWordsPerIdType * (numWordsPerCell-1));
-  T* buff = NULL;
+  T* buff = nullptr;
 
   //get from the part the read information for this lsdyna block type
   this->Parts->GetPartReadInfo(blockType,nc,numCellsToSkip,numCellsToSkipEnd);
@@ -3793,7 +3681,7 @@ int vtkLSDynaReader::ReadPartSizes()
 }
 
 //-----------------------------------------------------------------------------
-void vtkLSDynaReader::SetDeformedMesh(int deformed)
+void vtkLSDynaReader::SetDeformedMesh(vtkTypeBool deformed)
 {
   if (this->DeformedMesh != deformed)
   {
@@ -3801,4 +3689,75 @@ void vtkLSDynaReader::SetDeformedMesh(int deformed)
     this->ResetPartsCache();
     this->Modified();
   }
+}
+
+namespace
+{
+template <class T, int NumberOfComponents>
+vtkSmartPointer<T> vtkComputeDifference(T* aArray, T* bArray)
+{
+  if (aArray == nullptr || bArray == nullptr)
+  {
+    return nullptr;
+  }
+
+  const vtkIdType numTuples = aArray->GetNumberOfTuples();
+  const int numComps = aArray->GetNumberOfComponents();
+  if (bArray->GetNumberOfTuples() != numTuples || bArray->GetNumberOfComponents() != numComps ||
+    numComps != NumberOfComponents)
+  {
+    return nullptr;
+  }
+
+  vtkVector<typename T::ValueType, NumberOfComponents> tupleA, tupleB;
+  vtkSmartPointer<T> result = vtkSmartPointer<T>::New();
+  result->SetNumberOfComponents(NumberOfComponents);
+  result->SetNumberOfTuples(numTuples);
+  for (vtkIdType cc = 0, max = numTuples; cc < max; ++cc)
+  {
+    aArray->GetTypedTuple(cc, tupleA.GetData());
+    bArray->GetTypedTuple(cc, tupleB.GetData());
+    result->SetTypedTuple(cc, (tupleA - tupleB).GetData());
+  }
+  return result;
+}
+}
+
+//-----------------------------------------------------------------------------
+int vtkLSDynaReader::ComputeDeflectionAndUpdateGeometry(vtkUnstructuredGrid* ug)
+{
+  // If LS_ARRAYNAME_DEFLECTION is preset then this computes the deflection.
+  // If this->DeformedMesh is true, this additionally swaps the output geometry points
+  // to be the LS_ARRAYNAME_DEFLECTION (which is the deflected coordinates).
+  LSDynaMetaData* p = this->P;
+  vtkDataArray* deflectedCoords =
+    ug ? ug->GetPointData()->GetArray(LS_ARRAYNAME_DEFLECTION) : nullptr;
+  if (deflectedCoords)
+  {
+    vtkSmartPointer<vtkDataArray> deflection;
+    if (p->Fam.GetWordSize() == 8)
+    {
+      deflection =
+        vtkComputeDifference<vtkDoubleArray, 3>(vtkDoubleArray::SafeDownCast(deflectedCoords),
+          vtkDoubleArray::SafeDownCast(ug->GetPoints()->GetData()));
+    }
+    else
+    {
+      deflection =
+        vtkComputeDifference<vtkFloatArray, 3>(vtkFloatArray::SafeDownCast(deflectedCoords),
+          vtkFloatArray::SafeDownCast(ug->GetPoints()->GetData()));
+    }
+
+    if (deflection)
+    {
+      deflection->SetName("Deflection");
+      ug->GetPointData()->AddArray(deflection);
+    }
+
+    if (this->DeformedMesh)
+    {
+      ug->GetPoints()->SetData(deflectedCoords);
+    }
+  }
+  return EXIT_SUCCESS;
 }

@@ -11,7 +11,6 @@ set(Module_SRCS
   vtkEllipticalButtonSource.cxx
   vtkFrustumSource.cxx
   vtkGlyphSource2D.cxx
-  vtkHyperOctreeFractalSource.cxx
   vtkHyperTreeGridSource.cxx
   vtkLineSource.cxx
   vtkOutlineCornerFilter.cxx
@@ -24,6 +23,7 @@ set(Module_SRCS
   vtkPolyLineSource.cxx
   vtkProgrammableDataObjectSource.cxx
   vtkProgrammableSource.cxx
+  vtkRandomHyperTreeGridSource.cxx
   vtkRectangularButtonSource.cxx
   vtkRegularPolygonSource.cxx
   #vtkRRandomTableSource.cxx # Should be in R kit
@@ -36,11 +36,6 @@ set(Module_SRCS
   vtkTexturedSphereSource.cxx
   vtkGraphToPolyData.cxx
   vtkDiagonalMatrixSource.cxx
-  )
-
-set_source_files_properties(
-  vtkButtonSource
-  ABSTRACT
   )
 
 vtk_module_library(vtkFiltersSources ${Module_SRCS})

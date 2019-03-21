@@ -47,7 +47,7 @@ void vtkUnicodeStringArray::PrintSelf(ostream& os, vtkIndent indent)
   this->Superclass::PrintSelf(os,indent);
 }
 
-int vtkUnicodeStringArray::Allocate(vtkIdType sz, vtkIdType)
+vtkTypeBool vtkUnicodeStringArray::Allocate(vtkIdType sz, vtkIdType)
 {
   this->Internal->Storage.reserve(sz);
   this->DataChanged();
@@ -209,7 +209,7 @@ void* vtkUnicodeStringArray::GetVoidPointer(vtkIdType id)
 {
   // Err.. not totally sure what to do here
   if (this->Internal->Storage.empty())
-    return 0;
+    return nullptr;
   else
     return &this->Internal->Storage[id];
 }
@@ -291,11 +291,11 @@ void vtkUnicodeStringArray::InterpolateTuple(vtkIdType i,
 
 void vtkUnicodeStringArray::Squeeze()
 {
-  Implementation::StorageT(this->Internal->Storage).swap(this->Internal->Storage);
+  this->Internal->Storage.shrink_to_fit();
   this->DataChanged();
 }
 
-int vtkUnicodeStringArray::Resize(vtkIdType numTuples)
+vtkTypeBool vtkUnicodeStringArray::Resize(vtkIdType numTuples)
 {
   this->Internal->Storage.resize(numTuples);
   this->DataChanged();
@@ -308,6 +308,11 @@ void vtkUnicodeStringArray::SetVoidArray(void*, vtkIdType, int)
 }
 
 void vtkUnicodeStringArray::SetVoidArray(void*, vtkIdType, int, int)
+{
+  vtkErrorMacro("Not implemented.");
+}
+
+void vtkUnicodeStringArray::SetArrayFreeFunction(void (*)(void *))
 {
   vtkErrorMacro("Not implemented.");
 }
@@ -331,7 +336,7 @@ int vtkUnicodeStringArray::IsNumeric()
 vtkArrayIterator* vtkUnicodeStringArray::NewIterator()
 {
   vtkErrorMacro("Not implemented.");
-  return 0;
+  return nullptr;
 }
 
 vtkVariant vtkUnicodeStringArray::GetVariantValue(vtkIdType idx)

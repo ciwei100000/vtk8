@@ -102,7 +102,7 @@ class VTKFILTERSCORE_EXPORT vtkSmoothPolyDataFilter : public vtkPolyDataAlgorith
 {
 public:
   vtkTypeMacro(vtkSmoothPolyDataFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with number of iterations 20; relaxation factor .01;
@@ -146,9 +146,9 @@ public:
   /**
    * Turn on/off smoothing along sharp interior edges.
    */
-  vtkSetMacro(FeatureEdgeSmoothing,int);
-  vtkGetMacro(FeatureEdgeSmoothing,int);
-  vtkBooleanMacro(FeatureEdgeSmoothing,int);
+  vtkSetMacro(FeatureEdgeSmoothing,vtkTypeBool);
+  vtkGetMacro(FeatureEdgeSmoothing,vtkTypeBool);
+  vtkBooleanMacro(FeatureEdgeSmoothing,vtkTypeBool);
   //@}
 
   //@{
@@ -172,27 +172,27 @@ public:
   /**
    * Turn on/off the smoothing of vertices on the boundary of the mesh.
    */
-  vtkSetMacro(BoundarySmoothing,int);
-  vtkGetMacro(BoundarySmoothing,int);
-  vtkBooleanMacro(BoundarySmoothing,int);
+  vtkSetMacro(BoundarySmoothing,vtkTypeBool);
+  vtkGetMacro(BoundarySmoothing,vtkTypeBool);
+  vtkBooleanMacro(BoundarySmoothing,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off the generation of scalar distance values.
    */
-  vtkSetMacro(GenerateErrorScalars,int);
-  vtkGetMacro(GenerateErrorScalars,int);
-  vtkBooleanMacro(GenerateErrorScalars,int);
+  vtkSetMacro(GenerateErrorScalars,vtkTypeBool);
+  vtkGetMacro(GenerateErrorScalars,vtkTypeBool);
+  vtkBooleanMacro(GenerateErrorScalars,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off the generation of error vectors.
    */
-  vtkSetMacro(GenerateErrorVectors,int);
-  vtkGetMacro(GenerateErrorVectors,int);
-  vtkBooleanMacro(GenerateErrorVectors,int);
+  vtkSetMacro(GenerateErrorVectors,vtkTypeBool);
+  vtkGetMacro(GenerateErrorVectors,vtkTypeBool);
+  vtkBooleanMacro(GenerateErrorVectors,vtkTypeBool);
   //@}
 
   //@{
@@ -217,26 +217,26 @@ public:
 
 protected:
   vtkSmoothPolyDataFilter();
-  ~vtkSmoothPolyDataFilter() VTK_OVERRIDE {}
+  ~vtkSmoothPolyDataFilter() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   double Convergence;
   int NumberOfIterations;
   double RelaxationFactor;
-  int FeatureEdgeSmoothing;
+  vtkTypeBool FeatureEdgeSmoothing;
   double FeatureAngle;
   double EdgeAngle;
-  int BoundarySmoothing;
-  int GenerateErrorScalars;
-  int GenerateErrorVectors;
+  vtkTypeBool BoundarySmoothing;
+  vtkTypeBool GenerateErrorScalars;
+  vtkTypeBool GenerateErrorVectors;
   int OutputPointsPrecision;
 
   vtkSmoothPoints *SmoothPoints;
 private:
-  vtkSmoothPolyDataFilter(const vtkSmoothPolyDataFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSmoothPolyDataFilter&) VTK_DELETE_FUNCTION;
+  vtkSmoothPolyDataFilter(const vtkSmoothPolyDataFilter&) = delete;
+  void operator=(const vtkSmoothPolyDataFilter&) = delete;
 };
 
 #endif

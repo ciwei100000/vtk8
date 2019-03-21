@@ -24,6 +24,10 @@
 #include <vtk_glew.h>
 // GLUT includes
 #if defined(__APPLE__)
+# include <AvailabilityMacros.h>
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1090
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 # include <GLUT/glut.h> // Include GLUT API.
 #else
 # if defined(_WIN32)
@@ -78,16 +82,16 @@ void display()
   if (!initialized)
   {
     vtkNew<vtkExternalOpenGLRenderWindow> renWin;
-    externalVTKWidget->SetRenderWindow(renWin.GetPointer());
+    externalVTKWidget->SetRenderWindow(renWin);
     vtkNew<vtkCallbackCommand> callback;
     callback->SetCallback(MakeCurrentCallback);
     renWin->AddObserver(vtkCommand::WindowMakeCurrentEvent,
-                        callback.GetPointer());
+                        callback);
     vtkNew<vtkPolyDataMapper> mapper;
     vtkNew<vtkActor> actor;
-    actor->SetMapper(mapper.GetPointer());
+    actor->SetMapper(mapper);
     vtkRenderer* ren = externalVTKWidget->AddRenderer();
-    ren->AddActor(actor.GetPointer());
+    ren->AddActor(actor);
     vtkNew<vtkCubeSource> cs;
     mapper->SetInputConnection(cs->GetOutputPort());
     actor->RotateX(45.0);

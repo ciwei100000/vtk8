@@ -68,10 +68,10 @@ typedef vtkObserverMap::iterator ObserverMapIterator;
 //----------------------------------------------------------------------------
 vtkObserverMediator::vtkObserverMediator()
 {
-  this->Interactor = NULL;
+  this->Interactor = nullptr;
   this->ObserverMap = new vtkObserverMap;
 
-  this->CurrentObserver = NULL;
+  this->CurrentObserver = nullptr;
   this->CurrentCursorShape = VTK_CURSOR_DEFAULT;
 }
 
@@ -89,7 +89,7 @@ void vtkObserverMediator::SetInteractor(vtkRenderWindowInteractor* i)
 }
 
 //----------------------------------------------------------------------------
-// This  mediation process works by keeping track of non-default cursor
+// This mediation process works by keeping track of non-default cursor
 // requests.
 // Ties are broken based on widget priority (hence the priority queue).
 int vtkObserverMediator::RequestCursorShape(vtkInteractorObserver *w, int requestedShape)

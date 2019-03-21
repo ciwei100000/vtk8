@@ -62,7 +62,6 @@ vtkPolyLineRepresentation::vtkPolyLineRepresentation()
   vtkPolyDataMapper* lineMapper = vtkPolyDataMapper::New();
   lineMapper->SetInputConnection(
     this->PolyLineSource->GetOutputPort()) ;
-  lineMapper->ImmediateModeRenderingOn();
   lineMapper->SetResolveCoincidentTopologyToPolygonOffset();
 
   this->LineActor->SetMapper( lineMapper );
@@ -104,6 +103,7 @@ void vtkPolyLineRepresentation::BuildRepresentation()
   }
   this->PolyLineSource->SetClosed(this->Closed);
   this->PolyLineSource->Modified();
+  points->Modified();
 
   double bounds[6];
   bbox.GetBounds(bounds);
@@ -126,7 +126,7 @@ void vtkPolyLineRepresentation::SetNumberOfHandles(int npts)
   }
 
   // Ensure that no handle is current
-  this->HighlightHandle(NULL);
+  this->HighlightHandle(nullptr);
 
   double radius = this->HandleGeometry[0]->GetRadius();
   this->Initialize();
@@ -175,7 +175,7 @@ void vtkPolyLineRepresentation::SetNumberOfHandles(int npts)
   }
   else
   {
-    this->CurrentHandleIndex = this->HighlightHandle(NULL);
+    this->CurrentHandleIndex = this->HighlightHandle(nullptr);
   }
 
   this->BuildRepresentation();
@@ -227,26 +227,37 @@ void vtkPolyLineRepresentation::InsertHandleOnLine(double* pos)
   if (this->NumberOfHandles < 2) { return; }
 
   vtkIdType id = this->LinePicker->GetCellId();
-  if (id == -1){ return; }
-
-  vtkIdType subid = this->LinePicker->GetSubId();
 
   vtkPoints* newpoints = vtkPoints::New(VTK_DOUBLE);
   newpoints->SetNumberOfPoints(this->NumberOfHandles+1);
 
-  int istart = subid;
-  int istop = istart + 1;
-  int count = 0;
-  for ( int i = 0; i <= istart; ++i )
+  if (id == -1)
   {
-    newpoints->SetPoint(count++,this->HandleGeometry[i]->GetCenter());
+    // not on a line, add to the end
+    for (int i = 0; i < this->NumberOfHandles; ++i)
+    {
+      newpoints->SetPoint(i, this->HandleGeometry[i]->GetCenter());
+    }
+    newpoints->SetPoint(this->NumberOfHandles, pos);
   }
-
-  newpoints->SetPoint(count++,pos);
-
-  for ( int i = istop; i < this->NumberOfHandles; ++i )
+  else
   {
-    newpoints->SetPoint(count++,this->HandleGeometry[i]->GetCenter());
+    vtkIdType subid = this->LinePicker->GetSubId();
+
+    int istart = subid;
+    int istop = istart + 1;
+    int count = 0;
+    for (int i = 0; i <= istart; ++i)
+    {
+      newpoints->SetPoint(count++, this->HandleGeometry[i]->GetCenter());
+    }
+
+    newpoints->SetPoint(count++, pos);
+
+    for (int i = istop; i < this->NumberOfHandles; ++i)
+    {
+      newpoints->SetPoint(count++, this->HandleGeometry[i]->GetCenter());
+    }
   }
 
   this->InitializeHandles(newpoints);

@@ -49,7 +49,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkAbstractCellLocator : public vtkLocator
 {
 public:
   vtkTypeMacro(vtkAbstractCellLocator,vtkLocator);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -70,9 +70,9 @@ public:
    * won't cause disk caching (24 extra bytes per cell are required to
    * save the bounds).
    */
-  vtkSetMacro(CacheCellBounds,int);
-  vtkGetMacro(CacheCellBounds,int);
-  vtkBooleanMacro(CacheCellBounds,int);
+  vtkSetMacro(CacheCellBounds,vtkTypeBool);
+  vtkGetMacro(CacheCellBounds,vtkTypeBool);
+  vtkBooleanMacro(CacheCellBounds,vtkTypeBool);
   //@}
 
   //@{
@@ -81,9 +81,9 @@ public:
    * not applicable to all implementations, but if the locator is being used
    * as a geometry simplification technique, there is no need to keep them.
    */
-  vtkSetMacro(RetainCellLists,int);
-  vtkGetMacro(RetainCellLists,int);
-  vtkBooleanMacro(RetainCellLists,int);
+  vtkSetMacro(RetainCellLists,vtkTypeBool);
+  vtkGetMacro(RetainCellLists,vtkTypeBool);
+  vtkBooleanMacro(RetainCellLists,vtkTypeBool);
   //@}
 
   //@{
@@ -93,9 +93,9 @@ public:
    * If LazyEvaluation is supported, this turns on/off the feature.
    * if not supported, it is ignored.
    */
-  vtkSetMacro(LazyEvaluation,int);
-  vtkGetMacro(LazyEvaluation,int);
-  vtkBooleanMacro(LazyEvaluation,int);
+  vtkSetMacro(LazyEvaluation,vtkTypeBool);
+  vtkGetMacro(LazyEvaluation,vtkTypeBool);
+  vtkBooleanMacro(LazyEvaluation,vtkTypeBool);
   //@}
 
   //@{
@@ -106,33 +106,31 @@ public:
    * Turning on this flag enables some locators to skip the rebuilding
    * phase
    */
-  vtkSetMacro(UseExistingSearchStructure,int);
-  vtkGetMacro(UseExistingSearchStructure,int);
-  vtkBooleanMacro(UseExistingSearchStructure,int);
+  vtkSetMacro(UseExistingSearchStructure,vtkTypeBool);
+  vtkGetMacro(UseExistingSearchStructure,vtkTypeBool);
+  vtkBooleanMacro(UseExistingSearchStructure,vtkTypeBool);
   //@}
 
   /**
    * Return intersection point (if any) of finite line with cells contained
    * in cell locator. See vtkCell.h parameters documentation.
    */
-  virtual int IntersectWithLine(
-    double p1[3], double p2[3], double tol, double& t, double x[3],
+  virtual int IntersectWithLine(const double p1[3], const double p2[3], double tol, double& t, double x[3],
     double pcoords[3], int &subId);
 
   /**
    * Return intersection point (if any) AND the cell which was intersected by
    * the finite line.
    */
-  virtual int IntersectWithLine(
-    double p1[3], double p2[3], double tol, double& t, double x[3],
+  virtual int IntersectWithLine(const double p1[3], const double p2[3], double tol, double& t, double x[3],
     double pcoords[3], int &subId, vtkIdType &cellId);
 
   /**
    * Return intersection point (if any) AND the cell which was intersected by
-   * the finite line. The cell is returned as a cell id and as a generic cell.
+   * the finite line. The cell is returned as a cell id and as a generic
+   * cell.
    */
-  virtual int IntersectWithLine(
-    double p1[3], double p2[3], double tol, double& t, double x[3],
+  virtual int IntersectWithLine(const double p1[3], const double p2[3], double tol, double& t, double x[3],
     double pcoords[3], int &subId, vtkIdType &cellId, vtkGenericCell *cell);
 
   /**
@@ -143,9 +141,9 @@ public:
    * The return value of the function is 0 if no intersections were found,
    * -1 if point 'a0' lies inside the closed surface, or +1 if point 'a0'
    * lies outside the closed surface.
-   * Either 'points' or 'cellIds' can be set to NULL if you don't want
+   * Either 'points' or 'cellIds' can be set to nullptr if you don't want
    * to receive that information. This method is currently only implemented
-   * in vtkOBBTree
+   * in vtkOBBTree.
    */
   virtual int IntersectWithLine(
     const double p1[3], const double p2[3],
@@ -157,7 +155,7 @@ public:
    * vertices of the cell.
    */
   virtual void FindClosestPoint(
-    double x[3], double closestPoint[3],
+    const double x[3], double closestPoint[3],
     vtkIdType &cellId, int &subId, double& dist2);
 
   /**
@@ -172,7 +170,7 @@ public:
    * exit.
    */
   virtual void FindClosestPoint(
-    double x[3], double closestPoint[3],
+    const double x[3], double closestPoint[3],
     vtkGenericCell *cell, vtkIdType &cellId,
     int &subId, double& dist2);
 
@@ -245,8 +243,7 @@ public:
    * to populate. This method returns data only after the locator has been
    * built.
    */
-  virtual void FindCellsAlongLine(
-    double p1[3], double p2[3], double tolerance, vtkIdList *cells);
+  virtual void FindCellsAlongLine(const double p1[3], const double p2[3], double tolerance, vtkIdList *cells);
 
   /**
    * Returns the Id of the cell containing the point,
@@ -272,7 +269,7 @@ public:
 
 protected:
    vtkAbstractCellLocator();
-  ~vtkAbstractCellLocator() VTK_OVERRIDE;
+  ~vtkAbstractCellLocator() override;
 
   //@{
   /**
@@ -287,18 +284,16 @@ protected:
   //@}
 
   int NumberOfCellsPerNode;
-  int RetainCellLists;
-  int CacheCellBounds;
-  int LazyEvaluation;
-  int UseExistingSearchStructure;
+  vtkTypeBool RetainCellLists;
+  vtkTypeBool CacheCellBounds;
+  vtkTypeBool LazyEvaluation;
+  vtkTypeBool UseExistingSearchStructure;
   vtkGenericCell *GenericCell;
   double (*CellBounds)[6];
 
 private:
-  vtkAbstractCellLocator(const vtkAbstractCellLocator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAbstractCellLocator&) VTK_DELETE_FUNCTION;
+  vtkAbstractCellLocator(const vtkAbstractCellLocator&) = delete;
+  void operator=(const vtkAbstractCellLocator&) = delete;
 };
 
 #endif
-
-

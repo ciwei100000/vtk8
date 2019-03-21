@@ -46,7 +46,7 @@ bool fuzzyCompare3D(A a[3], A b[3])
 // Helpful class for storing and using color triples.
 class Triple {
 public:
-  Triple() {};
+  Triple() = default;
   Triple(double a, double b, double c) {
     data[0] = a; data[1] = b; data[2] = c;
   }
@@ -398,6 +398,14 @@ int TestMath(int,char *[])
     return 1;
   }
 
+  // If a NaN is passed, the first argument must be returned:
+  if (!std::isnan(vtkMath::Min(std::nan(""), 0.)) ||
+      std::isnan(vtkMath::Min(0., std::nan(""))))
+  {
+    vtkGenericWarningMacro("Min() does not properly handle NaN inputs.");
+    return 1;
+  }
+
   // test Max
   if (iMax != vtkMath::Max(iMin, iMax))
   {
@@ -408,6 +416,14 @@ int TestMath(int,char *[])
   if (dMax != vtkMath::Max(dMin, dMax))
   {
     vtkGenericWarningMacro("Max(" << dMin << ", " << dMax << " != " << dMax);
+    return 1;
+  }
+
+  // If a NaN is passed, the first argument must be returned:
+  if (!std::isnan(vtkMath::Max(std::nan(""), 0.)) ||
+      std::isnan(vtkMath::Max(0., std::nan(""))))
+  {
+    vtkGenericWarningMacro("Max() does not properly handle NaN inputs.");
     return 1;
   }
 
@@ -591,13 +607,12 @@ static int TestColorConvert(const Triple &rgb, const Triple &hsv,
   cout << "   CIE-L*ab: " << lab << endl;
 
   Triple result1;
-  double *result2;
 
 #define COMPARE(testname, target, dest) \
-  if (target != dest)                              \
+  if ((target) != (dest)) \
   { \
     vtkGenericWarningMacro(<< "Incorrect " #testname " conversion.  Got " \
-                           << dest << " expected " << target); \
+                           << (dest) << " expected " << (target)); \
     return 0; \
   }
 
@@ -606,11 +621,6 @@ static int TestColorConvert(const Triple &rgb, const Triple &hsv,
   COMPARE(RGBToHSV, hsv, result1);
   vtkMath::HSVToRGB(hsv(), result1());
   COMPARE(HSVToRGB, rgb, result1);
-
-  result2 = vtkMath::RGBToHSV(rgb());
-  COMPARE(RGBToHSV, hsv, result2);
-  result2 = vtkMath::HSVToRGB(hsv());
-  COMPARE(HSVToRGB, rgb, result2);
 
   vtkMath::RGBToHSV(rgb[0], rgb[1], rgb[2],
                     &result1[0], &result1[1], &result1[2]);
@@ -625,11 +635,6 @@ static int TestColorConvert(const Triple &rgb, const Triple &hsv,
   vtkMath::XYZToRGB(xyz(), result1());
   COMPARE(XYZToRGB, rgb, result1);
 
-  result2 = vtkMath::RGBToXYZ(rgb());
-  COMPARE(RGBToXYZ, xyz, result2);
-  result2 = vtkMath::XYZToRGB(xyz());
-  COMPARE(XYZToRGB, rgb, result2);
-
   vtkMath::RGBToXYZ(rgb[0], rgb[1], rgb[2],
                     &result1[0], &result1[1], &result1[2]);
   COMPARE(RGBToXYZ, xyz, result1);
@@ -643,11 +648,6 @@ static int TestColorConvert(const Triple &rgb, const Triple &hsv,
   vtkMath::XYZToLab(xyz(), result1());
   COMPARE(XYZToLab, lab, result1);
 
-  result2 = vtkMath::LabToXYZ(lab());
-  COMPARE(LabToXYZ, xyz, result2);
-  result2 = vtkMath::XYZToLab(xyz());
-  COMPARE(XYZToLab, lab, result2);
-
   vtkMath::LabToXYZ(lab[0], lab[1], lab[2],
                     &result1[0], &result1[1], &result1[2]);
   COMPARE(LabToXYZ, xyz, result1);
@@ -660,11 +660,6 @@ static int TestColorConvert(const Triple &rgb, const Triple &hsv,
   COMPARE(LabToRGB, rgb, result1);
   vtkMath::RGBToLab(rgb(), result1());
   COMPARE(RGBToLab, lab, result1);
-
-  result2 = vtkMath::LabToRGB(lab());
-  COMPARE(LabToRGB, rgb, result2);
-  result2 = vtkMath::RGBToLab(rgb());
-  COMPARE(RGBToLab, lab, result2);
 
   vtkMath::LabToRGB(lab[0], lab[1], lab[2],
                     &result1[0], &result1[1], &result1[2]);

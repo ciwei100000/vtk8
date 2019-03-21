@@ -36,9 +36,7 @@ vtkFillHolesFilter::vtkFillHolesFilter()
 }
 
 //------------------------------------------------------------------------
-vtkFillHolesFilter::~vtkFillHolesFilter()
-{
-}
+vtkFillHolesFilter::~vtkFillHolesFilter() = default;
 
 //------------------------------------------------------------------------
 int vtkFillHolesFilter::RequestData(
@@ -146,7 +144,7 @@ int vtkFillHolesFilter::RequestData(
   // add to the output list of cells
   vtkIdType numHolesFilled=0;
   numCells = newLines->GetNumberOfCells();
-  vtkCellArray *newCells = NULL;
+  vtkCellArray *newCells = nullptr;
   if ( numCells >= 3 ) //only do the work if there are free edges
   {
     double sphere[4];

@@ -43,7 +43,7 @@ public:
   static vtkForceDirectedLayoutStrategy *New();
 
   vtkTypeMacro(vtkForceDirectedLayoutStrategy, vtkGraphLayoutStrategy);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -71,9 +71,9 @@ public:
    * boolean is off, then the manually specified GraphBounds is used.
    * If on, then the input's bounds us used as the graph bounds.
    */
-  vtkSetMacro(AutomaticBoundsComputation, int);
-  vtkGetMacro(AutomaticBoundsComputation, int);
-  vtkBooleanMacro(AutomaticBoundsComputation, int);
+  vtkSetMacro(AutomaticBoundsComputation, vtkTypeBool);
+  vtkGetMacro(AutomaticBoundsComputation, vtkTypeBool);
+  vtkBooleanMacro(AutomaticBoundsComputation, vtkTypeBool);
   //@}
 
   //@{
@@ -114,18 +114,18 @@ public:
    * layout occurs in two dimensions. By default, three dimensional
    * layout is off.
    */
-  vtkSetMacro(ThreeDimensionalLayout, int);
-  vtkGetMacro(ThreeDimensionalLayout, int);
-  vtkBooleanMacro(ThreeDimensionalLayout, int);
+  vtkSetMacro(ThreeDimensionalLayout, vtkTypeBool);
+  vtkGetMacro(ThreeDimensionalLayout, vtkTypeBool);
+  vtkBooleanMacro(ThreeDimensionalLayout, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off use of random positions within the graph bounds as initial points.
    */
-  vtkSetMacro(RandomInitialPoints, int);
-  vtkGetMacro(RandomInitialPoints, int);
-  vtkBooleanMacro(RandomInitialPoints, int);
+  vtkSetMacro(RandomInitialPoints, vtkTypeBool);
+  vtkGetMacro(RandomInitialPoints, vtkTypeBool);
+  vtkBooleanMacro(RandomInitialPoints, vtkTypeBool);
   //@}
 
   //@{
@@ -141,7 +141,7 @@ public:
    * This strategy sets up some data structures
    * for faster processing of each Layout() call
    */
-  void Initialize() VTK_OVERRIDE;
+  void Initialize() override;
 
   /**
    * This is the layout method where the graph that was
@@ -150,25 +150,25 @@ public:
    * graph. If you have an iterative layout please implement
    * the IsLayoutComplete() method.
    */
-  void Layout() VTK_OVERRIDE;
+  void Layout() override;
 
   /**
    * I'm an iterative layout so this method lets the caller
    * know if I'm done laying out the graph
    */
-  int IsLayoutComplete() VTK_OVERRIDE {return this->LayoutComplete;}
+  int IsLayoutComplete() override {return this->LayoutComplete;}
 
 protected:
   vtkForceDirectedLayoutStrategy();
-  ~vtkForceDirectedLayoutStrategy() VTK_OVERRIDE;
+  ~vtkForceDirectedLayoutStrategy() override;
 
   double GraphBounds[6];
-  int   AutomaticBoundsComputation;  //Boolean controls automatic bounds calc.
+  vtkTypeBool   AutomaticBoundsComputation;  //Boolean controls automatic bounds calc.
   int   MaxNumberOfIterations;  //Maximum number of iterations.
   double CoolDownRate;  //Cool-down rate.  Note:  Higher # = Slower rate.
   double InitialTemperature;
-  int   ThreeDimensionalLayout;  //Boolean for a third dimension.
-  int RandomInitialPoints; //Boolean for having random points
+  vtkTypeBool   ThreeDimensionalLayout;  //Boolean for a third dimension.
+  vtkTypeBool RandomInitialPoints; //Boolean for having random points
 private:
 
   // A vertex contains a position and a displacement.
@@ -195,8 +195,8 @@ private:
   vtkLayoutVertex *v;
   vtkLayoutEdge *e;
 
-  vtkForceDirectedLayoutStrategy(const vtkForceDirectedLayoutStrategy&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkForceDirectedLayoutStrategy&) VTK_DELETE_FUNCTION;
+  vtkForceDirectedLayoutStrategy(const vtkForceDirectedLayoutStrategy&) = delete;
+  void operator=(const vtkForceDirectedLayoutStrategy&) = delete;
 };
 
 #endif

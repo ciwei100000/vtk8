@@ -58,7 +58,7 @@ class VTKRENDERINGCORE_EXPORT vtkRenderer : public vtkViewport
 {
 public:
   vtkTypeMacro(vtkRenderer,vtkViewport);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Create a vtkRenderer with a black background, a white ambient light,
@@ -126,9 +126,9 @@ public:
    * and the other side dark. If two-sided lighting on, both sides of the
    * surface will be lit.
    */
-  vtkGetMacro(TwoSidedLighting,int);
-  vtkSetMacro(TwoSidedLighting,int);
-  vtkBooleanMacro(TwoSidedLighting,int);
+  vtkGetMacro(TwoSidedLighting,vtkTypeBool);
+  vtkSetMacro(TwoSidedLighting,vtkTypeBool);
+  vtkBooleanMacro(TwoSidedLighting,vtkTypeBool);
   //@}
 
   //@{
@@ -145,9 +145,9 @@ public:
    * interactor's LightFollowCamera flag OFF, and leave the renderer's
    * LightFollowCamera flag ON.)
    */
-  vtkSetMacro(LightFollowCamera,int);
-  vtkGetMacro(LightFollowCamera,int);
-  vtkBooleanMacro(LightFollowCamera,int);
+  vtkSetMacro(LightFollowCamera,vtkTypeBool);
+  vtkGetMacro(LightFollowCamera,vtkTypeBool);
+  vtkBooleanMacro(LightFollowCamera,vtkTypeBool);
   //@}
 
   //@{
@@ -159,9 +159,9 @@ public:
    * light creation. (Turn AutomaticLightCreation off if you do not want lights
    * to be created.)
    */
-  vtkGetMacro(AutomaticLightCreation,int);
-  vtkSetMacro(AutomaticLightCreation,int);
-  vtkBooleanMacro(AutomaticLightCreation,int);
+  vtkGetMacro(AutomaticLightCreation,vtkTypeBool);
+  vtkSetMacro(AutomaticLightCreation,vtkTypeBool);
+  vtkBooleanMacro(AutomaticLightCreation,vtkTypeBool);
   //@}
 
   /**
@@ -207,9 +207,9 @@ public:
    * Both the RenderWindow Erase and Render Erase must be on
    * for the camera to clear the renderer.  By default, Erase is on.
    */
-  vtkSetMacro(Erase, int);
-  vtkGetMacro(Erase, int);
-  vtkBooleanMacro(Erase, int);
+  vtkSetMacro(Erase, vtkTypeBool);
+  vtkGetMacro(Erase, vtkTypeBool);
+  vtkBooleanMacro(Erase, vtkTypeBool);
   //@}
 
   //@{
@@ -218,9 +218,9 @@ public:
    * multiplex a vtkRenderWindow or render only part of a vtkRenderWindow.
    * By default, Draw is on.
    */
-  vtkSetMacro(Draw, int);
-  vtkGetMacro(Draw, int);
-  vtkBooleanMacro(Draw, int);
+  vtkSetMacro(Draw, vtkTypeBool);
+  vtkGetMacro(Draw, vtkTypeBool);
+  vtkBooleanMacro(Draw, vtkTypeBool);
   //@}
 
   /**
@@ -338,7 +338,7 @@ public:
   /**
    * Wrapper-friendly version of ComputeVisiblePropBounds
    */
-  double *ComputeVisiblePropBounds();
+  double *ComputeVisiblePropBounds() VTK_SIZEHINT(6);
 
   /**
    * Reset the camera clipping range based on the bounds of the
@@ -412,7 +412,7 @@ public:
    */
   void SetRenderWindow(vtkRenderWindow *);
   vtkRenderWindow *GetRenderWindow() {return this->RenderWindow;};
-  vtkWindow *GetVTKWindow() VTK_OVERRIDE;
+  vtkWindow *GetVTKWindow() override;
   //@}
 
   //@{
@@ -422,9 +422,9 @@ public:
    * much faster when the image has not changed, such as during an
    * expose event.
    */
-  vtkSetMacro(BackingStore,int);
-  vtkGetMacro(BackingStore,int);
-  vtkBooleanMacro(BackingStore,int);
+  vtkSetMacro(BackingStore,vtkTypeBool);
+  vtkGetMacro(BackingStore,vtkTypeBool);
+  vtkBooleanMacro(BackingStore,vtkTypeBool);
   //@}
 
   //@{
@@ -433,9 +433,9 @@ public:
    * can receive events from an interactor.  Should only be set if
    * there are multiple renderers in the same section of the viewport.
    */
-  vtkSetMacro(Interactive,int);
-  vtkGetMacro(Interactive,int);
-  vtkBooleanMacro(Interactive,int);
+  vtkSetMacro(Interactive,vtkTypeBool);
+  vtkGetMacro(Interactive,vtkTypeBool);
+  vtkBooleanMacro(Interactive,vtkTypeBool);
   //@}
 
   //@{
@@ -465,9 +465,9 @@ public:
    * This flag influences the Transparent() method, and is updated by calls to
    * SetLayer(). For this reason it should only be set after changing the layer.
    */
-  vtkGetMacro(PreserveColorBuffer, int);
-  vtkSetMacro(PreserveColorBuffer, int);
-  vtkBooleanMacro(PreserveColorBuffer, int);
+  vtkGetMacro(PreserveColorBuffer, vtkTypeBool);
+  vtkSetMacro(PreserveColorBuffer, vtkTypeBool);
+  vtkBooleanMacro(PreserveColorBuffer, vtkTypeBool);
   //@}
 
   //@{
@@ -475,9 +475,9 @@ public:
    * By default, the depth buffer is reset for each renderer. If this flag is
    * true, this renderer will use the existing depth buffer for its rendering.
    */
-  vtkSetMacro(PreserveDepthBuffer, int);
-  vtkGetMacro(PreserveDepthBuffer, int);
-  vtkBooleanMacro(PreserveDepthBuffer, int);
+  vtkSetMacro(PreserveDepthBuffer, vtkTypeBool);
+  vtkGetMacro(PreserveDepthBuffer, vtkTypeBool);
+  vtkBooleanMacro(PreserveDepthBuffer, vtkTypeBool);
   //@}
 
   /**
@@ -489,20 +489,30 @@ public:
   /**
    * Convert world point coordinates to view coordinates.
    */
-  void WorldToView() VTK_OVERRIDE;
+  void WorldToView() override;
 
   //@{
   /**
    * Convert view point coordinates to world coordinates.
    */
-  void ViewToWorld() VTK_OVERRIDE;
-  void ViewToWorld(double &wx, double &wy, double &wz) VTK_OVERRIDE;
+  void ViewToWorld() override;
+  void ViewToWorld(double &wx, double &wy, double &wz) override;
   //@}
 
   /**
    * Convert world point coordinates to view coordinates.
    */
-  void WorldToView(double &wx, double &wy, double &wz) VTK_OVERRIDE;
+  void WorldToView(double &wx, double &wy, double &wz) override;
+
+  //@{
+  /**
+   * Convert to from pose coordinates
+   */
+  void WorldToPose(double &wx, double &wy, double &wz) override;
+  void PoseToWorld(double &wx, double &wy, double &wz) override;
+  void ViewToPose(double &wx, double &wy, double &wz) override;
+  void PoseToView(double &wx, double &wy, double &wz) override;
+  //@}
 
   /**
    * Given a pixel location, return the Z value. The z value is
@@ -513,7 +523,7 @@ public:
   /**
    * Return the MTime of the renderer also considering its ivars.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -540,12 +550,12 @@ public:
    * If nothing was picked then NULL is returned.  This method selects from
    * the renderers Prop list.
    */
-  vtkAssemblyPath* PickProp(double selectionX, double selectionY) VTK_OVERRIDE
+  vtkAssemblyPath* PickProp(double selectionX, double selectionY) override
   {
     return this->PickProp(selectionX, selectionY, selectionX, selectionY);
   }
   vtkAssemblyPath* PickProp(double selectionX1, double selectionY1,
-                            double selectionX2, double selectionY2) VTK_OVERRIDE;
+                            double selectionX2, double selectionY2) override;
   //@}
 
   /**
@@ -568,8 +578,8 @@ public:
    * automatically created by the renderer. It returns 0 if the
    * ActiveCamera does not yet exist.
    */
-  int IsActiveCameraCreated()
-    { return (this->ActiveCamera != NULL); }
+  vtkTypeBool IsActiveCameraCreated()
+    { return (this->ActiveCamera != nullptr); }
 
 
   //@{
@@ -583,13 +593,13 @@ public:
    * If UseDepthPeeling is off, alpha blending is used.
    * Initial value is off.
    */
-  vtkSetMacro(UseDepthPeeling,int);
-  vtkGetMacro(UseDepthPeeling,int);
-  vtkBooleanMacro(UseDepthPeeling,int);
+  vtkSetMacro(UseDepthPeeling,vtkTypeBool);
+  vtkGetMacro(UseDepthPeeling,vtkTypeBool);
+  vtkBooleanMacro(UseDepthPeeling,vtkTypeBool);
   //@}
 
   /**
-   * This this flag is on and the GPU supports it, depth-peel volumes along with
+   * This flag is on and the GPU supports it, depth-peel volumes along with
    * the translucent geometry. Only supported on OpenGL2 with dual-depth
    * peeling. Default is false.
    */
@@ -652,11 +662,23 @@ public:
 
   //@{
   /**
-   * Set/Get the texture to be used for the background. If set
-   * and enabled this gets the priority over the gradient background.
+   * Set/Get the texture to be used for the monocular or stereo left eye
+   * background. If set and enabled this gets the priority over the gradient
+   * background.
    */
+  virtual void SetLeftBackgroundTexture(vtkTexture*);
+  vtkTexture* GetLeftBackgroundTexture();
   virtual void SetBackgroundTexture(vtkTexture*);
   vtkGetObjectMacro(BackgroundTexture, vtkTexture);
+  //@}
+
+  //@{
+  /**
+  * Set/Get the texture to be used for the right eye background. If set
+  * and enabled this gets the priority over the gradient background.
+  */
+  virtual void SetRightBackgroundTexture(vtkTexture*);
+  vtkGetObjectMacro(RightBackgroundTexture, vtkTexture);
   //@}
 
   //@{
@@ -694,9 +716,9 @@ public:
    * Turn on/off rendering of shadows if supported
    * Initial value is off.
    */
-  vtkSetMacro(UseShadows,int);
-  vtkGetMacro(UseShadows,int);
-  vtkBooleanMacro(UseShadows,int);
+  vtkSetMacro(UseShadows,vtkTypeBool);
+  vtkGetMacro(UseShadows,vtkTypeBool);
+  vtkBooleanMacro(UseShadows,vtkTypeBool);
   //@}
 
   //@{
@@ -704,9 +726,9 @@ public:
    * If this flag is true and the rendering engine supports it, wireframe
    * geometry will be drawn using hidden line removal.
    */
-  vtkSetMacro(UseHiddenLineRemoval, int)
-  vtkGetMacro(UseHiddenLineRemoval, int)
-  vtkBooleanMacro(UseHiddenLineRemoval, int)
+  vtkSetMacro(UseHiddenLineRemoval, vtkTypeBool)
+  vtkGetMacro(UseHiddenLineRemoval, vtkTypeBool)
+  vtkBooleanMacro(UseHiddenLineRemoval, vtkTypeBool)
   //@}
 
   // Set/Get a custom render pass.
@@ -724,11 +746,7 @@ public:
 
 protected:
   vtkRenderer();
-  ~vtkRenderer() VTK_OVERRIDE;
-
-  // internal method for doing a render for picking purposes
-  virtual void PickRender(vtkPropCollection *props);
-  virtual void PickGeometry();
+  ~vtkRenderer() override;
 
   // internal method to expand bounding box to consider model transform
   // matrix or model view transform matrix based on whether or not deering
@@ -748,16 +766,16 @@ protected:
   vtkRenderWindow    *RenderWindow;
   double              AllocatedRenderTime;
   double              TimeFactor;
-  int                TwoSidedLighting;
-  int                AutomaticLightCreation;
-  int                BackingStore;
+  vtkTypeBool         TwoSidedLighting;
+  int                 AutomaticLightCreation;
+  vtkTypeBool         BackingStore;
   unsigned char      *BackingImage;
-  int                BackingStoreSize[2];
-  vtkTimeStamp       RenderTime;
+  int                 BackingStoreSize[2];
+  vtkTimeStamp        RenderTime;
 
   double              LastRenderTimeInSeconds;
 
-  int                LightFollowCamera;
+  vtkTypeBool         LightFollowCamera;
 
   // Allocate the time for each prop
   void               AllocateTime();
@@ -771,19 +789,15 @@ protected:
   vtkProp            **PropArray;
   int                PropArrayCount;
 
-  // A temporary list used for picking
-  vtkAssemblyPath    **PathArray;
-  int                PathArrayCount;
-
   // Indicates if the renderer should receive events from an interactor.
   // Typically only used in conjunction with transparent renderers.
-  int                Interactive;
+  vtkTypeBool                Interactive;
 
   // Shows what layer this renderer belongs to.  Only of interested when
   // there are layered renderers.
   int                Layer;
-  int                PreserveColorBuffer;
-  int                PreserveDepthBuffer;
+  vtkTypeBool                PreserveColorBuffer;
+  vtkTypeBool                PreserveDepthBuffer;
 
   // Holds the result of ComputeVisiblePropBounds so that it is visible from
   // wrapped languages
@@ -810,14 +824,14 @@ protected:
    * Both the RenderWindow Erase and Render Erase must be on
    * for the camera to clear the renderer.  By default, Erase is on.
    */
-  int Erase;
+  vtkTypeBool Erase;
 
   /**
    * When this flag is off, render commands are ignored.  It is used to either
    * multiplex a vtkRenderWindow or render only part of a vtkRenderWindow.
    * By default, Draw is on.
    */
-  int Draw;
+  vtkTypeBool Draw;
 
   /**
    * Temporary collection used by vtkRenderWindow::CaptureGL2PSSpecialProps.
@@ -888,13 +902,13 @@ protected:
    * If this flag is on and the rendering engine supports it render shadows
    * Initial value is off.
    */
-  int UseShadows;
+  vtkTypeBool UseShadows;
 
   /**
    * When this flag is on and the rendering engine supports it, wireframe
    * polydata will be rendered using hidden line removal.
    */
-  int UseHiddenLineRemoval;
+  vtkTypeBool UseHiddenLineRemoval;
 
   /**
    * If this flag is on and the GPU supports it, depth peeling is used
@@ -902,10 +916,10 @@ protected:
    * If this flag is off, alpha blending is used.
    * Initial value is off.
    */
-  int UseDepthPeeling;
+  vtkTypeBool UseDepthPeeling;
 
   /**
-   * This this flag is on and the GPU supports it, depth-peel volumes along with
+   * This flag is on and the GPU supports it, depth-peel volumes along with
    * the translucent geometry. Default is false;
    */
   bool UseDepthPeelingForVolumes;
@@ -953,6 +967,7 @@ protected:
 
   bool TexturedBackground;
   vtkTexture* BackgroundTexture;
+  vtkTexture* RightBackgroundTexture;
 
   friend class vtkRenderPass;
   vtkRenderPass *Pass;
@@ -961,8 +976,8 @@ protected:
   vtkInformation* Information;
 
 private:
-  vtkRenderer(const vtkRenderer&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRenderer&) VTK_DELETE_FUNCTION;
+  vtkRenderer(const vtkRenderer&) = delete;
+  void operator=(const vtkRenderer&) = delete;
 
 };
 

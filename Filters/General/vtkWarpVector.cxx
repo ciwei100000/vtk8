@@ -46,9 +46,7 @@ vtkWarpVector::vtkWarpVector()
 }
 
 //----------------------------------------------------------------------------
-vtkWarpVector::~vtkWarpVector()
-{
-}
+vtkWarpVector::~vtkWarpVector() = default;
 
 //----------------------------------------------------------------------------
 int vtkWarpVector::FillInputPortInformation(int vtkNotUsed(port),
@@ -76,7 +74,7 @@ int vtkWarpVector::RequestDataObject(vtkInformation *request,
     {
       vtkNew<vtkStructuredGrid> newOutput;
       outputVector->GetInformationObject(0)->Set(
-        vtkDataObject::DATA_OBJECT(), newOutput.GetPointer());
+        vtkDataObject::DATA_OBJECT(), newOutput);
     }
     return 1;
   }
@@ -206,7 +204,7 @@ int vtkWarpVector::RequestData(
   // First, copy the input to the output as a starting point
   output->CopyStructure( input );
 
-  if (input == NULL || input->GetPoints() == NULL)
+  if (input == nullptr || input->GetPoints() == nullptr)
   {
     return 1;
   }

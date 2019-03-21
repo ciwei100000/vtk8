@@ -93,12 +93,12 @@ vtkDataArray *Magnitude(vtkDataArray *V)
 static
 vtkDataArray *Magnitude(vtkDataSet *ds, std::string &vectors)
 {
-  vtkDataArray *V = NULL;
+  vtkDataArray *V = nullptr;
   V = ds->GetPointData()->GetArray(vectors.c_str());
-  if (V == NULL)
+  if (V == nullptr)
   {
     cerr << "ERROR: point vectors " << vectors << " not found" << endl;
-    return NULL;
+    return nullptr;
   }
   vtkDataArray *magV = Magnitude(V);
   std::string magVName = "mag"+vectors;
@@ -160,18 +160,15 @@ int vtkSurfaceLICTestDriver(
   {
     renWin->SetSize(300, 300);
   }
-  else
-  if (camera_config == 2)
+  else if (camera_config == 2)
   {
     renWin->SetSize(300, 270);
   }
-  else
-  if (camera_config == 3)
+  else if (camera_config == 3)
   {
     renWin->SetSize(400, 340);
   }
-  else
-  if (camera_config == 4)
+  else if (camera_config == 4)
   {
     renWin->SetSize(364, 256);
   }
@@ -182,11 +179,11 @@ int vtkSurfaceLICTestDriver(
     cerr
       << "WARNING: The rendering context does not support required extensions."
       << endl;
-    dataObj = NULL;
-    renWin = NULL;
-    renderer = NULL;
-    iren = NULL;
-    vtkAlgorithm::SetDefaultExecutivePrototype(NULL);
+    dataObj = nullptr;
+    renWin = nullptr;
+    renderer = nullptr;
+    iren = nullptr;
+    vtkAlgorithm::SetDefaultExecutivePrototype(nullptr);
     return 0;
   }
 
@@ -238,11 +235,11 @@ int vtkSurfaceLICTestDriver(
     if ( vectors.empty() )
     {
       cerr << "ERROR: color by mag requires using --vectors." << endl;
-      vtkAlgorithm::SetDefaultExecutivePrototype(NULL);
+      vtkAlgorithm::SetDefaultExecutivePrototype(nullptr);
       return 1;
     }
 
-    const char *magVName = NULL;
+    const char *magVName = nullptr;
     double range[2] = {VTK_FLOAT_MAX, -VTK_FLOAT_MAX};
     vtkCompositeDataSet *cd = dynamic_cast<vtkCompositeDataSet*>(dataObj);
     if (cd)
@@ -274,7 +271,7 @@ int vtkSurfaceLICTestDriver(
     if (!magVName)
     {
       cerr << "ERROR: color by mag could not generate magV." << endl;
-      vtkAlgorithm::SetDefaultExecutivePrototype(NULL);
+      vtkAlgorithm::SetDefaultExecutivePrototype(nullptr);
       return 1;
     }
     vtkColorTransferFunction *lut = vtkColorTransferFunction::New();
@@ -328,8 +325,8 @@ int vtkSurfaceLICTestDriver(
   actor->SetMapper(mapper);
   renderer->AddActor(actor);
   renderer->SetBackground(0.3, 0.3, 0.3);
-  mapper = NULL;
-  actor = NULL;
+  mapper = nullptr;
+  actor = nullptr;
 
   vtkCamera *camera = renderer->GetActiveCamera();
 
@@ -345,8 +342,7 @@ int vtkSurfaceLICTestDriver(
     camera->SetViewUp(0.41, 0.83, 0.35);
     renderer->ResetCamera();
   }
-  else
-  if (camera_config == 2)
+  else if (camera_config == 2)
   {
     renWin->SetSize(300, 270);
     camera->SetFocalPoint(0.0, 0.0, 0.0);
@@ -356,8 +352,7 @@ int vtkSurfaceLICTestDriver(
     renderer->ResetCamera();
     camera->Zoom(1.2);
   }
-  else
-  if (camera_config == 3)
+  else if (camera_config == 3)
   {
     renWin->SetSize(400, 340);
     camera->SetFocalPoint(0.0, 0.0, 0.0);
@@ -367,8 +362,7 @@ int vtkSurfaceLICTestDriver(
     renderer->ResetCamera();
     camera->Zoom(1.4);
   }
-  else
-  if (camera_config == 4)
+  else if (camera_config == 4)
   {
     renWin->SetSize(364, 256);
     renderer->SetBackground(0.3216, 0.3412, 0.4314);
@@ -389,9 +383,9 @@ int vtkSurfaceLICTestDriver(
     iren->Start();
   }
 
-  renderer = NULL;
-  renWin = NULL;
-  iren = NULL;
+  renderer = nullptr;
+  renWin = nullptr;
+  iren = nullptr;
 
   if ((retVal == vtkTesting::PASSED) || (retVal == vtkTesting::DO_INTERACTOR))
   {

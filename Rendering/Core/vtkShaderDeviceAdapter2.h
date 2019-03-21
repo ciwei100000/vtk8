@@ -35,7 +35,7 @@ class VTKRENDERINGCORE_EXPORT vtkShaderDeviceAdapter2 : public vtkObject
 {
 public:
   vtkTypeMacro(vtkShaderDeviceAdapter2, vtkObject);
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   /**
    * Sends a single attribute to the graphics card.
@@ -62,7 +62,7 @@ public:
     { this->ShaderProgram = program; }
   vtkGetObjectMacro(ShaderProgram, vtkShaderProgram2)
 
-  // Descrition:
+  // Description:
   // This method is called before rendering. This gives the shader device
   // adapter an opportunity to collect information, such as attribute indices
   // that it will need while rendering.
@@ -70,13 +70,13 @@ public:
 
 protected:
   vtkShaderDeviceAdapter2();
-  ~vtkShaderDeviceAdapter2() VTK_OVERRIDE;
+  ~vtkShaderDeviceAdapter2() override;
 
   vtkShaderProgram2* ShaderProgram;
 
 private:
-  vtkShaderDeviceAdapter2(const vtkShaderDeviceAdapter2&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkShaderDeviceAdapter2&) VTK_DELETE_FUNCTION;
+  vtkShaderDeviceAdapter2(const vtkShaderDeviceAdapter2&) = delete;
+  void operator=(const vtkShaderDeviceAdapter2&) = delete;
 
 };
 

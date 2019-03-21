@@ -32,7 +32,7 @@ class VTKIMAGINGSOURCES_EXPORT vtkImageEllipsoidSource : public vtkImageAlgorith
 public:
   static vtkImageEllipsoidSource *New();
   vtkTypeMacro(vtkImageEllipsoidSource,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -42,7 +42,7 @@ public:
   void SetWholeExtent(int minX, int maxX, int minY, int maxY,
                             int minZ, int maxZ);
   void GetWholeExtent(int extent[6]);
-  int *GetWholeExtent() {return this->WholeExtent;}
+  int *GetWholeExtent() VTK_SIZEHINT(6) {return this->WholeExtent;}
   //@}
 
   //@{
@@ -107,7 +107,7 @@ public:
 
 protected:
   vtkImageEllipsoidSource();
-  ~vtkImageEllipsoidSource() VTK_OVERRIDE;
+  ~vtkImageEllipsoidSource() override;
 
   int WholeExtent[6];
   double Center[3];
@@ -118,14 +118,14 @@ protected:
 
   int RequestInformation (vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
 
   int RequestData(vtkInformation *,
-                          vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector **, vtkInformationVector *) override;
 
 private:
-  vtkImageEllipsoidSource(const vtkImageEllipsoidSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageEllipsoidSource&) VTK_DELETE_FUNCTION;
+  vtkImageEllipsoidSource(const vtkImageEllipsoidSource&) = delete;
+  void operator=(const vtkImageEllipsoidSource&) = delete;
 };
 
 

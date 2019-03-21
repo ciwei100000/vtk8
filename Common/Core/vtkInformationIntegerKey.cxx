@@ -25,9 +25,7 @@ vtkInformationIntegerKey::vtkInformationIntegerKey(const char* name, const char*
 }
 
 //----------------------------------------------------------------------------
-vtkInformationIntegerKey::~vtkInformationIntegerKey()
-{
-}
+vtkInformationIntegerKey::~vtkInformationIntegerKey() = default;
 
 //----------------------------------------------------------------------------
 void vtkInformationIntegerKey::PrintSelf(ostream& os, vtkIndent indent)
@@ -89,7 +87,7 @@ void vtkInformationIntegerKey::ShallowCopy(vtkInformation* from, vtkInformation*
   }
   else
   {
-    this->SetAsObjectBase(to, 0); // doesn't exist in from, so remove the key
+    this->SetAsObjectBase(to, nullptr); // doesn't exist in from, so remove the key
   }
 }
 
@@ -112,5 +110,5 @@ int* vtkInformationIntegerKey::GetWatchAddress(vtkInformation* info)
   {
     return &v->Value;
   }
-  return 0;
+  return nullptr;
 }

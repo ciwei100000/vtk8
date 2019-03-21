@@ -1,3 +1,4 @@
+#include <vtkBitArray.h>
 #include <vtkCellData.h>
 #include <vtkCubeSource.h>
 #include <vtkDataObjectWriter.h>
@@ -15,6 +16,7 @@
 #include <vtkIntArray.h>
 #include <vtkMutableDirectedGraph.h>
 #include <vtkNew.h>
+#include <vtkPermuteOptions.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkRandomGraphSource.h>
@@ -22,12 +24,14 @@
 #include <vtkSmartPointer.h>
 #include <vtkStructuredGrid.h>
 #include <vtkTable.h>
+#include <vtkTesting.h>
 #include <vtkTree.h>
 #include <vtkUndirectedGraph.h>
 #include <vtkUniformGrid.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkVariant.h>
 
+#include <sstream>
 #include <string>
 
 // Serializable keys to test:
@@ -42,6 +46,10 @@
 
 namespace
 {
+
+static vtkNew<vtkTesting> TestingData; // For temporary path
+
+static const char *BIT_ARRAY_NAME = "BitArray";
 
 static vtkInformationDoubleKey *TestDoubleKey =
     vtkInformationDoubleKey::MakeKey("Double", "XMLTestKey");
@@ -89,6 +97,62 @@ bool compareValues(const std::string &desc, T expect, T actual)
   return true;
 }
 
+// Generate a somewhat interesting bit pattern for the test bit arrays:
+int bitArrayFunc(vtkIdType i)
+{
+  return (i + (i / 2) + (i / 3) + (i / 5) + (i / 7) + (i / 11)) % 2;
+}
+
+void fillBitArray(vtkBitArray *bits)
+{
+  bits->SetName(BIT_ARRAY_NAME);
+  bits->SetNumberOfComponents(4);
+  bits->SetNumberOfTuples(100);
+  vtkIdType numValues = bits->GetNumberOfValues();
+  for (vtkIdType i = 0; i < numValues; ++i)
+  {
+    bits->SetValue(i, bitArrayFunc(i));
+  }
+}
+
+bool validateBitArray(vtkAbstractArray *abits)
+{
+  if (!abits)
+  {
+    std::cerr << "Bit array not found.\n";
+    return false;
+  }
+
+  vtkBitArray *bits = vtkBitArray::SafeDownCast(abits);
+  if (!bits)
+  {
+    std::cerr << "Bit Array is incorrect type: " << abits->GetClassName()
+              << ".\n";
+    return false;
+  }
+
+  vtkIdType numValues = bits->GetNumberOfValues();
+  if (numValues != 400)
+  {
+    std::cerr << "Expected 400 values in bit array, got: " << numValues << "\n";
+    return false;
+  }
+
+  for (vtkIdType i = 0; i < numValues; ++i)
+  {
+    int expected = bitArrayFunc(i);
+    int actual = bits->GetValue(i);
+    if (actual != expected)
+    {
+      std::cerr << "Bit array invalid - expected " << expected << " , got "
+                << actual << " for valueIdx " << i << ".\n";
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void InitializeDataCommon(vtkDataObject *data)
 {
   vtkFieldData *fd = data->GetFieldData();
@@ -102,7 +166,7 @@ void InitializeDataCommon(vtkDataObject *data)
   // Add a dummy array to test component name and information key serialization.
   vtkNew<vtkFloatArray> array;
   array->SetName("Test Array");
-  fd->AddArray(array.GetPointer());
+  fd->AddArray(array);
   array->SetNumberOfComponents(3);
   array->SetComponentName(0, "Component 0 name");
   array->SetComponentName(1, "Component 1 name");
@@ -124,6 +188,11 @@ void InitializeDataCommon(vtkDataObject *data)
   info->Append(TestStringVectorKey, "Second (with whitespace!)");
   info->Append(TestStringVectorKey, "Third (with\nnewline!)");
   info->Set(TestUnsignedLongKey, 9);
+
+  // Ensure that bit arrays are handled properly (#17197)
+  vtkNew<vtkBitArray> bits;
+  fillBitArray(bits);
+  fd->AddArray(bits);
 }
 
 bool CompareDataCommon(vtkDataObject *data)
@@ -184,6 +253,11 @@ bool CompareDataCommon(vtkDataObject *data)
       !stringEqual("Second (with whitespace!)", info->Get(TestStringVectorKey, 1)) ||
       !stringEqual("Third (with\nnewline!)", info->Get(TestStringVectorKey, 2)) ||
       !compareValues("unsigned long key", 9ul, info->Get(TestUnsignedLongKey)))
+  {
+    return false;
+  }
+
+  if (!validateBitArray(fd->GetAbstractArray(BIT_ARRAY_NAME)))
   {
     return false;
   }
@@ -305,28 +379,85 @@ bool CompareData(vtkUnstructuredGrid* Output, vtkUnstructuredGrid* Input)
   return true;
 }
 
-template<typename DataT>
-bool TestDataObjectXMLSerialization()
+//------------------------------------------------------------------------------
+// Determine the data object read as member Type for a given WriterDataObjectT.
+template <typename WriterDataObjectT>
+struct GetReaderDataObjectType
 {
-  DataT* const output_data = DataT::New();
+  using Type = WriterDataObjectT;
+};
+
+// Specialize for vtkUniformGrid --> vtkImageData
+template <>
+struct GetReaderDataObjectType<vtkUniformGrid>
+{
+  using Type = vtkImageData;
+};
+
+class WriterConfig : public vtkPermuteOptions<vtkXMLDataSetWriter>
+{
+public:
+  WriterConfig()
+  {
+    this->AddOptionValues("ByteOrder",
+                          &vtkXMLDataObjectWriter::SetByteOrder,
+                          "BigEndian", vtkXMLWriter::BigEndian,
+                          "LittleEndian", vtkXMLWriter::LittleEndian);
+    this->AddOptionValues("HeaderType",
+                          &vtkXMLDataObjectWriter::SetHeaderType,
+                          "32Bit", vtkXMLWriter::UInt32,
+                          "64Bit", vtkXMLWriter::UInt64);
+    this->AddOptionValues("CompressorType",
+                          &vtkXMLDataObjectWriter::SetCompressorType,
+                          "NONE", vtkXMLWriter::NONE,
+                          "ZLIB", vtkXMLWriter::ZLIB,
+                          "LZ4", vtkXMLWriter::LZ4);
+    this->AddOptionValues("DataMode", &vtkXMLDataObjectWriter::SetDataMode,
+                          "Ascii", vtkXMLWriter::Ascii,
+                          "Binary", vtkXMLWriter::Binary,
+                          "Appended", vtkXMLWriter::Appended);
+
+    // Calling vtkXMLWriter::SetIdType throws an Error while requesting 64 bit
+    // ids if this option isn't set:
+    this->AddOptionValue("IdType", &vtkXMLDataObjectWriter::SetIdType,
+                         "32Bit", vtkXMLWriter::Int32);
+#ifdef VTK_USE_64BIT_IDS
+    this->AddOptionValue("IdType", &vtkXMLDataObjectWriter::SetIdType,
+                          "64Bit", vtkXMLWriter::Int64);
+#endif
+
+  }
+};
+
+//------------------------------------------------------------------------------
+// Main test function for a given data type and writer configuration.
+template <typename WriterDataObjectT>
+bool TestDataObjectXMLSerialization(const WriterConfig& writerConfig)
+{
+  using ReaderDataObjectT = typename GetReaderDataObjectType<WriterDataObjectT>::Type;
+
+  WriterDataObjectT* const output_data = WriterDataObjectT::New();
   InitializeData(output_data);
 
-  const char* const filename = output_data->GetClassName();
+  std::ostringstream filename;
+  filename << TestingData->GetTempDirectory() << "/"
+           << output_data->GetClassName()
+           << "-" << writerConfig.GetCurrentPermutationName();
 
-  vtkXMLDataSetWriter* const writer =
-    vtkXMLDataSetWriter::New();
+  vtkXMLDataSetWriter* const writer = vtkXMLDataSetWriter::New();
   writer->SetInputData(output_data);
-  writer->SetFileName(filename);
+  writer->SetFileName(filename.str().c_str());
+  writerConfig.ApplyCurrentPermutation(writer);
   writer->Write();
   writer->Delete();
 
   vtkXMLGenericDataObjectReader* const reader =
     vtkXMLGenericDataObjectReader::New();
-  reader->SetFileName(filename);
+  reader->SetFileName(filename.str().c_str());
   reader->Update();
 
   vtkDataObject *obj = reader->GetOutput();
-  DataT* input_data = DataT::SafeDownCast(obj);
+  ReaderDataObjectT* input_data = ReaderDataObjectT::SafeDownCast(obj);
   if(!input_data)
   {
     reader->Delete();
@@ -339,80 +470,80 @@ bool TestDataObjectXMLSerialization()
   reader->Delete();
   output_data->Delete();
 
-  return result;
-}
-
-bool TestUniformGridXMLSerialization()
-{
-  vtkUniformGrid* const output_data = vtkUniformGrid::New();
-  InitializeData(output_data);
-
-  const char* const filename = output_data->GetClassName();
-
-  vtkXMLDataSetWriter* const writer =
-    vtkXMLDataSetWriter::New();
-  writer->SetInputData(output_data);
-  writer->SetFileName(filename);
-  writer->Write();
-  writer->Delete();
-
-  vtkXMLGenericDataObjectReader* const reader =
-    vtkXMLGenericDataObjectReader::New();
-  reader->SetFileName(filename);
-  reader->Update();
-
-  vtkDataObject *obj = reader->GetOutput();
-  vtkImageData* input_data = vtkImageData::SafeDownCast(obj);
-  if(!input_data)
+  if (!result)
   {
-    reader->Delete();
-    output_data->Delete();
-    return false;
+    std::cerr << "Comparison failed. Filename: " << filename.str() << "\n";
   }
 
-  const bool result = CompareData(output_data, input_data);
+  return result;
+}
 
-  reader->Delete();
-  output_data->Delete();
+//------------------------------------------------------------------------------
+// Test all permutations of the writer configuration with a given data type.
+template <typename WriterDataObjectT>
+bool TestWriterPermutations()
+{
+  bool result = true;
+  WriterConfig config;
+
+  config.InitPermutations();
+  while (!config.IsDoneWithPermutations())
+  {
+    { // Some progress/debugging output:
+      std::string testName;
+      vtkNew<WriterDataObjectT> dummy;
+      std::ostringstream tmp;
+      tmp << dummy->GetClassName()
+          << " [" << config.GetCurrentPermutationName() << "]";
+      testName = tmp.str();
+      std::cerr << "Testing: " << testName << "..." << std::endl;
+    }
+
+    if (!TestDataObjectXMLSerialization<WriterDataObjectT>(config))
+    {
+      std::cerr << "Failed.\n\n";
+      result = false;
+    }
+
+    config.GoToNextPermutation();
+  }
 
   return result;
 }
-}
-int TestDataObjectXMLIO(int /*argc*/, char* /*argv*/[])
+
+} // end anon namespace
+
+int TestDataObjectXMLIO(int argc, char *argv[])
 {
+  TestingData->AddArguments(argc, argv);
+
   int result = 0;
 
-  if(!TestDataObjectXMLSerialization<vtkImageData>())
+  if(!TestWriterPermutations<vtkImageData>())
   {
-    cerr << "Error: failure serializing vtkImageData" << endl;
     result = 1;
   }
-  if(!TestUniformGridXMLSerialization())
+  if(!TestWriterPermutations<vtkUniformGrid>())
   {
     // note that the current output from serializing a vtkUniformGrid
     // is a vtkImageData. this is the same as writing out a
     // vtkUniformGrid using vtkXMLImageDataWriter.
-    cerr << "Error: failure serializing vtkUniformGrid" << endl;
     result = 1;
   }
-  if(!TestDataObjectXMLSerialization<vtkPolyData>())
+  if(!TestWriterPermutations<vtkPolyData>())
   {
-    cerr << "Error: failure serializing vtkPolyData" << endl;
     result = 1;
   }
-  if(!TestDataObjectXMLSerialization<vtkRectilinearGrid>())
+  if(!TestWriterPermutations<vtkRectilinearGrid>())
   {
-    cerr << "Error: failure serializing vtkRectilinearGrid" << endl;
     result = 1;
   }
-//  if(!TestDataObjectXMLSerialization<vtkStructuredGrid>())
+//  if(!TestWriterPermutations<vtkStructuredGrid>())
 //    {
-//    cerr << "Error: failure serializing vtkStructuredGrid" << endl;
 //    result = 1;
 //    }
-  if(!TestDataObjectXMLSerialization<vtkUnstructuredGrid>())
+  if(!TestWriterPermutations<vtkUnstructuredGrid>())
   {
-    cerr << "Error: failure serializing vtkUnstructuredGrid" << endl;
     result = 1;
   }
 

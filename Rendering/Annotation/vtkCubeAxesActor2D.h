@@ -60,7 +60,7 @@ class VTKRENDERINGANNOTATION_EXPORT vtkCubeAxesActor2D : public vtkActor2D
 {
 public:
   vtkTypeMacro(vtkCubeAxesActor2D,vtkActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate object with bold, italic, and shadow enabled; font family
@@ -73,15 +73,15 @@ public:
   /**
    * Draw the axes as per the vtkProp superclass' API.
    */
-  int RenderOverlay(vtkViewport*) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport *) VTK_OVERRIDE {return 0;}
+  int RenderOverlay(vtkViewport*) override;
+  int RenderOpaqueGeometry(vtkViewport*) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport *) override {return 0;}
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
   //@{
   /**
@@ -112,7 +112,7 @@ public:
    * sure that the min's are less than the max's.
    */
   vtkSetVector6Macro(Bounds,double);
-  double *GetBounds() VTK_OVERRIDE;
+  double *GetBounds() VTK_SIZEHINT(6) override;
   void GetBounds(double& xmin, double& xmax, double& ymin, double& ymax,
                  double& zmin, double& zmax);
   void GetBounds(double bounds[6]);
@@ -125,7 +125,7 @@ public:
    * making sure that the min's are less than the max's.
    */
   vtkSetVector6Macro(Ranges,double);
-  double *GetRanges();
+  double *GetRanges() VTK_SIZEHINT(6);
   void GetRanges(double& xmin, double& xmax, double& ymin, double& ymax,
                  double& zmin, double& zmax);
   void GetRanges(double ranges[6]);
@@ -148,9 +148,9 @@ public:
    * or the ranges set by SetRanges. By default the axes use the data
    * ranges.
    */
-  vtkSetMacro(UseRanges,int);
-  vtkGetMacro(UseRanges,int);
-  vtkBooleanMacro(UseRanges,int);
+  vtkSetMacro(UseRanges,vtkTypeBool);
+  vtkGetMacro(UseRanges,vtkTypeBool);
+  vtkBooleanMacro(UseRanges,vtkTypeBool);
   //@}
 
   //@{
@@ -192,9 +192,9 @@ public:
    * size of the bounding box). By default scaling is on so the axes are
    * scaled to fit inside the viewport.
    */
-  vtkSetMacro(Scaling,int);
-  vtkGetMacro(Scaling,int);
-  vtkBooleanMacro(Scaling,int);
+  vtkSetMacro(Scaling,vtkTypeBool);
+  vtkGetMacro(Scaling,vtkTypeBool);
+  vtkBooleanMacro(Scaling,vtkTypeBool);
   //@}
 
   //@{
@@ -305,21 +305,21 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   //@{
   /**
    * Turn on and off the visibility of each axis.
    */
-  vtkSetMacro(XAxisVisibility,int);
-  vtkGetMacro(XAxisVisibility,int);
-  vtkBooleanMacro(XAxisVisibility,int);
-  vtkSetMacro(YAxisVisibility,int);
-  vtkGetMacro(YAxisVisibility,int);
-  vtkBooleanMacro(YAxisVisibility,int);
-  vtkSetMacro(ZAxisVisibility,int);
-  vtkGetMacro(ZAxisVisibility,int);
-  vtkBooleanMacro(ZAxisVisibility,int);
+  vtkSetMacro(XAxisVisibility,vtkTypeBool);
+  vtkGetMacro(XAxisVisibility,vtkTypeBool);
+  vtkBooleanMacro(XAxisVisibility,vtkTypeBool);
+  vtkSetMacro(YAxisVisibility,vtkTypeBool);
+  vtkGetMacro(YAxisVisibility,vtkTypeBool);
+  vtkBooleanMacro(YAxisVisibility,vtkTypeBool);
+  vtkSetMacro(ZAxisVisibility,vtkTypeBool);
+  vtkGetMacro(ZAxisVisibility,vtkTypeBool);
+  vtkBooleanMacro(ZAxisVisibility,vtkTypeBool);
   //@}
 
   /**
@@ -329,18 +329,18 @@ public:
 
 protected:
   vtkCubeAxesActor2D();
-  ~vtkCubeAxesActor2D() VTK_OVERRIDE;
+  ~vtkCubeAxesActor2D() override;
 
   vtkCubeAxesActor2DConnection* ConnectionHolder;
 
   vtkProp    *ViewProp;     //Define bounds from actor/assembly, or
   double      Bounds[6]; //Define bounds explicitly
   double      Ranges[6]; //Define ranges explicitly
-  int        UseRanges; //Flag to use ranges or not
+  vtkTypeBool        UseRanges; //Flag to use ranges or not
 
   vtkCamera *Camera;
   int FlyMode;
-  int Scaling;
+  vtkTypeBool Scaling;
 
   vtkAxisActor2D *XAxis;
   vtkAxisActor2D *YAxis;
@@ -357,9 +357,9 @@ protected:
   char *ZLabel;
   char *Labels[3];
 
-  int XAxisVisibility;
-  int YAxisVisibility;
-  int ZAxisVisibility;
+  vtkTypeBool XAxisVisibility;
+  vtkTypeBool YAxisVisibility;
+  vtkTypeBool ZAxisVisibility;
 
   char  *LabelFormat;
   double FontFactor;
@@ -391,10 +391,10 @@ protected:
 
 private:
   // hide the superclass' ShallowCopy() from the user and the compiler.
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE { this->vtkProp::ShallowCopy( prop ); };
+  void ShallowCopy(vtkProp *prop) override { this->vtkProp::ShallowCopy( prop ); };
 private:
-  vtkCubeAxesActor2D(const vtkCubeAxesActor2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCubeAxesActor2D&) VTK_DELETE_FUNCTION;
+  vtkCubeAxesActor2D(const vtkCubeAxesActor2D&) = delete;
+  void operator=(const vtkCubeAxesActor2D&) = delete;
 };
 
 

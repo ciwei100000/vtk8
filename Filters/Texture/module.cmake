@@ -2,7 +2,13 @@ vtk_module(vtkFiltersTexture
   GROUPS
     StandAlone
   TEST_DEPENDS
-    vtkRendering${VTK_RENDERING_BACKEND}
+    vtkImagingCore
+    vtkIOGeometry
+    vtkIOXML
+    vtkRenderingCore
+    vtkRenderingOpenGL2
+    vtkTestingCore
+    vtkTestingRendering
   KIT
     vtkFilters
   DEPENDS

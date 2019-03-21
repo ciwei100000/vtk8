@@ -27,9 +27,7 @@ vtkInformationKeyVectorKey::vtkInformationKeyVectorKey(const char* name, const c
 }
 
 //----------------------------------------------------------------------------
-vtkInformationKeyVectorKey::~vtkInformationKeyVectorKey()
-{
-}
+vtkInformationKeyVectorKey::~vtkInformationKeyVectorKey() = default;
 
 //----------------------------------------------------------------------------
 void vtkInformationKeyVectorKey::PrintSelf(ostream& os, vtkIndent indent)
@@ -107,7 +105,7 @@ void vtkInformationKeyVectorKey::Set(vtkInformation* info,
   }
   else
   {
-    this->SetAsObjectBase(info, 0);
+    this->SetAsObjectBase(info, nullptr);
   }
 }
 
@@ -135,7 +133,7 @@ vtkInformationKey** vtkInformationKeyVectorKey::Get(vtkInformation* info)
   vtkInformationKeyVectorValue* v =
     static_cast<vtkInformationKeyVectorValue *>
     (this->GetAsObjectBase(info));
-  return (v && !v->Value.empty())?(&v->Value[0]):0;
+  return (v && !v->Value.empty())?(&v->Value[0]):nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -147,7 +145,7 @@ vtkInformationKey* vtkInformationKeyVectorKey::Get(vtkInformation* info,
     vtkErrorWithObjectMacro(info,
                             "Information does not contain " << idx
                             << " elements. Cannot return information value.");
-    return 0;
+    return nullptr;
   }
   vtkInformationKey** values = this->Get(info);
   return values[idx];
@@ -196,7 +194,7 @@ void vtkInformationKeyVectorKey::Print(ostream& os, vtkInformation* info)
     const char* sep = "";
     for(int i=0; i < length; ++i)
     {
-      os << sep << (value[i]? value[i]->GetName() : "(NULL)");
+      os << sep << (value[i]? value[i]->GetName() : "(nullptr)");
       sep = " ";
     }
   }

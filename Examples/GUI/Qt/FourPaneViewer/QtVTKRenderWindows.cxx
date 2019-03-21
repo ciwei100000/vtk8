@@ -1,8 +1,28 @@
 #include "ui_QtVTKRenderWindows.h"
 #include "QtVTKRenderWindows.h"
 
+#include "vtkBoundedPlanePointPlacer.h"
+#include "vtkCellPicker.h"
+#include "vtkCommand.h"
+#include "vtkDICOMImageReader.h"
+#include "vtkDistanceRepresentation.h"
+#include "vtkDistanceRepresentation2D.h"
+#include "vtkDistanceWidget.h"
+#include <vtkGenericOpenGLRenderWindow.h>
+#include "vtkHandleRepresentation.h"
+#include "vtkImageData.h"
+#include "vtkImageMapToWindowLevelColors.h"
+#include "vtkImageSlabReslice.h"
+#include "vtkInteractorStyleImage.h"
+#include "vtkLookupTable.h"
+#include "vtkPlane.h"
+#include "vtkPlaneSource.h"
+#include "vtkPointHandleRepresentation2D.h"
+#include "vtkPointHandleRepresentation3D.h"
+#include "vtkProperty.h"
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
+#include "vtkRenderWindowInteractor.h"
 #include "vtkResliceImageViewer.h"
 #include "vtkResliceCursorLineRepresentation.h"
 #include "vtkResliceCursorThickLineRepresentation.h"
@@ -10,26 +30,7 @@
 #include "vtkResliceCursorActor.h"
 #include "vtkResliceCursorPolyDataAlgorithm.h"
 #include "vtkResliceCursor.h"
-#include "vtkDICOMImageReader.h"
-#include "vtkCellPicker.h"
-#include "vtkProperty.h"
-#include "vtkPlane.h"
-#include "vtkImageData.h"
-#include "vtkCommand.h"
-#include "vtkPlaneSource.h"
-#include "vtkLookupTable.h"
-#include "vtkImageMapToWindowLevelColors.h"
-#include "vtkInteractorStyleImage.h"
-#include "vtkImageSlabReslice.h"
-#include "vtkBoundedPlanePointPlacer.h"
-#include "vtkDistanceWidget.h"
-#include "vtkDistanceRepresentation.h"
-#include "vtkHandleRepresentation.h"
 #include "vtkResliceImageViewerMeasurements.h"
-#include "vtkDistanceRepresentation2D.h"
-#include "vtkPointHandleRepresentation3D.h"
-#include "vtkPointHandleRepresentation2D.h"
-
 
 //----------------------------------------------------------------------------
 class vtkResliceCursorCallback : public vtkCommand
@@ -39,7 +40,7 @@ public:
   { return new vtkResliceCursorCallback; }
 
   void Execute( vtkObject *caller, unsigned long ev,
-                void *callData )
+                void *callData ) override
   {
 
     if (ev == vtkResliceCursorWidget::WindowLevelEvent ||
@@ -133,6 +134,8 @@ QtVTKRenderWindows::QtVTKRenderWindows( int vtkNotUsed(argc), char *argv[])
   for (int i = 0; i < 3; i++)
   {
     riw[i] = vtkSmartPointer< vtkResliceImageViewer >::New();
+    vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
+    riw[i]->SetRenderWindow(renderWindow);
   }
 
   this->ui->view1->SetRenderWindow(riw[0]->GetRenderWindow());
@@ -173,6 +176,8 @@ QtVTKRenderWindows::QtVTKRenderWindows( int vtkNotUsed(argc), char *argv[])
   vtkSmartPointer< vtkRenderer > ren =
     vtkSmartPointer< vtkRenderer >::New();
 
+  vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
+  this->ui->view4->SetRenderWindow(renderWindow);
   this->ui->view4->GetRenderWindow()->AddRenderer(ren);
   vtkRenderWindowInteractor *iren = this->ui->view4->GetInteractor();
 
@@ -348,7 +353,7 @@ void QtVTKRenderWindows::AddDistanceMeasurementToView(int i)
   if (this->DistanceWidget[i])
   {
     this->DistanceWidget[i]->SetEnabled(0);
-    this->DistanceWidget[i] = NULL;
+    this->DistanceWidget[i] = nullptr;
   }
 
   // add new widget

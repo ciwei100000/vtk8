@@ -17,7 +17,6 @@
 #include "vtkBoundingBox.h"
 #include "vtkCellData.h"
 #include "vtkCell.h"
-#include "vtkDataSetAttributes.h"
 #include "vtkDataSetCollection.h"
 #include "vtkExecutive.h"
 #include "vtkIncrementalOctreePointLocator.h"
@@ -30,7 +29,6 @@
 #include "vtkUnstructuredGrid.h"
 #include "vtkStreamingDemandDrivenPipeline.h"
 
-#include <set>
 #include <string>
 
 vtkStandardNewMacro(vtkAppendFilter);
@@ -38,7 +36,7 @@ vtkStandardNewMacro(vtkAppendFilter);
 //----------------------------------------------------------------------------
 vtkAppendFilter::vtkAppendFilter()
 {
-  this->InputList = NULL;
+  this->InputList = nullptr;
   this->MergePoints = 0;
   this->OutputPointsPrecision = DEFAULT_PRECISION;
 }
@@ -46,10 +44,10 @@ vtkAppendFilter::vtkAppendFilter()
 //----------------------------------------------------------------------------
 vtkAppendFilter::~vtkAppendFilter()
 {
-  if (this->InputList != NULL)
+  if (this->InputList != nullptr)
   {
     this->InputList->Delete();
-    this->InputList = NULL;
+    this->InputList = nullptr;
   }
 }
 
@@ -58,7 +56,7 @@ vtkDataSet *vtkAppendFilter::GetInput(int idx)
 {
   if (idx >= this->GetNumberOfInputConnections(0) || idx < 0)
   {
-    return NULL;
+    return nullptr;
   }
 
   return vtkDataSet::SafeDownCast(
@@ -135,7 +133,7 @@ int vtkAppendFilter::RequestData(
   // get the output info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkUnstructuredGrid *output = vtkUnstructuredGrid::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -147,22 +145,35 @@ int vtkAppendFilter::RequestData(
   // float, etc.), and 3) if a data array in a field, if it has the same name.
   vtkIdType totalNumPts = 0;
   vtkIdType totalNumCells = 0;
+  // If we only have a single dataset and it's an unstructured grid
+  // we can just shallow copy that and exit quickly.
+  int numDataSets = 0;
+  vtkUnstructuredGrid* inputUG = nullptr;
 
   vtkSmartPointer<vtkDataSetCollection> inputs;
   inputs.TakeReference(this->GetNonEmptyInputs(inputVector));
 
   vtkCollectionSimpleIterator iter;
   inputs->InitTraversal(iter);
-  vtkDataSet* dataSet = 0;
+  vtkDataSet* dataSet = nullptr;
   while ((dataSet = inputs->GetNextDataSet(iter)))
   {
     totalNumPts += dataSet->GetNumberOfPoints();
     totalNumCells += dataSet->GetNumberOfCells();
+    numDataSets++;
+    inputUG = vtkUnstructuredGrid::SafeDownCast(dataSet);
   }
 
   if ( totalNumPts < 1)
   {
     vtkDebugMacro(<<"No data to append!");
+    return 1;
+  }
+
+  if ( numDataSets == 1 && inputUG != nullptr)
+  {
+    vtkDebugMacro(<<"Only a single unstructured grid in the composite dataset and we can shallow copy.");
+    output->ShallowCopy(inputUG);
     return 1;
   }
 
@@ -180,12 +191,12 @@ int vtkAppendFilter::RequestData(
     for (int inputIndex = 0; inputIndex < numInputs; ++inputIndex)
     {
       vtkInformation* inInfo = inputVector[0]->GetInformationObject(inputIndex);
-      vtkPointSet* ps = 0;
+      vtkPointSet* ps = nullptr;
       if (inInfo)
       {
         ps = vtkPointSet::SafeDownCast(inInfo->Get(vtkDataObject::DATA_OBJECT()));
       }
-      if ( ps != NULL && ps->GetNumberOfPoints() > 0)
+      if ( ps != nullptr && ps->GetNumberOfPoints() > 0)
       {
         datatype = ps->GetPoints()->GetDataType();
         break;
@@ -240,7 +251,7 @@ int vtkAppendFilter::RequestData(
     ptInserter->InitPointInsertion(newPts, outputBounds);
   }
 
-  // append the blocks / pieces in terms of the geoemetry and topology
+  // append the blocks / pieces in terms of the geometry and topology
   vtkIdType count = 0;
   vtkIdType ptOffset = 0;
   float decimal = 0.0;
@@ -325,7 +336,7 @@ int vtkAppendFilter::RequestData(
   this->AppendArrays(
     vtkDataObject::POINT, inputVector, globalIndices, output, newPts->GetNumberOfPoints());
   this->UpdateProgress(0.75);
-  this->AppendArrays(vtkDataObject::CELL, inputVector, NULL, output, output->GetNumberOfCells());
+  this->AppendArrays(vtkDataObject::CELL, inputVector, nullptr, output, output->GetNumberOfCells());
   this->UpdateProgress(1.0);
 
   // Update ourselves and release memory
@@ -345,12 +356,12 @@ vtkDataSetCollection* vtkAppendFilter::GetNonEmptyInputs(vtkInformationVector **
   for (int inputIndex = 0; inputIndex < numInputs; ++inputIndex)
   {
     vtkInformation* inInfo = inputVector[0]->GetInformationObject(inputIndex);
-    vtkDataSet* dataSet = NULL;
+    vtkDataSet* dataSet = nullptr;
     if (inInfo)
     {
       dataSet = vtkDataSet::SafeDownCast(inInfo->Get(vtkDataObject::DATA_OBJECT()));
     }
-    if (dataSet != NULL)
+    if (dataSet != nullptr)
     {
       if (dataSet->GetNumberOfPoints() <= 0 && dataSet->GetNumberOfCells() <= 0)
       {
@@ -378,251 +389,42 @@ void vtkAppendFilter::AppendArrays(int attributesType,
     return;
   }
 
-  //////////////////////////////////////////////////////////////////
-  // Phase 1 - Find arrays to append based on name
-  //////////////////////////////////////////////////////////////////
-
-  // Store the set of data arrays common to all inputs. This set is
-  // initialized with the data arrays from the first input and is
-  // updated to be the intersection of it with the arrays from
-  // subsequent inputs.
-  std::set<std::string> dataArrayNames;
+  vtkDataSetAttributes::FieldList fieldList;
+  auto inputs = vtkSmartPointer<vtkDataSetCollection>::Take(this->GetNonEmptyInputs(inputVector));
+  vtkCollectionSimpleIterator iter;
+  vtkDataSet* dataSet = nullptr;
+  for (dataSet = nullptr, inputs->InitTraversal(iter); (dataSet = inputs->GetNextDataSet(iter)); )
+  {
+    if (auto inputData = dataSet->GetAttributes(attributesType))
+    {
+      fieldList.IntersectFieldList(inputData);
+    }
+  }
 
   vtkDataSetAttributes* outputData = output->GetAttributes(attributesType);
+  outputData->CopyAllocate(fieldList, totalNumberOfElements);
 
-  bool isFirstInputData = true;
-  vtkDataSetAttributes* firstInputData = NULL;
-  vtkSmartPointer<vtkDataSetCollection> inputs;
-  inputs.TakeReference(this->GetNonEmptyInputs(inputVector));
-  vtkCollectionSimpleIterator iter;
-  inputs->InitTraversal(iter);
-  vtkDataSet* dataSet = NULL;
-  while ((dataSet = inputs->GetNextDataSet(iter)))
-  {
-    vtkDataSetAttributes* inputData = dataSet->GetAttributes(attributesType);
-
-    if (isFirstInputData)
-    {
-      isFirstInputData = false;
-      firstInputData = inputData;
-      for (int arrayIndex = 0; arrayIndex < inputData->GetNumberOfArrays(); ++arrayIndex)
-      {
-        vtkAbstractArray* array = inputData->GetAbstractArray(arrayIndex);
-        if (array && array->GetName())
-        {
-          // NOTE - it is possible for an array to not have a name,
-          // but be an active attribute. We'll deal with that case
-          // later on.
-          dataArrayNames.insert(std::string(array->GetName()));
-        }
-      }
-    }
-    else
-    {
-      std::set<std::string>::iterator it = dataArrayNames.begin();
-      while (it != dataArrayNames.end())
-      {
-        const char* arrayName = it->c_str();
-        vtkAbstractArray* array = inputData->GetAbstractArray(arrayName);
-        vtkAbstractArray* firstArray = firstInputData->GetAbstractArray(arrayName);
-        if (!array ||
-            array->GetDataType() != firstArray->GetDataType() ||
-            array->GetNumberOfComponents() != firstArray->GetNumberOfComponents())
-        {
-          // Incompatible array in this input. We can't append it.
-          dataArrayNames.erase(it++);
-        }
-        else
-        {
-          ++it;
-        }
-      }
-    }
-  }
-
-  // Allocate arrays for the output
-  for (std::set<std::string>::iterator it = dataArrayNames.begin(); it != dataArrayNames.end(); ++it)
-  {
-    vtkAbstractArray* srcArray = firstInputData->GetAbstractArray((*it).c_str());
-    vtkAbstractArray* dstArray = vtkAbstractArray::CreateArray(srcArray->GetDataType());
-    dstArray->CopyInformation(srcArray->GetInformation());
-    dstArray->SetName(srcArray->GetName());
-    dstArray->SetNumberOfComponents(srcArray->GetNumberOfComponents());
-    for (int j = 0; j < srcArray->GetNumberOfComponents(); ++j)
-    {
-      if (srcArray->GetComponentName(j))
-      {
-        dstArray->SetComponentName(j, srcArray->GetComponentName(j));
-      }
-    }
-    dstArray->SetNumberOfTuples(totalNumberOfElements);
-    outputData->AddArray(dstArray);
-    dstArray->Delete();
-  }
-
-  //////////////////////////////////////////////////////////////////
-  // Phase 2 - Set up arrays as attributes
-  //////////////////////////////////////////////////////////////////
-
-  // Set active attributes in the outputs only if all the inputs have
-  // the same active attributes name (or the name is NULL).
-  vtkAbstractArray* attributeArrays[vtkDataSetAttributes::NUM_ATTRIBUTES];
-
-  // Initialize with the active attribute from the first input
-  for (int attribute = 0; attribute < vtkDataSetAttributes::NUM_ATTRIBUTES; ++attribute)
-  {
-    attributeArrays[attribute] = firstInputData->GetAbstractAttribute(attribute);
-  }
-
-  inputs->InitTraversal(iter);
-  while ((dataSet = inputs->GetNextDataSet(iter)))
-  {
-    for (int attributeIndex = 0; attributeIndex < vtkDataSetAttributes::NUM_ATTRIBUTES; ++attributeIndex)
-    {
-      if (attributeArrays[attributeIndex])
-      {
-        vtkDataSetAttributes* inputData = dataSet->GetAttributes(attributesType);
-        vtkAbstractArray* thisArray = inputData->GetAbstractAttribute(attributeIndex);
-        bool matches = thisArray &&
-          ((attributeArrays[attributeIndex]->GetName() == NULL && thisArray->GetName() == NULL) ||
-           strcmp(attributeArrays[attributeIndex]->GetName(), thisArray->GetName()) == 0);
-        if (!matches)
-        {
-          // This input doesn't agree on the active attribute, so unset it.
-          attributeArrays[attributeIndex] = NULL;
-        }
-      }
-    }
-  }
-
-  // Set the active attributes
-  for (int attributeIndex = 0; attributeIndex < vtkDataSetAttributes::NUM_ATTRIBUTES; ++attributeIndex)
-  {
-    if (attributeArrays[attributeIndex])
-    {
-      const char* arrayName = attributeArrays[attributeIndex]->GetName();
-      if (arrayName)
-      {
-        outputData->SetActiveAttribute(arrayName, attributeIndex);
-      }
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////
-  // Phase 3 - Handle attributes with no name
-  //////////////////////////////////////////////////////////////////
-
-  // Now check if we need NULL-named arrays for the special case where
-  // the active attributes are set to an array with a NULL name.  It's
-  // important to point out that vtkFieldData can have more than one
-  // array with a NULL name. We append only those arrays with a NULL
-  // name that are set as the active attribute because otherwise we
-  // have no information about how to append NULL-named arrays.
-  bool attributeNeedsNullArray[vtkDataSetAttributes::NUM_ATTRIBUTES];
-  for (int attributeIndex = 0; attributeIndex < vtkDataSetAttributes::NUM_ATTRIBUTES; ++attributeIndex)
-  {
-    attributeNeedsNullArray[attributeIndex] = true;
-  }
-  inputs->InitTraversal(iter);
-  while ((dataSet = inputs->GetNextDataSet(iter)))
-  {
-    for (int attributeIndex = 0; attributeIndex < vtkDataSetAttributes::NUM_ATTRIBUTES; ++attributeIndex)
-    {
-      // Check if the attribute array name is NULL. If attribute is
-      // not set or the name is not NULL, we do not need a NULL
-      // array.
-      vtkDataSetAttributes *inputData = dataSet->GetAttributes(attributesType);
-      vtkDataArray* attributeArray = inputData->GetAttribute(attributeIndex);
-      vtkDataArray* firstAttributeArray = firstInputData->GetAttribute(attributeIndex);
-      if (!attributeArray || attributeArray->GetName() ||
-          (attributeArray->GetNumberOfComponents() != firstAttributeArray->GetNumberOfComponents()) ||
-          (attributeArray->GetDataType() != firstAttributeArray->GetDataType()))
-      {
-        attributeNeedsNullArray[attributeIndex] = false;
-      }
-    }
-  }
-
-  // Now allocate the attribute arrays we need
-  for (int attributeIndex = 0; attributeIndex < vtkDataSetAttributes::NUM_ATTRIBUTES; ++attributeIndex)
-  {
-    if (attributeNeedsNullArray[attributeIndex])
-    {
-      vtkAbstractArray* srcArray = firstInputData->GetAttribute(attributeIndex);
-      vtkAbstractArray* dstArray = vtkAbstractArray::CreateArray(srcArray->GetDataType());
-      dstArray->SetNumberOfComponents(srcArray->GetNumberOfComponents());
-      for (int j = 0; j < srcArray->GetNumberOfComponents(); ++j)
-      {
-        if (srcArray->GetComponentName(j))
-        {
-          dstArray->SetComponentName(j, srcArray->GetComponentName(j));
-        }
-      }
-      dstArray->SetNumberOfTuples(totalNumberOfElements);
-      outputData->SetAttribute(dstArray, attributeIndex);
-      dstArray->Delete();
-    }
-  }
-
-  //////////////////////////////////////////////////////////////
-  // Phase 4 - Copy data
-  //////////////////////////////////////////////////////////////
+  // copy arrays.
+  int inputIndex;
   vtkIdType offset = 0;
-  inputs->InitTraversal(iter);
-  while ((dataSet = inputs->GetNextDataSet(iter)))
+  for (inputIndex = 0, dataSet = nullptr, inputs->InitTraversal(iter); (dataSet = inputs->GetNextDataSet(iter));)
   {
-    vtkDataSetAttributes* inputData = dataSet->GetAttributes(attributesType);
-    for (std::set<std::string>::iterator it = dataArrayNames.begin(); it != dataArrayNames.end(); ++it)
+    if (auto inputData = dataSet->GetAttributes(attributesType))
     {
-      const char* arrayName = it->c_str();
-      vtkAbstractArray* srcArray = inputData->GetAbstractArray(arrayName);
-      vtkAbstractArray* dstArray = outputData->GetAbstractArray(arrayName);
-
-      for (vtkIdType id = 0; id < srcArray->GetNumberOfTuples(); ++id)
+      const auto numberOfInputTuples = inputData->GetNumberOfTuples();
+      if (globalIds != nullptr)
       {
-        if (globalIds)
+        for (vtkIdType id=0; id < numberOfInputTuples; ++id)
         {
-          dstArray->SetTuple(globalIds[id + offset], id, srcArray);
-        }
-        else
-        {
-          dstArray->SetTuple(id + offset, id, srcArray);
+          fieldList.CopyData(inputIndex, inputData, id, outputData, offset + id);
         }
       }
-    }
-
-    // Copy attributes
-    for (int attribute = 0; attribute < vtkDataSetAttributes::NUM_ATTRIBUTES; ++attribute)
-    {
-      vtkAbstractArray* srcArray = inputData->GetAbstractAttribute(attribute);
-      vtkAbstractArray* dstArray = outputData->GetAbstractAttribute(attribute);
-
-      // Copy if only the array name is NULL. If the array name is non-NULL, it will
-      // have been copied in the loop above.
-      if (srcArray && !srcArray->GetName() &&
-          dstArray && !dstArray->GetName())
+      else
       {
-        for (vtkIdType id = 0; id < srcArray->GetNumberOfTuples(); ++id)
-        {
-          if (globalIds)
-          {
-            dstArray->SetTuple(globalIds[id + offset], id, srcArray);
-          }
-          else
-          {
-            dstArray->SetTuple(id + offset, id, srcArray);
-          }
-        }
+        fieldList.CopyData(inputIndex, inputData, 0, numberOfInputTuples, outputData, offset);
       }
-    }
-
-    if (attributesType == vtkDataObject::POINT)
-    {
-      offset += dataSet->GetNumberOfPoints();
-    }
-    else if (attributesType == vtkDataObject::CELL)
-    {
-      offset += dataSet->GetNumberOfCells();
+      offset += numberOfInputTuples;
+      ++inputIndex;
     }
   }
 }

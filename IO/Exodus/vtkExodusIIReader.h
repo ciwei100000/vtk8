@@ -29,8 +29,8 @@
  * vector, are combined internally for convenience.  To be combined, the array
  * names have to be identical except for a trailing X,Y and Z (or x,y,z).  By
  * default cell and point arrays are not loaded.  However, the user can flag
- * arrays to load with the methods "SetPointArrayStatus" and
- * "SetCellArrayStatus".  The reader DOES NOT respond to piece requests
+ * arrays to load with the methods "SetPointResultArrayStatus" and
+ * "SetElementResultArrayStatus".  The reader DOES NOT respond to piece requests
  *
 */
 
@@ -55,19 +55,19 @@ class VTKIOEXODUS_EXPORT vtkExodusIIReader : public vtkMultiBlockDataSetAlgorith
 public:
   static vtkExodusIIReader *New();
   vtkTypeMacro(vtkExodusIIReader,vtkMultiBlockDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
-   * Determine if the file can be readed with this reader.
+   * Determine if the file can be read with this reader.
    */
-  int CanReadFile(const char* fname);
+  virtual int CanReadFile(const char* fname);
 
   //virtual void Modified();
 
   /**
    * Return the object's MTime. This is overridden to include the timestamp of its internal class.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   /**
    * Return the MTime of the internal data structure.
@@ -140,31 +140,32 @@ public:
    * representing faces from an Exodus face block. The same holds
    * for cells representing entries of node, edge, face, side, and element sets.
    */
-  virtual void SetGenerateObjectIdCellArray( int g );
-  int GetGenerateObjectIdCellArray();
-  vtkBooleanMacro(GenerateObjectIdCellArray, int);
+  virtual void SetGenerateObjectIdCellArray( vtkTypeBool g );
+  vtkTypeBool GetGenerateObjectIdCellArray();
+  vtkBooleanMacro(GenerateObjectIdCellArray, vtkTypeBool);
   static const char *GetObjectIdArrayName() { return "ObjectId"; }
   //@}
 
-  virtual void SetGenerateGlobalElementIdArray( int g );
-  int GetGenerateGlobalElementIdArray();
-  vtkBooleanMacro(GenerateGlobalElementIdArray, int);
+  virtual void SetGenerateGlobalElementIdArray( vtkTypeBool g );
+  vtkTypeBool GetGenerateGlobalElementIdArray();
+  vtkBooleanMacro(GenerateGlobalElementIdArray, vtkTypeBool);
 
-  virtual void SetGenerateGlobalNodeIdArray( int g );
-  int GetGenerateGlobalNodeIdArray();
-  vtkBooleanMacro(GenerateGlobalNodeIdArray, int);
+  virtual void SetGenerateGlobalNodeIdArray( vtkTypeBool g );
+  vtkTypeBool GetGenerateGlobalNodeIdArray();
+  vtkBooleanMacro(GenerateGlobalNodeIdArray, vtkTypeBool);
 
-  virtual void SetGenerateImplicitElementIdArray( int g );
-  int GetGenerateImplicitElementIdArray();
-  vtkBooleanMacro(GenerateImplicitElementIdArray, int);
+  virtual void SetGenerateImplicitElementIdArray( vtkTypeBool g );
+  vtkTypeBool GetGenerateImplicitElementIdArray();
+  vtkBooleanMacro(GenerateImplicitElementIdArray, vtkTypeBool);
 
-  virtual void SetGenerateImplicitNodeIdArray( int g );
-  int GetGenerateImplicitNodeIdArray();
-  vtkBooleanMacro(GenerateImplicitNodeIdArray, int);
+  virtual void SetGenerateImplicitNodeIdArray( vtkTypeBool g );
+  vtkTypeBool GetGenerateImplicitNodeIdArray();
+  vtkBooleanMacro(GenerateImplicitNodeIdArray, vtkTypeBool);
 
-  virtual void SetGenerateFileIdArray( int f );
-  int GetGenerateFileIdArray();
-  vtkBooleanMacro(GenerateFileIdArray, int);
+  virtual void SetGenerateFileIdArray( vtkTypeBool f );
+  vtkTypeBool GetGenerateFileIdArray();
+  vtkBooleanMacro(GenerateFileIdArray, vtkTypeBool);
+
   virtual void SetFileId( int f );
   int GetFileId();
 
@@ -290,13 +291,13 @@ public:
   /**
    * Geometric locations can include displacements.  By default,
    * this is ON.  The nodal positions are 'displaced' by the
-   * standard exodus displacment vector. If displacements
+   * standard exodus displacement vector. If displacements
    * are turned 'off', the user can explicitly add them by
    * applying a warp filter.
    */
-  virtual void SetApplyDisplacements( int d );
-  int GetApplyDisplacements();
-  vtkBooleanMacro(ApplyDisplacements, int);
+  virtual void SetApplyDisplacements( vtkTypeBool d );
+  vtkTypeBool GetApplyDisplacements();
+  vtkBooleanMacro(ApplyDisplacements, vtkTypeBool);
   virtual void SetDisplacementMagnitude( float s );
   float GetDisplacementMagnitude();
   //@}
@@ -307,9 +308,9 @@ public:
    * By default, HasModeShapes is false unless two time values in the Exodus file are identical,
    * in which case it is true.
    */
-  virtual void SetHasModeShapes( int ms );
-  int GetHasModeShapes();
-  vtkBooleanMacro(HasModeShapes,int);
+  virtual void SetHasModeShapes( vtkTypeBool ms );
+  vtkTypeBool GetHasModeShapes();
+  vtkBooleanMacro(HasModeShapes,vtkTypeBool);
   //@}
 
   //@{
@@ -332,9 +333,22 @@ public:
    * HasModeShapes is on, this reader ignores time.  This flag has no effect if
    * HasModeShapes is off.
    */
-  virtual void SetAnimateModeShapes(int flag);
-  int GetAnimateModeShapes();
-  vtkBooleanMacro(AnimateModeShapes, int);
+  virtual void SetAnimateModeShapes(vtkTypeBool flag);
+  vtkTypeBool GetAnimateModeShapes();
+  vtkBooleanMacro(AnimateModeShapes, vtkTypeBool);
+  //@}
+
+
+  //@{
+  /**
+   * When on, this option ignores the time values assigned to each time step in
+   * the file. This can be useful for Exodus files where different time steps
+   * are overloaded to represent different aspects of a data set rather than the
+   * data set at different time values.
+   */
+  virtual void SetIgnoreFileTime(bool flag);
+  bool GetIgnoreFileTime();
+  vtkBooleanMacro(IgnoreFileTime, bool);
   //@}
 
   //@{
@@ -769,9 +783,17 @@ public:
   vtkGetMacro(SILUpdateStamp, int);
   //@}
 
+  //@{
+  /**
+   * Get the max_name_length in the file. This is the amount of space allocated
+   * int the file for storing names of arrays, blocks, etc.
+   */
+  int GetMaxNameLength();
+  //@}
+
 protected:
   vtkExodusIIReader();
-  ~vtkExodusIIReader() VTK_OVERRIDE;
+  ~vtkExodusIIReader() override;
 
   // helper for finding IDs
   static int GetIDHelper ( const char *arrayName, vtkDataSet *data, int localID, int searchType );
@@ -781,12 +803,7 @@ protected:
   vtkGetObjectMacro(Metadata,vtkExodusIIReaderPrivate);
 
   /**
-   * Returns true if XMLFileName has already been set. Otherwise, look for the XML
-   * metadata file in the same directory as the data file(s) using the following
-   * possible file names:
-   * DATA_FILE_NAME.xml
-   * DATA_FILE_NAME.dart
-   * artifact.dta
+   * Returns true if the file given by XMLFileName exists.
    * Return true if found, false otherwise
    */
   bool FindXMLFile();
@@ -800,9 +817,9 @@ protected:
    */
   void AdvertiseTimeSteps( vtkInformation* outputInfo );
 
-  int ProcessRequest( vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestInformation( vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestData( vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int ProcessRequest( vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestInformation( vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestData( vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   //int RequestDataOverTime( vtkInformation *, vtkInformationVector **, vtkInformationVector *);
 
   // Parameters for controlling what is read in.
@@ -827,8 +844,8 @@ protected:
 
   friend class vtkPExodusIIReader;
 private:
-  vtkExodusIIReader(const vtkExodusIIReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExodusIIReader&) VTK_DELETE_FUNCTION;
+  vtkExodusIIReader(const vtkExodusIIReader&) = delete;
+  void operator=(const vtkExodusIIReader&) = delete;
 
   void AddDisplacements(vtkUnstructuredGrid* output);
   int ModeShapesRange[2];

@@ -14,23 +14,27 @@
 =========================================================================*/
 #include <cassert>
 
-#include "vtkSmartVolumeMapper.h"
-#include "vtkObjectFactory.h"
+#include "vtkCellData.h"
+#include "vtkCellDataToPointData.h"
 #include "vtkColorTransferFunction.h"
+#include "vtkContourValues.h"
 #include "vtkDataArray.h"
-#include "vtkFixedPointVolumeRayCastMapper.h"
 #include "vtkEventForwarderCommand.h"
+#include "vtkFixedPointVolumeRayCastMapper.h"
+#include "vtkGPUVolumeRayCastMapper.h"
 #include "vtkImageData.h"
+#include "vtkImageMagnitude.h"
 #include "vtkImageResample.h"
+#include "vtkObjectFactory.h"
 #include "vtkOSPRayVolumeInterface.h"
 #include "vtkPiecewiseFunction.h"
+#include "vtkPointData.h"
+#include "vtkPointDataToCellData.h"
 #include "vtkRenderer.h"
 #include "vtkRenderWindow.h"
+#include "vtkSmartVolumeMapper.h"
 #include "vtkVolume.h"
 #include "vtkVolumeProperty.h"
-#include "vtkGPUVolumeRayCastMapper.h"
-#include "vtkImageMagnitude.h"
-#include "vtkPointData.h"
 
 
 vtkStandardNewMacro( vtkSmartVolumeMapper );
@@ -81,7 +85,7 @@ vtkSmartVolumeMapper::vtkSmartVolumeMapper()
   this->GPUResampleFilter = vtkImageResample::New();
 
   // Compute the magnitude of a 3-component image for the SingleComponentMode
-  this->ImageMagnitude = NULL;
+  this->ImageMagnitude = nullptr;
   this->InputDataMagnitude = vtkImageData::New();
 
   // Turn this on by default - this means that the sample spacing will be
@@ -112,7 +116,7 @@ vtkSmartVolumeMapper::vtkSmartVolumeMapper()
   this->RayCastMapper->AddObserver(vtkCommand::VolumeMapperComputeGradientsProgressEvent, cb);
 
   // And the GPU mapper's events
-  // Commented out because too many events are being forwwarded
+  // Commented out because too many events are being forwarded
   // put back in after that is fixed
   /***
   this->GPUMapper->AddObserver(vtkCommand::VolumeMapperRenderStartEvent, cb);
@@ -121,7 +125,7 @@ vtkSmartVolumeMapper::vtkSmartVolumeMapper()
   ***/
 
   // And the low res GPU mapper's events
-  // Commented out because too many events are being forwwarded
+  // Commented out because too many events are being forwarded
   // put back in after that is fixed
   /***
   this->GPULowResMapper->AddObserver(vtkCommand::VolumeMapperRenderStartEvent, cb);
@@ -131,7 +135,7 @@ vtkSmartVolumeMapper::vtkSmartVolumeMapper()
 
   cb->Delete();
 
-  this->OSPRayMapper = NULL;
+  this->OSPRayMapper = nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -142,37 +146,37 @@ vtkSmartVolumeMapper::~vtkSmartVolumeMapper()
   if (this->RayCastMapper)
   {
     this->RayCastMapper->Delete();
-    this->RayCastMapper = NULL;
+    this->RayCastMapper = nullptr;
   }
   if (this->GPUMapper)
   {
     this->GPUMapper->Delete();
-    this->GPUMapper = NULL;
+    this->GPUMapper = nullptr;
   }
   if (this->GPULowResMapper)
   {
     this->GPULowResMapper->Delete();
-    this->GPULowResMapper = NULL;
+    this->GPULowResMapper = nullptr;
   }
   if (this->GPUResampleFilter)
   {
     this->GPUResampleFilter->Delete();
-    this->GPUResampleFilter = NULL;
+    this->GPUResampleFilter = nullptr;
   }
   if (this->ImageMagnitude)
   {
     this->ImageMagnitude->Delete();
-    this->ImageMagnitude = NULL;
+    this->ImageMagnitude = nullptr;
   }
   if (this->InputDataMagnitude)
   {
     this->InputDataMagnitude->Delete();
-    this->InputDataMagnitude = NULL;
+    this->InputDataMagnitude = nullptr;
   }
   if (this->OSPRayMapper)
   {
     this->OSPRayMapper->Delete();
-    this->OSPRayMapper = NULL;
+    this->OSPRayMapper = nullptr;
   }
 }
 
@@ -189,7 +193,7 @@ void vtkSmartVolumeMapper::Render( vtkRenderer *ren, vtkVolume *vol )
   // desired update rate
   this->ComputeRenderMode(ren,vol);
 
-  vtkGPUVolumeRayCastMapper *usedMapper=0;
+  vtkGPUVolumeRayCastMapper *usedMapper=nullptr;
 
   switch ( this->CurrentRenderMode )
   {
@@ -509,6 +513,61 @@ void vtkSmartVolumeMapper::ComputeRenderMode(vtkRenderer *ren, vtkVolume *vol)
 }
 
 // ----------------------------------------------------------------------------
+void vtkSmartVolumeMapper::ComputeMagnitudeCellData(vtkImageData* input,
+  vtkDataArray* arr)
+{
+  vtkNew<vtkImageData> tempInput;
+  tempInput->ShallowCopy(input);
+
+  tempInput->GetCellData()->SetActiveAttribute(arr->GetName(),
+    vtkDataSetAttributes::SCALARS);
+
+  // vtkImageMagnitude can only process point data so, data is transformed first
+  // to points and then back to cells.
+  vtkNew<vtkCellDataToPointData> cellToPoints;
+  cellToPoints->SetInputData(tempInput);
+  cellToPoints->Update();
+  tempInput->ShallowCopy(cellToPoints->GetOutput());
+
+  const int id = tempInput->GetPointData()->SetActiveAttribute(arr->GetName(),
+    vtkDataSetAttributes::SCALARS);
+  if (id < 0)
+  {
+    vtkErrorMacro("Failed to set the active attribute in vtkImageMagnitude's input"
+      " (from cellToPoints)!");
+    return;
+  }
+
+  this->ImageMagnitude->SetInputData(tempInput);
+  this->ImageMagnitude->Update();
+
+  vtkNew<vtkPointDataToCellData> pointsToCells;
+  pointsToCells->SetInputConnection(this->ImageMagnitude->GetOutputPort());
+  pointsToCells->Update();
+  this->InputDataMagnitude->ShallowCopy(pointsToCells->GetOutput());
+}
+
+// ----------------------------------------------------------------------------
+void vtkSmartVolumeMapper::ComputeMagnitudePointData(vtkImageData* input,
+  vtkDataArray* arr)
+{
+  vtkNew<vtkImageData> tempInput;
+  tempInput->ShallowCopy(input);
+
+  const int id = tempInput->GetPointData()->SetActiveAttribute(arr->GetName(),
+    vtkDataSetAttributes::SCALARS);
+  if (id < 0)
+  {
+    vtkErrorMacro("Failed to set the active attribute in vtkImageMagnitude's input!");
+    return;
+  }
+
+  this->ImageMagnitude->SetInputData(tempInput);
+  this->ImageMagnitude->Update();
+  this->InputDataMagnitude->ShallowCopy(this->ImageMagnitude->GetOutput());
+}
+
+// ----------------------------------------------------------------------------
 void vtkSmartVolumeMapper::SetupVectorMode(vtkVolume* vol)
 {
   vtkImageData* input = this->GetInput();
@@ -517,9 +576,9 @@ void vtkSmartVolumeMapper::SetupVectorMode(vtkVolume* vol)
     vtkErrorMacro("Failed to setup vector rendering mode! No input.");
   }
 
-  int cellFlag = 0;
+  int isCellData = 0;
   vtkDataArray* dataArray  = this->GetScalars(input, this->ScalarMode,
-    this->ArrayAccessMode, this->ArrayId, this->ArrayName, cellFlag);
+    this->ArrayAccessMode, this->ArrayId, this->ArrayName, isCellData);
   int const numComponents = dataArray->GetNumberOfComponents();
 
   switch (this->VectorMode)
@@ -540,21 +599,14 @@ void vtkSmartVolumeMapper::SetupVectorMode(vtkVolume* vol)
           }
 
           // Proxy dataset (set the active attribute for the magnitude filter)
-          vtkImageData* tempInput = vtkImageData::New();
-          tempInput->ShallowCopy(input);
-          int const id = tempInput->GetPointData()->SetActiveAttribute(
-            dataArray->GetName(), vtkDataSetAttributes::SCALARS);
-
-          if (id < 0)
+          if (isCellData)
           {
-            vtkErrorMacro("Failed to set the active attribute in magnitude"
-              " filter!");
+            this->ComputeMagnitudeCellData(input, dataArray);
           }
-
-          this->ImageMagnitude->SetInputData(tempInput);
-          this->ImageMagnitude->Update();
-          this->InputDataMagnitude->ShallowCopy(this->ImageMagnitude->GetOutput());
-          tempInput->Delete();
+          else
+          {
+            this->ComputeMagnitudePointData(input, dataArray);
+          }
         }
 
         if (this->InputDataMagnitude->GetMTime() > this->MagnitudeUploadTime)
@@ -636,12 +688,12 @@ void vtkSmartVolumeMapper::SetupVectorMode(vtkVolume* vol)
 // ----------------------------------------------------------------------------
 void vtkSmartVolumeMapper::ConnectMapperInput(vtkVolumeMapper *m)
 {
-  assert("pre: m_exists" && m != NULL);
+  assert("pre: m_exists" && m != nullptr);
 
   bool needShallowCopy = false;
   vtkImageData* imData = m->GetInput();
 
-  if (imData == NULL || imData == this->InputDataMagnitude)
+  if (imData == nullptr || imData == this->InputDataMagnitude)
   {
     imData = vtkImageData::New();
     m->SetInputDataObject(imData);
@@ -665,11 +717,11 @@ void vtkSmartVolumeMapper::ConnectMapperInput(vtkVolumeMapper *m)
 // ----------------------------------------------------------------------------
 void vtkSmartVolumeMapper::ConnectFilterInput(vtkImageResample *f)
 {
-  assert("pre: f_exists" && f!=0);
+  assert("pre: f_exists" && f!=nullptr);
 
   vtkImageData *input2=static_cast<vtkImageData *>(f->GetInput());
   bool needShallowCopy=false;
-  if(input2==0)
+  if(input2==nullptr)
   {
     // make sure we not create a shallow copy each time to avoid
     // performance penalty.
@@ -696,15 +748,6 @@ void vtkSmartVolumeMapper::SetRequestedRenderMode(int mode)
   {
     return;
   }
-
-#if !defined(VTK_LEGACY_REMOVE)
-  if (mode == RayCastAndTextureRenderMode || mode == TextureRenderMode)
-  {
-    vtkErrorMacro("RayCastAndTextureRenderMode and \
-                  TextureRenderMode no longer supported");
-    return;
-  }
-#endif // VTK_LEGACY_REMOVE
 
   // Make sure it is a valid mode
   if ( mode < vtkSmartVolumeMapper::DefaultRenderMode ||

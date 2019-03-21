@@ -33,7 +33,7 @@ class VTKIMAGINGCORE_EXPORT vtkImageThreshold : public vtkThreadedImageAlgorithm
 public:
   static vtkImageThreshold *New();
   vtkTypeMacro(vtkImageThreshold,vtkThreadedImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * The values greater than or equal to the value match.
@@ -54,9 +54,9 @@ public:
   /**
    * Determines whether to replace the pixel in range with InValue
    */
-  vtkSetMacro(ReplaceIn, int);
-  vtkGetMacro(ReplaceIn, int);
-  vtkBooleanMacro(ReplaceIn, int);
+  vtkSetMacro(ReplaceIn, vtkTypeBool);
+  vtkGetMacro(ReplaceIn, vtkTypeBool);
+  vtkBooleanMacro(ReplaceIn, vtkTypeBool);
   //@}
 
   //@{
@@ -71,9 +71,9 @@ public:
   /**
    * Determines whether to replace the pixel out of range with OutValue
    */
-  vtkSetMacro(ReplaceOut, int);
-  vtkGetMacro(ReplaceOut, int);
-  vtkBooleanMacro(ReplaceOut, int);
+  vtkSetMacro(ReplaceOut, vtkTypeBool);
+  vtkGetMacro(ReplaceOut, vtkTypeBool);
+  vtkBooleanMacro(ReplaceOut, vtkTypeBool);
   //@}
 
   //@{
@@ -124,28 +124,28 @@ public:
 
 protected:
   vtkImageThreshold();
-  ~vtkImageThreshold()VTK_OVERRIDE {}
+  ~vtkImageThreshold() override {}
 
   double UpperThreshold;
   double LowerThreshold;
-  int ReplaceIn;
+  vtkTypeBool ReplaceIn;
   double InValue;
-  int ReplaceOut;
+  vtkTypeBool ReplaceOut;
   double OutValue;
 
   int OutputScalarType;
 
-  int RequestInformation (vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestInformation (vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   void ThreadedRequestData(vtkInformation *request,
                            vtkInformationVector **inputVector,
                            vtkInformationVector *outputVector,
                            vtkImageData ***inData, vtkImageData **outData,
-                           int extent[6], int id) VTK_OVERRIDE;
+                           int extent[6], int id) override;
 
 private:
-  vtkImageThreshold(const vtkImageThreshold&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageThreshold&) VTK_DELETE_FUNCTION;
+  vtkImageThreshold(const vtkImageThreshold&) = delete;
+  void operator=(const vtkImageThreshold&) = delete;
 };
 
 #endif

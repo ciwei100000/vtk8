@@ -42,7 +42,7 @@
 #define VTK_CREATE(type, var) \
   vtkSmartPointer<type> var = vtkSmartPointer<type>::New()
 
-#include <time.h>
+#include <ctime>
 
 #include <vector>
 
@@ -192,7 +192,7 @@ static vtkSmartPointer<vtkUnstructuredGrid> BuildInput(int type,
   while (!idsLeft.empty())
   {
     vtkIdType next
-      = vtkMath::Round(vtkMath::Random(-0.49, idsLeft.size() - 0.51));
+      = std::lround(vtkMath::Random(-0.49, idsLeft.size() - 0.51));
     std::vector<vtkIdType>::iterator nextp = idsLeft.begin() + next;
     idMap.push_back(*nextp);
     idsLeft.erase(nextp, nextp + 1);
@@ -326,7 +326,7 @@ static void Check3DPrimitive(int type, vtkIdType numcells,
 
 int BoxClipTriangulate(int, char *[])
 {
-  long seed = time(NULL);
+  long seed = time(nullptr);
   std::cout << "Random seed = " << seed << std::endl;
   vtkMath::RandomSeed(seed);
   vtkMath::Random();

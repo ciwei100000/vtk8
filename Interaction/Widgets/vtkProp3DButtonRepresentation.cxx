@@ -54,7 +54,7 @@ typedef std::map<int,vtkScaledProp>::iterator vtkPropArrayIterator;
 vtkProp3DButtonRepresentation::vtkProp3DButtonRepresentation()
 {
   // Current button representation
-  this->CurrentProp = NULL;
+  this->CurrentProp = nullptr;
 
   // Following
   this->FollowCamera = 0;
@@ -132,15 +132,19 @@ GetButtonProp(int i)
   }
   else
   {
-    return NULL;
+    return nullptr;
   }
 }
 
 //------------------------------------------------------------------------------
 void vtkProp3DButtonRepresentation::RegisterPickers()
 {
-  this->Renderer->GetRenderWindow()->GetInteractor()->GetPickingManager()
-    ->AddPicker(this->Picker, this);
+  vtkPickingManager* pm = this->GetPickingManager();
+  if (!pm)
+  {
+    return;
+  }
+  pm->AddPicker(this->Picker, this);
 }
 
 //-------------------------------------------------------------------------
@@ -167,8 +171,8 @@ void vtkProp3DButtonRepresentation::PlaceWidget(double bds[6])
 
     prop->GetBounds(aBds);
     aCenter[0] = (aBds[0]+aBds[1]) / 2.0;
-    aCenter[1] = (aBds[2]+aBds[3]) / 2.0;;
-    aCenter[2] = (aBds[4]+aBds[5]) / 2.0;;
+    aCenter[1] = (aBds[2]+aBds[3]) / 2.0;
+    aCenter[2] = (aBds[4]+aBds[5]) / 2.0;
 
     // Now fit the actor bounds in the place bounds by tampering with its
     // transform.
@@ -212,7 +216,7 @@ int vtkProp3DButtonRepresentation
 
   vtkAssemblyPath* path = this->GetAssemblyPath(X, Y, 0., this->Picker);
 
-  if ( path != NULL )
+  if ( path != nullptr )
   {
     this->InteractionState = vtkButtonRepresentation::Inside;
   }
@@ -230,7 +234,7 @@ void vtkProp3DButtonRepresentation::BuildRepresentation()
   {
     this->SetState(this->State); //side effect sets CurrentProp
     vtkPropArrayIterator iter = this->PropArray->find(this->State);
-    if ( this->CurrentProp == NULL || iter == this->PropArray->end() )
+    if ( this->CurrentProp == nullptr || iter == this->PropArray->end() )
     {
       return;
     }
@@ -345,8 +349,7 @@ RenderTranslucentPolygonalGeometry(vtkViewport *viewport)
   }
 }
 //-----------------------------------------------------------------------------
-int vtkProp3DButtonRepresentation::
-HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkProp3DButtonRepresentation::HasTranslucentPolygonalGeometry()
 {
   this->BuildRepresentation();
 
@@ -366,7 +369,7 @@ double *vtkProp3DButtonRepresentation::GetBounds()
 {
   if ( !this->CurrentProp )
   {
-    return NULL;
+    return nullptr;
   }
 
   if ( this->FollowCamera )

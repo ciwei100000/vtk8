@@ -49,7 +49,7 @@ class VTKIOLEGACY_EXPORT vtkDataSetReader : public vtkDataReader
 public:
   static vtkDataSetReader *New();
   vtkTypeMacro(vtkDataSetReader,vtkDataReader);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -63,7 +63,7 @@ public:
   /**
    * Get the output as various concrete types. This method is typically used
    * when you know exactly what type of data is being read.  Otherwise, use
-   * the general GetOutput() method. If the wrong type is used NULL is
+   * the general GetOutput() method. If the wrong type is used nullptr is
    * returned.  (You must also set the filename of the object prior to
    * getting the output.)
    */
@@ -80,23 +80,30 @@ public:
    */
   virtual int ReadOutputType();
 
+  /**
+   * Read metadata from file.
+   */
+  int ReadMetaDataSimple(const std::string& fname,
+                         vtkInformation* metadata) override;
+
+  /**
+   * Actual reading happens here
+   */
+  int ReadMeshSimple(const std::string& fname,
+                     vtkDataObject* output) override;
+
+
 protected:
   vtkDataSetReader();
-  ~vtkDataSetReader() VTK_OVERRIDE;
+  ~vtkDataSetReader() override;
 
-  int ProcessRequest(vtkInformation *, vtkInformationVector **,
-                             vtkInformationVector *) VTK_OVERRIDE;
-  int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
-  virtual int RequestDataObject(vtkInformation *, vtkInformationVector **,
-                                vtkInformationVector *);
-  int FillOutputPortInformation(int, vtkInformation *) VTK_OVERRIDE;
-  int RequestInformation(vtkInformation *, vtkInformationVector **,
-                                 vtkInformationVector *) VTK_OVERRIDE;
+  vtkDataObject* CreateOutput(vtkDataObject* currentOutput) override;
+
+  int FillOutputPortInformation(int, vtkInformation *) override;
 
 private:
-  vtkDataSetReader(const vtkDataSetReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataSetReader&) VTK_DELETE_FUNCTION;
+  vtkDataSetReader(const vtkDataSetReader&) = delete;
+  void operator=(const vtkDataSetReader&) = delete;
 };
 
 #endif

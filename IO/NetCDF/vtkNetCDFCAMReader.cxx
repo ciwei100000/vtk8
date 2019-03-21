@@ -35,7 +35,7 @@
 #include <set>
 #include <sstream>
 #include <vector>
-#include <vtk_netcdfcpp.h>
+#include <vtk_netcdf.h>
 
 namespace
 {
@@ -44,7 +44,7 @@ namespace
   bool IsCellInverted(double points[4][3])
   {
     // We test the normal 3 points at a time. Not all grids are well-behaved
-    // i.e. consistenly use 0 or 360. We've had grid where 3 points on the left
+    // i.e. consistently use 0 or 360. We've had grid where 3 points on the left
     // side, and just 1 on the right. Just checking the first 3 points (which is
     // what ComputeNormal() does, we may (and do) miss a few cells.
     // See BUG #0014897.
@@ -67,34 +67,130 @@ namespace
   {
     return std::abs(val) < std::numeric_limits<T>::epsilon();
   }
+}
 
-  /**
-   * Returns the concatenation of the name of the variable
-   * with the dimensions as a string.
-   */
-  std::string GetNameDimension(NcVar* var)
+class vtkNetCDFCAMReader::Internal
+{
+public:
+  Internal(vtkNetCDFCAMReader *r)
+    : reader(r), nc_points(-1), nc_connectivity(-1)
   {
-    std::ostringstream name;
-    std::ostringstream postfix;
-    if (! var)
+  }
+  ~Internal()
+  {
+    closePoints();
+    closeConnectivity();
+  }
+
+  bool open(const char* file, int *ncfile)
+  {
+    int mode = NC_NOWRITE | NC_64BIT_OFFSET | NC_NETCDF4 | NC_CLASSIC_MODEL;
+    int ncid;
+    if (nc_err(nc_open(file, mode, &ncid)))
+    {
+      return false;
+    }
+    *ncfile = ncid;
+    return true;
+  }
+  bool openPoints(const char* file)
+  {
+    return open(file, &nc_points);
+  }
+  bool openConnectivity(const char* file)
+  {
+    return open(file, &nc_connectivity);
+  }
+  void closePoints()
+  {
+    if (nc_points != -1)
+    {
+      nc_err(nc_close(nc_points));
+      nc_points = -1;
+    }
+  }
+
+  void closeConnectivity()
+  {
+    if (nc_connectivity != -1)
+    {
+      nc_err(nc_close(nc_connectivity));
+      nc_connectivity = -1;
+    }
+  }
+
+  bool nc_err(int nc_ret, bool msg_on_err = true) const;
+
+  std::string GetNameDimension(int ncid, int varid) const;
+
+  vtkNetCDFCAMReader *reader;
+  int nc_points;
+  int nc_connectivity;
+};
+
+bool vtkNetCDFCAMReader::Internal::nc_err(int nc_ret, bool msg_on_err) const
+{
+  if (nc_ret == NC_NOERR)
+  {
+    return false;
+  }
+
+  if (msg_on_err)
+  {
+    vtkErrorWithObjectMacro(reader, << "NetCDF error: " << nc_strerror(nc_ret));
+  }
+  return true;
+}
+
+std::string vtkNetCDFCAMReader::Internal::GetNameDimension(int nc_file, int nc_var) const
+{
+  int ndims;
+  if (nc_err(nc_inq_varndims(nc_file, nc_var, &ndims)))
+  {
+    return "";
+  }
+  if (ndims < 2)
+  {
+    return "";
+  }
+
+  int dims[NC_MAX_VAR_DIMS];
+  if (nc_err(nc_inq_vardimid(nc_file, nc_var, dims)))
+  {
+    return "";
+  }
+
+  std::ostringstream postfix;
+
+  char ncname[NC_MAX_NAME + 1];
+  if (nc_err(nc_inq_dimname(nc_file, dims[0], ncname)))
+  {
+    return "";
+  }
+  postfix << "[" << ncname;
+  if (nc_err(nc_inq_dimname(nc_file, dims[1], ncname)))
+  {
+    return "";
+  }
+  postfix << "," << ncname;
+
+  if (ndims > 2)
+  {
+    if (nc_err(nc_inq_dimname(nc_file, dims[2], ncname)))
     {
       return "";
     }
-    postfix << "["
-            << var->get_dim(0)->name() << ", "
-            << var->get_dim(1)->name();
-    if (var->num_dims() == 2)
-    {
-      postfix << "]";
-    }
-    else
-    {
-      postfix << ", "
-              << var->get_dim(2)->name() << "]";
-    }
-    name << var->name() << " " << postfix.str();
-    return name.str();
+    postfix << ", " << ncname;
   }
+  postfix << "]";
+
+  if (nc_err(nc_inq_varname(nc_file, nc_var, ncname)))
+  {
+    return "";
+  }
+  std::ostringstream name;
+  name << ncname << " " << postfix.str();
+  return name.str();
 }
 
 //----------------------------------------------------------------------------
@@ -103,14 +199,12 @@ vtkStandardNewMacro(vtkNetCDFCAMReader);
 //----------------------------------------------------------------------------
 vtkNetCDFCAMReader::vtkNetCDFCAMReader()
 {
-  this->FileName = NULL;
-  this->CurrentFileName = NULL;
-  this->ConnectivityFileName = NULL;
-  this->CurrentConnectivityFileName = NULL;
-  this->PointsFile = NULL;
-  this->ConnectivityFile = NULL;
+  this->FileName = nullptr;
+  this->CurrentFileName = nullptr;
+  this->ConnectivityFileName = nullptr;
+  this->CurrentConnectivityFileName = nullptr;
   this->VerticalDimension = VERTICAL_DIMENSION_MIDPOINT_LAYERS;
-  this->TimeSteps = NULL;
+  this->TimeSteps = nullptr;
   this->NumberOfTimeSteps = 0;
   this->SetNumberOfInputPorts(0);
   this->SetNumberOfOutputPorts(1);
@@ -130,97 +224,45 @@ vtkNetCDFCAMReader::vtkNetCDFCAMReader()
   this->InterfaceLayerIndex = 0;
   this->InterfaceLayersRange[0] = 0;
   this->InterfaceLayersRange[1] = 1;
+
+  this->Internals = new Internal(this);
 }
 
 //----------------------------------------------------------------------------
 vtkNetCDFCAMReader::~vtkNetCDFCAMReader()
 {
-  this->SetFileName(NULL);
-  this->SetCurrentFileName(NULL);
-  this->SetConnectivityFileName(NULL);
-  this->SetCurrentConnectivityFileName(NULL);
-  delete this->PointsFile;
-  this->PointsFile = NULL;
-  delete this->ConnectivityFile;
-  this->ConnectivityFile = NULL;
+  this->SetFileName(nullptr);
+  this->SetCurrentFileName(nullptr);
+  this->SetConnectivityFileName(nullptr);
+  this->SetCurrentConnectivityFileName(nullptr);
   delete []this->TimeSteps;
-  this->TimeSteps = NULL;
+  this->TimeSteps = nullptr;
   this->PointDataArraySelection->Delete();
-  this->PointDataArraySelection = NULL;
+  this->PointDataArraySelection = nullptr;
   this->SelectionObserver->Delete();
-  this->SelectionObserver = NULL;
-}
+  this->SelectionObserver = nullptr;
 
-//----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-void vtkNetCDFCAMReader::SingleLevelOn ()
-{
-  VTK_LEGACY_REPLACED_BODY(vtkNetCDFCAMReader::SingleLevelOn, "VTK 7.1",
-                           vtkNetCDFCAMReader::SetVerticalDimension);
-  this->VerticalDimension = VERTICAL_DIMENSION_SINGLE_LAYER;
-  this->Modified();
+  delete this->Internals;
 }
-#endif
-
-//----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-void vtkNetCDFCAMReader::SingleLevelOff ()
-{
-  VTK_LEGACY_REPLACED_BODY(vtkNetCDFCAMReader::SingleLevelOn, "VTK 7.1",
-                           vtkNetCDFCAMReader::SetVerticalDimension);
-  this->VerticalDimension = VERTICAL_DIMENSION_MIDPOINT_LAYERS;
-  this->Modified();
-}
-#endif
-
-//----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-void vtkNetCDFCAMReader::SetSingleLevel (int level)
-{
-  VTK_LEGACY_REPLACED_BODY(vtkNetCDFCAMReader::SetSingleLevel, "VTK 7.1",
-                           vtkNetCDFCAMReader::SetVerticalDimension);
-  if (level <= 0)
-  {
-    this->VerticalDimension = VERTICAL_DIMENSION_MIDPOINT_LAYERS;
-  }
-  else
-  {
-    this->VerticalDimension = VERTICAL_DIMENSION_SINGLE_LAYER;
-  }
-  this->Modified();
-}
-#endif
-
-//----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-int vtkNetCDFCAMReader::GetSingleLevel ()
-{
-  VTK_LEGACY_REPLACED_BODY(vtkNetCDFCAMReader::GetSingleLevel, "VTK 7.1",
-                           vtkNetCDFCAMReader::GetVerticalDimension);
-  if (this->VerticalDimension == VERTICAL_DIMENSION_SINGLE_LAYER)
-  {
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
-}
-#endif
-
 
 //----------------------------------------------------------------------------
 int vtkNetCDFCAMReader::CanReadFile(const char* fileName)
 {
-  NcFile file(fileName, NcFile::ReadOnly);
-  return file.is_valid();
+  Internal *internals = new Internal(nullptr);
+  if (!internals->openPoints(fileName))
+  {
+    delete internals;
+    return 0;
+  }
+  delete internals;
+  return 1;
 }
 
 //----------------------------------------------------------------------------
 void vtkNetCDFCAMReader::SetFileName(const char* fileName)
 {
   vtkDebugMacro(<<" setting FileName to " << (fileName?fileName:"(null)") );
-  if ( this->FileName == NULL && fileName == NULL)
+  if ( this->FileName == nullptr && fileName == nullptr)
   {
     return;
   }
@@ -228,26 +270,14 @@ void vtkNetCDFCAMReader::SetFileName(const char* fileName)
   {
     return;
   }
-  delete this->PointsFile;
-  this->PointsFile = NULL;
+  this->Internals->closePoints();
   delete [] this->FileName;
-  this->FileName = NULL;
-  if (fileName)
+  this->FileName = nullptr;
+  if (fileName && *fileName)
   {
-    size_t n = strlen(fileName) + 1;
-    char *cp1 =  new char[n];
-    const char *cp2 = (fileName);
-    this->FileName = cp1;
-    do
-    {
-      *cp1++ = *cp2++;
-    }
-    while ( --n );
+    this->FileName = new char[strlen(fileName) + 1];
+    strcpy(this->FileName, fileName);
   }
-   else
-   {
-    this->FileName = NULL;
-   }
   this->Modified();
 }
 
@@ -256,7 +286,7 @@ void vtkNetCDFCAMReader::SetConnectivityFileName(const char* fileName)
 {
   vtkDebugMacro(<<" setting ConnectivityFileName to "
                 << (fileName?fileName:"(null)") );
-  if ( this->ConnectivityFileName == NULL && fileName == NULL)
+  if ( this->ConnectivityFileName == nullptr && fileName == nullptr)
   {
     return;
   }
@@ -265,25 +295,14 @@ void vtkNetCDFCAMReader::SetConnectivityFileName(const char* fileName)
   {
     return;
   }
-  delete this->ConnectivityFile;
-  this->ConnectivityFile = NULL;
+  this->Internals->closeConnectivity();
   delete [] this->ConnectivityFileName;
-  if (fileName)
+  this->ConnectivityFileName = nullptr;
+  if (fileName && *fileName)
   {
-    size_t n = strlen(fileName) + 1;
-    char *cp1 =  new char[n];
-    const char *cp2 = (fileName);
-    this->ConnectivityFileName = cp1;
-    do
-    {
-      *cp1++ = *cp2++;
-    }
-    while ( --n );
+    this->ConnectivityFileName = new char[strlen(fileName) + 1];
+    strcpy(this->ConnectivityFileName, fileName);
   }
-   else
-   {
-    this->ConnectivityFileName = NULL;
-   }
   this->Modified();
 }
 
@@ -293,62 +312,81 @@ int vtkNetCDFCAMReader::RequestInformation(
   vtkInformationVector** vtkNotUsed(inputVector),
   vtkInformationVector* outputVector)
 {
-  if(this->FileName == NULL)
+  if(this->FileName == nullptr)
   {
     vtkWarningMacro("Missing a file name.");
     return 0;
   }
 
-  if(this->CurrentFileName != NULL &&
+  if(this->CurrentFileName != nullptr &&
      strcmp(this->CurrentFileName, this->FileName) != 0)
   {
-    delete this->PointsFile;
+    this->Internals->closePoints();
     this->PointDataArraySelection->RemoveAllArrays();
-    this->PointsFile = NULL;
-    this->SetCurrentFileName(NULL);
+    this->SetCurrentFileName(nullptr);
   }
-  if(this->PointsFile == NULL)
+  if(this->Internals->nc_points == -1)
   {
-    this->PointsFile = new NcFile(this->FileName, NcFile::ReadOnly);
-    if(this->PointsFile->is_valid() == 0)
+    if(!this->Internals->openPoints(this->FileName))
     {
       vtkErrorMacro(<< "Can't read file " << this->FileName);
-      delete this->PointsFile;
-      this->PointsFile = NULL;
       return 0;
     }
     this->SetCurrentFileName(this->FileName);
     this->BuildVarArray();
-    NcDim* levDim = this->PointsFile->get_dim("lev");
-    if (levDim)
+    int dimid;
+    if (!this->Internals->nc_err(nc_inq_dimid(this->Internals->nc_points, "lev", &dimid), false))
     {
-      this->MidpointLayersRange[1] = levDim->size() - 1;
+      size_t size;
+      if (this->Internals->nc_err(nc_inq_dimlen(this->Internals->nc_points, dimid, &size)))
+      {
+        return 0;
+      }
+      this->MidpointLayersRange[1] = static_cast<int>(size - 1);
     }
-    NcDim* ilevDim = this->PointsFile->get_dim("ilev");
-    if (ilevDim)
+    if (!this->Internals->nc_err(nc_inq_dimid(this->Internals->nc_points, "ilev", &dimid), false))
     {
-      this->InterfaceLayersRange[1] = ilevDim->size() - 1;
+      size_t size;
+      if (this->Internals->nc_err(nc_inq_dimlen(this->Internals->nc_points, dimid, &size)))
+      {
+        return 0;
+      }
+      this->InterfaceLayersRange[1] = static_cast<int>(size - 1);
     }
   }
-  NcDim* timeDimension = this->PointsFile->get_dim("time");
-  if(timeDimension == NULL)
+  int dimid;
+  if (this->Internals->nc_err(nc_inq_dimid(this->Internals->nc_points, "time", &dimid)))
   {
     vtkErrorMacro("Cannot find the number of time steps (time dimension).");
     return 0;
   }
-  this->NumberOfTimeSteps = timeDimension->size();
+  size_t size;
+  if (this->Internals->nc_err(nc_inq_dimlen(this->Internals->nc_points, dimid, &size)))
+  {
+    return 0;
+  }
+  this->NumberOfTimeSteps = size;
   vtkInformation* outInfo = outputVector->GetInformationObject(0);
 
   if (this->NumberOfTimeSteps > 0)
   {
     delete []this->TimeSteps;
     this->TimeSteps = new double[this->NumberOfTimeSteps];
-    NcVar* timeVar = this->PointsFile->get_var("time");
-    timeVar->get(this->TimeSteps, this->NumberOfTimeSteps);
+    int varid;
+    if (this->Internals->nc_err(nc_inq_varid(this->Internals->nc_points, "time", &varid)))
+    {
+      return 0;
+    }
+    size_t start[] = {0};
+    size_t count[] = {this->NumberOfTimeSteps};
+    if (this->Internals->nc_err(nc_get_vara_double(this->Internals->nc_points, varid, start, count, this->TimeSteps)))
+    {
+      return 0;
+    }
 
     // Tell the pipeline what steps are available
     outInfo->Set(vtkStreamingDemandDrivenPipeline::TIME_STEPS(),
-              this->TimeSteps, this->NumberOfTimeSteps);
+              this->TimeSteps, static_cast<int>(this->NumberOfTimeSteps));
 
     // Range is required to get GUI to show things
     double tRange[2] = {this->TimeSteps[0],
@@ -370,37 +408,86 @@ int vtkNetCDFCAMReader::RequestInformation(
 //----------------------------------------------------------------------------
 void vtkNetCDFCAMReader::BuildVarArray()
 {
-  std::vector<std::set<std::string> > vars(VERTICAL_DIMENSION_COUNT);
-  for(int i=0; i<this->PointsFile->num_vars(); i++)
+  std::vector<std::set<std::string> > varsnames(VERTICAL_DIMENSION_COUNT);
+  int nvars;
+  int vars[NC_MAX_VARS];
+  if (this->Internals->nc_err(nc_inq_varids(this->Internals->nc_points, &nvars, vars)))
   {
-    NcVar* var = this->PointsFile->get_var(i);
+    return;
+  }
+  for(int i=0; i<nvars; i++)
+  {
     bool showVar = false;
     enum VerticalDimension verticalDimension = VERTICAL_DIMENSION_SINGLE_LAYER;
-    if(var->num_dims() == 3 &&
-       strcmp(var->get_dim(0)->name(), "time") == 0 &&
-       (strcmp(var->get_dim(1)->name(), "lev") == 0 ||
-        strcmp(var->get_dim(1)->name(), "ilev") == 0) &&
-       strcmp(var->get_dim(2)->name(), "ncol") == 0)
+    int ndims;
+    if (this->Internals->nc_err(nc_inq_varndims(this->Internals->nc_points, vars[i], &ndims)))
     {
-      verticalDimension = (strcmp(var->get_dim(1)->name(), "lev") == 0) ?
-        VERTICAL_DIMENSION_MIDPOINT_LAYERS: VERTICAL_DIMENSION_INTERFACE_LAYERS;
-      showVar = true;
+      continue;
     }
-    else if(var->num_dims() == 2 &&
-            strcmp(var->get_dim(0)->name(), "time") == 0 &&
-            strcmp(var->get_dim(1)->name(), "ncol") == 0)
+    int dims[NC_MAX_VAR_DIMS];
+    if (this->Internals->nc_err(nc_inq_vardimid(this->Internals->nc_points, vars[i], dims)))
     {
-      verticalDimension = VERTICAL_DIMENSION_SINGLE_LAYER;
-      showVar = true;
+      continue;
+    }
+    if(ndims == 3)
+    {
+      bool ok = true;
+      char name[NC_MAX_NAME + 1];
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[0], name)))
+      {
+        continue;
+      }
+      ok = ok && (strcmp(name, "time") == 0);
+
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[1], name)))
+      {
+        continue;
+      }
+      ok = ok && (strcmp(name, "lev") == 0 || strcmp(name, "ilev") == 0);
+      verticalDimension = (strcmp(name, "lev") == 0) ?
+        VERTICAL_DIMENSION_MIDPOINT_LAYERS : VERTICAL_DIMENSION_INTERFACE_LAYERS;
+
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[2], name)))
+      {
+        continue;
+      }
+      ok = ok && (strcmp(name, "ncol") == 0);
+
+      if (ok)
+      {
+        showVar = true;
+      }
+    }
+    else if(ndims == 2)
+    {
+      bool ok = true;
+      char name[NC_MAX_NAME + 1];
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[0], name)))
+      {
+        continue;
+      }
+      ok = ok && (strcmp(name, "time") == 0);
+
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[1], name)))
+      {
+        continue;
+      }
+      ok = ok && (strcmp(name, "ncol") == 0);
+
+      if (ok)
+      {
+        verticalDimension = VERTICAL_DIMENSION_SINGLE_LAYER;
+        showVar = true;
+      }
     }
     if (showVar)
     {
-      vars[verticalDimension].insert(GetNameDimension(var));
+      varsnames[verticalDimension].insert(this->Internals->GetNameDimension(this->Internals->nc_points, vars[i]));
     }
   }
   for (int i = 0; i < VERTICAL_DIMENSION_COUNT; ++i)
   {
-    for(std::set<std::string>::iterator it = vars[i].begin(); it != vars[i].end();
+    for(std::set<std::string>::iterator it = varsnames[i].begin(); it != varsnames[i].end();
         ++it)
     {
       this->PointDataArraySelection->EnableArray(it->c_str());
@@ -415,7 +502,7 @@ int vtkNetCDFCAMReader::RequestUpdateExtent(
   vtkInformationVector **,
   vtkInformationVector *outputVector)
 {
-  if(this->FileName == NULL || this->ConnectivityFileName == NULL)
+  if(this->FileName == nullptr || this->ConnectivityFileName == nullptr)
   {
     vtkWarningMacro("Missing a file name.");
     return 0;
@@ -483,7 +570,7 @@ void vtkNetCDFCAMReader::EnableAllPointArrays()
 int vtkNetCDFCAMReader::RequestData(
   vtkInformation *,vtkInformationVector **,vtkInformationVector *outputVector)
 {
-  if(this->FileName == NULL || this->ConnectivityFileName == NULL)
+  if(this->FileName == nullptr || this->ConnectivityFileName == nullptr)
   {
     vtkWarningMacro("Missing a file name.");
     return 0;
@@ -495,112 +582,137 @@ int vtkNetCDFCAMReader::RequestData(
 
   vtkDebugMacro(<<"Reading NetCDF CAM file.");
   this->SetProgress(0);
-  if(this->CurrentConnectivityFileName != NULL &&
+  if(this->CurrentConnectivityFileName != nullptr &&
      strcmp(this->CurrentConnectivityFileName, this->ConnectivityFileName) != 0)
   {
-    delete this->ConnectivityFile;
-    this->ConnectivityFile = NULL;
-    this->SetCurrentConnectivityFileName(NULL);
+    this->Internals->closeConnectivity();
+    this->SetCurrentConnectivityFileName(nullptr);
   }
-  if(this->ConnectivityFile == NULL)
+  if(this->Internals->nc_connectivity == -1)
   {
-    this->ConnectivityFile = new NcFile(this->ConnectivityFileName,
-                                        NcFile::ReadOnly);
-    if(this->ConnectivityFile->is_valid() == 0)
+    if(!this->Internals->openConnectivity(this->ConnectivityFileName))
     {
       vtkErrorMacro(<< "Can't read file " << this->ConnectivityFileName);
-      delete this->ConnectivityFile;
-      this->ConnectivityFile = NULL;
       return 0;
     }
     this->SetCurrentConnectivityFileName(this->ConnectivityFileName);
   }
 
-  // Set the NetCDF error handler to not kill the application.
-  // Upon exiting this method the error handler will be restored
-  // to its previous state.
-  NcError ncError(NcError::verbose_nonfatal);
-
   // read in the points first
-  long numLevels = 1; // value for single level
-  const char* levName = NULL;
-  NcVar* levelsVar = NULL;
+  size_t numLevels = 1; // value for single level
+  const char* levName = nullptr;
+  int levelsid;
   if (this->VerticalDimension == VERTICAL_DIMENSION_MIDPOINT_LAYERS ||
       this->VerticalDimension == VERTICAL_DIMENSION_INTERFACE_LAYERS)
   {
     levName = (this->VerticalDimension == VERTICAL_DIMENSION_MIDPOINT_LAYERS) ?
       "lev" : "ilev";
-    NcDim* levelsDimension = this->PointsFile->get_dim(levName);
-    if(levelsDimension == NULL)
+    int dimid;
+    if (this->Internals->nc_err(nc_inq_dimid(this->Internals->nc_points, levName, &dimid)))
     {
       vtkErrorMacro("Cannot find the number of levels (lev dimension).");
       return 0;
     }
-    numLevels = levelsDimension->size();
-    levelsVar = this->PointsFile->get_var(levName);
-    if(levelsVar == NULL)
+    if (this->Internals->nc_err(nc_inq_dimlen(this->Internals->nc_points, dimid, &numLevels)))
+    {
+      return 0;
+    }
+    if (this->Internals->nc_err(nc_inq_varid(this->Internals->nc_points, levName, &levelsid)))
     {
       vtkErrorMacro("Cannot find the number of levels (lev variable).");
       return 0;
     }
-    if(levelsVar->num_dims() != 1 ||
-       levelsVar->get_dim(0)->size() != numLevels)
+    int ndims;
+    if (this->Internals->nc_err(nc_inq_varndims(this->Internals->nc_points, levelsid, &ndims)))
+    {
+      return 0;
+    }
+    int dims[NC_MAX_VAR_DIMS];
+    if (this->Internals->nc_err(nc_inq_vardimid(this->Internals->nc_points, levelsid, dims)))
+    {
+      return 0;
+    }
+    size_t size;
+    if (this->Internals->nc_err(nc_inq_dimlen(this->Internals->nc_points, dims[0], &size)))
+    {
+      return 0;
+    }
+    if(ndims != 1 || size != numLevels)
     {
       vtkErrorMacro("The lev variable is not consistent.");
       return 0;
     }
   }
-  NcDim* dimension = this->PointsFile->get_dim("ncol");
-  if(dimension == NULL)
+  int dimid;
+  if (this->Internals->nc_err(nc_inq_dimid(this->Internals->nc_points, "ncol", &dimid)))
   {
     vtkErrorMacro("Cannot find the number of points (ncol dimension).");
     return 0;
   }
-  NcVar* lon = this->PointsFile->get_var("lon");
-  NcVar* lat = this->PointsFile->get_var("lat");
+  int lonid;
+  if (this->Internals->nc_err(nc_inq_varid(this->Internals->nc_points, "lon", &lonid)))
+  {
+    vtkErrorMacro("Cannot find coordinates (lon variable).");
+    return 0;
+  }
+  int latid;
+  if (this->Internals->nc_err(nc_inq_varid(this->Internals->nc_points, "lat", &latid)))
+  {
+    vtkErrorMacro("Cannot find coordinates (lat variable).");
+    return 0;
+  }
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
   output->SetPoints(points);
 
-  long numFilePoints = dimension->size();
-  if(lat == NULL || lon == NULL)
+  size_t numFilePoints;
+  if (this->Internals->nc_err(nc_inq_dimlen(this->Internals->nc_points, dimid, &numFilePoints)))
   {
-    vtkErrorMacro("Cannot find coordinates (lat or lon variable).");
     return 0;
   }
-  if(lat->type() == ncDouble)
+
+  nc_type var_type;
+  if (this->Internals->nc_err(nc_inq_vartype(this->Internals->nc_points, latid, &var_type)))
+  {
+    return 0;
+  }
+  if(var_type == NC_DOUBLE)
   {
     points->SetDataTypeToDouble();
-    points->SetNumberOfPoints(numFilePoints);
+    points->SetNumberOfPoints(static_cast<int>(numFilePoints));
     std::vector<double> array(numFilePoints*2);
-    if(!lon->get(&array[0], numFilePoints))
+    size_t start[] = {0};
+    size_t count[] = {numFilePoints};
+    if (this->Internals->nc_err(nc_get_vara_double(this->Internals->nc_points, lonid, start, count, &array[0])))
     {
       return 0;
     }
-    if(!lat->get(&array[numFilePoints], numFilePoints))
+    if (this->Internals->nc_err(nc_get_vara_double(this->Internals->nc_points, latid, start, count, &array[numFilePoints])))
     {
       return 0;
     }
-    for(long i=0;i<numFilePoints;i++)
+    for(size_t i=0;i<numFilePoints;i++)
     {
-      points->SetPoint(i, array[i], array[i+numFilePoints], numLevels);
+      points->SetPoint(static_cast<vtkIdType>(i), array[i], array[i+numFilePoints], numLevels);
     }
   }
   else
   {
     points->SetDataTypeToFloat();
-    points->SetNumberOfPoints(numFilePoints);
+    points->SetNumberOfPoints(static_cast<int>(numFilePoints));
     std::vector<float> array(numFilePoints*2);
-    if(!lon->get(&array[0], numFilePoints))
+    size_t start[] = {0};
+    size_t count[] = {numFilePoints};
+    if (this->Internals->nc_err(nc_get_vara_float(this->Internals->nc_points, lonid, start, count, &array[0])))
     {
       return 0;
     }
-    if(!lat->get(&array[numFilePoints], numFilePoints))
+    if (this->Internals->nc_err(nc_get_vara_float(this->Internals->nc_points, latid, start, count, &array[numFilePoints])))
     {
       return 0;
     }
-    for(long i=0;i<numFilePoints;i++)
+    for(size_t i=0;i<numFilePoints;i++)
     {
-      points->SetPoint(i, array[i], array[i+numFilePoints], numLevels - 1);
+      points->SetPoint(static_cast<vtkIdType>(i), array[i], array[i+numFilePoints], numLevels - 1);
     }
   }
   this->SetProgress(.25);  // educated guess for progress
@@ -615,32 +727,33 @@ int vtkNetCDFCAMReader::RequestData(
   // boundaryPoint is duplicate of.
   std::vector<vtkIdType> boundaryPoints;
 
-  // To avoid creating multiple duplicates, we we a
+  // To avoid creating multiple duplicates, we create a
   // vtkIncrementalOctreePointLocator.
   vtkSmartPointer<vtkIncrementalOctreePointLocator> locator =
     vtkSmartPointer<vtkIncrementalOctreePointLocator>::New();
   locator->SetDataSet(output); // dataset only has points right now.
   locator->BuildLocator();
 
-  dimension = this->ConnectivityFile->get_dim("ncells");
-  if(dimension == NULL)
+  if (this->Internals->nc_err(nc_inq_dimid(this->Internals->nc_connectivity, "ncells", &dimid)))
   {
     vtkErrorMacro("Cannot find the number of cells (ncells dimension).");
     return 0;
   }
-  NcVar* connectivity =
-    this->ConnectivityFile->get_var("element_corners");
-  if(connectivity == NULL)
+  int connid;
+  if (this->Internals->nc_err(nc_inq_varid(this->Internals->nc_connectivity, "element_corners", &connid)))
   {
     vtkErrorMacro("Cannot find cell connectivity (element_corners dimension).");
     return 0;
   }
-  long numCellsPerLevel = dimension->size();
+  size_t numCellsPerLevel;
+  if (this->Internals->nc_err(nc_inq_dimlen(this->Internals->nc_connectivity, dimid, &numCellsPerLevel)))
+  {
+    return 0;
+  }
 
-
-  int piece = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_PIECE_NUMBER());
-  int numPieces = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_NUMBER_OF_PIECES());
-  int originalNumLevels = numLevels;
+  size_t piece = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_PIECE_NUMBER());
+  size_t numPieces = outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_NUMBER_OF_PIECES());
+  size_t originalNumLevels = numLevels;
   if ((this->VerticalDimension == VERTICAL_DIMENSION_MIDPOINT_LAYERS &&
        this->SingleMidpointLayer) ||
       (this->VerticalDimension == VERTICAL_DIMENSION_INTERFACE_LAYERS &&
@@ -649,20 +762,24 @@ int vtkNetCDFCAMReader::RequestData(
     numLevels = 1;
   }
 
-  int beginLevel, endLevel, beginCell, endCell;
+  size_t beginLevel, endLevel, beginCell, endCell;
   if (! this->GetPartitioning(piece, numPieces, numLevels, numCellsPerLevel,
                               beginLevel, endLevel, beginCell, endCell))
   {
     return 0;
   }
   // the cells/levels assigned to this piece
-  long numLocalCells = endCell-beginCell;
-  int numLocalLevels = endLevel-beginLevel + 1;
+  size_t numLocalCells = endCell-beginCell;
+  size_t numLocalLevels = endLevel-beginLevel + 1;
   std::vector<int> cellConnectivity(4*numLocalCells);
-  connectivity->set_cur(0, beginCell);
-  connectivity->get(&(cellConnectivity[0]), 4, numLocalCells);
+  size_t start_conn[] = {0, static_cast<size_t>(beginCell)};
+  size_t count_conn[] = {4, static_cast<size_t>(numLocalCells)};
+  if (this->Internals->nc_err(nc_get_vara_int(this->Internals->nc_connectivity, connid, start_conn, count_conn, &cellConnectivity[0])))
+  {
+    return 0;
+  }
 
-  for(long i=0;i<numLocalCells;i++)
+  for(size_t i=0;i<numLocalCells;i++)
   {
     vtkIdType pointIds[4];
     double coords[4][3]; // assume quads here
@@ -743,15 +860,15 @@ int vtkNetCDFCAMReader::RequestData(
         {
           // if a new point was indeed inserted, we need to update the
           // boundaryPoints to keep track of it.
-          assert(newPtId >= numFilePoints && pointIds[j] < newPtId);
-          assert(static_cast<vtkIdType>(boundaryPoints.size()) == (newPtId-numFilePoints));
+          assert(newPtId >= static_cast<vtkIdType>(numFilePoints) && pointIds[j] < newPtId);
+          assert(static_cast<size_t>(boundaryPoints.size()) == (newPtId-numFilePoints));
           boundaryPoints.push_back(pointIds[j]);
         }
-        cellConnectivity[i+j*numLocalCells] = (newPtId + 1); // note: 1-indexed.
+        cellConnectivity[i+j*numLocalCells] = static_cast<int>(newPtId + 1); // note: 1-indexed.
       }
     }
   }
-  locator = NULL; // release the locator memory.
+  locator = nullptr; // release the locator memory.
 
   // we now have all of the points at a single level.  build them up
   // for the rest of the levels before creating the cells.
@@ -761,17 +878,17 @@ int vtkNetCDFCAMReader::RequestData(
      originalNumLevels == numLevels)
   {
     // a hacky way to resize the points array without resetting the data
-    points->InsertPoint(numPointsPerLevel*numLocalLevels-1, 0, 0, 0);
+    points->InsertPoint(static_cast<vtkIdType>(numPointsPerLevel*numLocalLevels-1), 0, 0, 0);
     for(vtkIdType pt=0;pt<numPointsPerLevel;pt++)
     {
       double point[3];
       points->GetPoint(pt, point);
       // need to start at 0 here since for multiple process the first
       // level will need to be replaced
-      for(long lev=0;lev<numLocalLevels;lev++)
+      for(size_t lev=0;lev<numLocalLevels;lev++)
       {
         point[2] = numLevels - lev - beginLevel - 1;
-        points->SetPoint(pt+lev*numPointsPerLevel, point);
+        points->SetPoint(static_cast<vtkIdType>(pt+lev*numPointsPerLevel), point);
       }
     }
   }
@@ -796,7 +913,7 @@ int vtkNetCDFCAMReader::RequestData(
   output->GetInformation()->Set(vtkDataObject::DATA_TIME_STEP(), dTime);
 
   // Index of the time step to request
-  int timeStep = 0;
+  size_t timeStep = 0;
   while (timeStep < this->NumberOfTimeSteps &&
          this->TimeSteps[timeStep] < dTime)
   {
@@ -807,39 +924,106 @@ int vtkNetCDFCAMReader::RequestData(
   // data with dimensions (time, lev, ncol) but read them in
   // by chunks of ncol since it will be a pretty big chunk of
   // memory that we'll have to break up anyways.
-  for(int i=0;i<this->PointsFile->num_vars();i++)
+  int nvars;
+  int vars[NC_MAX_VARS];
+  if (this->Internals->nc_err(nc_inq_varids(this->Internals->nc_points, &nvars, vars)))
   {
-    NcVar* variable = this->PointsFile->get_var(i);
-    if(this->VerticalDimension != VERTICAL_DIMENSION_SINGLE_LAYER &&
-       (variable->num_dims() != 3 ||
-        strcmp(variable->get_dim(0)->name(), "time") != 0 ||
-        strcmp(variable->get_dim(1)->name(), levName) != 0 ||
-        strcmp(variable->get_dim(2)->name(), "ncol") != 0) )
-    { // not a 3D field variable
-      continue;
+    return 0;
+  }
+  for(int i=0;i<nvars;i++)
+  {
+    int ndims;
+    if (this->Internals->nc_err(nc_inq_varndims(this->Internals->nc_points, vars[i], &ndims)))
+    {
+      return 0;
     }
-    else if(this->VerticalDimension == VERTICAL_DIMENSION_SINGLE_LAYER &&
-            ((variable->num_dims() != 2 ||
-              strcmp(variable->get_dim(0)->name(), "time") != 0 ||
-              strcmp(variable->get_dim(1)->name(), "ncol") != 0)))
-    { // not a 2D field variable
-      continue;
+    int dims[NC_MAX_VAR_DIMS];
+    if (this->Internals->nc_err(nc_inq_vardimid(this->Internals->nc_points, vars[i], dims)))
+    {
+      return 0;
+    }
+    if(this->VerticalDimension != VERTICAL_DIMENSION_SINGLE_LAYER)
+    { // check for a 3D field variable
+      if (ndims != 3)
+      {
+        continue;
+      }
+
+      char name[NC_MAX_NAME + 1];
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[0], name)))
+      {
+        return 0;
+      }
+      if (strcmp(name, "time") != 0)
+      {
+        continue;
+      }
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[1], name)))
+      {
+        return 0;
+      }
+      if (strcmp(name, levName) != 0)
+      {
+        continue;
+      }
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[2], name)))
+      {
+        return 0;
+      }
+      if (strcmp(name, "ncol") != 0)
+      {
+        continue;
+      }
+    }
+    else if(this->VerticalDimension == VERTICAL_DIMENSION_SINGLE_LAYER)
+    { // check for a 2D field variable
+      if (ndims != 2)
+      {
+        continue;
+      }
+
+      char name[NC_MAX_NAME + 1];
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[0], name)))
+      {
+        return 0;
+      }
+      if (strcmp(name, "time") != 0)
+      {
+        continue;
+      }
+      if (this->Internals->nc_err(nc_inq_dimname(this->Internals->nc_points, dims[1], name)))
+      {
+        return 0;
+      }
+      if (strcmp(name, "ncol") != 0)
+      {
+        continue;
+      }
     }
 
     if (! this->PointDataArraySelection->GetArraySetting(
-          GetNameDimension(variable).c_str()))
+          this->Internals->GetNameDimension(this->Internals->nc_points, vars[i]).c_str()))
     {
       // not enabled
       continue;
     }
 
-    vtkDoubleArray* doubleArray = NULL;
-    vtkFloatArray* floatArray = NULL;
-    if(variable->type() == ncDouble)
+    vtkDoubleArray* doubleArray = nullptr;
+    vtkFloatArray* floatArray = nullptr;
+    if (this->Internals->nc_err(nc_inq_vartype(this->Internals->nc_points, vars[i], &var_type)))
+    {
+      return 0;
+    }
+    char varname[NC_MAX_NAME + 1];
+    if (this->Internals->nc_err(nc_inq_varname(this->Internals->nc_points, vars[i], varname)))
+    {
+      return 0;
+    }
+    if(var_type == NC_DOUBLE)
     {
       doubleArray = vtkDoubleArray::New();
       doubleArray->SetNumberOfTuples(points->GetNumberOfPoints());
-      doubleArray->SetName(variable->name());
+      doubleArray->SetName(varname);
       output->GetPointData()->AddArray(doubleArray);
       doubleArray->Delete();
     }
@@ -847,30 +1031,29 @@ int vtkNetCDFCAMReader::RequestData(
     {
       floatArray = vtkFloatArray::New();
       floatArray->SetNumberOfTuples(points->GetNumberOfPoints());
-      floatArray->SetName(variable->name());
+      floatArray->SetName(varname);
       output->GetPointData()->AddArray(floatArray);
       floatArray->Delete();
     }
     if(this->VerticalDimension != VERTICAL_DIMENSION_SINGLE_LAYER)
     {
-      for(long lev=0;lev<numLocalLevels;lev++)
+      for(size_t lev=0;lev<numLocalLevels;lev++)
       {
-        variable->set_cur(timeStep, lev+beginLevel, 0);
+        size_t start[] = {static_cast<size_t>(timeStep), static_cast<size_t>(lev + beginLevel), 0};
+        size_t count[] = {1, 1, numFilePoints};
         if(doubleArray)
         {
-          if(!variable->get(doubleArray->GetPointer(0)+lev*numPointsPerLevel,
-                            1, 1, numFilePoints))
+          if (this->Internals->nc_err(nc_get_vara_double(this->Internals->nc_points, vars[i], start, count, doubleArray->GetPointer(0)+lev*numPointsPerLevel)))
           {
-            vtkErrorMacro("Problem getting NetCDF variable " << variable->name());
+            vtkErrorMacro("Problem getting NetCDF variable " << varname);
             return 0;
           }
         }
         else
         {
-          if(!variable->get(floatArray->GetPointer(0)+lev*numPointsPerLevel,
-                            1, 1, numFilePoints))
+          if (this->Internals->nc_err(nc_get_vara_float(this->Internals->nc_points, vars[i], start, count, floatArray->GetPointer(0)+lev*numPointsPerLevel)))
           {
-            vtkErrorMacro("Problem getting NetCDF variable " << variable->name());
+            vtkErrorMacro("Problem getting NetCDF variable " << varname);
             return 0;
           }
         }
@@ -878,20 +1061,21 @@ int vtkNetCDFCAMReader::RequestData(
     }
     else
     {
-      variable->set_cur(timeStep, 0);
+      size_t start[] = {static_cast<size_t>(timeStep), 0};
+      size_t count[] = {1, numFilePoints};
       if(doubleArray)
       {
-        if(!variable->get(doubleArray->GetPointer(0), 1, numFilePoints))
+        if (this->Internals->nc_err(nc_get_vara_double(this->Internals->nc_points, vars[i], start, count, doubleArray->GetPointer(0))))
         {
-          vtkErrorMacro("Problem getting NetCDF variable " << variable->name());
+          vtkErrorMacro("Problem getting NetCDF variable " << varname);
           return 0;
         }
       }
       else
       {
-        if(!variable->get(floatArray->GetPointer(0), 1, numFilePoints))
+        if (this->Internals->nc_err(nc_get_vara_float(this->Internals->nc_points, vars[i], start, count, floatArray->GetPointer(0))))
         {
-          vtkErrorMacro("Problem getting NetCDF variable " << variable->name());
+          vtkErrorMacro("Problem getting NetCDF variable " << varname);
           return 0;
         }
       }
@@ -908,10 +1092,10 @@ int vtkNetCDFCAMReader::RequestData(
   for (std::vector<vtkIdType>::const_iterator it=
         boundaryPoints.begin(); it!=boundaryPoints.end(); ++it, ++newPtId)
   {
-    for(long lev=0;lev<numLocalLevels;lev++)
+    for(size_t lev=0;lev<numLocalLevels;lev++)
     {
-      vtkIdType srcId = (*it) + lev * numPointsPerLevel;
-      vtkIdType destId = (newPtId + numFilePoints) + lev * numPointsPerLevel;
+      vtkIdType srcId = static_cast<vtkIdType>((*it) + lev * numPointsPerLevel);
+      vtkIdType destId = static_cast<vtkIdType>((newPtId + numFilePoints) + lev * numPointsPerLevel);
       pointData->CopyData(pointData, srcId, destId);
     }
   }
@@ -921,19 +1105,23 @@ int vtkNetCDFCAMReader::RequestData(
   if(this->VerticalDimension != VERTICAL_DIMENSION_SINGLE_LAYER)
   {
     std::vector<float> levelData(numLocalLevels);
-    levelsVar->set_cur(beginLevel);
-    levelsVar->get(&levelData[0], numLocalLevels);
+    size_t start[] = {static_cast<size_t>(beginLevel)};
+    size_t count[] = {static_cast<size_t>(numLocalLevels)};
+    if (this->Internals->nc_err(nc_get_vara_float(this->Internals->nc_points, lonid, start, count, &levelData[0])))
+    {
+      return 0;
+    }
     vtkNew<vtkFloatArray> levelPointData;
-    levelPointData->SetName(levelsVar->name());
+    levelPointData->SetName(levName);
     levelPointData->SetNumberOfTuples(points->GetNumberOfPoints());
-    for(long j=0;j<numLocalLevels;j++)
+    for(size_t j=0;j<numLocalLevels;j++)
     {
       for(vtkIdType i=0;i<numPointsPerLevel;i++)
       {
-        levelPointData->SetValue(j*numPointsPerLevel+i, levelData[j]);
+        levelPointData->SetValue(static_cast<vtkIdType>(j*numPointsPerLevel+i), levelData[j]);
       }
     }
-    output->GetPointData()->AddArray(levelPointData.GetPointer());
+    output->GetPointData()->AddArray(levelPointData);
   }
 
   this->SetProgress(.75);  // educated guess for progress
@@ -943,14 +1131,14 @@ int vtkNetCDFCAMReader::RequestData(
      // We load only one level
      numLevels != originalNumLevels)
   {
-    output->Allocate(numLocalCells);
+    output->Allocate(static_cast<vtkIdType>(numLocalCells));
   }
   else
   {
     // we have numLocalLevels points so we have (numLocalLevels-1) cells.
-    output->Allocate(numLocalCells*(numLocalLevels-1));
+    output->Allocate(static_cast<vtkIdType>(numLocalCells*(numLocalLevels-1)));
   }
-  for(long i=0;i<numLocalCells;i++)
+  for(size_t i=0;i<numLocalCells;i++)
   {
     vtkIdType pointIds[4];
     for(int j=0;j<4;j++)
@@ -962,13 +1150,13 @@ int vtkNetCDFCAMReader::RequestData(
        numLevels == originalNumLevels)
     {
       // volumetric grid
-      for(int lev=0;lev<(numLocalLevels-1);lev++)
+      for(size_t lev=0;lev<(numLocalLevels-1);lev++)
       {
         vtkIdType hexIds[8];
         for(int j=0;j<4;j++)
         {
-          hexIds[j] = pointIds[j]+lev*numPointsPerLevel;
-          hexIds[j+4] = pointIds[j]+(1+lev)*numPointsPerLevel;
+          hexIds[j] = static_cast<vtkIdType>(pointIds[j]+lev*numPointsPerLevel);
+          hexIds[j+4] = static_cast<vtkIdType>(pointIds[j]+(1+lev)*numPointsPerLevel);
         }
         output->InsertNextCell(VTK_HEXAHEDRON, 8, hexIds);
       }
@@ -995,12 +1183,12 @@ int vtkNetCDFCAMReader::RequestData(
 
 //----------------------------------------------------------------------------
 bool vtkNetCDFCAMReader::GetPartitioning(
-  int piece, int numPieces,int numLevels, int numCellsPerLevel,
-  int & beginLevel, int & endLevel, int & beginCell, int & endCell)
+  size_t piece, size_t numPieces,size_t numLevels, size_t numCellsPerLevel,
+  size_t & beginLevel, size_t & endLevel, size_t & beginCell, size_t & endCell)
 {
   // probably not the best way to partition the data but should
   // be sufficient for development.
-  if(numPieces <= 0 || piece < 0 || piece >= numPieces)
+  if(numPieces <= 0 || piece >= numPieces)
   {
     vtkErrorMacro("Bad piece information for partitioning.");
     return false;
@@ -1037,21 +1225,21 @@ bool vtkNetCDFCAMReader::GetPartitioning(
 
   int levelsPerPiece = vtkMath::Ceil(numLevels/static_cast<double>(numPieces));
   int piecesPerLevel = vtkMath::Ceil(numPieces/static_cast<double>(numLevels));
-  int numOverworkedPieces = piecesPerLevel/levelsPerPiece*numLevels - numPieces;
+  size_t numOverworkedPieces = piecesPerLevel/levelsPerPiece*numLevels - numPieces;
   bool evenOverworked = (piecesPerLevel % 2 == 0 || numOverworkedPieces == 0);
   if(piece < numOverworkedPieces)
   {
     if(evenOverworked)
     {
       beginLevel = inputBeginLevel + 2*piece/piecesPerLevel;
-      int remainder = piece % (piecesPerLevel/2);
+      size_t remainder = piece % (piecesPerLevel/2);
       beginCell = remainder * numCellsPerLevel * 2 / piecesPerLevel;
       endCell = (remainder + 1)* numCellsPerLevel * 2 / piecesPerLevel;
     }
     else
     {
       beginLevel = inputBeginLevel + 2*piece/(piecesPerLevel-1);
-      int remainder = piece % ((piecesPerLevel-1)/2);
+      size_t remainder = piece % ((piecesPerLevel-1)/2);
       beginCell = remainder * numCellsPerLevel * 2 / piecesPerLevel;
       endCell = (remainder + 1)* numCellsPerLevel * 2 / piecesPerLevel;
     }
@@ -1066,9 +1254,9 @@ bool vtkNetCDFCAMReader::GetPartitioning(
     }
     else
     {
-      int fakePiece = numOverworkedPieces+piece; // take into account overworked pieces
+      size_t fakePiece = numOverworkedPieces+piece; // take into account overworked pieces
       beginLevel = inputBeginLevel + fakePiece / piecesPerLevel;
-      int remainder = fakePiece % piecesPerLevel;
+      size_t remainder = fakePiece % piecesPerLevel;
       beginCell = remainder * numCellsPerLevel / piecesPerLevel;
       endCell = (remainder + 1)*numCellsPerLevel / piecesPerLevel;
     }
@@ -1076,23 +1264,6 @@ bool vtkNetCDFCAMReader::GetPartitioning(
   endLevel = beginLevel + numLevels - 1;
   return true;
 }
-
-//----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-void vtkNetCDFCAMReader::SetCellLayerRight(int)
-{
-  VTK_LEGACY_BODY(vtkNetCDFCAMReader::SetCellLayerRight, "VTK 6.3");
-}
-#endif
-
-//----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-int vtkNetCDFCAMReader::GetCellLayerRight()
-{
-  VTK_LEGACY_BODY(vtkNetCDFCAMReader::GetCellLayerRight, "VTK 6.3");
-  return 0;
-}
-#endif
 
 //----------------------------------------------------------------------------
 void vtkNetCDFCAMReader::SelectionCallback(vtkObject*,
@@ -1108,9 +1279,9 @@ void vtkNetCDFCAMReader::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
   os << indent << "FileName: "
-     << (this->FileName ? this->FileName : "(NULL)") << endl;
+     << (this->FileName ? this->FileName : "(nullptr)") << endl;
   os << indent << "ConnectivityFileName: " <<
-    (this->ConnectivityFileName ? this->ConnectivityFileName : "(NULL)")
+    (this->ConnectivityFileName ? this->ConnectivityFileName : "(nullptr)")
      << endl;
   os << indent << "VerticalDimension: " << this->VerticalDimension << endl;
   os << indent << "SingleMidpointLayer: " << this->SingleMidpointLayer << endl;
@@ -1118,20 +1289,6 @@ void vtkNetCDFCAMReader::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "SingleInterfaceLayer: " << this->SingleInterfaceLayer << endl;
   os << indent << "InterfaceLayerIndex: " << this->InterfaceLayerIndex << endl;
 
-  if(this->PointsFile)
-  {
-    os << indent << "PointsFile: " << this->PointsFile << endl;
-  }
-  else
-  {
-    os << indent << "PointsFile: (NULL)" << endl;
-  }
-  if(this->ConnectivityFile)
-  {
-    os << indent << "ConnectivityFile: " << this->ConnectivityFile << endl;
-  }
-  else
-  {
-    os << indent << "ConnectivityFile: (NULL)" << endl;
-  }
+  os << indent << "PointsFile: " << this->Internals->nc_points << endl;
+  os << indent << "ConnectivityFile: " << this->Internals->nc_connectivity << endl;
 }

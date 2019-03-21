@@ -38,7 +38,7 @@ public:
   void SetRenderWindow(vtkRenderWindow *);
 
 protected:
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   vtkOpenGLImageGradient();
   ~vtkOpenGLImageGradient();
 
@@ -48,11 +48,11 @@ protected:
                            vtkInformationVector **inputVector,
                            vtkInformationVector *outputVector,
                            vtkImageData ***inData, vtkImageData **outData,
-                           int extent[6], int id);
+                           int extent[6], int id) override;
 
 private:
-  vtkOpenGLImageGradient(const vtkOpenGLImageGradient&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLImageGradient&) VTK_DELETE_FUNCTION;
+  vtkOpenGLImageGradient(const vtkOpenGLImageGradient&) = delete;
+  void operator=(const vtkOpenGLImageGradient&) = delete;
 };
 
 #endif

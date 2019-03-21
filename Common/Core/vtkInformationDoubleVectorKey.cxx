@@ -29,9 +29,7 @@ vtkInformationDoubleVectorKey
 }
 
 //----------------------------------------------------------------------------
-vtkInformationDoubleVectorKey::~vtkInformationDoubleVectorKey()
-{
-}
+vtkInformationDoubleVectorKey::~vtkInformationDoubleVectorKey() = default;
 
 //----------------------------------------------------------------------------
 void vtkInformationDoubleVectorKey::PrintSelf(ostream& os, vtkIndent indent)
@@ -78,7 +76,7 @@ void vtkInformationDoubleVectorKey::Set(vtkInformation* info,
         << " with key " << this->Location << "::" << this->Name
         << " which requires a vector of length "
         << this->RequiredLength << ".  Removing the key instead.");
-      this->SetAsObjectBase(info, 0);
+      this->SetAsObjectBase(info, nullptr);
       return;
     }
     vtkInformationDoubleVectorValue* v =
@@ -90,7 +88,7 @@ void vtkInformationDoubleVectorKey::Set(vtkInformation* info,
   }
   else
   {
-    this->SetAsObjectBase(info, 0);
+    this->SetAsObjectBase(info, nullptr);
   }
 }
 
@@ -100,7 +98,7 @@ double* vtkInformationDoubleVectorKey::Get(vtkInformation* info)
   vtkInformationDoubleVectorValue* v =
     static_cast<vtkInformationDoubleVectorValue *>(
       this->GetAsObjectBase(info));
-  return (v && !v->Value.empty())?(&v->Value[0]):0;
+  return (v && !v->Value.empty())?(&v->Value[0]):nullptr;
 }
 
 //----------------------------------------------------------------------------

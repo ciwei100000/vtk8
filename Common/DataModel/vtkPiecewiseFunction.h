@@ -47,15 +47,15 @@ class VTKCOMMONDATAMODEL_EXPORT vtkPiecewiseFunction : public vtkDataObject
 public:
   static vtkPiecewiseFunction *New();
   vtkTypeMacro(vtkPiecewiseFunction,vtkDataObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
-  void DeepCopy( vtkDataObject *f ) VTK_OVERRIDE;
-  void ShallowCopy( vtkDataObject *f ) VTK_OVERRIDE;
+  void DeepCopy( vtkDataObject *f ) override;
+  void ShallowCopy( vtkDataObject *f ) override;
 
   /**
    * Return what type of dataset this is.
    */
-  int GetDataObjectType() VTK_OVERRIDE {return VTK_PIECEWISE_FUNCTION;};
+  int GetDataObjectType() override {return VTK_PIECEWISE_FUNCTION;};
 
   /**
    * Get the number of points used to specify the function
@@ -132,10 +132,12 @@ public:
   //@{
   /**
    * Fills in an array of function values evaluated at regular intervals.
-   * Parameter "stride" is used to step through the output "table".
+   * Parameter "stride" is used to step through the output "table". If
+   * logIncrements is true, the intervals between entries will be constant in
+   * logarithmic space.
    */
-  void GetTable( double x1, double x2, int size, float *table, int stride=1 );
-  void GetTable( double x1, double x2, int size, double *table, int stride=1 );
+  void GetTable( double x1, double x2, int size, float *table, int stride=1, int logIncrements=0 );
+  void GetTable( double x1, double x2, int size, double *table, int stride=1, int logIncrements=0 );
   //@}
 
   /**
@@ -156,10 +158,20 @@ public:
    * specified and returns the value at the highest point for a request
    * above all points specified. On is the default.
    */
-  vtkSetMacro( Clamping, int );
-  vtkGetMacro( Clamping, int );
-  vtkBooleanMacro( Clamping, int );
+  vtkSetMacro( Clamping, vtkTypeBool );
+  vtkGetMacro( Clamping, vtkTypeBool );
+  vtkBooleanMacro( Clamping, vtkTypeBool );
   //@}
+
+  /**
+   * Interpolate between the control points in base-10 logrithmic space.
+   * Default is false.
+   * @{
+   */
+  vtkSetMacro(UseLogScale, bool)
+  vtkGetMacro(UseLogScale, bool)
+  vtkBooleanMacro(UseLogScale, bool)
+  /**@}*/
 
   /**
    * Return the type of function:
@@ -179,10 +191,10 @@ public:
 
   /**
    * Clears out the current function. A newly created vtkPiecewiseFunction
-   * is alreay initialized, so there is no need to call this method which
+   * is already initialized, so there is no need to call this method which
    * in turn simply calls RemoveAllPoints()
    */
-  void Initialize() VTK_OVERRIDE;
+  void Initialize() override;
 
   //@{
   /**
@@ -197,9 +209,9 @@ public:
    * Toggle whether to allow duplicate scalar values in the piecewise
    * function (off by default).
    */
-  vtkSetMacro(AllowDuplicateScalars, int);
-  vtkGetMacro(AllowDuplicateScalars, int);
-  vtkBooleanMacro(AllowDuplicateScalars, int);
+  vtkSetMacro(AllowDuplicateScalars, vtkTypeBool);
+  vtkGetMacro(AllowDuplicateScalars, vtkTypeBool);
+  vtkBooleanMacro(AllowDuplicateScalars, vtkTypeBool);
   //@}
 
   /**
@@ -210,7 +222,7 @@ public:
 
 protected:
   vtkPiecewiseFunction();
-  ~vtkPiecewiseFunction() VTK_OVERRIDE;
+  ~vtkPiecewiseFunction() override;
 
   // Internal method to sort the vector and update the
   // Range whenever a node is added, edited or removed.
@@ -231,7 +243,7 @@ protected:
   // Zero = always return 0.0 outside of defined points
   // One  = clamp to the lowest value below defined points and
   //        highest value above defined points
-  int   Clamping;
+  vtkTypeBool   Clamping;
 
   // Array of points ((X,Y) pairs)
   double *Function;
@@ -239,11 +251,13 @@ protected:
   // Min and max range of function point locations
   double Range[2];
 
-  int AllowDuplicateScalars;
+  vtkTypeBool AllowDuplicateScalars;
+
+  bool UseLogScale;
 
 private:
-  vtkPiecewiseFunction(const vtkPiecewiseFunction&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPiecewiseFunction&) VTK_DELETE_FUNCTION;
+  vtkPiecewiseFunction(const vtkPiecewiseFunction&) = delete;
+  void operator=(const vtkPiecewiseFunction&) = delete;
 };
 
 #endif

@@ -46,11 +46,11 @@ class VTKFILTERSHYBRID_EXPORT vtkDSPFilterGroup : public vtkObject
 public:
   static vtkDSPFilterGroup *New();
   vtkTypeMacro(vtkDSPFilterGroup,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
 
   void AddFilter(vtkDSPFilterDefinition *filter);
-  void RemoveFilter(char *a_outputVariableName);
+  void RemoveFilter(const char *a_outputVariableName);
 
   bool IsThisInputVariableInstanceNeeded( const char *a_name, int a_timestep, int a_outputTimestep );
   bool IsThisInputVariableInstanceCached( const char *a_name, int a_timestep );
@@ -73,7 +73,7 @@ public:
 
 protected:
   vtkDSPFilterGroup();
-  ~vtkDSPFilterGroup() VTK_OVERRIDE;
+  ~vtkDSPFilterGroup() override;
 
 
   vtkDSPFilterGroupVectorArraySTLCloak * /*std::vector<vtkFloatArray *>*/ CachedInputs;
@@ -84,8 +84,8 @@ protected:
   vtkDSPFilterGroupVectorVectorIntSTLCloak * /*std::vector< std::vector<int> >*/ CachedOutputTimesteps;
 
 private:
-  vtkDSPFilterGroup(const vtkDSPFilterGroup&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDSPFilterGroup&) VTK_DELETE_FUNCTION;
+  vtkDSPFilterGroup(const vtkDSPFilterGroup&) = delete;
+  void operator=(const vtkDSPFilterGroup&) = delete;
 };
 
 #endif

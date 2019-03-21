@@ -42,18 +42,18 @@ class VTKINFOVISBOOSTGRAPHALGORITHMS_EXPORT vtkBoostConnectedComponents : public
 public:
   static vtkBoostConnectedComponents *New();
   vtkTypeMacro(vtkBoostConnectedComponents, vtkGraphAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
 protected:
   vtkBoostConnectedComponents();
   ~vtkBoostConnectedComponents();
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
 private:
 
-  vtkBoostConnectedComponents(const vtkBoostConnectedComponents&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoostConnectedComponents&) VTK_DELETE_FUNCTION;
+  vtkBoostConnectedComponents(const vtkBoostConnectedComponents&) = delete;
+  void operator=(const vtkBoostConnectedComponents&) = delete;
 };
 
 #endif

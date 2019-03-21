@@ -19,6 +19,8 @@
 //============================================================================
 #ifndef vtkmConnectivityExec_h
 #define vtkmConnectivityExec_h
+#ifndef __VTK_WRAP__
+#ifndef VTK_WRAPPING_CXX
 
 #include "vtkmTags.h"
 
@@ -29,6 +31,7 @@
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 namespace vtkm {
@@ -197,6 +200,12 @@ extern template class VTKACCELERATORSVTKM_TEMPLATE_EXPORT ConnectivityVTKSingleT
 extern template class VTKACCELERATORSVTKM_TEMPLATE_EXPORT ReverseConnectivityVTK<vtkm::cont::DeviceAdapterTagTBB>;
 #endif
 
+#ifdef VTKM_ENABLE_OPENMP
+extern template class VTKACCELERATORSVTKM_TEMPLATE_EXPORT ConnectivityVTKAOS<vtkm::cont::DeviceAdapterTagOpenMP>;
+extern template class VTKACCELERATORSVTKM_TEMPLATE_EXPORT ConnectivityVTKSingleType<vtkm::cont::DeviceAdapterTagOpenMP>;
+extern template class VTKACCELERATORSVTKM_TEMPLATE_EXPORT ReverseConnectivityVTK<vtkm::cont::DeviceAdapterTagOpenMP>;
+#endif
+
 //only when cuda is enabled, and the compiler is cuda
 #if defined(VTKM_ENABLE_CUDA) && defined(VTKM_CUDA)
 extern template class VTKACCELERATORSVTKM_TEMPLATE_EXPORT ConnectivityVTKAOS<vtkm::cont::DeviceAdapterTagCuda>;
@@ -207,5 +216,7 @@ extern template class VTKACCELERATORSVTKM_TEMPLATE_EXPORT ReverseConnectivityVTK
 }
 
 
+#endif
+#endif
 #endif
 // VTK-HeaderTest-Exclude: vtkmConnectivityExec.h

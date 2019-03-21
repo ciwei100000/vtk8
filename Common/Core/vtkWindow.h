@@ -35,7 +35,7 @@ class VTKCOMMONCORE_EXPORT vtkWindow : public vtkObject
 {
 public:
   vtkTypeMacro(vtkWindow,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -50,8 +50,8 @@ public:
   virtual void *GetGenericParentId()  = 0;
   virtual void *GetGenericContext()   = 0;
   virtual void *GetGenericDrawable()  = 0;
-  virtual void SetWindowInfo(char *) = 0;
-  virtual void SetParentInfo(char *) = 0;
+  virtual void SetWindowInfo(const char *) = 0;
+  virtual void SetParentInfo(const char *) = 0;
   //@}
 
   //@{
@@ -59,7 +59,7 @@ public:
    * Set/Get the position in screen coordinates of the rendering window.
    * Measured in pixels.
    */
-  virtual int *GetPosition();
+  virtual int *GetPosition() VTK_SIZEHINT(2);
   virtual void SetPosition(int,int);
   virtual void SetPosition(int a[2]);
   //@}
@@ -68,7 +68,7 @@ public:
   /**
    * Set/Get the size of the window in screen coordinates in pixels.
    */
-  virtual int *GetSize();
+  virtual int *GetSize() VTK_SIZEHINT(2);
   virtual void SetSize(int,int);
   virtual void SetSize(int a[2]);
   //@}
@@ -77,20 +77,20 @@ public:
    * GetSize() returns the size * this->TileScale, whereas this method returns
    * the size without multiplying with the tile scale. Measured in pixels.
    */
-  int *GetActualSize();
+  int *GetActualSize() VTK_SIZEHINT(2);
 
   /**
    * Get the current size of the screen in pixels.
    */
-  virtual int     *GetScreenSize() = 0;
+  virtual int     *GetScreenSize() VTK_SIZEHINT(2) = 0;
 
   //@{
   /**
    * Keep track of whether the rendering window has been mapped to screen.
    */
-  vtkSetMacro(Mapped,int);
-  vtkGetMacro(Mapped,int);
-  vtkBooleanMacro(Mapped,int);
+  vtkSetMacro(Mapped,vtkTypeBool);
+  vtkGetMacro(Mapped,vtkTypeBool);
+  vtkBooleanMacro(Mapped,vtkTypeBool);
   //@}
 
   //@{
@@ -100,18 +100,18 @@ public:
    * buffering off or make use of the SwapBuffers methods to prevent
    * you from swapping buffers between exposures.
    */
-  vtkSetMacro(Erase,int);
-  vtkGetMacro(Erase,int);
-  vtkBooleanMacro(Erase,int);
+  vtkSetMacro(Erase,vtkTypeBool);
+  vtkGetMacro(Erase,vtkTypeBool);
+  vtkBooleanMacro(Erase,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Keep track of whether double buffering is on or off
    */
-  vtkSetMacro(DoubleBuffer,int);
-  vtkGetMacro(DoubleBuffer,int);
-  vtkBooleanMacro(DoubleBuffer,int);
+  vtkSetMacro(DoubleBuffer,vtkTypeBool);
+  vtkGetMacro(DoubleBuffer,vtkTypeBool);
+  vtkBooleanMacro(DoubleBuffer,vtkTypeBool);
   //@}
 
   //@{
@@ -142,9 +142,9 @@ public:
    * the diagonal.
    */
   virtual unsigned char *GetPixelData(int x, int y, int x2, int y2,
-                                      int front) = 0;
+                                      int front, int right=0) = 0;
   virtual int GetPixelData(int x, int y, int x2, int y2, int front,
-                           vtkUnsignedCharArray *data) = 0;
+                           vtkUnsignedCharArray *data, int right=0) = 0;
   //@}
 
   //@{
@@ -158,7 +158,7 @@ public:
 
   /**
    * Attempt to detect and set the DPI of the display device by querying the
-   * system. Note that this is not supported on all backends, and this method
+   * system. Note that this is not supported on most backends, and this method
    * will return false if the DPI could not be detected. Use GetDPI() to
    * inspect the detected value.
    */
@@ -170,9 +170,9 @@ public:
    * supported for every type of window and on some windows you may need to
    * invoke this prior to the first render.
    */
-  vtkSetMacro(OffScreenRendering,int);
-  vtkGetMacro(OffScreenRendering,int);
-  vtkBooleanMacro(OffScreenRendering,int);
+  vtkSetMacro(OffScreenRendering,vtkTypeBool);
+  vtkGetMacro(OffScreenRendering,vtkTypeBool);
+  vtkBooleanMacro(OffScreenRendering,vtkTypeBool);
   //@}
 
   /**
@@ -196,16 +196,16 @@ public:
   //@}
 
 protected:
-  int OffScreenRendering;
+  vtkTypeBool OffScreenRendering;
   vtkWindow();
-  ~vtkWindow() VTK_OVERRIDE;
+  ~vtkWindow() override;
 
   char *WindowName;
   int Size[2];
   int Position[2];
-  int Mapped;
-  int Erase;
-  int DoubleBuffer;
+  vtkTypeBool Mapped;
+  vtkTypeBool Erase;
+  vtkTypeBool DoubleBuffer;
   int DPI;
 
   double TileViewport[4];
@@ -213,8 +213,8 @@ protected:
   int    TileScale[2];
 
 private:
-  vtkWindow(const vtkWindow&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkWindow&) VTK_DELETE_FUNCTION;
+  vtkWindow(const vtkWindow&) = delete;
+  void operator=(const vtkWindow&) = delete;
 };
 
 #endif

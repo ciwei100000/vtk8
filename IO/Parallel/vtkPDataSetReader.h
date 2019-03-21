@@ -31,7 +31,7 @@ class vtkDataSet;
 class VTKIOPARALLEL_EXPORT vtkPDataSetReader : public vtkDataSetAlgorithm
 {
 public:
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   vtkTypeMacro(vtkPDataSetReader,vtkDataSetAlgorithm);
   static vtkPDataSetReader *New();
 
@@ -58,27 +58,26 @@ public:
 
 protected:
   vtkPDataSetReader();
-  ~vtkPDataSetReader() VTK_OVERRIDE;
+  ~vtkPDataSetReader() override;
 
   int RequestDataObject(vtkInformation* request,
                                 vtkInformationVector** inputVector,
-                                vtkInformationVector* outputVector) VTK_OVERRIDE;
+                                vtkInformationVector* outputVector) override;
   void ReadPVTKFileInformation(ifstream *fp,
                                vtkInformation* request,
                                vtkInformationVector** inputVector,
                                vtkInformationVector* outputVector);
-  void ReadVTKFileInformation(ifstream *fp,
-                               vtkInformation* request,
-                               vtkInformationVector** inputVector,
-                               vtkInformationVector* outputVector);
+  void ReadVTKFileInformation(vtkInformation* request,
+    vtkInformationVector** inputVector,
+    vtkInformationVector* outputVector);
 
   int RequestInformation(vtkInformation*,
                                  vtkInformationVector**,
-                                 vtkInformationVector*) VTK_OVERRIDE;
+                                 vtkInformationVector*) override;
 
   int RequestData(vtkInformation*,
                           vtkInformationVector**,
-                          vtkInformationVector*) VTK_OVERRIDE;
+                          vtkInformationVector*) override;
   int PolyDataExecute(vtkInformation*,
                       vtkInformationVector**,
                       vtkInformationVector*);
@@ -100,8 +99,6 @@ protected:
   ifstream *OpenFile(const char *);
 
   int ReadXML(ifstream *file, char **block, char **param, char **value);
-  void SkipFieldData(ifstream *file);
-
   int VTKFileFlag;
   int StructuredFlag;
   char *FileName;
@@ -111,8 +108,8 @@ protected:
   int **PieceExtents;
 
 private:
-  vtkPDataSetReader(const vtkPDataSetReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPDataSetReader&) VTK_DELETE_FUNCTION;
+  vtkPDataSetReader(const vtkPDataSetReader&) = delete;
+  void operator=(const vtkPDataSetReader&) = delete;
 };
 
 #endif

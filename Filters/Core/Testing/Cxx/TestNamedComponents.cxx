@@ -134,7 +134,7 @@ int TestNamedComponents(int , char *[])
 
   vtkSmartPointer<vtkUnstructuredGrid> out = thresh->GetOutput();
 
-  if (out == NULL)
+  if (out == nullptr)
   {
     vtkGenericWarningMacro("threshold failed.");
     return 1;
@@ -147,7 +147,7 @@ int TestNamedComponents(int , char *[])
   //confirm component names are intact
   if (strcmp(cellIndex->GetComponentName(0),"index") != 0)
   {
-    vtkGenericWarningMacro("threshold failed to mantain component name on cell scalars.");
+    vtkGenericWarningMacro("threshold failed to maintain component name on cell scalars.");
     return 1;
   }
 
@@ -156,14 +156,14 @@ int TestNamedComponents(int , char *[])
       strcmp(cellPoints->GetComponentName(2),"Y_ID")  != 0 ||
       strcmp(cellPoints->GetComponentName(3),"Z_ID")  != 0)
   {
-    vtkGenericWarningMacro("threshold failed to mantain component names on point property.");
+    vtkGenericWarningMacro("threshold failed to maintain component names on point property.");
     return 1;
   }
 
   //Test component names with the calculator
   vtkSmartPointer<vtkArrayCalculator> calc = vtkSmartPointer<vtkArrayCalculator>::New();
   calc->SetInputData( poly );
-  calc->SetAttributeModeToUsePointData();
+  calc->SetAttributeTypeToPointData();
   // Add coordinate scalar and vector variables
   calc->AddCoordinateScalarVariable( "coordsX", 0 );
   calc->AddScalarVariable("point coords_YLOC","point coords",1 );

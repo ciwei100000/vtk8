@@ -61,7 +61,7 @@ class VTKRENDERINGCORE_EXPORT vtkScenePicker : public vtkObject
 public:
   static vtkScenePicker* New();
   vtkTypeMacro(vtkScenePicker, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -98,14 +98,14 @@ public:
    * additional resources and can slow down still render time by
    * 5-10%. Enabled by default.
    */
-  vtkSetMacro(EnableVertexPicking, int);
-  vtkGetMacro(EnableVertexPicking, int);
-  vtkBooleanMacro(EnableVertexPicking, int);
+  vtkSetMacro(EnableVertexPicking, vtkTypeBool);
+  vtkGetMacro(EnableVertexPicking, vtkTypeBool);
+  vtkBooleanMacro(EnableVertexPicking, vtkTypeBool);
   //@}
 
 protected:
   vtkScenePicker();
-  ~vtkScenePicker() VTK_OVERRIDE;
+  ~vtkScenePicker() override;
 
   // Pick render entire viewport
   // Automatically invoked from vtkRenderer at the end of a still render.
@@ -122,7 +122,7 @@ protected:
   // RenderWindowInteractor for start and end interaction events.
   void SetInteractor(vtkRenderWindowInteractor *);
 
-  int EnableVertexPicking;
+  vtkTypeBool EnableVertexPicking;
   vtkHardwareSelector* Selector;
   vtkRenderer* Renderer;
   vtkRenderWindowInteractor* Interactor;
@@ -135,8 +135,8 @@ protected:
 
   vtkTimeStamp PickRenderTime;
 private:
-  vtkScenePicker(const vtkScenePicker&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkScenePicker&) VTK_DELETE_FUNCTION;
+  vtkScenePicker(const vtkScenePicker&) = delete;
+  void operator=(const vtkScenePicker&) = delete;
 };
 
 #endif

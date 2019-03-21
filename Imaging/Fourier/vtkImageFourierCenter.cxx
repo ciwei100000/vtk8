@@ -25,10 +25,8 @@
 vtkStandardNewMacro(vtkImageFourierCenter);
 
 //----------------------------------------------------------------------------
-// Construct an instance of vtkImageFourierCenter fitler.
-vtkImageFourierCenter::vtkImageFourierCenter()
-{
-}
+// Construct an instance of vtkImageFourierCenter filter.
+vtkImageFourierCenter::vtkImageFourierCenter() = default;
 
 
 //----------------------------------------------------------------------------
@@ -81,13 +79,13 @@ void vtkImageFourierCenter::ThreadedRequestData(
   // this filter expects that the input be doubles.
   if (inData->GetScalarType() != VTK_DOUBLE)
   {
-    vtkErrorMacro(<< "Execute: Input must be be type double.");
+    vtkErrorMacro(<< "Execute: Input must be type double.");
     return;
   }
   // this filter expects that the output be doubles.
   if (outData->GetScalarType() != VTK_DOUBLE)
   {
-    vtkErrorMacro(<< "Execute: Output must be be type double.");
+    vtkErrorMacro(<< "Execute: Output must be type double.");
     return;
   }
   // this filter expects input to have 1 or two components

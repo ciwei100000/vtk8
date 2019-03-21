@@ -27,22 +27,17 @@
 #  define VTK_JPEG_XMD_H
 # endif
 # include <jpeglib.h>
-# if defined(VTK_JPEG_XMD_H)
-#  undef VTK_JPEG_XMD_H
-#  undef XMD_H
-# endif
+# include <jerror.h>
 #else
+# include <vtkjpeg/jconfig.h>
+# include <vtkjpeg/jmorecfg.h>
+// Ensure jpeglib.h does not include jconfig.h nor jmorecfg.h from another include directory.
+# define JCONFIG_INCLUDED
+# define JMORECFG_INCLUDED
 # include <vtkjpeg/jpeglib.h>
+# include <vtkjpeg/jerror.h>
+# undef JCONFIG_INCLUDED
+# undef JMORECFG_INCLUDED
 #endif
 
-#endif
-
-/* Include the jerror header if VTK_JPEG_INCLUDE_JERROR is defined.  */
-#if defined(VTK_JPEG_INCLUDE_JERROR) && !defined(VTK_JPEG_JERROR_INCLUDED)
-# define VTK_JPEG_JERROR_INCLUDED
-# ifdef VTK_USE_SYSTEM_JPEG
-#  include <jerror.h>
-# else
-#  include <vtkjpeg/jerror.h>
-# endif
 #endif

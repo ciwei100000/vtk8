@@ -2,17 +2,19 @@ vtk_module(vtkFiltersParallel
   GROUPS
     StandAlone
   TEST_DEPENDS
+    vtkFiltersFlowPaths
+    vtkFiltersParallelGeometry
+    vtkFiltersParallelImaging
+    vtkFiltersParallelMPI
+    vtkInteractionStyle
+    vtkIOLegacy
+    vtkIOParallelExodus
+    vtkIOXML
     vtkParallelMPI
+    vtkRenderingOpenGL2
+    vtkRenderingParallel
     vtkTestingCore
     vtkTestingRendering
-    vtkInteractionStyle
-    vtkIOXML
-    vtkRendering${VTK_RENDERING_BACKEND}
-    vtkRenderingParallel
-    vtkFiltersParallelMPI
-    vtkFiltersParallelImaging
-    vtkFiltersFlowPaths
-    vtkIOLegacy
   KIT
     vtkParallel
   DEPENDS

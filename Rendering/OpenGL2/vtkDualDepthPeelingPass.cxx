@@ -15,6 +15,7 @@
 
 #include "vtkDualDepthPeelingPass.h"
 
+#include "vtkAbstractVolumeMapper.h"
 #include "vtkOpenGLFramebufferObject.h"
 #include "vtkInformation.h"
 #include "vtkInformationKey.h"
@@ -23,21 +24,20 @@
 #include "vtkOpenGLActor.h"
 #include "vtkOpenGLBufferObject.h"
 #include "vtkOpenGLError.h"
+#include "vtkOpenGLQuadHelper.h"
 #include "vtkOpenGLRenderUtilities.h"
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtkOpenGLVertexArrayObject.h"
 #include "vtkRenderer.h"
 #include "vtkRenderState.h"
+#include "vtkRenderTimerLog.h"
 #include "vtkShaderProgram.h"
 #include "vtkTextureObject.h"
 #include "vtkTypeTraits.h"
 
 #include <algorithm>
-
-// Define to print debug statements to the OpenGL CS stream (useful for e.g.
-// apitrace debugging):
-//#define ANNOTATE_STREAM
 
 // Define to output details about each peel:
 //#define DEBUG_PEEL
@@ -62,6 +62,11 @@
 #define NO_PRECOLOR_EARLY_RETURN
 #endif
 
+using RenderEvent = vtkRenderTimerLog::ScopedEventLogger;
+
+#define TIME_FUNCTION(functionName) \
+  VTK_SCOPED_RENDER_EVENT(#functionName, this->Timer);
+
 vtkStandardNewMacro(vtkDualDepthPeelingPass)
 vtkCxxSetObjectMacro(vtkDualDepthPeelingPass, VolumetricPass, vtkRenderPass)
 
@@ -69,15 +74,7 @@ namespace
 {
 void annotate(const std::string &str)
 {
-#ifdef ANNOTATE_STREAM
-  vtkOpenGLStaticCheckErrorMacro("Error before glDebug.")
-  glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER,
-                       GL_DEBUG_SEVERITY_NOTIFICATION,
-                       0, str.size(), str.c_str());
-  vtkOpenGLClearErrorMacro();
-#else // ANNOTATE_STREAM
-  (void)str;
-#endif // ANNOTATE_STREAM
+  vtkOpenGLRenderUtilities::MarkDebugEvent(str);
 }
 }
 
@@ -90,6 +87,14 @@ void vtkDualDepthPeelingPass::PrintSelf(std::ostream &os, vtkIndent indent)
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::Render(const vtkRenderState *s)
 {
+  VTK_SCOPED_RENDER_EVENT("vtkDualDepthPeelingPass::Render",
+                          s->GetRenderer()->GetRenderWindow()->GetRenderTimer());
+
+  vtkOpenGLRenderWindow *renWin = static_cast<vtkOpenGLRenderWindow*>(
+        s->GetRenderer()->GetRenderWindow());
+
+  this->State = renWin->GetState();
+
   // Setup vtkOpenGLRenderPass
   this->PreRender(s);
 
@@ -119,6 +124,26 @@ void vtkDualDepthPeelingPass::ReleaseGraphicsResources(vtkWindow* win)
   if (this->VolumetricPass)
   {
     this->VolumetricPass->ReleaseGraphicsResources(win);
+  }
+  if (this->BlendHelper)
+  {
+    delete this->BlendHelper;
+    this->BlendHelper = nullptr;
+  }
+  if (this->BackBlendHelper)
+  {
+    delete this->BackBlendHelper;
+    this->BackBlendHelper = nullptr;
+  }
+  if (this->CopyColorHelper)
+  {
+    delete this->CopyColorHelper;
+    this->CopyColorHelper = nullptr;
+  }
+  if (this->CopyDepthHelper)
+  {
+    delete this->CopyDepthHelper;
+    this->CopyDepthHelper = nullptr;
   }
 
   this->FreeGLObjects();
@@ -382,56 +407,97 @@ bool vtkDualDepthPeelingPass::PostReplaceTranslucentShaderValues(
 //------------------------------------------------------------------------------
 bool vtkDualDepthPeelingPass::PreReplaceVolumetricShaderValues(
     std::string &, std::string &, std::string &fragmentShader,
-    vtkAbstractMapper *, vtkProp *)
+    vtkAbstractMapper *mapper, vtkProp *)
 {
-  const std::string rayInit =
+  auto vmapper = vtkAbstractVolumeMapper::SafeDownCast(mapper);
+  if (!vmapper)
+  { // not a volume
+    return true;
+  }
+
+  std::string rayInit =
     "  // Transform zStart and zEnd to texture_coordinates\n"
-    "  mat4 NDCToTextureCoords = ip_inverseTextureDataAdjusted * in_inverseVolumeMatrix *\n"
+    "  mat4 NDCToTextureCoords = ip_inverseTextureDataAdjusted * in_inverseVolumeMatrix[0] *\n"
     "    in_inverseModelViewMatrix * in_inverseProjectionMatrix;\n"
     "  \n"
     "  // Start point\n"
     "  vec4 startPoint = WindowToNDC(gl_FragCoord.x, gl_FragCoord.y, zStart);\n"
     "  startPoint = NDCToTextureCoords * startPoint;\n"
     "  startPoint /= startPoint.w;\n"
-    "  \n"
-    "  // startPoint could be located outside of the bounding box (bbox), this\n"
-    "  // is the case in:\n"
-    "  // 1. PeelVolumesOutside: Areas external to any geometry.\n"
-    "  // 2. PeelVolumetricGeometry: Areas where the volume is contained within\n"
-    "  // translucent geometry but the containing geometry lies outside of the bbox\n"
-    "  // (startPoint is either in-front or behind the bbox depending on the viewpoint).\n"
-    "\n"
-    "  // Given that startPoint could be located either in-front, inside or behind the\n"
-    "  // bbox (the ray exit is unknown hence it is not possible to use clamp() directly),\n"
-    "  // the clamp is divided in these three zones:\n"
-    "  // a. In-front: clamp to ip_textureCoords (bbox's texture coord).\n"
-    "  // b. Inside: use startPoint directly as it is peeling within the bbox.\n"
-    "  // c. Behind: discard by returning vec4(0.f).\n"
+
+    // startPoint could be located outside of the bounding box (bbox), this
+    // is the case in:
+    // 1. PeelVolumesOutside: Areas external to any geometry.
+    // 2. PeelVolumetricGeometry: Areas where the volume is contained within
+    // translucent geometry but the containing geometry lies outside of the bbox
+    // (startPoint is either in-front or behind the bbox depending on the viewpoint).
+    //
+    // Given that startPoint could be located either in-front, inside or behind the\n"
+    // bbox (the ray exit is unknown hence it is not possible to use clamp() directly),\n"
+    // the clamp is divided in these three zones:\n"
+    // a. In-front: clamp to ip_textureCoords (bbox's texture coord).\n"
+    // b. Inside: use startPoint directly as it is peeling within the bbox.\n"
+    // c. Behind: discard by returning vec4(0.f).\n"
+
     "\n"
     "  // Initialize g_dataPos as if startPoint lies Inside (b.)\n"
-    "  g_dataPos = startPoint.xyz;\n"
-    "  bool isInsideBBox = !(any(greaterThan(startPoint.xyz, in_texMax)) ||\n"
-    "    any(lessThan(startPoint.xyz, in_texMin)));\n"
+    "  g_dataPos = startPoint.xyz + g_rayJitter;\n"
+    "\n"
+    "  bool isInsideBBox = !(any(greaterThan(g_dataPos, in_texMax[0])) ||\n"
+    "                        any(lessThan(g_dataPos, in_texMin[0])));\n"
     "  if (!isInsideBBox)\n"
     "  {\n"
-    "    vec3 distStartTexCoord = ip_textureCoords.xyz - startPoint.xyz;\n"
+    "    vec3 distStartTexCoord = g_rayOrigin - g_dataPos;\n"
     "    if (dot(distStartTexCoord, g_dirStep) < 0)\n"
     "    {\n"
     "      // startPoint lies behind the bounding box (c.)\n"
     "      return vec4(0.0);\n"
     "    }\n"
     "    // startPoint lies in-front (a.)\n"
-    "    g_dataPos = ip_textureCoords.xyz;\n"
+    "    g_dataPos = g_rayOrigin + g_rayJitter;\n"
     "  }\n"
-    "  g_dataPos += g_rayJitter;\n"
-    "  \n"
+    "\n"
     "  // End point\n"
-    "  vec4 endPoint = WindowToNDC(gl_FragCoord.x, gl_FragCoord.y, zEnd);\n"
-    "  endPoint = NDCToTextureCoords * endPoint;\n"
-    "  endPoint /= endPoint.w;\n"
+    "  {\n"
+    "    vec4 endPoint = WindowToNDC(gl_FragCoord.x, gl_FragCoord.y, zEnd);\n"
+    "    endPoint = NDCToTextureCoords * endPoint;\n"
+    "    g_terminatePos = endPoint.xyz / endPoint.w;\n"
+    "  }\n"
+    "\n";
+
+  if (vmapper->GetClippingPlanes())
+  {
+    rayInit +=
+        "  // Adjust the ray segment to account for clipping range:\n"
+        "  if (!AdjustSampleRangeForClipping(g_dataPos.xyz, g_terminatePos.xyz))\n"
+        "  {\n"
+        "    return vec4(0.);\n"
+        "  }\n"
+        "\n";
+  }
+  rayInit +=
+      "  // Update the number of ray marching steps to account for the clipped entry point (\n"
+      "  // this is necessary in case the ray hits geometry after marching behind the plane,\n"
+      "  // given that the number of steps was assumed to be from the not-clipped entry).\n"
+      "  g_terminatePointMax = length(g_terminatePos.xyz - g_dataPos.xyz) /\n"
+      "    length(g_dirStep);\n"
+      "\n";
+
+  const std::string pathCheck =
+    "  // Make sure that we're sampling consistently across boundaries:\n"
+    "  g_dataPos = ClampToSampleLocation(g_rayOrigin, g_dirStep, g_dataPos, true /*ceil*/);\n"
+    "\n"
+    "  // Ensure end is not located before start. This could be the case\n"
+    "  // if end lies outside of the volume's bounding box. In those cases\n"
+    "  // a transparent color is returned.\n"
+    "  vec3 rgrif = g_terminatePos.xyz - g_dataPos.xyz;\n"
+    "  if (dot(rgrif, g_dirStep) < 0)\n"
+    "  {\n"
+    "    return vec4(0.f);\n"
+    "  }\n"
     "\n"
     "  // Compute the number of steps and reinitialize the step counter.\n"
-    "  g_terminatePointMax = length(endPoint.xyz - g_dataPos.xyz) / length(g_dirStep);\n"
+    "  g_terminatePointMax = length(rgrif) / length(g_dirStep);\n"
     "  g_currentT = 0.0;\n"
     "  g_fragColor = vec4(0.0);\n"
     "\n";
@@ -516,13 +582,7 @@ bool vtkDualDepthPeelingPass::PreReplaceVolumetricShaderValues(
 #ifndef DEBUG_VOLUME_PREPASS_PIXELS
             "    float opaqueDepth = hasOpaqueGeometry ? outer.y : 1.f;\n"
             "    frontRange = vec2(0.f, -inner.x);\n"
-            "\n"
-            "    if (front.a < g_opacityThreshold)\n"
-            "    {\n"
-            "      // The color returned by castRay() has alpha pre-multiplied,\n"
-            "      // as required for back-blending.\n"
-            "      backRange = vec2(inner.y, opaqueDepth);\n"
-            "    }\n"
+            "    backRange = vec2(inner.y, opaqueDepth);\n"
             "\n"
 #else // not DEBUG_VOLUME_PREPASS_PIXELS
             "    float blue = hasOpaqueGeometry ? 1.f : 0.f;\n"
@@ -535,7 +595,8 @@ bool vtkDualDepthPeelingPass::PreReplaceVolumetricShaderValues(
             "  {\n"
             "    front = castRay(frontRange.x, frontRange.y);\n"
             "  }\n"
-            "  if (backRange.x < backRange.y)\n"
+            "  if (backRange.x < backRange.y && // range valid\n"
+            "      front.a < g_opacityThreshold) // early termination\n"
             "  {\n"
             "    back = castRay(backRange.x, backRange.y);\n"
             "  }\n"
@@ -548,16 +609,8 @@ bool vtkDualDepthPeelingPass::PreReplaceVolumetricShaderValues(
       vtkShaderProgram::Substitute(fragmentShader,
             "//VTK::DepthPeeling::Ray::Init", rayInit);
 
-      vtkShaderProgram::Substitute(fragmentShader, "//VTK::DepthPeeling::Ray::PathCheck",
-            "  // Ensure end is not located before start. This could be the case\n"
-            "  // if end lies outside of the volume's bounding box. In those cases\n"
-            "  // a transparent color is returned.\n"
-            "  vec3 rgrif = endPoint.xyz - g_dataPos.xyz;\n"
-            "  if (dot(rgrif, g_dirStep) < 0)\n"
-            "  {\n"
-            "    return vec4(0.f);\n"
-            "  }\n"
-            );
+      vtkShaderProgram::Substitute(fragmentShader,
+            "//VTK::DepthPeeling::Ray::PathCheck", pathCheck);
 
       return true;
 
@@ -593,23 +646,27 @@ bool vtkDualDepthPeelingPass::PreReplaceVolumetricShaderValues(
             "  bool onlyBack = frontStartDepth == backStartDepth &&\n"
             "                  frontEndDepth == backEndDepth;\n"
             "\n"
-            "  // In the last peel, innerDepths may be (-1, -1) for most of the\n"
-            "  // fragments. Casting a ray from [outerDepths.x, 1.0] would result\n"
-            "  // in accumulating areas that have already been accounted for in\n"
-            "  // former volume peels.  In this case frontEndDepth should be the\n"
-            "  // outer max instead. Because of this, the back castRay() is also\n"
-            "  // skipped.\n"
+
+            // In the last peel, innerDepths may be (-1, -1) for most of the
+            // fragments. Casting a ray from [outerDepths.x, 1.0] would result
+            // in accumulating areas that have already been accounted for in
+            // former volume peels.  In this case frontEndDepth should be the
+            // outer max instead. Because of this, the back castRay() is also
+            // skipped.
+
             "  bool noInnerDepths = innerDepths.x == -1.0;\n"
             "  if (noInnerDepths)\n"
             "  {\n"
             "    frontEndDepth = outerDepths.y;\n"
             "  }\n"
             "\n"
-            "  // Peel passes set -1 in pixels that contain only opaque geometry,\n"
-            "  // so the opaque depth is fetched in order to z-composite volumes\n"
-            "  // with opaque goemetry. To do this, the end point of front is clamped\n"
-            "  // to opaque-depth and back ray-cast is skipped altogether since it\n"
-            "  // would be covered by opaque geometry anyway.\n"
+
+            // Peel passes set -1 in pixels that contain only opaque geometry,
+            // so the opaque depth is fetched in order to z-composite volumes
+            // with opaque goemetry. To do this, the end point of front is clamped
+            // to opaque-depth and back ray-cast is skipped altogether since it
+            // would be covered by opaque geometry anyway.
+
             "  float oDepth = texture2D(opaqueDepthTex, pixelCoord * in_inverseWindowSize).x;\n"
             "  bool endBehindOpaque = frontEndDepth >= oDepth;\n"
             "  float clampedFrontEnd = frontEndDepth;\n"
@@ -653,6 +710,9 @@ bool vtkDualDepthPeelingPass::PreReplaceVolumetricShaderValues(
       vtkShaderProgram::Substitute(fragmentShader,
             "//VTK::DepthPeeling::Ray::Init", rayInit);
 
+      vtkShaderProgram::Substitute(fragmentShader,
+            "//VTK::DepthPeeling::Ray::PathCheck", pathCheck);
+
       break;
 
     case vtkDualDepthPeelingPass::AlphaBlending:
@@ -680,6 +740,13 @@ bool vtkDualDepthPeelingPass::PreReplaceVolumetricShaderValues(
             "  // as required for back-blending.\n"
             "  gl_FragData[0] = color;\n"
             );
+
+      vtkShaderProgram::Substitute(fragmentShader,
+            "//VTK::DepthPeeling::Ray::Init", rayInit);
+
+      vtkShaderProgram::Substitute(fragmentShader,
+            "//VTK::DepthPeeling::Ray::PathCheck", pathCheck);
+
       break;
 
     default:
@@ -771,18 +838,10 @@ bool vtkDualDepthPeelingPass::SetVolumetricShaderParameters(
 vtkDualDepthPeelingPass::vtkDualDepthPeelingPass()
   : VolumetricPass(nullptr),
     RenderState(nullptr),
-    CopyColorProgram(nullptr),
-    CopyColorVAO(nullptr),
-    CopyColorVBO(nullptr),
-    CopyDepthProgram(nullptr),
-    CopyDepthVAO(nullptr),
-    CopyDepthVBO(nullptr),
-    BackBlendProgram(nullptr),
-    BackBlendVAO(nullptr),
-    BackBlendVBO(nullptr),
-    BlendProgram(nullptr),
-    BlendVAO(nullptr),
-    BlendVBO(nullptr),
+    CopyColorHelper(nullptr),
+    CopyDepthHelper(nullptr),
+    BackBlendHelper(nullptr),
+    BlendHelper(nullptr),
     FrontSource(FrontA),
     FrontDestination(FrontB),
     DepthSource(DepthA),
@@ -816,6 +875,26 @@ vtkDualDepthPeelingPass::~vtkDualDepthPeelingPass()
   {
     this->SetVolumetricPass(nullptr);
   }
+  if (this->BlendHelper)
+  {
+    delete this->BlendHelper;
+    this->BlendHelper = nullptr;
+  }
+  if (this->BackBlendHelper)
+  {
+    delete this->BackBlendHelper;
+    this->BackBlendHelper = nullptr;
+  }
+  if (this->CopyColorHelper)
+  {
+    delete this->CopyColorHelper;
+    this->CopyColorHelper = nullptr;
+  }
+  if (this->CopyDepthHelper)
+  {
+    delete this->CopyDepthHelper;
+    this->CopyDepthHelper = nullptr;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -829,19 +908,6 @@ void vtkDualDepthPeelingPass::SetCurrentStage(ShaderStage stage)
 }
 
 //------------------------------------------------------------------------------
-// Delete the vtkObject subclass pointed at by ptr if it is set.
-namespace {
-template <typename T> void DeleteHelper(T *& ptr)
-{
-  if (ptr)
-  {
-    ptr->Delete();
-    ptr = nullptr;
-  }
-}
-} // end anon namespace
-
-//------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::FreeGLObjects()
 {
   for (int i = 0; i < static_cast<int>(NumberOfTextures); ++i)
@@ -852,26 +918,12 @@ void vtkDualDepthPeelingPass::FreeGLObjects()
       this->Textures[i] = nullptr;
     }
   }
-
-  DeleteHelper(this->CopyColorVAO);
-  DeleteHelper(this->CopyColorVBO);
-  DeleteHelper(this->CopyDepthVAO);
-  DeleteHelper(this->CopyDepthVBO);
-  DeleteHelper(this->BackBlendVAO);
-  DeleteHelper(this->BackBlendVBO);
-  DeleteHelper(this->BlendVAO);
-  DeleteHelper(this->BlendVBO);
-
-  // don't delete the shader programs -- let the cache clean them up.
-  this->CopyColorProgram = nullptr;
-  this->CopyDepthProgram = nullptr;
-  this->BackBlendProgram = nullptr;
-  this->BlendProgram = nullptr;
 }
 
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::RenderTranslucentPass()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::RenderTranslucentPass);
   this->TranslucentPass->Render(this->RenderState);
   ++this->TranslucentRenderCount;
 }
@@ -879,6 +931,7 @@ void vtkDualDepthPeelingPass::RenderTranslucentPass()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::RenderVolumetricPass()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::RenderVolumetricPass);
   this->VolumetricPass->Render(this->RenderState);
   ++this->VolumetricRenderCount;
   this->LastPeelHadVolumes =
@@ -915,14 +968,19 @@ void vtkDualDepthPeelingPass::Initialize(const vtkRenderState *s)
     this->ViewportY = 0;
   }
 
-  // See if we can reuse existing textures:
-  if (this->Textures[Back] &&
-      (static_cast<int>(this->Textures[Back]->GetHeight()) !=
-       this->ViewportHeight ||
-       static_cast<int>(this->Textures[Back]->GetWidth()) !=
-       this->ViewportWidth))
+  this->Timer = r->GetRenderWindow()->GetRenderTimer();
+
+  // The above code shouldn't touch the OpenGL command stream, so it's okay to
+  // start the event here:
+  TIME_FUNCTION(vtkDualDepthPeelingPass::Initialize);
+
+  // adjust size as needed
+  for (int i = 0; i < static_cast<int>(NumberOfTextures); ++i)
   {
-    this->FreeGLObjects();
+    if (this->Textures[i])
+    {
+      this->Textures[i]->Resize(this->ViewportWidth, this->ViewportHeight);
+    }
   }
 
   // Allocate new textures if needed:
@@ -1013,18 +1071,21 @@ void vtkDualDepthPeelingPass::ActivateDrawBuffers(const TextureName *ids,
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::Prepare()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::Prepare);
+
   // Since we're rendering into a temporary non-default framebuffer, we need to
   // remove the translation from the viewport and disable the scissor test;
   // otherwise we'll capture the wrong area of the rendered geometry.
-  glViewport(0, 0,
+  this->State->vtkglViewport(0, 0,
              this->ViewportWidth, this->ViewportHeight);
-  this->SaveScissorTestState = glIsEnabled(GL_SCISSOR_TEST) == GL_TRUE;
-  glDisable(GL_SCISSOR_TEST);
+  this->SaveScissorTestState = this->State->GetEnumState(GL_SCISSOR_TEST);
+  this->State->vtkglDisable(GL_SCISSOR_TEST);
 
-  glGetIntegerv(GL_CULL_FACE_MODE, &this->CullFaceMode);
-  this->CullFaceEnabled = glIsEnabled(GL_CULL_FACE) == GL_TRUE;
+  // bad sync here
+  this->State->vtkglGetIntegerv(GL_CULL_FACE_MODE, &this->CullFaceMode);
+  this->CullFaceEnabled = this->State->GetEnumState(GL_CULL_FACE);
 
-  this->DepthTestEnabled = glIsEnabled(GL_DEPTH_TEST) == GL_TRUE;
+  this->DepthTestEnabled = this->State->GetEnumState(GL_DEPTH_TEST);
 
   // Prevent vtkOpenGLActor from messing with the depth mask:
   size_t numProps = this->RenderState->GetPropArrayCount();
@@ -1042,7 +1103,7 @@ void vtkDualDepthPeelingPass::Prepare()
   }
 
   // Setup GL state:
-  glDisable(GL_DEPTH_TEST);
+  this->State->vtkglDisable(GL_DEPTH_TEST);
   this->InitializeOcclusionQuery();
   this->CurrentPeel = 0;
   this->TranslucentRenderCount = 0;
@@ -1058,16 +1119,16 @@ void vtkDualDepthPeelingPass::Prepare()
   // initialization as well.
   std::array<TextureName, 2> targets = { { Back, this->FrontSource } };
   this->ActivateDrawBuffers(targets);
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  this->State->vtkglClearColor(0.f, 0.f, 0.f, 0.f);
+  this->State->vtkglClear(GL_COLOR_BUFFER_BIT);
 
   // Fill both depth buffers with -1, -1. This lets us discard fragments in
   // CopyOpaqueDepthBuffers, which gives a moderate performance boost.
   targets[0] = this->DepthSource;
   targets[1] = this->DepthDestination;
   this->ActivateDrawBuffers(targets);
-  glClearColor(-1, -1, 0, 0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  this->State->vtkglClearColor(-1, -1, 0, 0);
+  this->State->vtkglClear(GL_COLOR_BUFFER_BIT);
 
   // Pre-fill the depth buffer with opaque pass data:
   this->CopyOpaqueDepthBuffer();
@@ -1091,6 +1152,8 @@ void vtkDualDepthPeelingPass::InitializeOcclusionQuery()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::CopyOpaqueDepthBuffer()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::CopyOpaqueDepthBuffer);
+
   // Initialize the peeling depth buffer using the existing opaque depth buffer.
   // Note that the min component is stored as -depth, allowing
   // glBlendEquation = GL_MAX to be used during peeling.
@@ -1113,15 +1176,14 @@ void vtkDualDepthPeelingPass::CopyOpaqueDepthBuffer()
   this->ActivateDrawBuffers(targets);
   this->Textures[OpaqueDepth]->Activate();
 
-  glDisable(GL_BLEND);
-
-  typedef vtkOpenGLRenderUtilities GLUtil;
+  this->State->vtkglDisable(GL_BLEND);
 
   vtkOpenGLRenderWindow *renWin = static_cast<vtkOpenGLRenderWindow*>(
         this->RenderState->GetRenderer()->GetRenderWindow());
-  if (!this->CopyDepthProgram)
+  if (!this->CopyDepthHelper)
   {
-    std::string fragShader = GLUtil::GetFullScreenQuadFragmentShaderTemplate();
+    std::string fragShader =
+      vtkOpenGLRenderUtilities::GetFullScreenQuadFragmentShaderTemplate();
     vtkShaderProgram::Substitute(
           fragShader, "//VTK::FSQ::Decl",
           "uniform float clearValue;\n"
@@ -1135,44 +1197,32 @@ void vtkDualDepthPeelingPass::CopyOpaqueDepthBuffer()
           "    }\n"
           "  gl_FragData[0] = gl_FragData[1] = vec4(-1, d, 0., 0.);\n"
           );
-    this->CopyDepthProgram = renWin->GetShaderCache()->ReadyShaderProgram(
-          GLUtil::GetFullScreenQuadVertexShader().c_str(),
+    this->CopyDepthHelper = new vtkOpenGLQuadHelper(renWin,
+          nullptr,
           fragShader.c_str(),
-          GLUtil::GetFullScreenQuadGeometryShader().c_str());
+          nullptr);
   }
   else
   {
-    renWin->GetShaderCache()->ReadyShaderProgram(this->CopyDepthProgram);
+    renWin->GetShaderCache()->ReadyShaderProgram(this->CopyDepthHelper->Program);
   }
 
-  if (!this->CopyDepthProgram)
+  if (!this->CopyDepthHelper->Program)
   {
     return;
-  }
-
-  if (!this->CopyDepthVAO)
-  {
-    this->CopyDepthVBO = vtkOpenGLBufferObject::New();
-    this->CopyDepthVAO = vtkOpenGLVertexArrayObject::New();
-    GLUtil::PrepFullScreenVAO(this->CopyDepthVBO, this->CopyDepthVAO,
-                              this->CopyDepthProgram);
   }
 
   // Get the clear value. We don't set this, so it should still be what the
   // opaque pass uses:
   GLfloat clearValue = 1.f;
   glGetFloatv(GL_DEPTH_CLEAR_VALUE, &clearValue);
-  this->CopyDepthProgram->SetUniformf("clearValue", clearValue);
-  this->CopyDepthProgram->SetUniformi(
+  this->CopyDepthHelper->Program->SetUniformf("clearValue", clearValue);
+  this->CopyDepthHelper->Program->SetUniformi(
         "oDepth", this->Textures[OpaqueDepth]->GetTextureUnit());
 
-  this->CopyDepthVAO->Bind();
-
   annotate("Copying opaque depth!");
-  GLUtil::DrawFullScreenQuad();
+  this->CopyDepthHelper->Render();
   annotate("Opaque depth copied!");
-
-  this->CopyDepthVAO->Release();
 
   this->Textures[OpaqueDepth]->Deactivate();
 }
@@ -1180,6 +1230,8 @@ void vtkDualDepthPeelingPass::CopyOpaqueDepthBuffer()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::InitializeDepth()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::InitializeDepth);
+
   // Add the translucent geometry to our depth peeling buffer:
 
   // We bind the back temporary buffer as render target 0 -- the data we
@@ -1194,8 +1246,8 @@ void vtkDualDepthPeelingPass::InitializeDepth()
   this->SetCurrentPeelType(TranslucentPeel);
   this->Textures[this->DepthDestination]->Activate();
 
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_MAX);
+  this->State->vtkglEnable(GL_BLEND);
+  this->State->vtkglBlendEquation(GL_MAX);
   annotate("Initializing depth.");
   this->RenderTranslucentPass();
   annotate("Depth initialized");
@@ -1206,6 +1258,8 @@ void vtkDualDepthPeelingPass::InitializeDepth()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::PeelVolumesOutsideTranslucentRange()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::PeelVolumesOutsideTranslucentRange);
+
   // Enable the destination targets. Note that we're rendering directly into
   // the Back accumulation buffer and the FrontSource buffer, since we know
   // this is the first time these buffers will be drawn into.
@@ -1214,8 +1268,8 @@ void vtkDualDepthPeelingPass::PeelVolumesOutsideTranslucentRange()
 
   // Cull back fragments of the volume's proxy geometry since they are
   // not necessary anyway.
-  glCullFace(GL_BACK);
-  glEnable(GL_CULL_FACE);
+  this->State->vtkglCullFace(GL_BACK);
+  this->State->vtkglEnable(GL_CULL_FACE);
 
   this->SetCurrentStage(InitializingDepth);
   this->SetCurrentPeelType(VolumetricPeel);
@@ -1227,8 +1281,8 @@ void vtkDualDepthPeelingPass::PeelVolumesOutsideTranslucentRange()
   this->RenderVolumetricPass();
   annotate("External volume peel done.");
 
-  glCullFace(this->CullFaceMode);
-  glDisable(GL_CULL_FACE);
+  this->State->vtkglCullFace(this->CullFaceMode);
+  this->State->vtkglDisable(GL_CULL_FACE);
 
   this->Textures[this->DepthSource]->Deactivate();
   this->Textures[this->DepthDestination]->Deactivate();
@@ -1248,6 +1302,8 @@ bool vtkDualDepthPeelingPass::PeelingDone()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::Peel()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::Peel);
+
   this->InitializeTargetsForTranslucentPass();
   this->PeelTranslucentGeometry();
   this->StartTranslucentOcclusionQuery();
@@ -1302,66 +1358,57 @@ void vtkDualDepthPeelingPass::PrepareFrontDestination()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::ClearFrontDestination()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::ClearFrontDestination);
   annotate("ClearFrontDestination()");
   this->ActivateDrawBuffer(this->FrontDestination);
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  this->State->vtkglClearColor(0.f, 0.f, 0.f, 0.f);
+  this->State->vtkglClear(GL_COLOR_BUFFER_BIT);
 }
 
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::CopyFrontSourceToFrontDestination()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::CopyFrontSourceToFrontDestination);
+
   this->ActivateDrawBuffer(this->FrontDestination);
 
-  glDisable(GL_BLEND);
-
-  typedef vtkOpenGLRenderUtilities GLUtil;
+  this->State->vtkglDisable(GL_BLEND);
 
   vtkOpenGLRenderWindow *renWin = static_cast<vtkOpenGLRenderWindow*>(
         this->RenderState->GetRenderer()->GetRenderWindow());
-  if (!this->CopyColorProgram)
+  if (!this->CopyColorHelper)
   {
-    std::string fragShader = GLUtil::GetFullScreenQuadFragmentShaderTemplate();
+    std::string fragShader =
+      vtkOpenGLRenderUtilities::GetFullScreenQuadFragmentShaderTemplate();
     vtkShaderProgram::Substitute(
           fragShader, "//VTK::FSQ::Decl",
           "uniform sampler2D inTex;\n");
     vtkShaderProgram::Substitute(
           fragShader, "//VTK::FSQ::Impl",
           "  gl_FragData[0] = texture2D(inTex, texCoord);\n");
-    this->CopyColorProgram = renWin->GetShaderCache()->ReadyShaderProgram(
-          GLUtil::GetFullScreenQuadVertexShader().c_str(),
+    this->CopyColorHelper = new vtkOpenGLQuadHelper(renWin,
+          nullptr,
           fragShader.c_str(),
-          GLUtil::GetFullScreenQuadGeometryShader().c_str());
+          nullptr);
   }
   else
   {
-    renWin->GetShaderCache()->ReadyShaderProgram(this->CopyColorProgram);
+    renWin->GetShaderCache()->ReadyShaderProgram(this->CopyColorHelper->Program);
   }
 
-  if (!this->CopyColorProgram)
+  if (!this->CopyColorHelper->Program)
   {
     return;
   }
 
-  if (!this->CopyColorVAO)
-  {
-    this->CopyColorVBO = vtkOpenGLBufferObject::New();
-    this->CopyColorVAO = vtkOpenGLVertexArrayObject::New();
-    GLUtil::PrepFullScreenVAO(this->CopyColorVBO, this->CopyColorVAO,
-                              this->CopyColorProgram);
-  }
-
   this->Textures[this->FrontSource]->Activate();
-  this->CopyColorProgram->SetUniformi(
+  this->CopyColorHelper->Program->SetUniformi(
         "inTex", this->Textures[this->FrontSource]->GetTextureUnit());
 
-  this->CopyColorVAO->Bind();
-
   annotate("Copying front texture src -> dst for pre-pass initialization!");
-  GLUtil::DrawFullScreenQuad();
+  this->CopyColorHelper->Render();
   annotate("Front texture copied!");
 
-  this->CopyColorVAO->Release();
 
   this->Textures[this->FrontSource]->Deactivate();
 }
@@ -1369,15 +1416,17 @@ void vtkDualDepthPeelingPass::CopyFrontSourceToFrontDestination()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::InitializeTargetsForTranslucentPass()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::InitializeTargetsForTranslucentPass);
+
   // Initialize destination buffers to their minima, since we're MAX blending,
   // this ensures that valid outputs are captured.
   this->ActivateDrawBuffer(BackTemp);
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  this->State->vtkglClearColor(0.f, 0.f, 0.f, 0.f);
+  this->State->vtkglClear(GL_COLOR_BUFFER_BIT);
 
   this->ActivateDrawBuffer(this->DepthDestination);
-  glClearColor(-1.f, -1.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  this->State->vtkglClearColor(-1.f, -1.f, 0.f, 0.f);
+  this->State->vtkglClear(GL_COLOR_BUFFER_BIT);
 
   this->PrepareFrontDestination();
 }
@@ -1385,11 +1434,13 @@ void vtkDualDepthPeelingPass::InitializeTargetsForTranslucentPass()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::InitializeTargetsForVolumetricPass()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::InitializeTargetsForVolumetricPass);
+
   // Clear the back buffer to ensure that current fragments are captured for
   // later blending into the back accumulation buffer:
   this->ActivateDrawBuffer(BackTemp);
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  this->State->vtkglClearColor(0.f, 0.f, 0.f, 0.f);
+  this->State->vtkglClear(GL_COLOR_BUFFER_BIT);
 
   this->PrepareFrontDestination();
 }
@@ -1397,6 +1448,8 @@ void vtkDualDepthPeelingPass::InitializeTargetsForVolumetricPass()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::PeelTranslucentGeometry()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::PeelTranslucentGeometry);
+
   // Enable the destination targets:
   std::array<TextureName, 3> targets = { { BackTemp,
                                            this->FrontDestination,
@@ -1404,8 +1457,8 @@ void vtkDualDepthPeelingPass::PeelTranslucentGeometry()
   this->ActivateDrawBuffers(targets);
 
   // Use MAX blending to capture peels:
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_MAX);
+  this->State->vtkglEnable(GL_BLEND);
+  this->State->vtkglBlendEquation(GL_MAX);
 
   this->SetCurrentStage(Peeling);
   this->SetCurrentPeelType(TranslucentPeel);
@@ -1423,18 +1476,20 @@ void vtkDualDepthPeelingPass::PeelTranslucentGeometry()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::PeelVolumetricGeometry()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::PeelVolumeGeometry);
+
   // Enable the destination targets:
   std::array<TextureName, 2> targets = { { BackTemp, this->FrontDestination } };
   this->ActivateDrawBuffers(targets);
 
   // Cull back fragments of the volume's proxy geometry since they are
   // not necessary anyway.
-  glCullFace(GL_BACK);
-  glEnable(GL_CULL_FACE);
+  this->State->vtkglCullFace(GL_BACK);
+  this->State->vtkglEnable(GL_CULL_FACE);
 
   // Use MAX blending to capture peels:
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_MAX);
+  this->State->vtkglEnable(GL_BLEND);
+  this->State->vtkglBlendEquation(GL_MAX);
 
   this->SetCurrentStage(Peeling);
   this->SetCurrentPeelType(VolumetricPeel);
@@ -1453,13 +1508,15 @@ void vtkDualDepthPeelingPass::PeelVolumetricGeometry()
   this->Textures[this->DepthDestination]->Deactivate();
   this->Textures[OpaqueDepth]->Deactivate();
 
-  glCullFace(this->CullFaceMode);
-  glDisable(GL_CULL_FACE);
+  this->State->vtkglCullFace(this->CullFaceMode);
+  this->State->vtkglDisable(GL_CULL_FACE);
 }
 
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::BlendBackBuffer()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::BlendBackBuffer);
+
   this->ActivateDrawBuffer(Back);
   this->Textures[BackTemp]->Activate();
 
@@ -1480,17 +1537,16 @@ void vtkDualDepthPeelingPass::BlendBackBuffer()
    * a = f.a + (1. - f.a) * b.a
    */
 
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_FUNC_ADD);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  typedef vtkOpenGLRenderUtilities GLUtil;
+  this->State->vtkglEnable(GL_BLEND);
+  this->State->vtkglBlendEquation(GL_FUNC_ADD);
+  this->State->vtkglBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   vtkOpenGLRenderWindow *renWin = static_cast<vtkOpenGLRenderWindow*>(
         this->RenderState->GetRenderer()->GetRenderWindow());
-  if (!this->BackBlendProgram)
+  if (!this->BackBlendHelper)
   {
-    std::string fragShader = GLUtil::GetFullScreenQuadFragmentShaderTemplate();
+    std::string fragShader =
+      vtkOpenGLRenderUtilities::GetFullScreenQuadFragmentShaderTemplate();
     vtkShaderProgram::Substitute(
           fragShader, "//VTK::FSQ::Decl",
           "uniform sampler2D newPeel;\n"
@@ -1505,39 +1561,29 @@ void vtkDualDepthPeelingPass::BlendBackBuffer()
           "\n"
           "  gl_FragData[0] = f;\n"
           );
-    this->BackBlendProgram = renWin->GetShaderCache()->ReadyShaderProgram(
-          GLUtil::GetFullScreenQuadVertexShader().c_str(),
+    this->BackBlendHelper = new vtkOpenGLQuadHelper(renWin,
+          nullptr,
           fragShader.c_str(),
-          GLUtil::GetFullScreenQuadGeometryShader().c_str());
+          nullptr);
   }
   else
   {
-    renWin->GetShaderCache()->ReadyShaderProgram(this->BackBlendProgram);
+    renWin->GetShaderCache()->ReadyShaderProgram(this->BackBlendHelper->Program);
   }
 
-  if (!this->BackBlendProgram)
+  if (!this->BackBlendHelper->Program)
   {
     return;
   }
 
-  if (!this->BackBlendVAO)
-  {
-    this->BackBlendVBO = vtkOpenGLBufferObject::New();
-    this->BackBlendVAO = vtkOpenGLVertexArrayObject::New();
-    GLUtil::PrepFullScreenVAO(this->BackBlendVBO, this->BackBlendVAO,
-                              this->BackBlendProgram);
-  }
-
-  this->BackBlendProgram->SetUniformi(
+  this->BackBlendHelper->Program->SetUniformi(
         "newPeel", this->Textures[BackTemp]->GetTextureUnit());
 
-  this->BackBlendVAO->Bind();
 
   annotate("Start blending back!");
-  GLUtil::DrawFullScreenQuad();
+  this->BackBlendHelper->Render();
   annotate("Back blended!");
 
-  this->BackBlendVAO->Release();
 
   this->Textures[BackTemp]->Deactivate();
 }
@@ -1558,6 +1604,10 @@ void vtkDualDepthPeelingPass::StartTranslucentOcclusionQuery()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::EndTranslucentOcclusionQuery()
 {
+  // We time the end, but not the start, since this is where we stall to
+  // sync the stream.
+  TIME_FUNCTION(vtkDualDepthPeelingPass::EndTranslucentOcclusionQuery);
+
 #if GL_ES_VERSION_3_0 == 1
   glEndQuery(GL_ANY_SAMPLES_PASSED);
   GLuint anySamplesPassed;
@@ -1588,6 +1638,10 @@ void vtkDualDepthPeelingPass::StartVolumetricOcclusionQuery()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::EndVolumetricOcclusionQuery()
 {
+  // We time the end, but not the start, since this is where we stall to
+  // sync the stream.
+  TIME_FUNCTION(vtkDualDepthPeelingPass::EndVolumetricOcclusionQuery);
+
 #if GL_ES_VERSION_3_0 == 1
   glEndQuery(GL_ANY_SAMPLES_PASSED);
   GLuint anySamplesPassed;
@@ -1618,6 +1672,8 @@ void vtkDualDepthPeelingPass::SwapDepthBufferSourceDest()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::Finalize()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::Finalize);
+
   // Mop up any unrendered fragments using simple alpha blending into the back
   // buffer.
 #ifndef DEBUG_VOLUME_PREPASS_PIXELS
@@ -1642,9 +1698,9 @@ void vtkDualDepthPeelingPass::Finalize()
   this->BlendFinalImage();
 
   // Restore blending parameters:
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_FUNC_ADD);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  this->State->vtkglEnable(GL_BLEND);
+  this->State->vtkglBlendEquation(GL_FUNC_ADD);
+  this->State->vtkglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   size_t numProps = this->RenderState->GetPropArrayCount();
   for (size_t i = 0; i < numProps; ++i)
@@ -1657,21 +1713,22 @@ void vtkDualDepthPeelingPass::Finalize()
     }
   }
 
+  this->Timer = nullptr;
   this->RenderState = nullptr;
   this->DeleteOcclusionQueryIds();
   this->SetCurrentStage(Inactive);
 
   if (this->CullFaceEnabled)
   {
-    glEnable(GL_CULL_FACE);
+    this->State->vtkglEnable(GL_CULL_FACE);
   }
   else
   {
-    glDisable(GL_CULL_FACE);
+    this->State->vtkglDisable(GL_CULL_FACE);
   }
   if (this->DepthTestEnabled)
   {
-    glEnable(GL_DEPTH_TEST);
+    this->State->vtkglEnable(GL_DEPTH_TEST);
   }
 #ifdef DEBUG_FRAME
   std::cout << "Depth peel done:\n"
@@ -1693,6 +1750,8 @@ void vtkDualDepthPeelingPass::Finalize()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::AlphaBlendRender()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::AlphaBlendRender);
+
   /* This pass is mopping up the remaining fragments when we exceed the max
    * number of peels or hit the occlusion limit. We'll simply render all of the
    * remaining fragments into the back destination buffer using the
@@ -1701,9 +1760,9 @@ void vtkDualDepthPeelingPass::AlphaBlendRender()
    * aC = f.a * f.rgb + (1 - f.a) * b.a * b.rgb
    * a = f.a + (1 - f.a) * b.a
    */
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_FUNC_ADD);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  this->State->vtkglEnable(GL_BLEND);
+  this->State->vtkglBlendEquation(GL_FUNC_ADD);
+  this->State->vtkglBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   this->SetCurrentStage(AlphaBlending);
   this->ActivateDrawBuffer(Back);
@@ -1734,6 +1793,8 @@ void vtkDualDepthPeelingPass::AlphaBlendRender()
 //------------------------------------------------------------------------------
 void vtkDualDepthPeelingPass::BlendFinalImage()
 {
+  TIME_FUNCTION(vtkDualDepthPeelingPass::BlendFinalImage);
+
   this->Textures[this->FrontSource]->Activate();
   this->Textures[Back]->Activate();
 
@@ -1762,30 +1823,29 @@ void vtkDualDepthPeelingPass::BlendFinalImage()
    * These blending parameters and fragment shader perform this work.
    * Note that the opaque fragments are assumed to have premultiplied alpha
    * in this implementation. */
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_FUNC_ADD);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  this->State->vtkglEnable(GL_BLEND);
+  this->State->vtkglBlendEquation(GL_FUNC_ADD);
+  this->State->vtkglBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   // Restore the original viewport and scissor test settings (see note in
   // Prepare).
-  glViewport(this->ViewportX, this->ViewportY,
+  this->State->vtkglViewport(this->ViewportX, this->ViewportY,
              this->ViewportWidth, this->ViewportHeight);
   if (this->SaveScissorTestState)
   {
-    glEnable(GL_SCISSOR_TEST);
+    this->State->vtkglEnable(GL_SCISSOR_TEST);
   }
   else
   {
-    glDisable(GL_SCISSOR_TEST);
+    this->State->vtkglDisable(GL_SCISSOR_TEST);
   }
-
-  typedef vtkOpenGLRenderUtilities GLUtil;
 
   vtkOpenGLRenderWindow *renWin = static_cast<vtkOpenGLRenderWindow*>(
         this->RenderState->GetRenderer()->GetRenderWindow());
-  if (!this->BlendProgram)
+  if (!this->BlendHelper)
   {
-    std::string fragShader = GLUtil::GetFullScreenQuadFragmentShaderTemplate();
+    std::string fragShader =
+      vtkOpenGLRenderUtilities::GetFullScreenQuadFragmentShaderTemplate();
     vtkShaderProgram::Substitute(
           fragShader, "//VTK::FSQ::Decl",
           "uniform sampler2D frontTexture;\n"
@@ -1803,41 +1863,31 @@ void vtkDualDepthPeelingPass::BlendFinalImage()
           "  // transparent-over-opaque blending pass.\n"
           "  gl_FragData[0].a = (1. - front.a * (1. - back.a));\n"
           );
-    this->BlendProgram = renWin->GetShaderCache()->ReadyShaderProgram(
-          GLUtil::GetFullScreenQuadVertexShader().c_str(),
+    this->BlendHelper = new vtkOpenGLQuadHelper(renWin,
+          nullptr,
           fragShader.c_str(),
-          GLUtil::GetFullScreenQuadGeometryShader().c_str());
+          nullptr);
   }
   else
   {
-    renWin->GetShaderCache()->ReadyShaderProgram(this->BlendProgram);
+    renWin->GetShaderCache()->ReadyShaderProgram(this->BlendHelper->Program);
   }
 
-  if (!this->BlendProgram)
+  if (!this->BlendHelper->Program)
   {
     return;
   }
 
-  if (!this->BlendVAO)
-  {
-    this->BlendVBO = vtkOpenGLBufferObject::New();
-    this->BlendVAO = vtkOpenGLVertexArrayObject::New();
-    GLUtil::PrepFullScreenVAO(this->BlendVBO, this->BlendVAO,
-                              this->BlendProgram);
-  }
-
-  this->BlendProgram->SetUniformi(
+  this->BlendHelper->Program->SetUniformi(
         "frontTexture", this->Textures[this->FrontSource]->GetTextureUnit());
-  this->BlendProgram->SetUniformi(
+  this->BlendHelper->Program->SetUniformi(
         "backTexture", this->Textures[Back]->GetTextureUnit());
 
-  this->BlendVAO->Bind();
 
   annotate("blending final!");
-  GLUtil::DrawFullScreenQuad();
+  this->BlendHelper->Render();
   annotate("final blended!");
 
-  this->BlendVAO->Release();
 
   this->Textures[this->FrontSource]->Deactivate();
   this->Textures[Back]->Deactivate();

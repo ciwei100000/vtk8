@@ -43,7 +43,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkKdNode : public vtkObject
 {
 public:
   vtkTypeMacro(vtkKdNode, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkKdNode *New();
 
@@ -104,8 +104,8 @@ public:
    * Get a pointer to the 3 bound minima (xmin, ymin and zmin) or the
    * 3 bound maxima (xmax, ymax, zmax).  Don't free this pointer.
    */
-  double *GetMinBounds() {return this->Min;}
-  double *GetMaxBounds() {return this->Max;}
+  double *GetMinBounds() VTK_SIZEHINT(3) {return this->Min;}
+  double *GetMaxBounds() VTK_SIZEHINT(3) {return this->Max;}
 
   /**
    * Set the xmin, ymin and zmin value of the bounds of this region
@@ -121,8 +121,8 @@ public:
    * Get a pointer to the 3 data bound minima (xmin, ymin and zmin) or the
    * 3 data bound maxima (xmax, ymax, zmax).  Don't free this pointer.
    */
-  double *GetMinDataBounds() {return this->MinVal;}
-  double *GetMaxDataBounds() {return this->MaxVal;}
+  double *GetMinDataBounds() VTK_SIZEHINT(3) {return this->MinVal;}
+  double *GetMaxDataBounds() VTK_SIZEHINT(3) {return this->MaxVal;}
 
   /**
    * Set the xmin, ymin and zmin value of the bounds of this
@@ -149,7 +149,7 @@ public:
   /**
    * If this node is not a leaf node, there are leaf nodes below it whose
    * regions represent a partitioning of this region.  The IDs of these
-   * leaf nodes form a contigous set.  Set/Get the range of the IDs of
+   * leaf nodes form a contiguous set.  Set/Get the range of the IDs of
    * the leaf nodes below this node.  If this is already a leaf node, these
    * values should be the same as the ID.
    */
@@ -229,7 +229,7 @@ public:
    * if useDataBounds is non-zero.
    */
   int IntersectsCell(vtkCell *cell, int useDataBounds,
-                     int cellRegion=-1, double *cellBounds=NULL);
+                     int cellRegion=-1, double *cellBounds=nullptr);
 
   /**
    * Return 1 if this spatial region entirely contains a box specified
@@ -244,7 +244,7 @@ public:
    * Use the possibly smaller bounds of the points within the region
    * if useDataBounds is non-zero.
    */
-  int ContainsPoint(double x, double y, double z, int useDataBounds);
+  vtkTypeBool ContainsPoint(double x, double y, double z, int useDataBounds);
 
   /**
    * Calculate the distance squared from any point to the boundary of this
@@ -280,7 +280,7 @@ public:
 protected:
 
   vtkKdNode();
-  ~vtkKdNode() VTK_OVERRIDE;
+  ~vtkKdNode() override;
 
 private:
 
@@ -306,8 +306,8 @@ private:
   int MinID;
   int MaxID;
 
-  vtkKdNode(const vtkKdNode&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkKdNode&) VTK_DELETE_FUNCTION;
+  vtkKdNode(const vtkKdNode&) = delete;
+  void operator=(const vtkKdNode&) = delete;
 };
 
 #endif

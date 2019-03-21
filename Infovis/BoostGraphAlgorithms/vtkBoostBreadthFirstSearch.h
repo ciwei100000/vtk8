@@ -47,7 +47,7 @@ class VTKINFOVISBOOSTGRAPHALGORITHMS_EXPORT vtkBoostBreadthFirstSearch : public 
 public:
   static vtkBoostBreadthFirstSearch *New();
   vtkTypeMacro(vtkBoostBreadthFirstSearch, vtkGraphAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -131,13 +131,13 @@ protected:
   virtual int RequestData(
     vtkInformation *,
     vtkInformationVector **,
-    vtkInformationVector *);
+    vtkInformationVector *) override;
 
   virtual int FillInputPortInformation(
-    int port, vtkInformation* info);
+    int port, vtkInformation* info) override;
 
   virtual int FillOutputPortInformation(
-    int port, vtkInformation* info);
+    int port, vtkInformation* info) override;
 
 private:
 
@@ -163,8 +163,8 @@ private:
   vtkIdType GetVertexIndex(
     vtkAbstractArray *abstract,vtkVariant value);
 
-  vtkBoostBreadthFirstSearch(const vtkBoostBreadthFirstSearch&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoostBreadthFirstSearch&) VTK_DELETE_FUNCTION;
+  vtkBoostBreadthFirstSearch(const vtkBoostBreadthFirstSearch&) = delete;
+  void operator=(const vtkBoostBreadthFirstSearch&) = delete;
 };
 
 #endif

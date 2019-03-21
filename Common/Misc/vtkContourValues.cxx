@@ -80,7 +80,7 @@ void vtkContourValues::SetNumberOfContours(const int number)
   vtkIdType    currentNumber = this->Contours->GetMaxId()+1;
   vtkIdType    n = ( number < 0 ? 0 : number);
   vtkIdType    i;
-  double  *oldValues = NULL;
+  double  *oldValues = nullptr;
 
   if ( n != currentNumber )
   {
@@ -173,4 +173,9 @@ void vtkContourValues::PrintSelf(ostream& os, vtkIndent indent)
   {
     os << indent << "  Value " << i << ": " << this->Contours->GetValue(i) << "\n";
   }
+}
+
+void vtkContourValues::DeepCopy(vtkContourValues* other)
+{
+  this->Contours->DeepCopy(other->Contours);
 }

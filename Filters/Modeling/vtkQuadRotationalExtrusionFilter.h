@@ -73,7 +73,7 @@ class VTKFILTERSMODELING_EXPORT vtkQuadRotationalExtrusionFilter : public vtkMul
 {
  public:
   vtkTypeMacro(vtkQuadRotationalExtrusionFilter,vtkMultiBlockDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Create object with capping on, angle of 360 degrees, resolution = 12, and
@@ -113,9 +113,9 @@ class VTKFILTERSMODELING_EXPORT vtkQuadRotationalExtrusionFilter : public vtkMul
   /**
    * Turn on/off the capping of the skirt.
    */
-  vtkSetMacro(Capping,int);
-  vtkGetMacro(Capping,int);
-  vtkBooleanMacro(Capping,int);
+  vtkSetMacro(Capping,vtkTypeBool);
+  vtkGetMacro(Capping,vtkTypeBool);
+  vtkBooleanMacro(Capping,vtkTypeBool);
   //@}
 
   //@{
@@ -152,12 +152,12 @@ class VTKFILTERSMODELING_EXPORT vtkQuadRotationalExtrusionFilter : public vtkMul
 
  protected:
   vtkQuadRotationalExtrusionFilter();
-  ~vtkQuadRotationalExtrusionFilter() VTK_OVERRIDE {}
+  ~vtkQuadRotationalExtrusionFilter() override {}
 
-  int FillInputPortInformation( int , vtkInformation* ) VTK_OVERRIDE;
+  int FillInputPortInformation( int , vtkInformation* ) override;
   int RequestData( vtkInformation*,
                    vtkInformationVector**,
-                   vtkInformationVector* ) VTK_OVERRIDE;
+                   vtkInformationVector* ) override;
 
   int RotateAroundAxis( double,
                         vtkIdType,
@@ -167,7 +167,7 @@ class VTKFILTERSMODELING_EXPORT vtkQuadRotationalExtrusionFilter : public vtkMul
                         vtkPointData* );
   int Axis;
   int Resolution;
-  int Capping;
+  vtkTypeBool Capping;
   double DefaultAngle;
   double Translation;
   double DeltaRadius;
@@ -175,8 +175,8 @@ class VTKFILTERSMODELING_EXPORT vtkQuadRotationalExtrusionFilter : public vtkMul
   std::map<vtkIdType,double> PerBlockAngles;
 
  private:
-  vtkQuadRotationalExtrusionFilter(const vtkQuadRotationalExtrusionFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkQuadRotationalExtrusionFilter&) VTK_DELETE_FUNCTION;
+  vtkQuadRotationalExtrusionFilter(const vtkQuadRotationalExtrusionFilter&) = delete;
+  void operator=(const vtkQuadRotationalExtrusionFilter&) = delete;
 };
 
 #endif

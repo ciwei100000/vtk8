@@ -46,7 +46,7 @@
  * @warning
  * The password supplied as an argument to the Open call will override
  * whatever password is set (if any) in the DSN definition.  To use
- * the password from the DSN definition, pass in NULL for
+ * the password from the DSN definition, pass in nullptr for
  * the password argument.
  *
  * @warning
@@ -87,7 +87,7 @@ class VTKIOODBC_EXPORT vtkODBCDatabase : public vtkSQLDatabase
 
 public:
   vtkTypeMacro(vtkODBCDatabase, vtkSQLDatabase);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   static vtkODBCDatabase *New();
 
   /**
@@ -95,42 +95,42 @@ public:
    * filename before calling this function.  Returns true if the
    * database was opened successfully; false otherwise.
    */
-  bool Open(const char* password);
+  bool Open(const char* password) override;
 
   /**
    * Close the connection to the database.
    */
-  void Close();
+  void Close() override;
 
   /**
    * Return whether the database has an open connection
    */
-  bool IsOpen();
+  bool IsOpen() override;
 
   /**
    * Return an empty query on this database.
    */
-  vtkSQLQuery* GetQueryInstance();
+  vtkSQLQuery* GetQueryInstance() override;
 
   /**
    * Get the last error text from the database
    */
-  const char* GetLastErrorText();
+  const char* GetLastErrorText() override;
 
   /**
    * Get the list of tables from the database
    */
-  vtkStringArray* GetTables();
+  vtkStringArray* GetTables() override;
 
   /**
    * Get the list of fields for a particular table
    */
-  vtkStringArray* GetRecord(const char *table);
+  vtkStringArray* GetRecord(const char *table) override;
 
   /**
    * Return whether a feature is supported by the database.
    */
-  bool IsSupported(int feature);
+  bool IsSupported(int feature) override;
 
   //@{
   /**
@@ -149,39 +149,39 @@ public:
   vtkGetStringMacro(DatabaseName);
   vtkSetStringMacro(Password);
 
-  bool HasError();
+  bool HasError() override;
 
   //@{
   /**
    * String representing database type (e.g. "ODBC").
    */
-  const char* GetDatabaseType() VTK_OVERRIDE
+  const char* GetDatabaseType() override
   {
     return this->DatabaseType;
   }
   //@}
 
-  vtkStdString GetURL();
+  vtkStdString GetURL() override;
 
   /**
    * Return the SQL string with the syntax to create a column inside a
    * "CREATE TABLE" SQL statement.
    * NB2: if a column has type SERIAL in the schema, this will be turned
-   * into INT NOT NULL. Therefore, one should not pass
-   * NOT NULL as an attribute of a column whose type is SERIAL.
+   * into INT NOT nullptr. Therefore, one should not pass
+   * NOT nullptr as an attribute of a column whose type is SERIAL.
    */
-  virtual vtkStdString GetColumnSpecification( vtkSQLDatabaseSchema* schema,
-                                               int tblHandle,
-                                               int colHandle );
+  vtkStdString GetColumnSpecification( vtkSQLDatabaseSchema* schema,
+                                       int tblHandle,
+                                       int colHandle ) override;
 
   /**
    * Return the SQL string with the syntax to create an index inside a
    * "CREATE TABLE" SQL statement.
    */
-  virtual vtkStdString GetIndexSpecification( vtkSQLDatabaseSchema* schema,
-                                              int tblHandle,
-                                              int idxHandle,
-                                              bool& skipped );
+  vtkStdString GetIndexSpecification( vtkSQLDatabaseSchema* schema,
+                                      int tblHandle,
+                                      int idxHandle,
+                                      bool& skipped ) override;
 
   /**
    * Create a new database, optionally dropping any existing database of the same name.
@@ -200,7 +200,7 @@ public:
    * odbc://[user@]datsourcename[:port]/[dbname].  Anything
    * more complicated than that needs to be set up manually.
    */
-  bool ParseURL(const char *url);
+  bool ParseURL(const char *url) override;
 
 protected:
   vtkODBCDatabase();
@@ -229,8 +229,8 @@ private:
 
   char *DatabaseType;
 
-  vtkODBCDatabase(const vtkODBCDatabase &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkODBCDatabase &) VTK_DELETE_FUNCTION;
+  vtkODBCDatabase(const vtkODBCDatabase &) = delete;
+  void operator=(const vtkODBCDatabase &) = delete;
 };
 
 #endif // vtkODBCDatabase_h

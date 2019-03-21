@@ -74,7 +74,7 @@ class VTKFILTERSGENERAL_EXPORT vtkClipClosedSurface : public vtkPolyDataAlgorith
 public:
   static vtkClipClosedSurface *New();
   vtkTypeMacro(vtkClipClosedSurface,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -99,9 +99,9 @@ public:
    * Pass the point data to the output.  Point data will be interpolated
    * when new points are generated.  This is off by default.
    */
-  vtkSetMacro(PassPointData, int);
-  vtkBooleanMacro(PassPointData, int);
-  vtkGetMacro(PassPointData, int);
+  vtkSetMacro(PassPointData, vtkTypeBool);
+  vtkBooleanMacro(PassPointData, vtkTypeBool);
+  vtkGetMacro(PassPointData, vtkTypeBool);
   //@}
 
   //@{
@@ -109,9 +109,9 @@ public:
    * Set whether to generate an outline wherever an input face was
    * cut by a plane.  This is off by default.
    */
-  vtkSetMacro(GenerateOutline, int);
-  vtkBooleanMacro(GenerateOutline, int);
-  vtkGetMacro(GenerateOutline, int);
+  vtkSetMacro(GenerateOutline, vtkTypeBool);
+  vtkBooleanMacro(GenerateOutline, vtkTypeBool);
+  vtkGetMacro(GenerateOutline, vtkTypeBool);
   //@}
 
   //@{
@@ -119,9 +119,9 @@ public:
    * Set whether to generate polygonal faces for the output.  This is
    * on by default.  If it is off, then the output will have no polys.
    */
-  vtkSetMacro(GenerateFaces, int);
-  vtkBooleanMacro(GenerateFaces, int);
-  vtkGetMacro(GenerateFaces, int);
+  vtkSetMacro(GenerateFaces, vtkTypeBool);
+  vtkBooleanMacro(GenerateFaces, vtkTypeBool);
+  vtkGetMacro(GenerateFaces, vtkTypeBool);
   //@}
 
   //@{
@@ -149,7 +149,7 @@ public:
   //@{
   /**
    * Set the color for all cells were part of the original geometry.
-   * If the the input data already has color cell scalars, then those
+   * If the input data already has color cell scalars, then those
    * values will be used and parameter will be ignored.  The default color
    * is red.  Requires SetScalarModeToColors.
    */
@@ -194,40 +194,40 @@ public:
    * a surface that is not watertight.  This option has no impact
    * on performance.
    */
-  vtkSetMacro(TriangulationErrorDisplay, int);
-  vtkBooleanMacro(TriangulationErrorDisplay, int);
-  vtkGetMacro(TriangulationErrorDisplay, int);
+  vtkSetMacro(TriangulationErrorDisplay, vtkTypeBool);
+  vtkBooleanMacro(TriangulationErrorDisplay, vtkTypeBool);
+  vtkGetMacro(TriangulationErrorDisplay, vtkTypeBool);
   //@}
 
 protected:
   vtkClipClosedSurface();
-  ~vtkClipClosedSurface() VTK_OVERRIDE;
+  ~vtkClipClosedSurface() override;
 
   vtkPlaneCollection *ClippingPlanes;
 
   double Tolerance;
 
-  int PassPointData;
-  int GenerateOutline;
-  int GenerateFaces;
+  vtkTypeBool PassPointData;
+  vtkTypeBool GenerateOutline;
+  vtkTypeBool GenerateFaces;
   int ActivePlaneId;
   int ScalarMode;
   double BaseColor[3];
   double ClipColor[3];
   double ActivePlaneColor[3];
 
-  int TriangulationErrorDisplay;
+  vtkTypeBool TriangulationErrorDisplay;
 
   vtkIdList *IdList;
 
   int ComputePipelineMTime(
     vtkInformation* request, vtkInformationVector** inputVector,
     vtkInformationVector* outputVector, int requestFromOutputPort,
-    vtkMTimeType* mtime) VTK_OVERRIDE;
+    vtkMTimeType* mtime) override;
 
   int RequestData(
     vtkInformation* request, vtkInformationVector** inputVector,
-    vtkInformationVector* outputVector) VTK_OVERRIDE;
+    vtkInformationVector* outputVector) override;
 
   /**
    * Method for clipping lines and copying the scalar data.
@@ -275,7 +275,7 @@ protected:
    * fills those lines.  The input lines must be single-segment lines,
    * not polylines.  The input lines do not have to be in order.
    * Only lines from firstLine to will be used.  Specify the normal
-   * of the clip plane, which will be opposite the the normals
+   * of the clip plane, which will be opposite the normals
    * of the polys that will be produced.  If outCD has scalars, then color
    * scalars will be added for each poly that is created.
    */
@@ -330,8 +330,8 @@ protected:
     unsigned char colors[3][3]);
 
 private:
-  vtkClipClosedSurface(const vtkClipClosedSurface&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkClipClosedSurface&) VTK_DELETE_FUNCTION;
+  vtkClipClosedSurface(const vtkClipClosedSurface&) = delete;
+  void operator=(const vtkClipClosedSurface&) = delete;
 };
 
 #endif

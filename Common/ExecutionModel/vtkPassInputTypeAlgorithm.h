@@ -22,7 +22,7 @@
  * class you should be aware of. This class defaults such that your filter
  * will have one input port and one output port. If that is not the case
  * simply change it with SetNumberOfInputPorts etc. See this classes
- * contstructor for the default. This class also provides a FillInputPortInfo
+ * constructor for the default. This class also provides a FillInputPortInfo
  * method that by default says that all inputs will be DataObject. If that isn't
  * the case then please override this method in your subclass. This class
  * breaks out the downstream requests into separate functions such as
@@ -40,19 +40,20 @@
 class vtkDataObject;
 class vtkGraph;
 class vtkImageData;
+class vtkMolecule;
 class vtkPolyData;
-class vtkStructuredPoints;
-class vtkStructuredGrid;
-class vtkUnstructuredGrid;
 class vtkRectilinearGrid;
+class vtkStructuredGrid;
+class vtkStructuredPoints;
 class vtkTable;
+class vtkUnstructuredGrid;
 
 class VTKCOMMONEXECUTIONMODEL_EXPORT vtkPassInputTypeAlgorithm : public vtkAlgorithm
 {
 public:
   static vtkPassInputTypeAlgorithm *New();
   vtkTypeMacro(vtkPassInputTypeAlgorithm,vtkAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -62,45 +63,20 @@ public:
   vtkDataObject* GetOutput(int);
   //@}
 
+  //@{
   /**
-   * Get the output as vtkPolyData.
+   * Get the output as a concrete type.
    */
   vtkPolyData *GetPolyDataOutput();
-
-  /**
-   * Get the output as vtkStructuredPoints.
-   */
   vtkStructuredPoints *GetStructuredPointsOutput();
-
-  /**
-   * Get the output as vtkStructuredPoints.
-   */
   vtkImageData *GetImageDataOutput();
-
-  /**
-   * Get the output as vtkStructuredGrid.
-   */
   vtkStructuredGrid *GetStructuredGridOutput();
-
-  /**
-   * Get the output as vtkUnstructuredGrid.
-   */
   vtkUnstructuredGrid *GetUnstructuredGridOutput();
-
-  /**
-   * Get the output as vtkRectilinearGrid.
-   */
   vtkRectilinearGrid *GetRectilinearGridOutput();
-
-  /**
-   * Get the output as vtkTable.
-   */
-  vtkTable *GetTableOutput();
-
-  /**
-   * Get the output as vtkGraph.
-   */
   vtkGraph *GetGraphOutput();
+  vtkMolecule* GetMoleculeOutput();
+  vtkTable *GetTableOutput();
+  //@}
 
   /**
    * Get the input data object. This method is not recommended for use, but
@@ -134,11 +110,11 @@ public:
    */
   int ProcessRequest(vtkInformation* request,
                              vtkInformationVector** inputVector,
-                             vtkInformationVector* outputVector) VTK_OVERRIDE;
+                             vtkInformationVector* outputVector) override;
 
 protected:
   vtkPassInputTypeAlgorithm();
-  ~vtkPassInputTypeAlgorithm() VTK_OVERRIDE {}
+  ~vtkPassInputTypeAlgorithm() override {}
 
   /**
    * This is called within ProcessRequest when a request asks for
@@ -202,14 +178,14 @@ protected:
 
 
   // see algorithm for more info
-  int FillOutputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillOutputPortInformation(int port, vtkInformation* info) override;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
 
   vtkDataObject *GetInput(int port);
 
 private:
-  vtkPassInputTypeAlgorithm(const vtkPassInputTypeAlgorithm&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPassInputTypeAlgorithm&) VTK_DELETE_FUNCTION;
+  vtkPassInputTypeAlgorithm(const vtkPassInputTypeAlgorithm&) = delete;
+  void operator=(const vtkPassInputTypeAlgorithm&) = delete;
 };
 
 #endif

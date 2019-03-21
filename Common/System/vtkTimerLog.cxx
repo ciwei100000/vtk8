@@ -28,9 +28,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <iomanip>
 #include <iterator>
-#include <stdarg.h>
+#include <cstdarg>
 #include <string>
 #include <vector>
 
@@ -48,7 +49,7 @@
 
 vtkStandardNewMacro(vtkTimerLog);
 
-// initialze the class variables
+// initialize the class variables
 int vtkTimerLog::Logging = 1;
 int vtkTimerLog::Indent = 0;
 int vtkTimerLog::MaxEntries = 100;
@@ -166,7 +167,7 @@ void vtkTimerLog::MarkEventInternal(
     ::ftime( &(vtkTimerLog::FirstWallTime) );
 #endif
 #else
-    gettimeofday( &(vtkTimerLog::FirstWallTime), NULL );
+    gettimeofday( &(vtkTimerLog::FirstWallTime), nullptr );
     times(&FirstCpuTicks);
 #endif
 
@@ -217,7 +218,7 @@ void vtkTimerLog::MarkEventInternal(
     ticks_diff = 0;
 #else
     static double scale = 1.0/1000000.0;
-    gettimeofday( &(vtkTimerLog::CurrentWallTime), NULL );
+    gettimeofday( &(vtkTimerLog::CurrentWallTime), nullptr );
     time_diff  =  vtkTimerLog::CurrentWallTime.tv_sec
       - vtkTimerLog::FirstWallTime.tv_sec;
     time_diff +=
@@ -308,10 +309,10 @@ int vtkTimerLog::GetNumberOfEvents()
   {
     return vtkTimerLog::MaxEntries;
   }
-   else
-   {
+  else
+  {
     return vtkTimerLog::NextEntry;
-   }
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -376,7 +377,7 @@ vtkTimerLogEntry::LogEntryType vtkTimerLog::GetEventType(int idx)
 
 //----------------------------------------------------------------------------
 // Write the timing table out to a file.  Calculate some helpful
-// statistics (deltas and  percentages) in the process.
+// statistics (deltas and percentages) in the process.
 void vtkTimerLog::DumpLogWithIndents(ostream *os, double threshold)
 {
 #ifndef _WIN32_WCE
@@ -503,7 +504,7 @@ void vtkTimerLog::DumpLogWithIndentsAndPercentages(std::ostream *os)
       continue;
     }
     else if (logEntryType == vtkTimerLogEntry::STANDALONE)
-    { // Skip this event if it is just to mark that an event occured
+    { // Skip this event if it is just to mark that an event occurred
       continue;
     }
 
@@ -532,10 +533,9 @@ void vtkTimerLog::DumpLogWithIndentsAndPercentages(std::ostream *os)
                                            : parentInfo.back();
 
     // Percentage of parent exec time, rounded to a single decimal:
-    float percentage =
-        vtkMath::Round(elapsedTime / parent.second * 1000.) / 10.f;
+    double percentage = std::round(elapsedTime / parent.second * 1000.) / 10.;
 
-    *os << std::setw(8) << std::setprecision(6) << std::fixed
+    *os << std::setw(12) << std::setprecision(6) << std::fixed
         << elapsedTime
         << std::setw(0) << "s"
         << std::setw(curIndent * 2) << " "
@@ -698,7 +698,7 @@ double vtkTimerLog::GetUniversalTime()
 #else
   timeval CurrentTime;
   static double scale = 1.0/1000000.0;
-  gettimeofday( &CurrentTime, NULL );
+  gettimeofday( &CurrentTime, nullptr );
   currentTimeInSeconds = CurrentTime.tv_sec + scale * CurrentTime.tv_usec;
 #endif
 

@@ -29,8 +29,8 @@ vtkStandardNewMacro(vtkDataSetMapper);
 //----------------------------------------------------------------------------
 vtkDataSetMapper::vtkDataSetMapper()
 {
-  this->GeometryExtractor = NULL;
-  this->PolyDataMapper = NULL;
+  this->GeometryExtractor = nullptr;
+  this->PolyDataMapper = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ void vtkDataSetMapper::Render(vtkRenderer *ren, vtkActor *act)
 
   // Need a lookup table
   //
-  if ( this->LookupTable == NULL )
+  if ( this->LookupTable == nullptr )
   {
     this->CreateDefaultLookupTable();
   }
@@ -91,7 +91,7 @@ void vtkDataSetMapper::Render(vtkRenderer *ren, vtkActor *act)
 
   // Now can create appropriate mapper
   //
-  if ( this->PolyDataMapper == NULL )
+  if ( this->PolyDataMapper == nullptr )
   {
     vtkDataSetSurfaceFilter *gf = vtkDataSetSurfaceFilter::New();
     vtkPolyDataMapper *pm = vtkPolyDataMapper::New();
@@ -129,11 +129,18 @@ void vtkDataSetMapper::Render(vtkRenderer *ren, vtkActor *act)
   this->PolyDataMapper->SetUseLookupTableScalarRange(
     this->GetUseLookupTableScalarRange());
   this->PolyDataMapper->SetScalarRange(this->GetScalarRange());
-  this->PolyDataMapper->SetImmediateModeRendering(
-    this->GetImmediateModeRendering());
+
   this->PolyDataMapper->SetColorMode(this->GetColorMode());
   this->PolyDataMapper->SetInterpolateScalarsBeforeMapping(
                                this->GetInterpolateScalarsBeforeMapping());
+
+  double f, u;
+  this->GetRelativeCoincidentTopologyPolygonOffsetParameters(f,u);
+  this->PolyDataMapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(f,u);
+  this->GetRelativeCoincidentTopologyLineOffsetParameters(f,u);
+  this->PolyDataMapper->SetRelativeCoincidentTopologyLineOffsetParameters(f,u);
+  this->GetRelativeCoincidentTopologyPointOffsetParameter(u);
+  this->PolyDataMapper->SetRelativeCoincidentTopologyPointOffsetParameter(u);
 
   this->PolyDataMapper->SetScalarMode(this->GetScalarMode());
   if ( this->ScalarMode == VTK_SCALAR_MODE_USE_POINT_FIELD_DATA ||
@@ -183,7 +190,7 @@ vtkMTimeType vtkDataSetMapper::GetMTime()
   vtkMTimeType mTime=this->vtkMapper::GetMTime();
   vtkMTimeType time;
 
-  if ( this->LookupTable != NULL )
+  if ( this->LookupTable != nullptr )
   {
     time = this->LookupTable->GetMTime();
     mTime = ( time > mTime ? time : mTime );

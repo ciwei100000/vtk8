@@ -30,9 +30,7 @@ vtkExtractSelectionBase::vtkExtractSelectionBase()
 }
 
 //----------------------------------------------------------------------------
-vtkExtractSelectionBase::~vtkExtractSelectionBase()
-{
-}
+vtkExtractSelectionBase::~vtkExtractSelectionBase() = default;
 
 //----------------------------------------------------------------------------
 int vtkExtractSelectionBase::FillInputPortInformation(
@@ -81,7 +79,7 @@ int vtkExtractSelectionBase::RequestDataObject(
       (passThrough && !output->IsA(input->GetClassName())) ||
       (!passThrough && !output->IsA("vtkUnstructuredGrid")))
     {
-      vtkDataSet* newOutput = NULL;
+      vtkDataSet* newOutput = nullptr;
       if (!passThrough)
       {
         // The mesh will be modified.

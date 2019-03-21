@@ -80,7 +80,7 @@ class VTKFILTERSVERDICT_EXPORT vtkCellQuality : public vtkDataSetAlgorithm
   };
 
 public:
-  void PrintSelf (ostream&, vtkIndent) VTK_OVERRIDE;
+  void PrintSelf (ostream&, vtkIndent) override;
   vtkTypeMacro(vtkCellQuality, vtkDataSetAlgorithm);
   static vtkCellQuality* New ();
 
@@ -219,7 +219,7 @@ public:
   /**
    * Set/Get the return value for unsupported geometry. Unsupported geometry
    * are geometries that are not supported by this filter currently, future
-   * implementation might include support for them. The defalut value for
+   * implementation might include support for them. The default value for
    * UnsupportedGeometry is -1.
    */
   vtkSetMacro(UnsupportedGeometry, double);
@@ -243,7 +243,7 @@ public:
   double PolygonArea (vtkCell*);
 
 protected:
- ~vtkCellQuality () VTK_OVERRIDE;
+ ~vtkCellQuality () override;
   vtkCellQuality ();
 
   /**
@@ -357,7 +357,7 @@ protected:
   double ComputePixelQuality (vtkCell*);
 
   int RequestData
-    (vtkInformation*, vtkInformationVector**, vtkInformationVector*) VTK_OVERRIDE;
+    (vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
 
   //@{
   /**
@@ -384,8 +384,8 @@ private:
   vtkIdList* PointIds;
   vtkPoints* Points;
 
-  vtkCellQuality(const vtkCellQuality&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCellQuality&) VTK_DELETE_FUNCTION;
+  vtkCellQuality(const vtkCellQuality&) = delete;
+  void operator=(const vtkCellQuality&) = delete;
 };
 
 #endif // vtkCellQuality_h

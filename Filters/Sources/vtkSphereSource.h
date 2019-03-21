@@ -41,7 +41,7 @@ class VTKFILTERSSOURCES_EXPORT vtkSphereSource : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkSphereSource,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct sphere with radius=0.5 and default resolution 8 in both Phi
@@ -125,9 +125,9 @@ public:
    * except at the poles. This can be useful for generating a wireframe
    * sphere with natural latitude and longitude lines.
    */
-  vtkSetMacro(LatLongTessellation,int);
-  vtkGetMacro(LatLongTessellation,int);
-  vtkBooleanMacro(LatLongTessellation,int);
+  vtkSetMacro(LatLongTessellation,vtkTypeBool);
+  vtkGetMacro(LatLongTessellation,vtkTypeBool);
+  vtkBooleanMacro(LatLongTessellation,vtkTypeBool);
   //@}
 
   //@{
@@ -142,10 +142,10 @@ public:
 
 protected:
   vtkSphereSource(int res=8);
-  ~vtkSphereSource() VTK_OVERRIDE {}
+  ~vtkSphereSource() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double Radius;
   double Center[3];
@@ -155,12 +155,12 @@ protected:
   double EndTheta;
   double StartPhi;
   double EndPhi;
-  int LatLongTessellation;
+  vtkTypeBool LatLongTessellation;
   int OutputPointsPrecision;
 
 private:
-  vtkSphereSource(const vtkSphereSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSphereSource&) VTK_DELETE_FUNCTION;
+  vtkSphereSource(const vtkSphereSource&) = delete;
+  void operator=(const vtkSphereSource&) = delete;
 };
 
 #endif

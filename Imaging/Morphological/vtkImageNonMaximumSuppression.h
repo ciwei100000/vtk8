@@ -39,7 +39,7 @@ class VTKIMAGINGMORPHOLOGICAL_EXPORT vtkImageNonMaximumSuppression : public vtkT
 public:
   static vtkImageNonMaximumSuppression *New();
   vtkTypeMacro(vtkImageNonMaximumSuppression,vtkThreadedImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -54,9 +54,9 @@ public:
    * If "HandleBoundariesOn" then boundary pixels are duplicated
    * So central differences can get values.
    */
-  vtkSetMacro(HandleBoundaries, int);
-  vtkGetMacro(HandleBoundaries, int);
-  vtkBooleanMacro(HandleBoundaries, int);
+  vtkSetMacro(HandleBoundaries, vtkTypeBool);
+  vtkGetMacro(HandleBoundaries, vtkTypeBool);
+  vtkBooleanMacro(HandleBoundaries, vtkTypeBool);
   //@}
 
   //@{
@@ -69,29 +69,29 @@ public:
 
 protected:
   vtkImageNonMaximumSuppression();
-  ~vtkImageNonMaximumSuppression()VTK_OVERRIDE {}
+  ~vtkImageNonMaximumSuppression() override {}
 
-  int HandleBoundaries;
+  vtkTypeBool HandleBoundaries;
   int Dimensionality;
 
   int RequestInformation (vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
 
   int RequestUpdateExtent(vtkInformation*,
                                   vtkInformationVector**,
-                                  vtkInformationVector*) VTK_OVERRIDE;
+                                  vtkInformationVector*) override;
 
   void ThreadedRequestData(vtkInformation *request,
                                    vtkInformationVector **inputVector,
                                    vtkInformationVector *outputVector,
                                    vtkImageData ***inData,
                                    vtkImageData **outData,
-                                   int extent[6], int threadId) VTK_OVERRIDE;
+                                   int extent[6], int threadId) override;
 
 private:
-  vtkImageNonMaximumSuppression(const vtkImageNonMaximumSuppression&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageNonMaximumSuppression&) VTK_DELETE_FUNCTION;
+  vtkImageNonMaximumSuppression(const vtkImageNonMaximumSuppression&) = delete;
+  void operator=(const vtkImageNonMaximumSuppression&) = delete;
 };
 
 #endif

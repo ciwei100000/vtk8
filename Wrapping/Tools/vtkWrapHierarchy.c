@@ -376,7 +376,7 @@ static char **append_class_contents(
 
       line = append_scope_to_line(line, &m, &maxlen, scope);
       line = append_class_to_line(line, &m, &maxlen, class_info);
-      tmpflags = "WRAP_EXCLUDE";
+      tmpflags = "WRAP_EXCLUDE_PYTHON";
     }
     else if (data->Items[i].Type == VTK_ENUM_INFO)
     {
@@ -454,14 +454,10 @@ static char **append_namespace_contents(
   if (m && n)
   {
     new_scope = (char *)malloc(m + n + 3);
-    if (n)
-    {
-      strncpy(new_scope, scope, n);
-      new_scope[n++] = ':';
-      new_scope[n++] = ':';
-    }
-    strncpy(&new_scope[n], data->Name, m);
-    new_scope[n+m] = '\0';
+    strncpy(new_scope, scope, n);
+    new_scope[n++] = ':';
+    new_scope[n++] = ':';
+    strncpy(&new_scope[n], data->Name, m + 1);
     scope = new_scope;
   }
   else if (m)
@@ -488,7 +484,7 @@ static char **append_namespace_contents(
         data->Classes[data->Items[i].Index];
 
       /* all but the main class in each file is excluded from wrapping */
-      tmpflags = "WRAP_EXCLUDE";
+      tmpflags = "WRAP_EXCLUDE_PYTHON";
       if (class_info == main_class)
       {
         tmpflags = flags;
@@ -541,7 +537,7 @@ static char **append_namespace_contents(
     {
       lines = append_namespace_contents(lines, np,
         data->Namespaces[data->Items[i].Index], 0,
-        scope, header_file, module_name, "WRAP_EXCLUDE");
+        scope, header_file, module_name, "WRAP_EXCLUDE_PYTHON");
     }
   }
 
@@ -746,6 +742,7 @@ static int vtkWrapHierarchy_CompareHierarchyFile(FILE *fp, char *lines[])
 
     if (lines[i] == NULL)
     {
+      free(line);
       free(matched);
       return 0;
     }
@@ -757,6 +754,7 @@ static int vtkWrapHierarchy_CompareHierarchyFile(FILE *fp, char *lines[])
   {
     if (matched[i] == 0)
     {
+      free(line);
       free(matched);
       return 0;
     }
@@ -933,8 +931,11 @@ int main(int argc, char *argv[])
   char *flags;
   char *module_name;
 
+  /* pre-define a macro to identify the language */
+  vtkParse_DefineMacro("__VTK_WRAP_HIERARCHY__", 0);
+
   /* parse command-line options */
-  vtkParse_MainMulti(argc, argv);
+  StringCache *string_cache = vtkParse_MainMulti(argc, argv);
   options = vtkParse_GetCommandLineOptions();
 
   /* make sure than an output file was given on the command line */
@@ -984,6 +985,13 @@ int main(int argc, char *argv[])
     free(lines[j]);
   }
 
+  for(j = 0; files[j] != NULL; j++)
+  {
+    free(files[j]);
+  }
+
+  vtkParse_FreeStringCache(string_cache);
+  free(string_cache);
   free(files);
   free(lines);
   return 0;

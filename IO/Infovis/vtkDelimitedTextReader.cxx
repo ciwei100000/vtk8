@@ -40,12 +40,11 @@
 #include <algorithm>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 #include <set>
 #include <vector>
 
 #include <cctype>
-
-// #include <utf8.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 // DelimitedTextIterator
@@ -98,7 +97,7 @@ public:
   {
   }
 
-  ~DelimitedTextIterator() VTK_OVERRIDE
+  ~DelimitedTextIterator() override
   {
     // Ensure that all table columns have the same length ...
     for(vtkIdType i = 0; i != this->OutputTable->GetNumberOfColumns(); ++i)
@@ -112,12 +111,12 @@ public:
     }
   }
 
-  DelimitedTextIterator& operator++(int) VTK_OVERRIDE
+  DelimitedTextIterator& operator++(int) override
   {
     return *this;
   }
 
-  DelimitedTextIterator& operator*() VTK_OVERRIDE
+  DelimitedTextIterator& operator*() override
   {
     return *this;
   }
@@ -137,7 +136,7 @@ public:
     }
   }
 
-  DelimitedTextIterator& operator=(const vtkUnicodeString::value_type value) VTK_OVERRIDE
+  DelimitedTextIterator& operator=(const vtkUnicodeString::value_type value) override
   {
     // If we've already read our maximum number of records, we're done ...
     if(this->MaxRecords && this->CurrentRecordIndex == this->MaxRecordIndex)
@@ -362,8 +361,8 @@ private:
 vtkStandardNewMacro(vtkDelimitedTextReader);
 
 vtkDelimitedTextReader::vtkDelimitedTextReader() :
-  FileName(0),
-  UnicodeCharacterSet(0),
+  FileName(nullptr),
+  UnicodeCharacterSet(nullptr),
   MaxRecords(0),
   UnicodeRecordDelimiters(vtkUnicodeString::from_utf8("\r\n")),
   UnicodeFieldDelimiters(vtkUnicodeString::from_utf8(",")),
@@ -377,15 +376,16 @@ vtkDelimitedTextReader::vtkDelimitedTextReader() :
   this->SetNumberOfOutputPorts(1);
 
   this->ReadFromInputString = 0;
-  this->InputString = NULL;
+  this->InputString = nullptr;
   this->InputStringLength = 0;
   this->MergeConsecutiveDelimiters = false;
-  this->PedigreeIdArrayName = NULL;
+  this->PedigreeIdArrayName = nullptr;
   this->SetPedigreeIdArrayName("id");
   this->GeneratePedigreeIds = true;
   this->OutputPedigreeIds = false;
+  this->AddTabFieldDelimiter = false;
   this->UnicodeOutputArrays = false;
-  this->FieldDelimiterCharacters = 0;
+  this->FieldDelimiterCharacters = nullptr;
   this->SetFieldDelimiterCharacters(",");
   this->StringDelimiter='"';
   this->UseStringDelimiter = true;
@@ -398,11 +398,11 @@ vtkDelimitedTextReader::vtkDelimitedTextReader() :
 
 vtkDelimitedTextReader::~vtkDelimitedTextReader()
 {
-  this->SetPedigreeIdArrayName(0);
-  this->SetUnicodeCharacterSet(0);
-  this->SetFileName(0);
-  this->SetInputString(NULL);
-  this->SetFieldDelimiterCharacters(0);
+  this->SetPedigreeIdArrayName(nullptr);
+  this->SetUnicodeCharacterSet(nullptr);
+  this->SetFileName(nullptr);
+  this->SetInputString(nullptr);
+  this->SetFieldDelimiterCharacters(nullptr);
 }
 
 void vtkDelimitedTextReader::PrintSelf(ostream& os, vtkIndent indent)
@@ -456,13 +456,15 @@ void vtkDelimitedTextReader::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "PedigreeIdArrayName: "
     << this->PedigreeIdArrayName << endl;
   os << indent << "OutputPedigreeIds: "
-    << (this->OutputPedigreeIds? "true" : "false") << endl;
+    << (this->OutputPedigreeIds ? "true" : "false") << endl;
+  os << indent << "AddTabFieldDelimiter: "
+    << (this->AddTabFieldDelimiter ? "true" : "false") << endl;
 }
 
 void vtkDelimitedTextReader::SetInputString(const char *in)
 {
   int len = 0;
-  if (in != NULL)
+  if (in != nullptr)
   {
     len = static_cast<int>(strlen(in));
   }
@@ -480,7 +482,7 @@ void vtkDelimitedTextReader::SetInputString(const char *in, int len)
 
   if (in && len>0)
   {
-    // Add a NULL terminator so that GetInputString
+    // Add a nullptr terminator so that GetInputString
     // callers (from wrapped languages) get a valid
     // C string in *ALL* cases...
     //
@@ -489,11 +491,11 @@ void vtkDelimitedTextReader::SetInputString(const char *in, int len)
     this->InputString[len] = 0;
     this->InputStringLength = len;
   }
-   else
-   {
-    this->InputString = NULL;
+  else
+  {
+    this->InputString = nullptr;
     this->InputStringLength = 0;
-   }
+  }
 
   this->Modified();
 }
@@ -589,9 +591,11 @@ int vtkDelimitedTextReader::RequestData(
     }
 
     if (!this->PedigreeIdArrayName)
+    {
       throw std::runtime_error("You must specify a pedigree id array name");
+    }
 
-    istream* input_stream_pt = NULL;
+    istream* input_stream_pt = nullptr;
     ifstream file_stream;
     std::istringstream string_stream;
 
@@ -623,7 +627,7 @@ int vtkDelimitedTextReader::RequestData(
     }
 
     vtkStdString character_set;
-    vtkTextCodec* transCodec = NULL;
+    vtkTextCodec* transCodec = nullptr;
 
     if(this->UnicodeCharacterSet)
     {
@@ -638,15 +642,20 @@ int vtkDelimitedTextReader::RequestData(
       tstring[0] = this->StringDelimiter;
       // don't use Set* methods since they change the MTime in
       // RequestData() !!!!!
+      std::string fieldDelimiterCharacters = this->FieldDelimiterCharacters;
+      if (this->AddTabFieldDelimiter)
+      {
+        fieldDelimiterCharacters.push_back('\t');
+      }
       this->UnicodeFieldDelimiters =
-            vtkUnicodeString::from_utf8(this->FieldDelimiterCharacters);
+            vtkUnicodeString::from_utf8(fieldDelimiterCharacters);
       this->UnicodeStringDelimiters =
         vtkUnicodeString::from_utf8(tstring);
       this->UnicodeOutputArrays = false;
       transCodec = vtkTextCodecFactory::CodecToHandle(*input_stream_pt);
     }
 
-    if (NULL == transCodec)
+    if (nullptr == transCodec)
     {
       // should this use the locale instead??
       return 1;

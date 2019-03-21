@@ -62,7 +62,7 @@ class VTKIOGEOMETRY_EXPORT vtkOpenFOAMReader : public vtkMultiBlockDataSetAlgori
 public:
   static vtkOpenFOAMReader *New();
   vtkTypeMacro(vtkOpenFOAMReader, vtkMultiBlockDataSetAlgorithm);
-  void PrintSelf(ostream &, vtkIndent) VTK_OVERRIDE;
+  void PrintSelf(ostream &, vtkIndent) override;
 
   /**
    * Determine if the file can be read with this reader.
@@ -93,7 +93,7 @@ public:
   { this->SetSelectionArrayStatus(this->CellDataArraySelection, name, status); }
 
   /**
-   * Get the name of the  cell array with the given index in
+   * Get the name of the cell array with the given index in
    * the input.
    */
   const char *GetCellArrayName(int index)
@@ -124,7 +124,7 @@ public:
     name, status); }
 
   /**
-   * Get the name of the  point array with the given index in
+   * Get the name of the point array with the given index in
    * the input.
    */
   const char *GetPointArrayName(int index)
@@ -157,7 +157,7 @@ public:
     status); }
 
   /**
-   * Get the name of the  Lagrangian array with the given index in
+   * Get the name of the Lagrangian array with the given index in
    * the input.
    */
   const char* GetLagrangianArrayName(int index)
@@ -207,27 +207,27 @@ public:
   /**
    * Set/Get whether to create cell-to-point translated data for cell-type data
    */
-  vtkSetMacro(CreateCellToPoint, int);
-  vtkGetMacro(CreateCellToPoint, int);
-  vtkBooleanMacro(CreateCellToPoint, int);
+  vtkSetMacro(CreateCellToPoint, vtkTypeBool);
+  vtkGetMacro(CreateCellToPoint, vtkTypeBool);
+  vtkBooleanMacro(CreateCellToPoint, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get whether mesh is to be cached.
    */
-  vtkSetMacro(CacheMesh, int);
-  vtkGetMacro(CacheMesh, int);
-  vtkBooleanMacro(CacheMesh, int);
+  vtkSetMacro(CacheMesh, vtkTypeBool);
+  vtkGetMacro(CacheMesh, vtkTypeBool);
+  vtkBooleanMacro(CacheMesh, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get whether polyhedra are to be decomposed.
    */
-  vtkSetMacro(DecomposePolyhedra, int);
-  vtkGetMacro(DecomposePolyhedra, int);
-  vtkBooleanMacro(DecomposePolyhedra, int);
+  vtkSetMacro(DecomposePolyhedra, vtkTypeBool);
+  vtkGetMacro(DecomposePolyhedra, vtkTypeBool);
+  vtkBooleanMacro(DecomposePolyhedra, vtkTypeBool);
   //@}
 
   // Option for reading old binary lagrangian/positions format
@@ -238,9 +238,9 @@ public:
    * the positions only have x,y,z value and the cell of the enclosing cell.
    * In OpenFOAM 1.4-2.4, positions included facei and stepFraction information.
    */
-  vtkSetMacro(PositionsIsIn13Format, int);
-  vtkGetMacro(PositionsIsIn13Format, int);
-  vtkBooleanMacro(PositionsIsIn13Format, int);
+  vtkSetMacro(PositionsIsIn13Format, vtkTypeBool);
+  vtkGetMacro(PositionsIsIn13Format, vtkTypeBool);
+  vtkBooleanMacro(PositionsIsIn13Format, vtkTypeBool);
   //@}
 
   //@{
@@ -257,27 +257,27 @@ public:
   /**
    * Determine if time directories are to be listed according to controlDict
    */
-  vtkSetMacro(ListTimeStepsByControlDict, int);
-  vtkGetMacro(ListTimeStepsByControlDict, int);
-  vtkBooleanMacro(ListTimeStepsByControlDict, int);
+  vtkSetMacro(ListTimeStepsByControlDict, vtkTypeBool);
+  vtkGetMacro(ListTimeStepsByControlDict, vtkTypeBool);
+  vtkBooleanMacro(ListTimeStepsByControlDict, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Add dimensions to array names
    */
-  vtkSetMacro(AddDimensionsToArrayNames, int);
-  vtkGetMacro(AddDimensionsToArrayNames, int);
-  vtkBooleanMacro(AddDimensionsToArrayNames, int);
+  vtkSetMacro(AddDimensionsToArrayNames, vtkTypeBool);
+  vtkGetMacro(AddDimensionsToArrayNames, vtkTypeBool);
+  vtkBooleanMacro(AddDimensionsToArrayNames, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get whether zones will be read.
    */
-  vtkSetMacro(ReadZones, int);
-  vtkGetMacro(ReadZones, int);
-  vtkBooleanMacro(ReadZones, int);
+  vtkSetMacro(ReadZones, vtkTypeBool);
+  vtkGetMacro(ReadZones, vtkTypeBool);
+  vtkBooleanMacro(ReadZones, vtkTypeBool);
   //@}
 
   //@{
@@ -287,6 +287,16 @@ public:
   virtual void SetUse64BitLabels(bool val);
   vtkGetMacro(Use64BitLabels, bool)
   vtkBooleanMacro(Use64BitLabels, bool)
+  //@}
+
+  //@{
+  /**
+   * If true, data of the internal mesh are copied to the cell zones.
+   * Default is false.
+   */
+  vtkGetMacro(CopyDataToCellZones, bool)
+  vtkSetMacro(CopyDataToCellZones, bool)
+  vtkBooleanMacro(CopyDataToCellZones, bool)
   //@}
 
   //@{
@@ -315,28 +325,28 @@ protected:
   bool Refresh;
 
   // for creating cell-to-point translated data
-  int CreateCellToPoint;
+  vtkTypeBool CreateCellToPoint;
 
   // for caching mesh
-  int CacheMesh;
+  vtkTypeBool CacheMesh;
 
   // for decomposing polyhedra on-the-fly
-  int DecomposePolyhedra;
+  vtkTypeBool DecomposePolyhedra;
 
   // for lagrangian/positions without extra data (OF 1.4 - 2.4)
-  int PositionsIsIn13Format;
+  vtkTypeBool PositionsIsIn13Format;
 
   // for reading point/face/cell-Zones
-  int ReadZones;
+  vtkTypeBool ReadZones;
 
   // Ignore 0/ directory
   bool SkipZeroTime;
 
   // determine if time directories are listed according to controlDict
-  int ListTimeStepsByControlDict;
+  vtkTypeBool ListTimeStepsByControlDict;
 
   // add dimensions to array names
-  int AddDimensionsToArrayNames;
+  vtkTypeBool AddDimensionsToArrayNames;
 
   // Expect label size to be 64-bit integers instead of 32-bit.
   bool Use64BitLabels;
@@ -345,6 +355,9 @@ protected:
   // Note that vtkFloatArrays may still be used -- this just tells the reader how to
   // parse the binary data.
   bool Use64BitFloats;
+
+  // The data of internal mesh are copied to cell zones
+  bool CopyDataToCellZones;
 
   char *FileName;
   vtkCharArray *CasePath;
@@ -383,11 +396,11 @@ protected:
   int CurrentReaderIndex;
 
   vtkOpenFOAMReader();
-  ~vtkOpenFOAMReader() VTK_OVERRIDE;
+  ~vtkOpenFOAMReader() override;
   int RequestInformation(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
   int RequestData(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
 
   void CreateCasePath(vtkStdString &, vtkStdString &);
   void SetTimeInformation(vtkInformationVector *, vtkDoubleArray *);
@@ -398,8 +411,8 @@ protected:
 private:
   vtkOpenFOAMReader *Parent;
 
-  vtkOpenFOAMReader(const vtkOpenFOAMReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenFOAMReader&) VTK_DELETE_FUNCTION;
+  vtkOpenFOAMReader(const vtkOpenFOAMReader&) = delete;
+  void operator=(const vtkOpenFOAMReader&) = delete;
 
   int GetNumberOfSelectionArrays(vtkDataArraySelection *);
   int GetSelectionArrayStatus(vtkDataArraySelection *, const char *);

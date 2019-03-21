@@ -70,7 +70,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkUnstructuredGridVolumeZSweepMapper : public v
 {
 public:
   vtkTypeMacro(vtkUnstructuredGridVolumeZSweepMapper,vtkUnstructuredGridVolumeMapper);
-  void PrintSelf( ostream& os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream& os, vtkIndent indent ) override;
 
   /**
    * Set MaxPixelListSize to 32.
@@ -107,14 +107,14 @@ public:
 
   //@{
   /**
-   * If AutoAdjustSampleDistances is on, the the ImageSampleDistance
+   * If AutoAdjustSampleDistances is on, the ImageSampleDistance
    * will be varied to achieve the allocated render time of this
    * prop (controlled by the desired update rate and any culling in
    * use).
    */
-  vtkSetClampMacro( AutoAdjustSampleDistances, int, 0, 1 );
-  vtkGetMacro( AutoAdjustSampleDistances, int );
-  vtkBooleanMacro( AutoAdjustSampleDistances, int );
+  vtkSetClampMacro( AutoAdjustSampleDistances, vtkTypeBool, 0, 1 );
+  vtkGetMacro( AutoAdjustSampleDistances, vtkTypeBool );
+  vtkBooleanMacro( AutoAdjustSampleDistances, vtkTypeBool );
   //@}
 
   //@{
@@ -122,9 +122,9 @@ public:
    * If IntermixIntersectingGeometry is turned on, the zbuffer will be
    * captured and used to limit the traversal of the rays.
    */
-  vtkSetClampMacro( IntermixIntersectingGeometry, int, 0, 1 );
-  vtkGetMacro( IntermixIntersectingGeometry, int );
-  vtkBooleanMacro( IntermixIntersectingGeometry, int );
+  vtkSetClampMacro( IntermixIntersectingGeometry, vtkTypeBool, 0, 1 );
+  vtkGetMacro( IntermixIntersectingGeometry, vtkTypeBool );
+  vtkBooleanMacro( IntermixIntersectingGeometry, vtkTypeBool );
   //@}
 
   /**
@@ -157,7 +157,7 @@ public:
    * Render the volume
    */
   void Render(vtkRenderer *ren,
-              vtkVolume *vol) VTK_OVERRIDE;
+              vtkVolume *vol) override;
 
   vtkGetVectorMacro( ImageInUseSize, int, 2 );
   vtkGetVectorMacro( ImageOrigin, int, 2 );
@@ -165,7 +165,7 @@ public:
 
 protected:
   vtkUnstructuredGridVolumeZSweepMapper();
-  ~vtkUnstructuredGridVolumeZSweepMapper() VTK_OVERRIDE;
+  ~vtkUnstructuredGridVolumeZSweepMapper() override;
 
   /**
    * For each vertex, find the list of incident faces.
@@ -286,7 +286,7 @@ protected:
   float ImageSampleDistance;
   float MinimumImageSampleDistance;
   float MaximumImageSampleDistance;
-  int AutoAdjustSampleDistances;
+  vtkTypeBool AutoAdjustSampleDistances;
 
   vtkRayCastImageDisplayHelper *ImageDisplayHelper;
 
@@ -321,7 +321,7 @@ protected:
   int RenderTableSize;
   int RenderTableEntries;
 
-  int IntermixIntersectingGeometry;
+  vtkTypeBool IntermixIntersectingGeometry;
 
   float *ZBuffer;
   int ZBufferSize[2];
@@ -375,8 +375,8 @@ protected:
   vtkUnstructuredGridVolumeZSweepMapperNamespace::vtkPixelListEntryMemory *MemoryManager;
 
 private:
-  vtkUnstructuredGridVolumeZSweepMapper(const vtkUnstructuredGridVolumeZSweepMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkUnstructuredGridVolumeZSweepMapper&) VTK_DELETE_FUNCTION;
+  vtkUnstructuredGridVolumeZSweepMapper(const vtkUnstructuredGridVolumeZSweepMapper&) = delete;
+  void operator=(const vtkUnstructuredGridVolumeZSweepMapper&) = delete;
 };
 
 #endif

@@ -35,9 +35,7 @@ vtkSubPixelPositionEdgels::vtkSubPixelPositionEdgels()
   this->SetNumberOfInputPorts(2);
 }
 
-vtkSubPixelPositionEdgels::~vtkSubPixelPositionEdgels()
-{
-}
+vtkSubPixelPositionEdgels::~vtkSubPixelPositionEdgels() = default;
 
 int vtkSubPixelPositionEdgels::RequestData(
   vtkInformation *vtkNotUsed(request),
@@ -63,8 +61,8 @@ int vtkSubPixelPositionEdgels::RequestData(
   vtkPoints *inPts;
   vtkDataArray *inVectors;
   vtkIdType ptId;
-  float *MapData = 0;
-  double *DMapData = 0;
+  float *MapData = nullptr;
+  double *DMapData = nullptr;
   double pnt[3];
   int *dimensions;
   double result[3], resultNormal[3];
@@ -72,7 +70,7 @@ int vtkSubPixelPositionEdgels::RequestData(
 
   vtkDebugMacro(<<"SubPixelPositioning Edgels");
 
-  if ( numPts < 1 || (inPts=input->GetPoints()) == NULL )
+  if ( numPts < 1 || (inPts=input->GetPoints()) == nullptr )
   {
     vtkErrorMacro(<<"No data to fit!");
     return 1;
@@ -737,7 +735,7 @@ vtkStructuredPoints *vtkSubPixelPositionEdgels::GetGradMaps()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return NULL;
+    return nullptr;
   }
   return vtkStructuredPoints::SafeDownCast(
     this->GetExecutive()->GetInputData(1, 0));

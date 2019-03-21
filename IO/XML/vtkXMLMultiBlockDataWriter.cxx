@@ -24,14 +24,10 @@
 
 vtkStandardNewMacro(vtkXMLMultiBlockDataWriter);
 //----------------------------------------------------------------------------
-vtkXMLMultiBlockDataWriter::vtkXMLMultiBlockDataWriter()
-{
-}
+vtkXMLMultiBlockDataWriter::vtkXMLMultiBlockDataWriter() = default;
 
 //----------------------------------------------------------------------------
-vtkXMLMultiBlockDataWriter::~vtkXMLMultiBlockDataWriter()
-{
-}
+vtkXMLMultiBlockDataWriter::~vtkXMLMultiBlockDataWriter() = default;
 
 //----------------------------------------------------------------------------
 int vtkXMLMultiBlockDataWriter::FillInputPortInformation(
@@ -76,7 +72,7 @@ int vtkXMLMultiBlockDataWriter::WriteComposite(vtkCompositeDataSet* compositeDat
     iter->GoToNextItem(), index++)
   {
     vtkDataObject* curDO = iter->GetCurrentDataObject();
-    const char *name = NULL;
+    const char *name = nullptr;
     if (iter->HasCurrentMetaData())
     {
       name = iter->GetCurrentMetaData()->Get(vtkCompositeDataSet::NAME());

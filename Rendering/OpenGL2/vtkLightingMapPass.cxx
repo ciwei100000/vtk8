@@ -37,9 +37,7 @@ vtkLightingMapPass::vtkLightingMapPass()
 }
 
 // ----------------------------------------------------------------------------
-vtkLightingMapPass::~vtkLightingMapPass()
-{
-}
+vtkLightingMapPass::~vtkLightingMapPass() = default;
 
 // ----------------------------------------------------------------------------
 void vtkLightingMapPass::PrintSelf(ostream& os, vtkIndent indent)
@@ -53,10 +51,15 @@ void vtkLightingMapPass::PrintSelf(ostream& os, vtkIndent indent)
 // \pre s_exists: s!=0
 void vtkLightingMapPass::Render(const vtkRenderState *s)
 {
-  assert("pre: s_exists" && s != 0);
+  assert("pre: s_exists" && s != nullptr);
 
   // Render filtered geometry according to our keys
   this->NumberOfRenderedProps = 0;
+
+  this->ClearLights(s->GetRenderer());
+  this->UpdateLightGeometry(s->GetRenderer());
+  this->UpdateLights(s->GetRenderer());
+
   this->RenderOpaqueGeometry(s);
 }
 
@@ -66,7 +69,7 @@ void vtkLightingMapPass::Render(const vtkRenderState *s)
 // \pre s_exists: s!=0
 void vtkLightingMapPass::RenderOpaqueGeometry(const vtkRenderState *s)
 {
-  assert("pre: s_exists" && s!=0);
+  assert("pre: s_exists" && s!=nullptr);
 
   // Clear the RGB buffer first
   vtkSmartPointer<vtkClearRGBPass> clear =

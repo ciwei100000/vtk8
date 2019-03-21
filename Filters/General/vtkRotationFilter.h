@@ -37,7 +37,7 @@ class VTKFILTERSGENERAL_EXPORT vtkRotationFilter : public vtkUnstructuredGridAlg
 public:
   static vtkRotationFilter *New();
   vtkTypeMacro(vtkRotationFilter, vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   enum RotationAxis
   {
@@ -88,28 +88,28 @@ public:
    * If on (the default), copy the input geometry to the output. If off,
    * the output will only contain the rotation.
    */
-  vtkSetMacro(CopyInput, int);
-  vtkGetMacro(CopyInput, int);
-  vtkBooleanMacro(CopyInput, int);
+  vtkSetMacro(CopyInput, vtkTypeBool);
+  vtkGetMacro(CopyInput, vtkTypeBool);
+  vtkBooleanMacro(CopyInput, vtkTypeBool);
   //@}
 
 
 protected:
   vtkRotationFilter();
-  ~vtkRotationFilter() VTK_OVERRIDE;
+  ~vtkRotationFilter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   int Axis;
   double Angle;
   double Center[3];
   int NumberOfCopies;
-  int CopyInput;
+  vtkTypeBool CopyInput;
 
 private:
-  vtkRotationFilter(const vtkRotationFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRotationFilter&) VTK_DELETE_FUNCTION;
+  vtkRotationFilter(const vtkRotationFilter&) = delete;
+  void operator=(const vtkRotationFilter&) = delete;
 };
 
 #endif

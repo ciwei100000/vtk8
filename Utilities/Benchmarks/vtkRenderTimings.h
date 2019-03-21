@@ -21,8 +21,6 @@
  */
 
 #include "vtkTimerLog.h"
-#include <vtksys/SystemInformation.hxx>
-#include <vtksys/RegularExpression.hxx>
 #include <vtksys/CommandLineArguments.hxx>
 #include <map>
 
@@ -171,7 +169,7 @@ protected:
   void ReportResults();
 
 private:
-  std::string Regex; // regualr expression for tests
+  std::string Regex; // regular expression for tests
   double TargetTime;
   std::string SystemName;
   vtksys::CommandLineArguments Arguments;

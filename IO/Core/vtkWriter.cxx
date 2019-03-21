@@ -31,9 +31,7 @@ vtkWriter::vtkWriter()
   this->SetNumberOfOutputPorts(0);
 }
 
-vtkWriter::~vtkWriter()
-{
-}
+vtkWriter::~vtkWriter() = default;
 
 void vtkWriter::SetInputData(vtkDataObject *input)
 {
@@ -54,7 +52,7 @@ vtkDataObject *vtkWriter::GetInput(int port)
 {
   if (this->GetNumberOfInputConnections(port) < 1)
   {
-    return NULL;
+    return nullptr;
   }
   return this->GetExecutive()->GetInputData(port, 0);
 }
@@ -99,7 +97,6 @@ int vtkWriter::RequestData(
   this->SetErrorCode(vtkErrorCode::NoError);
 
   vtkDataObject *input = this->GetInput();
-  int idx;
 
   // make sure input is available
   if ( !input )
@@ -108,36 +105,9 @@ int vtkWriter::RequestData(
     return 0;
   }
 
-  for (idx = 0; idx < this->GetNumberOfInputPorts(); ++idx)
-  {
-    if (this->GetInputExecutive(idx, 0) != NULL)
-    {
-      this->GetInputExecutive(idx, 0)->Update();
-    }
-  }
-
-  vtkMTimeType lastUpdateTime =  this->GetInput(0)->GetUpdateTime();
-  for (idx = 1; idx < this->GetNumberOfInputPorts(); ++idx)
-  {
-    if (this->GetInput(idx))
-    {
-      vtkMTimeType updateTime = this->GetInput(idx)->GetUpdateTime();
-      if ( updateTime > lastUpdateTime )
-      {
-        lastUpdateTime = updateTime;
-      }
-    }
-  }
-
-  if (lastUpdateTime < this->WriteTime && this->GetMTime() < this->WriteTime)
-  {
-    // we are up to date
-    return 1;
-  }
-
-  this->InvokeEvent(vtkCommand::StartEvent,NULL);
+  this->InvokeEvent(vtkCommand::StartEvent,nullptr);
   this->WriteData();
-  this->InvokeEvent(vtkCommand::EndEvent,NULL);
+  this->InvokeEvent(vtkCommand::EndEvent,nullptr);
 
   this->WriteTime.Modified();
 

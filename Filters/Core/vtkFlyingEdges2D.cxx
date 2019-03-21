@@ -108,7 +108,7 @@ public:
   {
     this->Origin[0] = this->Origin[0] + this->Spacing[0]*updateExt[0];
     this->Origin[1] = this->Origin[1] + this->Spacing[1]*updateExt[2];
-    this->Origin[2] = this->Origin[2] + this->Spacing[2]*updateExt[4];;
+    this->Origin[2] = this->Origin[2] + this->Spacing[2]*updateExt[4];
   }
 
   // The three passes of the algorithm.
@@ -284,8 +284,8 @@ EdgeCases[16][5] = {
 // Instantiate and initialize key data members. Mostly we build some
 // acceleration structures from the case table.
 template <class T> vtkFlyingEdges2DAlgorithm<T>::
-vtkFlyingEdges2DAlgorithm():XCases(NULL),EdgeMetaData(NULL),Scalars(NULL),
-                            NewScalars(NULL),NewLines(NULL),NewPoints(NULL)
+vtkFlyingEdges2DAlgorithm():XCases(nullptr),EdgeMetaData(nullptr),Scalars(nullptr),
+                            NewScalars(nullptr),NewLines(nullptr),NewPoints(nullptr)
 {
   int j, eCase, numLines;
   const unsigned char *edgeCase;
@@ -766,10 +766,12 @@ ContourImage(vtkFlyingEdges2D *self, T *scalars, vtkPoints *newPts,
       algo.NewLines = static_cast<vtkIdType*>(newLines->GetPointer());
       if (newScalars)
       {
-        newScalars->WriteVoidPointer(0,numOutXPts+numOutYPts);
+        vtkIdType numPrevPts = newScalars->GetNumberOfTuples();
+        vtkIdType numNewPts = totalPts - numPrevPts;
+        newScalars->WriteVoidPointer(0,totalPts);
         algo.NewScalars = static_cast<T*>(newScalars->GetVoidPointer(0));
         T TValue = static_cast<T>(value);
-        std::fill_n(algo.NewScalars, totalPts, TValue);
+        std::fill_n(algo.NewScalars+numPrevPts, numNewPts, TValue);
       }
 
       // PASS 4: Now process each x-row and produce the output primitives.
@@ -843,7 +845,7 @@ int vtkFlyingEdges2D::RequestData( vtkInformation *vtkNotUsed(request),
   int *ext =
     inInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_EXTENT());
   inScalars = this->GetInputArrayToProcess(0,inputVector);
-  if ( inScalars == NULL )
+  if ( inScalars == nullptr )
   {
     vtkErrorMacro(<<"Scalars must be defined for contouring");
     return 1;
@@ -862,7 +864,7 @@ int vtkFlyingEdges2D::RequestData( vtkInformation *vtkNotUsed(request),
   vtkCellArray *newLines = vtkCellArray::New();
   vtkPoints *newPts = vtkPoints::New();
   newPts->SetDataTypeToFloat();
-  vtkDataArray *newScalars = NULL;
+  vtkDataArray *newScalars = nullptr;
 
   if (this->ComputeScalars)
   {

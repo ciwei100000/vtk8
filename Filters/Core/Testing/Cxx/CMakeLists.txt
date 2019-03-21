@@ -1,6 +1,7 @@
-vtk_add_test_cxx(${vtk-module}CxxTests tests
+vtk_add_test_cxx(vtkFiltersCoreCxxTests tests
   TestAppendArcLength.cxx,NO_VALID
   TestAppendFilter.cxx,NO_VALID
+  TestAppendMolecule.cxx,NO_VALID
   TestAppendPolyData.cxx,NO_VALID
   TestAppendSelection.cxx,NO_VALID
   TestArrayCalculator.cxx,NO_VALID
@@ -11,12 +12,14 @@ vtk_add_test_cxx(${vtk-module}CxxTests tests
   TestCellDataToPointData.cxx,NO_VALID
   TestCenterOfMass.cxx,NO_VALID
   TestCleanPolyData.cxx,NO_VALID
+  TestCleanPolyData2.cxx,NO_VALID
   TestClipPolyData.cxx,NO_VALID
   TestConnectivityFilter.cxx,NO_VALID
   TestCutter.cxx,NO_VALID
   TestDecimatePolylineFilter.cxx
   TestDecimatePro.cxx,NO_VALID
   TestDelaunay2D.cxx
+  TestDelaunay2DBestFittingPlane.cxx,NO_VALID
   TestDelaunay2DFindTriangle.cxx,NO_VALID
   TestDelaunay2DMeshes.cxx,NO_VALID
   TestDelaunay3D.cxx,NO_VALID
@@ -28,14 +31,17 @@ vtk_add_test_cxx(${vtk-module}CxxTests tests
   TestImplicitPolyDataDistance.cxx
   TestMaskPoints.cxx,NO_VALID
   TestNamedComponents.cxx,NO_VALID
+  TestPointDataToCellData.cxx,NO_VALID
   TestPolyDataConnectivityFilter.cxx,NO_VALID
   TestProbeFilter.cxx,NO_VALID
   TestProbeFilterImageInput.cxx
   TestProbeFilterOutputAttributes.cxx,NO_VALID
   TestResampleToImage.cxx,NO_VALID
+  TestResampleToImage2D.cxx,NO_VALID
   TestResampleWithDataSet.cxx,
   TestResampleWithDataSet2.cxx
   TestResampleWithDataSet3.cxx
+  TestRemoveDuplicatePolys.cxx,NO_VALID
   TestSmoothPolyDataFilter.cxx,NO_VALID
   TestSMPPipelineContour.cxx,NO_VALID
   TestStripper.cxx,NO_VALID
@@ -50,4 +56,4 @@ vtk_add_test_cxx(${vtk-module}CxxTests tests
   UnitTestMergeFilter.cxx,NO_VALID
   )
 
-vtk_test_cxx_executable(${vtk-module}CxxTests tests)
+vtk_test_cxx_executable(vtkFiltersCoreCxxTests tests)

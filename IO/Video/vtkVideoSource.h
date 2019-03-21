@@ -45,7 +45,7 @@ class VTKIOVIDEO_EXPORT vtkVideoSource : public vtkImageAlgorithm
 public:
   static vtkVideoSource *New();
   vtkTypeMacro(vtkVideoSource,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Record incoming video at the specified FrameRate.  The recording
@@ -164,9 +164,9 @@ public:
    * Set whether to automatically advance the buffer before each grab.
    * Default: on
    */
-  vtkBooleanMacro(AutoAdvance,int);
-  vtkSetMacro(AutoAdvance,int)
-  vtkGetMacro(AutoAdvance,int);
+  vtkBooleanMacro(AutoAdvance,vtkTypeBool);
+  vtkSetMacro(AutoAdvance,vtkTypeBool)
+  vtkGetMacro(AutoAdvance,vtkTypeBool);
   //@}
 
   //@{
@@ -290,8 +290,8 @@ public:
 
 protected:
   vtkVideoSource();
-  ~vtkVideoSource() VTK_OVERRIDE;
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  ~vtkVideoSource() override;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   int Initialized;
 
@@ -316,11 +316,11 @@ protected:
   int Playing;
   float FrameRate;
   int FrameCount;
-  int FrameIndex;
+
   double StartTimeStamp;
   double FrameTimeStamp;
 
-  int AutoAdvance;
+  vtkTypeBool AutoAdvance;
   int NumberOfOutputFrames;
 
   float Opacity;
@@ -349,7 +349,16 @@ protected:
   int FrameBufferExtent[6];
 
   int FrameBufferSize;
+
+  // where the current frame is, note this decreases in time
+  // increasing values are older frames
   int FrameBufferIndex;
+
+  // number of frames from the beginning sort of,
+  // it does wrap, sometimes
+  int FrameIndex;
+
+
   void **FrameBuffer;
   double *FrameBufferTimeStamps;
 
@@ -359,15 +368,15 @@ protected:
    */
   virtual void UpdateFrameBuffer();
   virtual void AdvanceFrameBuffer(int n);
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   // if some component conversion is required, it is done here:
   virtual void UnpackRasterLine(char *outPtr, char *rowPtr,
                                 int start, int count);
   //@}
 
 private:
-  vtkVideoSource(const vtkVideoSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkVideoSource&) VTK_DELETE_FUNCTION;
+  vtkVideoSource(const vtkVideoSource&) = delete;
+  void operator=(const vtkVideoSource&) = delete;
 };
 
 #endif

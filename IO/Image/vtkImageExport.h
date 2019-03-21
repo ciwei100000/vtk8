@@ -40,7 +40,7 @@ class VTKIOIMAGE_EXPORT vtkImageExport : public vtkImageAlgorithm
 public:
   static vtkImageExport *New();
   vtkTypeMacro(vtkImageExport,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get the number of bytes required for the output C array.
@@ -53,7 +53,7 @@ public:
    * that C arrays are indexed in decreasing order, i.e. array[z][y][x].
    */
   void GetDataDimensions(int *ptr);
-  int *GetDataDimensions() {
+  int *GetDataDimensions() VTK_SIZEHINT(3) {
     this->GetDataDimensions(this->DataDimensions);
     return this->DataDimensions; }
   //@}
@@ -77,11 +77,11 @@ public:
   /**
    * Get miscellaneous additional information about the data.
    */
-  int *GetDataExtent();
+  int *GetDataExtent() VTK_SIZEHINT(6);
   void GetDataExtent(int *ptr);
-  double *GetDataSpacing();
+  double *GetDataSpacing() VTK_SIZEHINT(3);
   void GetDataSpacing(double *ptr);
-  double *GetDataOrigin();
+  double *GetDataOrigin() VTK_SIZEHINT(3);
   void GetDataOrigin(double *ptr);
   //@}
 
@@ -99,9 +99,9 @@ public:
    * WARNING: this flag is used only with the Export() method,
    * it is ignored by GetPointerToData().
    */
-  vtkBooleanMacro(ImageLowerLeft, int);
-  vtkGetMacro(ImageLowerLeft, int);
-  vtkSetMacro(ImageLowerLeft, int);
+  vtkBooleanMacro(ImageLowerLeft, vtkTypeBool);
+  vtkGetMacro(ImageLowerLeft, vtkTypeBool);
+  vtkSetMacro(ImageLowerLeft, vtkTypeBool);
   //@}
 
   //@{
@@ -175,12 +175,12 @@ public:
 
 protected:
   vtkImageExport();
-  ~vtkImageExport() VTK_OVERRIDE;
+  ~vtkImageExport() override;
 
   // This is called by the superclass.
   int RequestData(vtkInformation *request,
                           vtkInformationVector** inputVector,
-                          vtkInformationVector* outputVector) VTK_OVERRIDE;
+                          vtkInformationVector* outputVector) override;
 
   virtual void UpdateInformationCallback();
   virtual int PipelineModifiedCallback();
@@ -194,15 +194,15 @@ protected:
   virtual int* DataExtentCallback();
   virtual void* BufferPointerCallback();
 
-  int ImageLowerLeft;
+  vtkTypeBool ImageLowerLeft;
   int DataDimensions[3];
   void *ExportVoidPointer;
 
   vtkMTimeType LastPipelineMTime;
 
 private:
-  vtkImageExport(const vtkImageExport&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageExport&) VTK_DELETE_FUNCTION;
+  vtkImageExport(const vtkImageExport&) = delete;
+  void operator=(const vtkImageExport&) = delete;
 
   static void UpdateInformationCallbackFunction(void*);
   static int PipelineModifiedCallbackFunction(void*);

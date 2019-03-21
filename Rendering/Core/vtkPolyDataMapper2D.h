@@ -47,7 +47,7 @@ class VTKRENDERINGCORE_EXPORT vtkPolyDataMapper2D : public vtkMapper2D
 public:
   vtkTypeMacro(vtkPolyDataMapper2D,vtkMapper2D);
   static vtkPolyDataMapper2D *New();
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -75,9 +75,9 @@ public:
   /**
    * Turn on/off flag to control whether scalar data is used to color objects.
    */
-  vtkSetMacro(ScalarVisibility, int);
-  vtkGetMacro(ScalarVisibility, int);
-  vtkBooleanMacro(ScalarVisibility, int);
+  vtkSetMacro(ScalarVisibility, vtkTypeBool);
+  vtkGetMacro(ScalarVisibility, vtkTypeBool);
+  vtkBooleanMacro(ScalarVisibility, vtkTypeBool);
   //@}
 
   //@{
@@ -115,9 +115,9 @@ public:
    * mappers/actors will probably wish to force the mapper to use the
    * LookupTable unchanged.
    */
-  vtkSetMacro(UseLookupTableScalarRange, int);
-  vtkGetMacro(UseLookupTableScalarRange, int);
-  vtkBooleanMacro(UseLookupTableScalarRange, int);
+  vtkSetMacro(UseLookupTableScalarRange, vtkTypeBool);
+  vtkGetMacro(UseLookupTableScalarRange, vtkTypeBool);
+  vtkBooleanMacro(UseLookupTableScalarRange, vtkTypeBool);
   //@}
 
   //@{
@@ -162,13 +162,13 @@ public:
    * Choose which component of which field data array to color by.
    */
   void ColorByArrayComponent(int arrayNum, int component);
-  void ColorByArrayComponent(char* arrayName, int component);
+  void ColorByArrayComponent(const char* arrayName, int component);
   //@}
 
   /**
    * Get the array name or number and component to color by.
    */
-  char* GetArrayName() { return this->ArrayName; }
+  const char* GetArrayName() { return this->ArrayName; }
   int GetArrayId() { return this->ArrayId; }
   int GetArrayAccessMode() { return this->ArrayAccessMode; }
   int GetArrayComponent() { return this->ArrayComponent; }
@@ -177,7 +177,7 @@ public:
    * Overload standard modified time function. If lookup table is modified,
    * then this object is modified as well.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -212,21 +212,21 @@ public:
   /**
    * Make a shallow copy of this mapper.
    */
-  void ShallowCopy(vtkAbstractMapper *m);
+  void ShallowCopy(vtkAbstractMapper *m) override;
 
 protected:
   vtkPolyDataMapper2D();
-  ~vtkPolyDataMapper2D() VTK_OVERRIDE;
+  ~vtkPolyDataMapper2D() override;
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
   vtkUnsignedCharArray *Colors;
 
   vtkScalarsToColors *LookupTable;
-  int ScalarVisibility;
+  vtkTypeBool ScalarVisibility;
   vtkTimeStamp BuildTime;
   double ScalarRange[2];
-  int UseLookupTableScalarRange;
+  vtkTypeBool UseLookupTableScalarRange;
   int ColorMode;
   int ScalarMode;
 
@@ -239,8 +239,8 @@ protected:
   int ArrayComponent;
   int ArrayAccessMode;
 private:
-  vtkPolyDataMapper2D(const vtkPolyDataMapper2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPolyDataMapper2D&) VTK_DELETE_FUNCTION;
+  vtkPolyDataMapper2D(const vtkPolyDataMapper2D&) = delete;
+  void operator=(const vtkPolyDataMapper2D&) = delete;
 };
 
 

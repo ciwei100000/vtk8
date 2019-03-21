@@ -69,7 +69,7 @@ class VTKCHARTSCORE_EXPORT vtkAxis : public vtkContextItem
 {
 public:
   vtkTypeMacro(vtkAxis, vtkContextItem);
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   /**
    * Enumeration of the axis locations in a conventional XY chart. Other
@@ -156,7 +156,7 @@ public:
 
   //@{
   /**
-   * Get the vtkTextProperty that governs how the axis lables are displayed.
+   * Get the vtkTextProperty that governs how the axis labels are displayed.
    * Note that the alignment properties are not used.
    */
   vtkGetObjectMacro(LabelProperties, vtkTextProperty);
@@ -403,6 +403,14 @@ public:
 
   //@{
   /**
+   * Get/set whether the axis title should be visible.
+   */
+  vtkSetMacro(TitleVisible, bool);
+  vtkGetMacro(TitleVisible, bool);
+  //@}
+
+  //@{
+  /**
    * Get/set the numerical precision to use, default is 2. This is ignored
    * when Notation is STANDARD_NOTATION or PRINTF_NOTATION.
    */
@@ -507,12 +515,12 @@ public:
    * Update the geometry of the axis. Takes care of setting up the tick mark
    * locations etc. Should be called by the scene before rendering.
    */
-  void Update() VTK_OVERRIDE;
+  void Update() override;
 
   /**
    * Paint event for the axis, called whenever the axis needs to be drawn.
    */
-  bool Paint(vtkContext2D *painter) VTK_OVERRIDE;
+  bool Paint(vtkContext2D *painter) override;
 
   /**
    * Use this function to autoscale the axes after setting the minimum and
@@ -553,7 +561,7 @@ public:
    * must be of the same length. Returns true on success, false on failure.
    */
   virtual bool SetCustomTickPositions(vtkDoubleArray* positions,
-                                      vtkStringArray* labels = 0);
+                                      vtkStringArray* labels = nullptr);
 
   /**
    * Request the space the axes require to be drawn. This is returned as a
@@ -581,11 +589,11 @@ public:
    * Generate a single label using the current settings when TickLabelAlgorithm
    * is TICK_SIMPLE.
    */
-  vtkStdString GenerateSimpleLabel(double val);
+  virtual vtkStdString GenerateSimpleLabel(double val);
 
 protected:
   vtkAxis();
-  ~vtkAxis() VTK_OVERRIDE;
+  ~vtkAxis() override;
 
   /**
    * Update whether log scaling will be used for layout and rendering.
@@ -607,12 +615,12 @@ protected:
    */
   void GenerateTickLabels();
 
-  void GenerateLabelFormat(int notation, double n);
+  virtual void GenerateLabelFormat(int notation, double n);
 
   /**
    * Generate label using a printf-style format string.
    */
-  vtkStdString GenerateSprintfLabel(double value, const std::string & format);
+  virtual vtkStdString GenerateSprintfLabel(double value, const std::string & format);
 
   /**
    * Calculate the next "nicest" numbers above and below the current minimum.
@@ -645,7 +653,7 @@ protected:
    * If more than 20 tick marks would result, the stride for the varying digit
    * is increased.
    */
-  void GenerateLogSpacedLinearTicks(int order, double min, double max);
+  virtual void GenerateLogSpacedLinearTicks(int order, double min, double max);
 
   /**
    * Generate tick marks for logarithmic scale for specific order of magnitude.
@@ -691,6 +699,7 @@ protected:
   float LabelOffset;   // Offset of label from the tick mark
   bool TicksVisible;   // Should the tick marks be visible.
   bool AxisVisible;    // Should the axis line be visible.
+  bool TitleVisible;   // Should the title be visible.
   int Precision;       // Numerical precision to use, defaults to 2.
   int Notation;        // The notation to use (standard, scientific, mixed)
   std::string LabelFormat; // The printf-style format string used for labels.
@@ -767,8 +776,8 @@ protected:
   vtkTimeStamp BuildTime;
 
 private:
-  vtkAxis(const vtkAxis &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAxis &) VTK_DELETE_FUNCTION;
+  vtkAxis(const vtkAxis &) = delete;
+  void operator=(const vtkAxis &) = delete;
 
   /**
    * Return true if the value is in range, false otherwise.

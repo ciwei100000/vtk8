@@ -30,7 +30,7 @@ vtkStandardNewMacro(vtkPTSReader);
 
 //----------------------------------------------------------------------------
 vtkPTSReader::vtkPTSReader() :
-  FileName(NULL),
+  FileName(nullptr),
   OutputDataTypeIsDouble(false),
   LimitReadToBounds(false),
   LimitToMaxNumberOfPoints(false),
@@ -50,7 +50,7 @@ vtkPTSReader::~vtkPTSReader()
   if (this->FileName)
   {
     delete [] this->FileName;
-    this->FileName = NULL;
+    this->FileName = nullptr;
   }
 }
 
@@ -59,7 +59,7 @@ vtkPTSReader::~vtkPTSReader()
 void vtkPTSReader::SetFileName(const char *filename)
 {
   vtkDebugMacro(<< this->GetClassName() << " (" << this << "): setting FileName to " << filename );
-  if (this->FileName == NULL && filename == NULL)
+  if (this->FileName == nullptr && filename == nullptr)
   {
     return;
   }
@@ -67,10 +67,7 @@ void vtkPTSReader::SetFileName(const char *filename)
   {
     return;
   }
-  if (this->FileName)
-  {
-    delete [] this->FileName;
-  }
+  delete [] this->FileName;
   if (filename)
   {
     size_t n = strlen(filename) + 1;
@@ -82,10 +79,10 @@ void vtkPTSReader::SetFileName(const char *filename)
       *cp1++ = *cp2++;
     } while ( --n );
   }
-   else
-   {
-    this->FileName = NULL;
-   }
+  else
+  {
+    this->FileName = nullptr;
+  }
   this->Modified();
 }
 
@@ -249,7 +246,7 @@ RequestData(vtkInformation *vtkNotUsed(request),
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -276,12 +273,12 @@ RequestData(vtkInformation *vtkNotUsed(request),
 
   vtkNew<vtkUnsignedCharArray> colors;
   vtkNew<vtkFloatArray> intensities;
-  output->SetPoints( newPts.GetPointer() );
+  output->SetPoints( newPts );
 
   vtkNew<vtkCellArray> newVerts;
   if (this->CreateCells)
   {
-    output->SetVerts( newVerts.GetPointer() );
+    output->SetVerts( newVerts );
   }
 
   bool wantIntensities = ((numValuesPerLine == 4) || (numValuesPerLine == 7));
@@ -290,7 +287,7 @@ RequestData(vtkInformation *vtkNotUsed(request),
     colors->SetNumberOfComponents(3);
     colors->SetName("Color");
     colors->Allocate(targetNumPts*3);
-    output->GetPointData()->SetScalars( colors.GetPointer());
+    output->GetPointData()->SetScalars( colors);
     if (!this->IncludeColorAndLuminance)
     {
       wantIntensities = false;
@@ -302,7 +299,7 @@ RequestData(vtkInformation *vtkNotUsed(request),
     intensities->SetName("Intensities");
     intensities->SetNumberOfComponents(1);
     intensities->Allocate(targetNumPts);
-    output->GetPointData()->AddArray( intensities.GetPointer());
+    output->GetPointData()->AddArray( intensities);
   }
 
   if (numPts == 0)
@@ -318,7 +315,7 @@ RequestData(vtkInformation *vtkNotUsed(request),
     return 1;
   }
 
-  // setup the ReadBBox, IF we're limiting the read to specifed ReadBounds
+  // setup the ReadBBox, IF we're limiting the read to specified ReadBounds
   if (this->LimitReadToBounds)
   {
     this->ReadBBox.Reset();
@@ -334,7 +331,7 @@ RequestData(vtkInformation *vtkNotUsed(request),
 
   // Lets Process the points!  Remember that we have already loaded in
   // the first line of points in the buffer
-  vtkIdType *pids = 0;
+  vtkIdType *pids = nullptr;
   vtkIdType pid;
   if (this->CreateCells)
   {

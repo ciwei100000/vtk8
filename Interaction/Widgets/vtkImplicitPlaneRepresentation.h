@@ -49,6 +49,7 @@ class vtkLineSource;
 class vtkSphereSource;
 class vtkTubeFilter;
 class vtkPlane;
+class vtkPlaneSource;
 class vtkCutter;
 class vtkProperty;
 class vtkImageData;
@@ -73,7 +74,7 @@ public:
    * Standard methods for the class.
    */
   vtkTypeMacro(vtkImplicitPlaneRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -82,7 +83,7 @@ public:
    */
   void SetOrigin(double x, double y, double z);
   void SetOrigin(double x[3]);
-  double* GetOrigin();
+  double* GetOrigin() VTK_SIZEHINT(3);
   void GetOrigin(double xyz[3]);
   //@}
 
@@ -93,7 +94,7 @@ public:
   void SetNormal(double x, double y, double z);
   void SetNormal(double x[3]);
   void SetNormalToCamera();
-  double* GetNormal();
+  double* GetNormal() VTK_SIZEHINT(3);
   void GetNormal(double xyz[3]);
   //@}
 
@@ -105,15 +106,15 @@ public:
    * This can be used to snap the plane to the axes if it is originally
    * not aligned.
    */
-  void SetNormalToXAxis(int);
-  vtkGetMacro(NormalToXAxis,int);
-  vtkBooleanMacro(NormalToXAxis,int);
-  void SetNormalToYAxis(int);
-  vtkGetMacro(NormalToYAxis,int);
-  vtkBooleanMacro(NormalToYAxis,int);
-  void SetNormalToZAxis(int);
-  vtkGetMacro(NormalToZAxis,int);
-  vtkBooleanMacro(NormalToZAxis,int);
+  void SetNormalToXAxis(vtkTypeBool);
+  vtkGetMacro(NormalToXAxis,vtkTypeBool);
+  vtkBooleanMacro(NormalToXAxis,vtkTypeBool);
+  void SetNormalToYAxis(vtkTypeBool);
+  vtkGetMacro(NormalToYAxis,vtkTypeBool);
+  vtkBooleanMacro(NormalToYAxis,vtkTypeBool);
+  void SetNormalToZAxis(vtkTypeBool);
+  vtkGetMacro(NormalToZAxis,vtkTypeBool);
+  vtkBooleanMacro(NormalToZAxis,vtkTypeBool);
   //@}
 
   //@{
@@ -122,9 +123,9 @@ public:
    * LockNormalToCamera will cause the normal to follow the camera's
    * normal.
    */
-  virtual void SetLockNormalToCamera(int);
-  vtkGetMacro(LockNormalToCamera,int);
-  vtkBooleanMacro(LockNormalToCamera,int);
+  virtual void SetLockNormalToCamera(vtkTypeBool);
+  vtkGetMacro(LockNormalToCamera,vtkTypeBool);
+  vtkBooleanMacro(LockNormalToCamera,vtkTypeBool);
   //@}
 
   //@{
@@ -132,9 +133,9 @@ public:
    * Turn on/off tubing of the wire outline of the plane. The tube thickens
    * the line by wrapping with a vtkTubeFilter.
    */
-  vtkSetMacro(Tubing,int);
-  vtkGetMacro(Tubing,int);
-  vtkBooleanMacro(Tubing,int);
+  vtkSetMacro(Tubing,vtkTypeBool);
+  vtkGetMacro(Tubing,vtkTypeBool);
+  vtkBooleanMacro(Tubing,vtkTypeBool);
   //@}
 
   //@{
@@ -144,9 +145,18 @@ public:
    * plane interferes with the cut surface it produces producing
    * z-buffer artifacts.)
    */
-  void SetDrawPlane(int plane);
-  vtkGetMacro(DrawPlane,int);
-  vtkBooleanMacro(DrawPlane,int);
+  void SetDrawPlane(vtkTypeBool plane);
+  vtkGetMacro(DrawPlane,vtkTypeBool);
+  vtkBooleanMacro(DrawPlane,vtkTypeBool);
+  //@}
+
+  //@{
+  /**
+   * Enable/disable the drawing of the outline.
+   */
+  void SetDrawOutline(vtkTypeBool plane);
+  vtkGetMacro(DrawOutline,vtkTypeBool);
+  vtkBooleanMacro(DrawOutline,vtkTypeBool);
   //@}
 
   //@{
@@ -154,9 +164,9 @@ public:
    * Turn on/off the ability to translate the bounding box by grabbing it
    * with the left mouse button.
    */
-  vtkSetMacro(OutlineTranslation,int);
-  vtkGetMacro(OutlineTranslation,int);
-  vtkBooleanMacro(OutlineTranslation,int);
+  vtkSetMacro(OutlineTranslation,vtkTypeBool);
+  vtkGetMacro(OutlineTranslation,vtkTypeBool);
+  vtkBooleanMacro(OutlineTranslation,vtkTypeBool);
   //@}
 
   //@{
@@ -164,16 +174,16 @@ public:
    * Turn on/off the ability to move the widget outside of the bounds
    * specified in the initial PlaceWidget() invocation.
    */
-  vtkSetMacro(OutsideBounds,int);
-  vtkGetMacro(OutsideBounds,int);
-  vtkBooleanMacro(OutsideBounds,int);
+  vtkSetMacro(OutsideBounds,vtkTypeBool);
+  vtkGetMacro(OutsideBounds,vtkTypeBool);
+  vtkBooleanMacro(OutsideBounds,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get the bounds of the widget representation. PlaceWidget can also be
    * used to set the bounds of the widget but it may also have other effects
-   * on the internal state of the represenation. Use this function when only
+   * on the internal state of the representation. Use this function when only
    * the widget bounds are needs to be modified.
    */
   vtkSetVector6Macro(WidgetBounds, double);
@@ -188,18 +198,18 @@ public:
    * If off, the origin can be freely moved and the widget outline will change
    * accordingly.
    */
-  vtkSetMacro(ConstrainToWidgetBounds,int);
-  vtkGetMacro(ConstrainToWidgetBounds,int);
-  vtkBooleanMacro(ConstrainToWidgetBounds,int);
+  vtkSetMacro(ConstrainToWidgetBounds,vtkTypeBool);
+  vtkGetMacro(ConstrainToWidgetBounds,vtkTypeBool);
+  vtkBooleanMacro(ConstrainToWidgetBounds,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off the ability to scale the widget with the mouse.
    */
-  vtkSetMacro(ScaleEnabled,int);
-  vtkGetMacro(ScaleEnabled,int);
-  vtkBooleanMacro(ScaleEnabled,int);
+  vtkSetMacro(ScaleEnabled,vtkTypeBool);
+  vtkGetMacro(ScaleEnabled,vtkTypeBool);
+  vtkBooleanMacro(ScaleEnabled,vtkTypeBool);
   //@}
 
   /**
@@ -307,25 +317,42 @@ public:
 
   //@{
   /**
-   * Methods to interface with the vtkSliderWidget.
+   * Methods to interface with the vtkImplicitPlaneWidget2.
    */
-  int ComputeInteractionState(int X, int Y, int modify=0) VTK_OVERRIDE;
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void BuildRepresentation() VTK_OVERRIDE;
-  void StartWidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
-  void WidgetInteraction(double newEventPos[2]) VTK_OVERRIDE;
-  void EndWidgetInteraction(double newEventPos[2]) VTK_OVERRIDE;
+  int ComputeInteractionState(int X, int Y, int modify=0) override;
+  void PlaceWidget(double bounds[6]) override;
+  void BuildRepresentation() override;
+  void StartWidgetInteraction(double eventPos[2]) override;
+  void WidgetInteraction(double newEventPos[2]) override;
+  void EndWidgetInteraction(double newEventPos[2]) override;
+  void StartComplexInteraction(
+    vtkRenderWindowInteractor *iren,
+    vtkAbstractWidget *widget,
+    unsigned long event, void *calldata) override;
+  void ComplexInteraction(
+    vtkRenderWindowInteractor *iren,
+    vtkAbstractWidget *widget,
+    unsigned long event, void *calldata) override;
+  int ComputeComplexInteractionState(
+    vtkRenderWindowInteractor *iren,
+    vtkAbstractWidget *widget,
+    unsigned long event, void *calldata, int modify = 0) override;
+  void EndComplexInteraction(
+    vtkRenderWindowInteractor *iren,
+    vtkAbstractWidget *widget,
+    unsigned long event, void *calldata) override;
   //@}
+
   //@{
   /**
    * Methods supporting the rendering process.
    */
-  double *GetBounds() VTK_OVERRIDE;
-  void GetActors(vtkPropCollection *pc) VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport*) VTK_OVERRIDE;
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  double *GetBounds() VTK_SIZEHINT(6) override;
+  void GetActors(vtkPropCollection *pc) override;
+  void ReleaseGraphicsResources(vtkWindow*) override;
+  int RenderOpaqueGeometry(vtkViewport*) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport*) override;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
   //@}
 
   // Manage the state of the widget
@@ -362,22 +389,52 @@ public:
   vtkGetMacro(RepresentationState, int);
   //@}
 
+  // Get the underlying plane object used by this rep
+  // this can be used as a cropping plane in vtkMapper
+  vtkPlane *GetUnderlyingPlane() {
+    return this->Plane; }
+
+  //@{
+  /**
+   * Control if the plane should be drawn cropped by the bounding box
+   * or without cropping. Defaults to on.
+   */
+  virtual void SetCropPlaneToBoundingBox(bool);
+  vtkGetMacro(CropPlaneToBoundingBox,bool);
+  vtkBooleanMacro(CropPlaneToBoundingBox,bool);
+  //@}
+
+  //@{
+  /**
+   * For complex events should we snap orientations to
+   * be aligned with the x y z axes
+   */
+  vtkGetMacro(SnapToAxes, bool);
+  vtkSetMacro(SnapToAxes, bool);
+  //@}
+
 protected:
   vtkImplicitPlaneRepresentation();
-  ~vtkImplicitPlaneRepresentation() VTK_OVERRIDE;
+  ~vtkImplicitPlaneRepresentation() override;
 
   int RepresentationState;
 
   // Keep track of event positions
   double LastEventPosition[3];
+  double LastEventOrientation[4];
+  double StartEventOrientation[4];
 
   // Controlling ivars
-  int NormalToXAxis;
-  int NormalToYAxis;
-  int NormalToZAxis;
+  vtkTypeBool NormalToXAxis;
+  vtkTypeBool NormalToYAxis;
+  vtkTypeBool NormalToZAxis;
+
+  double SnappedEventOrientation[4];
+  bool SnappedOrientation;
+  bool SnapToAxes;
 
   // Locking normal to camera
-  int LockNormalToCamera;
+  vtkTypeBool LockNormalToCamera;
 
   // Controlling the push operation
   double BumpDistance;
@@ -391,17 +448,19 @@ protected:
   vtkPolyDataMapper *OutlineMapper;
   vtkActor          *OutlineActor;
   void HighlightOutline(int highlight);
-  int  OutlineTranslation; //whether the outline can be moved
-  int  ScaleEnabled; //whether the widget can be scaled
-  int  OutsideBounds; //whether the widget can be moved outside input's bounds
+  vtkTypeBool  OutlineTranslation; //whether the outline can be moved
+  vtkTypeBool  ScaleEnabled; //whether the widget can be scaled
+  vtkTypeBool  OutsideBounds; //whether the widget can be moved outside input's bounds
   double WidgetBounds[6];
-  int ConstrainToWidgetBounds;
+  vtkTypeBool ConstrainToWidgetBounds;
 
   // The cut plane is produced with a vtkCutter
   vtkCutter         *Cutter;
+  vtkPlaneSource    *PlaneSource;
   vtkPolyDataMapper *CutMapper;
   vtkActor          *CutActor;
-  int                DrawPlane;
+  vtkTypeBool                DrawPlane;
+  vtkTypeBool                DrawOutline;
   void HighlightPlane(int highlight);
 
   // Optional tubes are represented by extracting boundary edges and tubing
@@ -409,7 +468,7 @@ protected:
   vtkTubeFilter     *EdgesTuber;
   vtkPolyDataMapper *EdgesMapper;
   vtkActor          *EdgesActor;
-  int                Tubing; //control whether tubing is on
+  vtkTypeBool                Tubing; //control whether tubing is on
 
   // The + normal cone
   vtkConeSource     *ConeSource;
@@ -441,16 +500,18 @@ protected:
   vtkCellPicker *Picker;
 
   // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  void RegisterPickers() override;
 
   // Transform the normal (used for rotation)
   vtkTransform *Transform;
 
   // Methods to manipulate the plane
   void Rotate(double X, double Y, double *p1, double *p2, double *vpn);
+  void Rotate3D(double *p1, double *p2);
   void TranslatePlane(double *p1, double *p2);
   void TranslateOutline(double *p1, double *p2);
   void TranslateOrigin(double *p1, double *p2);
+  void UpdatePose(double *p1, double *d1, double *p2, double *d2);
   void Push(double *p1, double *p2);
   void Scale(double *p1, double *p2, double X, double Y);
   void SizeHandles();
@@ -468,12 +529,14 @@ protected:
 
   void GeneratePlane();
 
+  bool CropPlaneToBoundingBox;
+
   // Support GetBounds() method
   vtkBox *BoundingBox;
 
 private:
-  vtkImplicitPlaneRepresentation(const vtkImplicitPlaneRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImplicitPlaneRepresentation&) VTK_DELETE_FUNCTION;
+  vtkImplicitPlaneRepresentation(const vtkImplicitPlaneRepresentation&) = delete;
+  void operator=(const vtkImplicitPlaneRepresentation&) = delete;
 };
 
 #endif

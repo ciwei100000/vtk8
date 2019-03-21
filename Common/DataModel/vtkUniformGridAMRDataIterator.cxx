@@ -31,7 +31,7 @@ public:
 
   void Initialize(const std::vector<int>* numBlocks)
   {
-    assert(numBlocks && numBlocks->size()>=1);
+    assert(numBlocks && !numBlocks->empty());
     this->Level = 0;
     this->Index = -1;
     this->NumBlocks =  numBlocks;
@@ -53,7 +53,7 @@ public:
   virtual unsigned int GetFlatIndex() { return this->Index;}
 protected:
   AMRIndexIterator(): Level(0), Index(0) {}
-  ~AMRIndexIterator() VTK_OVERRIDE{};
+  ~AMRIndexIterator() override = default;
   unsigned int Level;
   int Index;
   unsigned int NumLevels;
@@ -78,10 +78,10 @@ class AMRLoadedDataIndexIterator: public AMRIndexIterator
 public:
   static AMRLoadedDataIndexIterator* New();
   vtkTypeMacro(AMRLoadedDataIndexIterator,AMRIndexIterator);
-  AMRLoadedDataIndexIterator(){}
+  AMRLoadedDataIndexIterator() = default;
   void Initialize(const std::vector<int>* numBlocks, const vtkAMRDataInternals::BlockList* dataBlocks)
   {
-    assert(numBlocks && numBlocks->size()>=1);
+    assert(numBlocks && !numBlocks->empty());
     this->Level = 0;
     this->InternalIdx = -1;
     this->NumBlocks =  numBlocks;
@@ -90,17 +90,17 @@ public:
     this->Next();
   }
 protected:
-  void AdvanceIndex() VTK_OVERRIDE
+  void AdvanceIndex() override
   {
     this->InternalIdx++;
     Superclass::Index = static_cast<size_t>(this->InternalIdx) < this->DataBlocks->size()? (*this->DataBlocks)[this->InternalIdx].Index : 0;
   }
-  bool IsDone() VTK_OVERRIDE { return static_cast<size_t>(this->InternalIdx) >=  this->DataBlocks->size();}
+  bool IsDone() override { return static_cast<size_t>(this->InternalIdx) >=  this->DataBlocks->size();}
   const vtkAMRDataInternals::BlockList* DataBlocks;
   int InternalIdx;
 private:
-  AMRLoadedDataIndexIterator(const AMRLoadedDataIndexIterator&) VTK_DELETE_FUNCTION;
-  void operator=(const AMRLoadedDataIndexIterator&) VTK_DELETE_FUNCTION;
+  AMRLoadedDataIndexIterator(const AMRLoadedDataIndexIterator&) = delete;
+  void operator=(const AMRLoadedDataIndexIterator&) = delete;
 };
 vtkStandardNewMacro(AMRLoadedDataIndexIterator);
 
@@ -111,14 +111,12 @@ vtkStandardNewMacro(vtkUniformGridAMRDataIterator);
 vtkUniformGridAMRDataIterator::vtkUniformGridAMRDataIterator()
 {
   this->Information = vtkSmartPointer<vtkInformation>::New();
-  this->AMR = NULL;
-  this->AMRData = NULL;
-  this->AMRInfo = NULL;
+  this->AMR = nullptr;
+  this->AMRData = nullptr;
+  this->AMRInfo = nullptr;
 }
 
-vtkUniformGridAMRDataIterator::~vtkUniformGridAMRDataIterator()
-{
-}
+vtkUniformGridAMRDataIterator::~vtkUniformGridAMRDataIterator() = default;
 
 
 vtkDataObject* vtkUniformGridAMRDataIterator::GetCurrentDataObject()

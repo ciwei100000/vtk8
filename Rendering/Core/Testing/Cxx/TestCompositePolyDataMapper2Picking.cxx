@@ -64,13 +64,9 @@ public:
   static PointPickCommand * New() {return new PointPickCommand;}
   vtkTypeMacro(PointPickCommand, vtkCommand);
 
-  PointPickCommand()
-  {
-  }
+  PointPickCommand() = default;
 
-  ~PointPickCommand() VTK_OVERRIDE
-  {
-  }
+  ~PointPickCommand() override = default;
 
   void SetPointIds(vtkSelection *selection)
   {
@@ -126,7 +122,7 @@ public:
     this->Picker = p;
   }
 
-  void Execute(vtkObject *, unsigned long, void *) VTK_OVERRIDE
+  void Execute(vtkObject *, unsigned long, void *) override
   {
     vtkProp3DCollection *props = this->Picker->GetProp3Ds();
     if (props->GetNumberOfItems() != 0)
@@ -205,6 +201,7 @@ int TestCompositePolyDataMapper2Picking(int argc, char* argv[])
   int numLeaves = 0;
   int numNodes = 0;
   vtkStdString blockName("Rolf");
+  mapper->SetInputDataObject(data.GetPointer());
   for (int level = 1; level < numLevels; ++level)
   {
     int nblocks=blocksPerLevel[level];
@@ -222,6 +219,26 @@ int TestCompositePolyDataMapper2Picking(int argc, char* argv[])
             plane->SetCenter(block*0.25, 0.5, parent*0.5);
             elev->SetLowPoint(block*0.25 - 0.2 + 0.2*block/nblocks, -0.02, 0.0);
             elev->SetHighPoint(block*0.25 + 0.1 + 0.2*block/nblocks, 0.02, 0.0);
+            elev->Update();
+
+            vtkPolyData* poly = vtkPolyData::SafeDownCast(elev->GetOutput(0));
+            vtkNew<vtkCellArray> lines;
+            lines->InsertNextCell(2);
+            lines->InsertCellPoint(16);
+            lines->InsertCellPoint(17);
+            lines->InsertNextCell(2);
+            lines->InsertCellPoint(18);
+            lines->InsertCellPoint(19);
+            poly->SetLines(lines);
+            vtkNew<vtkCellArray> strips;
+            strips->InsertNextCell(5);
+            strips->InsertCellPoint(20);
+            strips->InsertCellPoint(21);
+            strips->InsertCellPoint(22);
+            strips->InsertCellPoint(23);
+            strips->InsertCellPoint(24);
+            poly->SetStrips(strips);
+
             p2c->Update();
             child->DeepCopy(p2c->GetOutput(0));
           }
@@ -232,10 +249,10 @@ int TestCompositePolyDataMapper2Picking(int argc, char* argv[])
             child->DeepCopy(extract->GetOutput(0));
           }
           blocks[parent]->SetBlock(
-            block, (block % 2) ? NULL : child.GetPointer());
+            block, (block % 2) ? nullptr : child.GetPointer());
           blocks[parent]->GetMetaData(block)->Set(
             vtkCompositeDataSet::NAME(), blockName.c_str());
-          // test not seting it on some
+          // test not setting it on some
           if (block % 11)
           {
             mapper->SetBlockVisibility(parent+numLeaves, (block % 7) != 0);
@@ -254,7 +271,6 @@ int TestCompositePolyDataMapper2Picking(int argc, char* argv[])
     levelEnd = static_cast<unsigned>(blocks.size());
   }
 
-  mapper->SetInputData((vtkPolyData *)(data.GetPointer()));
   mapper->SetScalarModeToUseCellData();
 
   vtkSmartPointer<vtkActor> actor =
@@ -312,7 +328,7 @@ int TestCompositePolyDataMapper2Picking(int argc, char* argv[])
   if (
       bPrims.find(48) == bPrims.end() ||
       std::find(bPrims[48].begin(), bPrims[48].end(), 14) == bPrims[48].end() ||
-      bPrims.find(97) == bPrims.end() ||
+      bPrims.find(82) == bPrims.end() ||
       std::find(bPrims[82].begin(), bPrims[82].end(), 114) == bPrims[82].end()
       )
   {

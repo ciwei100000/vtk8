@@ -41,8 +41,8 @@ class vtkMapType : public MapBase {};
 
 vtkMapArrayValues::vtkMapArrayValues()
 {
-  this->InputArrayName = 0;
-  this->OutputArrayName = 0;
+  this->InputArrayName = nullptr;
+  this->OutputArrayName = nullptr;
   this->SetOutputArrayName("ArrayMap");
   this->FieldType = vtkMapArrayValues::POINT_DATA;
   this->OutputArrayType = VTK_INT;
@@ -54,12 +54,12 @@ vtkMapArrayValues::vtkMapArrayValues()
 
 vtkMapArrayValues::~vtkMapArrayValues()
 {
-  this->SetInputArrayName(0);
-  this->SetOutputArrayName(0);
+  this->SetInputArrayName(nullptr);
+  this->SetOutputArrayName(nullptr);
   delete this->Map;
 }
 
-void vtkMapArrayValues::AddToMap(char *from, int to)
+void vtkMapArrayValues::AddToMap(const char *from, int to)
 {
   vtkVariant fromVar(from);
   vtkVariant toVar(to);
@@ -77,7 +77,7 @@ void vtkMapArrayValues::AddToMap(int from, int to)
   this->Modified();
 }
 
-void vtkMapArrayValues::AddToMap(int from, char *to)
+void vtkMapArrayValues::AddToMap(int from, const char *to)
 {
   vtkVariant fromVar(from);
   vtkVariant toVar(to);
@@ -86,7 +86,7 @@ void vtkMapArrayValues::AddToMap(int from, char *to)
   this->Modified();
 }
 
-void vtkMapArrayValues::AddToMap(char *from, char *to)
+void vtkMapArrayValues::AddToMap(const char *from, const char *to)
 {
   vtkVariant fromVar(from);
   vtkVariant toVar(to);
@@ -136,7 +136,7 @@ int vtkMapArrayValues::RequestData(
     return 1;
   }
 
-  vtkDataSetAttributes* ods=0;
+  vtkDataSetAttributes* ods=nullptr;
   if (vtkDataSet::SafeDownCast(input))
   {
     vtkDataSet *dsInput = vtkDataSet::SafeDownCast(input);

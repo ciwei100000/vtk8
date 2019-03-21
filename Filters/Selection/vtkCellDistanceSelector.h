@@ -52,7 +52,7 @@ class VTKFILTERSSELECTION_EXPORT vtkCellDistanceSelector : public vtkSelectionAl
 {
  public:
   vtkTypeMacro(vtkCellDistanceSelector,vtkSelectionAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 //@}
 
   static vtkCellDistanceSelector* New();
@@ -102,28 +102,28 @@ class VTKFILTERSSELECTION_EXPORT vtkCellDistanceSelector : public vtkSelectionAl
   /**
    * If set, seed cells passed with SetSeedCells will be included in the final selection
    */
-  vtkSetMacro(IncludeSeed,int);
-  vtkGetMacro(IncludeSeed,int);
-  vtkBooleanMacro(IncludeSeed,int);
+  vtkSetMacro(IncludeSeed,vtkTypeBool);
+  vtkGetMacro(IncludeSeed,vtkTypeBool);
+  vtkBooleanMacro(IncludeSeed,vtkTypeBool);
   //@}
 
   //@{
   /**
    * If set, intermediate cells (between seed cells and the selection boundary) will be included in the final selection
    */
-  vtkSetMacro(AddIntermediate,int);
-  vtkGetMacro(AddIntermediate,int);
-  vtkBooleanMacro(AddIntermediate,int);
+  vtkSetMacro(AddIntermediate,vtkTypeBool);
+  vtkGetMacro(AddIntermediate,vtkTypeBool);
+  vtkBooleanMacro(AddIntermediate,vtkTypeBool);
   //@}
 
  protected:
   vtkCellDistanceSelector ();
-  ~vtkCellDistanceSelector () VTK_OVERRIDE;
+  ~vtkCellDistanceSelector () override;
 
   void AddSelectionNode(vtkSelection* output, vtkSmartPointer<vtkDataArray> outIndices, int partNumber, int d);
 
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
-  int RequestData(vtkInformation*,vtkInformationVector**,vtkInformationVector*) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
+  int RequestData(vtkInformation*,vtkInformationVector**,vtkInformationVector*) override;
 
   /**
    * Tological radius from seed cells to be used to select cells
@@ -135,17 +135,17 @@ class VTKFILTERSSELECTION_EXPORT vtkCellDistanceSelector : public vtkSelectionAl
    * Decide whether seed cells are included in selection
    * Default: 1
    */
-  int IncludeSeed;
+  vtkTypeBool IncludeSeed;
 
   /**
    * Decide whether at distance between 1 and Distance-1 are included in selection
    * Default: 1
    */
-  int AddIntermediate;
+  vtkTypeBool AddIntermediate;
 
  private:
-  vtkCellDistanceSelector(const vtkCellDistanceSelector &) VTK_DELETE_FUNCTION;
-  void operator= (const vtkCellDistanceSelector &) VTK_DELETE_FUNCTION;
+  vtkCellDistanceSelector(const vtkCellDistanceSelector &) = delete;
+  void operator= (const vtkCellDistanceSelector &) = delete;
 };
 
 #endif /* vtkCellDistanceSelector_h */

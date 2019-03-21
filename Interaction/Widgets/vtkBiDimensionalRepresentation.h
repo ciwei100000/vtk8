@@ -57,7 +57,7 @@ public:
    * Standard VTK methods.
    */
   vtkTypeMacro(vtkBiDimensionalRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -104,12 +104,12 @@ public:
    * control the appearance of the widget. Note: turning off Line1 actually turns
    * off Line1 and Line2.
    */
-  vtkSetMacro(Line1Visibility,int);
-  vtkGetMacro(Line1Visibility,int);
-  vtkBooleanMacro(Line1Visibility,int);
-  vtkSetMacro(Line2Visibility,int);
-  vtkGetMacro(Line2Visibility,int);
-  vtkBooleanMacro(Line2Visibility,int);
+  vtkSetMacro(Line1Visibility,vtkTypeBool);
+  vtkGetMacro(Line1Visibility,vtkTypeBool);
+  vtkBooleanMacro(Line1Visibility,vtkTypeBool);
+  vtkSetMacro(Line2Visibility,vtkTypeBool);
+  vtkGetMacro(Line2Visibility,vtkTypeBool);
+  vtkBooleanMacro(Line2Visibility,vtkTypeBool);
   //@}
 
   //@{
@@ -168,9 +168,9 @@ public:
    * Toggle whether to display the label above or below the widget.
    * Defaults to 1.
    */
-  vtkSetMacro(ShowLabelAboveWidget, int);
-  vtkGetMacro(ShowLabelAboveWidget, int);
-  vtkBooleanMacro(ShowLabelAboveWidget, int);
+  vtkSetMacro(ShowLabelAboveWidget, vtkTypeBool);
+  vtkGetMacro(ShowLabelAboveWidget, vtkTypeBool);
+  vtkBooleanMacro(ShowLabelAboveWidget, vtkTypeBool);
   //@}
 
   //@{
@@ -207,7 +207,7 @@ public:
 
 protected:
   vtkBiDimensionalRepresentation();
-  ~vtkBiDimensionalRepresentation() VTK_OVERRIDE;
+  ~vtkBiDimensionalRepresentation() override;
 
   // Keep track if modifier is set
   int Modifier;
@@ -223,8 +223,8 @@ protected:
   int Tolerance;
 
   // Visibility of the lines
-  int Line1Visibility;
-  int Line2Visibility;
+  vtkTypeBool Line1Visibility;
+  vtkTypeBool Line2Visibility;
 
   vtkIdType ID;
   int IDInitialized;
@@ -245,11 +245,11 @@ protected:
   char *LabelFormat;
 
   // toggle to determine whether to place text above or below widget
-  int ShowLabelAboveWidget;
+  vtkTypeBool ShowLabelAboveWidget;
 
 private:
-  vtkBiDimensionalRepresentation(const vtkBiDimensionalRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBiDimensionalRepresentation&) VTK_DELETE_FUNCTION;
+  vtkBiDimensionalRepresentation(const vtkBiDimensionalRepresentation&) = delete;
+  void operator=(const vtkBiDimensionalRepresentation&) = delete;
 };
 
 #endif

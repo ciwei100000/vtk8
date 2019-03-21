@@ -37,30 +37,30 @@ vtkInteractorStyleSwitch::vtkInteractorStyleSwitch()
   this->JoystickOrTrackball = VTKIS_JOYSTICK;
   this->CameraOrActor = VTKIS_CAMERA;
   this->MultiTouch = false;
-  this->CurrentStyle = 0;
+  this->CurrentStyle = nullptr;
 }
 
 //----------------------------------------------------------------------------
 vtkInteractorStyleSwitch::~vtkInteractorStyleSwitch()
 {
   this->JoystickActor->Delete();
-  this->JoystickActor = NULL;
+  this->JoystickActor = nullptr;
 
   this->JoystickCamera->Delete();
-  this->JoystickCamera = NULL;
+  this->JoystickCamera = nullptr;
 
   this->TrackballActor->Delete();
-  this->TrackballActor = NULL;
+  this->TrackballActor = nullptr;
 
   this->TrackballCamera->Delete();
-  this->TrackballCamera = NULL;
+  this->TrackballCamera = nullptr;
 
   this->MultiTouchCamera->Delete();
-  this->MultiTouchCamera = NULL;
+  this->MultiTouchCamera = nullptr;
 }
 
 //----------------------------------------------------------------------------
-void vtkInteractorStyleSwitch::SetAutoAdjustCameraClippingRange( int value )
+void vtkInteractorStyleSwitch::SetAutoAdjustCameraClippingRange( vtkTypeBool value )
 {
   if ( value == this->AutoAdjustCameraClippingRange )
   {
@@ -167,7 +167,7 @@ void vtkInteractorStyleSwitch::OnChar()
 }
 
 //----------------------------------------------------------------------------
-// this will do nothing if the CurrentStyle matchs
+// this will do nothing if the CurrentStyle matches
 // JoystickOrTrackball and CameraOrActor
 // It should! If the this->Interactor was changed (using SetInteractor()),
 // and the currentstyle should not change.
@@ -185,7 +185,7 @@ void vtkInteractorStyleSwitch::SetCurrentStyle()
     {
       if(this->CurrentStyle)
       {
-        this->CurrentStyle->SetInteractor(0);
+        this->CurrentStyle->SetInteractor(nullptr);
       }
       this->CurrentStyle = this->MultiTouchCamera;
     }
@@ -197,7 +197,7 @@ void vtkInteractorStyleSwitch::SetCurrentStyle()
     {
       if(this->CurrentStyle)
       {
-        this->CurrentStyle->SetInteractor(0);
+        this->CurrentStyle->SetInteractor(nullptr);
       }
       this->CurrentStyle = this->JoystickCamera;
     }
@@ -209,7 +209,7 @@ void vtkInteractorStyleSwitch::SetCurrentStyle()
     {
       if(this->CurrentStyle)
       {
-        this->CurrentStyle->SetInteractor(0);
+        this->CurrentStyle->SetInteractor(nullptr);
       }
       this->CurrentStyle = this->JoystickActor;
     }
@@ -221,7 +221,7 @@ void vtkInteractorStyleSwitch::SetCurrentStyle()
     {
       if(this->CurrentStyle)
       {
-        this->CurrentStyle->SetInteractor(0);
+        this->CurrentStyle->SetInteractor(nullptr);
       }
       this->CurrentStyle = this->TrackballCamera;
     }
@@ -233,7 +233,7 @@ void vtkInteractorStyleSwitch::SetCurrentStyle()
       {
         if(this->CurrentStyle)
         {
-          this->CurrentStyle->SetInteractor(0);
+          this->CurrentStyle->SetInteractor(nullptr);
         }
         this->CurrentStyle = this->TrackballActor;
       }

@@ -31,9 +31,7 @@ vtkPassThrough::vtkPassThrough()
 }
 
 //----------------------------------------------------------------------------
-vtkPassThrough::~vtkPassThrough()
-{
-}
+vtkPassThrough::~vtkPassThrough() = default;
 
 //----------------------------------------------------------------------------
 int vtkPassThrough::RequestDataObject(vtkInformation *request,
@@ -42,7 +40,7 @@ int vtkPassThrough::RequestDataObject(vtkInformation *request,
 {
   if (this->AllowNullInput &&
       this->GetNumberOfInputPorts() != 0 &&
-      inVec[0]->GetInformationObject(0) == NULL)
+      inVec[0]->GetInformationObject(0) == nullptr)
   {
     for (int i = 0; i < this->GetNumberOfOutputPorts(); ++i)
     {

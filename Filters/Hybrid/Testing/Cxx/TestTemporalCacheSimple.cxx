@@ -36,7 +36,7 @@
 #include <functional>
 
 //
-// This test is intended  to test the ability of the temporal pipeline
+// This test is intended to test the ability of the temporal pipeline
 // to loop a simple source over T and pass Temporal data downstream.
 //
 
@@ -68,12 +68,12 @@ public:
   int RequestInformation(
     vtkInformation* request,
     vtkInformationVector** inputVector,
-    vtkInformationVector* outputVector) VTK_OVERRIDE;
+    vtkInformationVector* outputVector) override;
 
   int RequestData(
     vtkInformation* request,
     vtkInformationVector** inputVector,
-    vtkInformationVector* outputVector) VTK_OVERRIDE;
+    vtkInformationVector* outputVector) override;
 
 public:
   int TimeStepRange[2];
@@ -146,7 +146,7 @@ int vtkTemporalSphereSource::RequestData(
     this->ActualTimeStep = std::find_if(
       this->TimeStepValues.begin(),
       this->TimeStepValues.end(),
-      std::bind2nd( vtkTestTemporalCacheSimpleWithinTolerance( ), requestedTimeValue ))
+      std::bind( vtkTestTemporalCacheSimpleWithinTolerance( ), std::placeholders::_1, requestedTimeValue ))
       - this->TimeStepValues.begin();
     this->ActualTimeStep = this->ActualTimeStep + this->TimeStepRange[0];
   }
@@ -172,7 +172,7 @@ public:
   static vtkTestTemporalCacheSimpleExecuteCallback *New()
   { return new vtkTestTemporalCacheSimpleExecuteCallback; }
 
-  void Execute(vtkObject *caller, unsigned long, void*) VTK_OVERRIDE
+  void Execute(vtkObject *caller, unsigned long, void*) override
   {
     // count the number of timesteps requested
     vtkTemporalSphereSource *sph = vtkTemporalSphereSource::SafeDownCast(caller);
@@ -248,7 +248,7 @@ int TestTemporalCacheSimple(int , char *[])
     }
   }
 
-  vtkAlgorithm::SetDefaultExecutivePrototype(0);
+  vtkAlgorithm::SetDefaultExecutivePrototype(nullptr);
 
   if (executecb->Count == 11)
   {

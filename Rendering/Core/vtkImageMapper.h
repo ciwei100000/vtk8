@@ -43,12 +43,12 @@ class VTKRENDERINGCORE_EXPORT vtkImageMapper : public vtkMapper2D
 public:
   vtkTypeMacro(vtkImageMapper, vtkMapper2D);
   static vtkImageMapper *New();
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Override Modifiedtime as we have added a lookuptable
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -117,9 +117,9 @@ public:
    * will render the image into the rectangle supplied by the Actor2D's
    * PositionCoordinate and Position2Coordinate
    */
-  vtkSetMacro(RenderToRectangle, int);
-  vtkGetMacro(RenderToRectangle, int);
-  vtkBooleanMacro(RenderToRectangle, int);
+  vtkSetMacro(RenderToRectangle, vtkTypeBool);
+  vtkGetMacro(RenderToRectangle, vtkTypeBool);
+  vtkBooleanMacro(RenderToRectangle, vtkTypeBool);
   //@}
 
   //@{
@@ -130,9 +130,9 @@ public:
    * Note that the Custom extents are x,y only and the zslice is still
    * applied
    */
-  vtkSetMacro(UseCustomExtents, int);
-  vtkGetMacro(UseCustomExtents, int);
-  vtkBooleanMacro(UseCustomExtents, int);
+  vtkSetMacro(UseCustomExtents, vtkTypeBool);
+  vtkGetMacro(UseCustomExtents, vtkTypeBool);
+  vtkBooleanMacro(UseCustomExtents, vtkTypeBool);
   //@}
 
   //@{
@@ -147,21 +147,21 @@ public:
 
 protected:
   vtkImageMapper();
-  ~vtkImageMapper() VTK_OVERRIDE;
+  ~vtkImageMapper() override;
 
   double ColorWindow;
   double ColorLevel;
 
   int PositionAdjustment[2];
   int ZSlice;
-  int UseCustomExtents;
+  vtkTypeBool UseCustomExtents;
   int CustomDisplayExtents[4];
-  int RenderToRectangle;
+  vtkTypeBool RenderToRectangle;
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 private:
-  vtkImageMapper(const vtkImageMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageMapper&) VTK_DELETE_FUNCTION;
+  vtkImageMapper(const vtkImageMapper&) = delete;
+  void operator=(const vtkImageMapper&) = delete;
 };
 
 #endif

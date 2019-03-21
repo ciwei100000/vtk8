@@ -72,9 +72,7 @@ vtkProjectSphereFilter::vtkProjectSphereFilter() : SplitLongitude(-180)
 }
 
 //-----------------------------------------------------------------------------
-vtkProjectSphereFilter::~vtkProjectSphereFilter()
-{
-}
+vtkProjectSphereFilter::~vtkProjectSphereFilter() = default;
 
 //-----------------------------------------------------------------------------
 void vtkProjectSphereFilter::PrintSelf(ostream &os, vtkIndent indent)
@@ -228,7 +226,7 @@ void vtkProjectSphereFilter::TransformCellInformation(
   }
 
   vtkIdType numberOfCells = input->GetNumberOfCells();
-  vtkCellArray* connectivity = NULL;
+  vtkCellArray* connectivity = nullptr;
   vtkUnstructuredGrid* ugrid = vtkUnstructuredGrid::SafeDownCast(output);
   vtkPolyData* poly = vtkPolyData::SafeDownCast(output);
   if(ugrid)

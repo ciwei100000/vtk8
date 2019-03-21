@@ -58,7 +58,7 @@ int vtkGlyphSource2D::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -114,10 +114,10 @@ int vtkGlyphSource2D::RequestData(
       this->CreateVertex(pts,verts,colors);
       break;
     case VTK_DASH_GLYPH:
-      this->CreateDash(pts,lines,polys,colors,this->Scale);
+      this->CreateDash(pts,lines,polys,colors,1.0);
       break;
     case VTK_CROSS_GLYPH:
-      this->CreateCross(pts,lines,polys,colors,this->Scale);
+      this->CreateCross(pts,lines,polys,colors,1.0);
       break;
     case VTK_THICKCROSS_GLYPH:
       this->CreateThickCross(pts,lines,polys,colors);

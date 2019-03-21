@@ -27,7 +27,7 @@
   * the integers in the vector will all be in \f$\{0,\ldots,2^d-1\}\f$.
   *
   * The octree_cursor class provides a free-form way to visit nodes in the octree;
-  * it does not behave like an interator that guarantees each node will be visited once.
+  * it does not behave like an iterator that guarantees each node will be visited once.
   * Instead, it provides a way to move up, down, and across the tree from any location.
   * This makes it useful for local queries that do not need to traverse the entire tree.
   *
@@ -57,7 +57,7 @@ public:
 
   typedef A_ allocator_type;
 
-  // Ugly. But neccessary according to young me. Old me says so.
+  // Ugly. But necessary according to young me. Old me says so.
   typedef octree_iterator< T_, T_&, T_*, _self_type, _self_pointer, d_ > iterator;
   typedef octree_iterator< T_, const T_&, const T_*, _self_type, _self_pointer, d_ > const_iterator;
 
@@ -86,7 +86,7 @@ public:
     */
   //@{
   iterator begin( bool only_leaves = true ) { return iterator( _M_root, _M_root, only_leaves ); }
-  iterator end( bool only_leaves = true ) { return iterator( _M_root, 0, only_leaves ); }
+  iterator end( bool only_leaves = true ) { return iterator( _M_root, nullptr, only_leaves ); }
 
   const_iterator begin( bool only_leaves = true ) const { return const_iterator( _M_root, _M_root, only_leaves ); }
   const_iterator end( bool only_leaves = true ) const { return const_iterator( _M_root, 0, only_leaves ); }

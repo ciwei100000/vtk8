@@ -104,7 +104,7 @@ class VTKRENDERINGCORE_EXPORT vtkLightKit : public vtkObject
 public:
   static vtkLightKit *New();
   vtkTypeMacro(vtkLightKit, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   enum LightKitType {
     TKeyLight,
@@ -139,7 +139,7 @@ public:
    * how bright the fill light is compared to the key light: larger
    * values correspond to a dimmer fill light.  The purpose of the
    * fill light is to light parts of the object not lit by the key
-   * light, while still maintaining constrast.  This type of lighting
+   * light, while still maintaining contrast.  This type of lighting
    * may correspond to indirect illumination from the key light, bounced
    * off a wall, floor, or other object.  The fill light should never
    * be brighter than the key light:  a good range for the key-to-fill
@@ -219,9 +219,9 @@ public:
    * the apparent intensity of lights based on their perceptual brightnesses.
    * By default, MaintainLuminance is off.
    */
-  vtkBooleanMacro(MaintainLuminance, int);
-  vtkGetMacro(MaintainLuminance, int);
-  vtkSetMacro(MaintainLuminance, int);
+  vtkBooleanMacro(MaintainLuminance, vtkTypeBool);
+  vtkGetMacro(MaintainLuminance, vtkTypeBool);
+  vtkSetMacro(MaintainLuminance, vtkTypeBool);
   //@}
 
   /**
@@ -299,7 +299,7 @@ public:
 
   void DeepCopy(vtkLightKit *kit);
 
-  void Modified() VTK_OVERRIDE;
+  void Modified() override;
   void Update();
 
   /**
@@ -315,7 +315,7 @@ public:
   /**
    * Helper method to go from a enum subtype to a string subtype
    * The difference from GetStringFromSubType is that it returns
-   * a shorter strings (useful for GUI with minimun space)
+   * a shorter strings (useful for GUI with minimum space)
    */
   static const char *GetShortStringFromSubType(int subtype);
 
@@ -327,7 +327,7 @@ public:
 
 protected:
   vtkLightKit();
-  ~vtkLightKit() VTK_OVERRIDE;
+  ~vtkLightKit() override;
 
   void WarmthToRGBI(double w, double rgb[3], double& i);
   void WarmthToRGB(double w, double rgb[3]);
@@ -362,13 +362,13 @@ protected:
   double HeadLightWarmth;
   double HeadLightColor[3];
 
-  int MaintainLuminance;
+  vtkTypeBool MaintainLuminance;
 
   vtkPiecewiseFunction *WarmthFunction[4]; // r, g, b, perceptual length
 
 private:
-  vtkLightKit(const vtkLightKit&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkLightKit&) VTK_DELETE_FUNCTION;
+  vtkLightKit(const vtkLightKit&) = delete;
+  void operator=(const vtkLightKit&) = delete;
 };
 
 #endif

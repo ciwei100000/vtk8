@@ -57,8 +57,9 @@
 #include <array> // For std::array!
 
 class vtkOpenGLFramebufferObject;
-class vtkOpenGLBufferObject;
+class vtkOpenGLQuadHelper;
 class vtkOpenGLVertexArrayObject;
+class vtkRenderTimerLog;
 class vtkShaderProgram;
 class vtkTextureObject;
 
@@ -68,10 +69,10 @@ class VTKRENDERINGOPENGL2_EXPORT vtkDualDepthPeelingPass:
 public:
   static vtkDualDepthPeelingPass* New();
   vtkTypeMacro(vtkDualDepthPeelingPass, vtkDepthPeelingPass)
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
-  void Render(const vtkRenderState *s) VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow *w) VTK_OVERRIDE;
+  void Render(const vtkRenderState *s) override;
+  void ReleaseGraphicsResources(vtkWindow *w) override;
 
   //@{
   /**
@@ -88,17 +89,17 @@ public:
                               std::string &geometryShader,
                               std::string &fragmentShader,
                               vtkAbstractMapper *mapper,
-                              vtkProp *prop) VTK_OVERRIDE;
+                              vtkProp *prop) override;
   bool PostReplaceShaderValues(std::string &vertexShader,
                                std::string &geometryShader,
                                std::string &fragmentShader,
                                vtkAbstractMapper *mapper,
-                               vtkProp *prop) VTK_OVERRIDE;
+                               vtkProp *prop) override;
   bool SetShaderParameters(vtkShaderProgram *program,
                            vtkAbstractMapper *mapper,
                            vtkProp *prop,
-                           vtkOpenGLVertexArrayObject *VAO = nullptr) VTK_OVERRIDE;
-  virtual vtkMTimeType GetShaderStageMTime() VTK_OVERRIDE;
+                           vtkOpenGLVertexArrayObject *VAO = nullptr) override;
+  vtkMTimeType GetShaderStageMTime() override;
 
 protected:
 
@@ -153,7 +154,7 @@ protected:
   };
 
   vtkDualDepthPeelingPass();
-  ~vtkDualDepthPeelingPass() VTK_OVERRIDE;
+  ~vtkDualDepthPeelingPass() override;
 
   void SetCurrentStage(ShaderStage stage);
   vtkSetMacro(CurrentPeelType, PeelType)
@@ -254,24 +255,14 @@ protected:
   void BlendFinalImage();
   void DeleteOcclusionQueryIds();
 
+  vtkRenderTimerLog *Timer;
   vtkRenderPass *VolumetricPass;
   const vtkRenderState *RenderState;
 
-  vtkShaderProgram *CopyColorProgram;
-  vtkOpenGLVertexArrayObject *CopyColorVAO;
-  vtkOpenGLBufferObject *CopyColorVBO;
-
-  vtkShaderProgram *CopyDepthProgram;
-  vtkOpenGLVertexArrayObject *CopyDepthVAO;
-  vtkOpenGLBufferObject *CopyDepthVBO;
-
-  vtkShaderProgram *BackBlendProgram;
-  vtkOpenGLVertexArrayObject *BackBlendVAO;
-  vtkOpenGLBufferObject *BackBlendVBO;
-
-  vtkShaderProgram *BlendProgram;
-  vtkOpenGLVertexArrayObject *BlendVAO;
-  vtkOpenGLBufferObject *BlendVBO;
+  vtkOpenGLQuadHelper *CopyColorHelper;
+  vtkOpenGLQuadHelper *CopyDepthHelper;
+  vtkOpenGLQuadHelper *BackBlendHelper;
+  vtkOpenGLQuadHelper *BlendHelper;
 
   vtkTextureObject *Textures[NumberOfTextures];
 
@@ -302,8 +293,8 @@ protected:
   bool DepthTestEnabled;
 
 private:
-  vtkDualDepthPeelingPass(const vtkDualDepthPeelingPass&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDualDepthPeelingPass&) VTK_DELETE_FUNCTION;
+  vtkDualDepthPeelingPass(const vtkDualDepthPeelingPass&) = delete;
+  void operator=(const vtkDualDepthPeelingPass&) = delete;
 };
 
 #endif // vtkDualDepthPeelingPass_h

@@ -56,15 +56,15 @@ public:
    * Standard methods for instances of this class.
    */
   vtkTypeMacro(vtkAbstractPolygonalHandleRepresentation3D,vtkHandleRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
   /**
    * Set the position of the point in world and display coordinates.
    */
-  void SetWorldPosition(double p[3]) VTK_OVERRIDE;
-  void SetDisplayPosition(double p[3]) VTK_OVERRIDE;
+  void SetWorldPosition(double p[3]) override;
+  void SetDisplayPosition(double p[3]) override;
   //@}
 
   //@{
@@ -95,24 +95,24 @@ public:
   /**
    * Methods to make this class properly act like a vtkWidgetRepresentation.
    */
-  void BuildRepresentation() VTK_OVERRIDE;
-  void StartWidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
-  void WidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
-  int ComputeInteractionState(int X, int Y, int modify=0) VTK_OVERRIDE;
+  void BuildRepresentation() override;
+  void StartWidgetInteraction(double eventPos[2]) override;
+  void WidgetInteraction(double eventPos[2]) override;
+  int ComputeInteractionState(int X, int Y, int modify=0) override;
   //@}
 
   //@{
   /**
    * Methods to make this class behave as a vtkProp.
    */
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE;
-  void DeepCopy(vtkProp *prop) VTK_OVERRIDE;
-  void GetActors(vtkPropCollection *) VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport *viewport) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport *viewport) VTK_OVERRIDE;
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
-  double *GetBounds() VTK_OVERRIDE;
+  void ShallowCopy(vtkProp *prop) override;
+  void DeepCopy(vtkProp *prop) override;
+  void GetActors(vtkPropCollection *) override;
+  void ReleaseGraphicsResources(vtkWindow *) override;
+  int RenderOpaqueGeometry(vtkViewport *viewport) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport *viewport) override;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
+  double *GetBounds() override;
   //@}
 
   //@{
@@ -120,9 +120,9 @@ public:
    * A label may be associated with the seed. The string can be set via
    * SetLabelText. The visibility of the label can be turned on / off.
    */
-  vtkSetMacro( LabelVisibility, int );
-  vtkGetMacro( LabelVisibility, int );
-  vtkBooleanMacro( LabelVisibility, int );
+  vtkSetMacro( LabelVisibility, vtkTypeBool );
+  vtkGetMacro( LabelVisibility, vtkTypeBool );
+  vtkBooleanMacro( LabelVisibility, vtkTypeBool );
   virtual void SetLabelText( const char * label );
   virtual char * GetLabelText();
   //@}
@@ -156,14 +156,14 @@ public:
 
   //@{
   /**
-   * Toogle the visibility of the handle on and off
+   * Toggle the visibility of the handle on and off
    */
-  vtkSetMacro( HandleVisibility, int );
-  vtkGetMacro( HandleVisibility, int );
-  vtkBooleanMacro( HandleVisibility, int );
+  vtkSetMacro( HandleVisibility, vtkTypeBool );
+  vtkGetMacro( HandleVisibility, vtkTypeBool );
+  vtkBooleanMacro( HandleVisibility, vtkTypeBool );
   //@}
 
-  void Highlight(int highlight) VTK_OVERRIDE;
+  void Highlight(int highlight) override;
 
   //@{
   /**
@@ -177,14 +177,19 @@ public:
    * inherent restrictions on handle placement might conflict with a request
    * for smooth motion of the handles.
    */
-  vtkSetMacro( SmoothMotion, int );
-  vtkGetMacro( SmoothMotion, int );
-  vtkBooleanMacro( SmoothMotion, int );
+  vtkSetMacro( SmoothMotion, vtkTypeBool );
+  vtkGetMacro( SmoothMotion, vtkTypeBool );
+  vtkBooleanMacro( SmoothMotion, vtkTypeBool );
   //@}
+
+  /*
+  * Register internal Pickers within PickingManager
+  */
+  void RegisterPickers() override;
 
 protected:
   vtkAbstractPolygonalHandleRepresentation3D();
-  ~vtkAbstractPolygonalHandleRepresentation3D() VTK_OVERRIDE;
+  ~vtkAbstractPolygonalHandleRepresentation3D() override;
 
   vtkActor                   * Actor;
   vtkPolyDataMapper          * Mapper;
@@ -199,10 +204,7 @@ protected:
   vtkProperty                * SelectedProperty;
   int                          WaitingForMotion;
   int                          WaitCount;
-  int                          HandleVisibility;
-
-  // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  vtkTypeBool                  HandleVisibility;
 
   // Methods to manipulate the cursor
   virtual void Translate(double *p1, double *p2);
@@ -242,16 +244,16 @@ protected:
   virtual void UpdateLabel();
 
   // Handle the label.
-  int                LabelVisibility;
+  vtkTypeBool        LabelVisibility;
   vtkFollower       *LabelTextActor;
   vtkPolyDataMapper *LabelTextMapper;
   vtkVectorText     *LabelTextInput;
   bool               LabelAnnotationTextScaleInitialized;
-  int                SmoothMotion;
+  vtkTypeBool        SmoothMotion;
 
 private:
-  vtkAbstractPolygonalHandleRepresentation3D(const vtkAbstractPolygonalHandleRepresentation3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAbstractPolygonalHandleRepresentation3D&) VTK_DELETE_FUNCTION;
+  vtkAbstractPolygonalHandleRepresentation3D(const vtkAbstractPolygonalHandleRepresentation3D&) = delete;
+  void operator=(const vtkAbstractPolygonalHandleRepresentation3D&) = delete;
 };
 
 #endif

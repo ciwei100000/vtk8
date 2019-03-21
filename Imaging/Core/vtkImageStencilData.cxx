@@ -249,8 +249,8 @@ vtkImageStencilData::vtkImageStencilData()
   this->Origin[2] = 0;
 
   this->NumberOfExtentEntries = 0;
-  this->ExtentLists = NULL;
-  this->ExtentListLengths = NULL;
+  this->ExtentLists = nullptr;
+  this->ExtentListLengths = nullptr;
 
   this->Extent[0] = 0;
   this->Extent[1] = -1;
@@ -311,11 +311,11 @@ void vtkImageStencilData::Initialize()
     }
     delete [] this->ExtentLists;
   }
-  this->ExtentLists = NULL;
+  this->ExtentLists = nullptr;
   this->NumberOfExtentEntries = 0;
 
   delete [] this->ExtentListLengths;
-  this->ExtentListLengths = NULL;
+  this->ExtentListLengths = nullptr;
 
   if(this->Information)
   {
@@ -362,7 +362,7 @@ void vtkImageStencilData::CopyOriginAndSpacingFromPipeline(vtkInformation* info)
 }
 
 //----------------------------------------------------------------------------
-void vtkImageStencilData::SetExtent(int extent[6])
+void vtkImageStencilData::SetExtent(const int extent[6])
 {
   for (int i = 0; i < 6; i++)
   {
@@ -424,11 +424,11 @@ void vtkImageStencilData::InternalImageStencilDataCopy(vtkImageStencilData *s)
     }
     delete [] this->ExtentLists;
   }
-  this->ExtentLists = NULL;
+  this->ExtentLists = nullptr;
   this->NumberOfExtentEntries = 0;
 
   delete [] this->ExtentListLengths;
-  this->ExtentListLengths = NULL;
+  this->ExtentListLengths = nullptr;
 
   // copy new data
   if (s->NumberOfExtentEntries != 0)
@@ -465,6 +465,7 @@ void vtkImageStencilData::ChangeExtent(const int extent[6])
 {
   int oldExtent[6];
   this->GetExtent(oldExtent);
+  this->SetExtent(extent);
 
   if (extent[2] != oldExtent[2] || extent[3] != oldExtent[3] ||
       extent[4] != oldExtent[4] || extent[5] != oldExtent[5])
@@ -477,12 +478,10 @@ void vtkImageStencilData::ChangeExtent(const int extent[6])
 
     // Clear the stencil
     this->NumberOfExtentEntries = 0;
-    this->ExtentListLengths = 0;
-    this->ExtentLists = 0;
+    this->ExtentListLengths = nullptr;
+    this->ExtentLists = nullptr;
 
-    // Set the new extent and re-allocate
-    this->SetExtent(
-      extent[0], extent[1], extent[2], extent[3], extent[4], extent[5]);
+    // Re-allocate
     this->AllocateExtents();
 
     // Get the location for storing single extents
@@ -575,8 +574,8 @@ void vtkImageStencilData::AllocateExtents()
     }
 
     this->NumberOfExtentEntries = numEntries;
-    this->ExtentLists = NULL;
-    this->ExtentListLengths = NULL;
+    this->ExtentLists = nullptr;
+    this->ExtentListLengths = nullptr;
 
     if (numEntries)
     {
@@ -853,7 +852,7 @@ void vtkImageStencilData::RemoveExtent(
 //----------------------------------------------------------------------------
 vtkImageStencilData* vtkImageStencilData::GetData(vtkInformation* info)
 {
-  return info? vtkImageStencilData::SafeDownCast(info->Get(DATA_OBJECT())) : 0;
+  return info? vtkImageStencilData::SafeDownCast(info->Get(DATA_OBJECT())) : nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -1000,7 +999,7 @@ void vtkImageStencilData::Replace(vtkImageStencilData *stencil1)
       (extent1[2] > extent2[3]) || (extent1[3] < extent2[2]) ||
       (extent1[4] > extent2[5]) || (extent1[5] < extent2[4]))
   {
-    // The extents don't intersect.. No subraction needed
+    // The extents don't intersect.. No subtraction needed
     return;
   }
 
@@ -1174,10 +1173,10 @@ void vtkImageStencilRaster::PrepareExtent(int ymin, int ymax)
     size_t imax = static_cast<size_t>(ymax - this->Extent[0]);
     for (size_t i = imin; i <= imax; i++)
     {
-      this->Raster[4*i] = 0;
-      this->Raster[4*i + 1] = 0;
-      this->Raster[4*i + 2] = 0;
-      this->Raster[4*i + 3] = 0;
+      this->Raster[4*i] = nullptr;
+      this->Raster[4*i + 1] = nullptr;
+      this->Raster[4*i + 2] = nullptr;
+      this->Raster[4*i + 3] = nullptr;
     }
 
     this->UsedExtent[0] = ymin;
@@ -1192,10 +1191,10 @@ void vtkImageStencilRaster::PrepareExtent(int ymin, int ymax)
     size_t imax = static_cast<size_t>(this->UsedExtent[0]-this->Extent[0]-1);
     for (size_t i = imin; i <= imax; i++)
     {
-      this->Raster[4*i] = 0;
-      this->Raster[4*i + 1] = 0;
-      this->Raster[4*i + 2] = 0;
-      this->Raster[4*i + 3] = 0;
+      this->Raster[4*i] = nullptr;
+      this->Raster[4*i + 1] = nullptr;
+      this->Raster[4*i + 2] = nullptr;
+      this->Raster[4*i + 3] = nullptr;
     }
 
     this->UsedExtent[0] = ymin;
@@ -1207,10 +1206,10 @@ void vtkImageStencilRaster::PrepareExtent(int ymin, int ymax)
     size_t imax = static_cast<size_t>(ymax - this->Extent[0]);
     for (size_t i = imin; i <= imax; i++)
     {
-      this->Raster[4*i] = 0;
-      this->Raster[4*i + 1] = 0;
-      this->Raster[4*i + 2] = 0;
-      this->Raster[4*i + 3] = 0;
+      this->Raster[4*i] = nullptr;
+      this->Raster[4*i + 1] = nullptr;
+      this->Raster[4*i + 2] = nullptr;
+      this->Raster[4*i + 3] = nullptr;
     }
 
     this->UsedExtent[1] = ymax;
@@ -1228,7 +1227,7 @@ void vtkImageStencilRaster::InsertPoint(int y, double x, int i)
   size_t n = rtail - rhead;
 
   // no allocation on this raster line yet
-  if (rhead == 0)
+  if (rhead == nullptr)
   {
     rhead = new double[2];
     rtail = rhead;

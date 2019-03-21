@@ -19,6 +19,7 @@
 
 #ifndef vtkLICNoiseHelper_h
 #define vtkLICNoiseHelper_h
+#ifndef __VTK_WRAP__
 
 #include "vtkRenderingLICOpenGL2Module.h" // for export
 
@@ -64,8 +65,8 @@ public:
   }
 
 private:
-  void operator=(const vtkLICRandomNumberGeneratorInterface &) VTK_DELETE_FUNCTION;
-  vtkLICRandomNumberGeneratorInterface(const vtkLICRandomNumberGeneratorInterface &) VTK_DELETE_FUNCTION;
+  void operator=(const vtkLICRandomNumberGeneratorInterface &) = delete;
+  vtkLICRandomNumberGeneratorInterface(const vtkLICRandomNumberGeneratorInterface &) = delete;
 
 private:
   vtkMinimalStandardRandomSequence *RNG;
@@ -93,7 +94,7 @@ public:
    * type              - UNIFORM=0, GAUSSIAN=1, PERLIN=2
    * sideLen           - side length of square patch in pixels (in/out)
    * grainSize         - grain size of noise values in pixels (in/out)
-   * nLevels           - number of noise intesity levels
+   * nLevels           - number of noise intensity levels
    * minNoiseVal       - set the min for noise pixels (position distribution)
    * maxNoiseVal       - set the max for noise pixels (position distribution)
    * impulseProb       - probability of impulse noise,1 touches every pixel
@@ -184,5 +185,6 @@ private:
   vtkLICRandomNumberGeneratorInterface ProbGen;
 };
 
+#endif
 #endif
 // VTK-HeaderTest-Exclude: vtkLICNoiseHelper.h

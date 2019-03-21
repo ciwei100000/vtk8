@@ -49,13 +49,17 @@
  * degenerate triangles (i.e., zero-area triangles).
  *
  * @warning
+ * If you are interested in extracting segmented regions from a label mask,
+ * consider using vtkDiscreteFlyingEdges3D.
+ *
+ * @warning
  * This class has been threaded with vtkSMPTools. Using TBB or other
  * non-sequential type (set in the CMake variable
  * VTK_SMP_IMPLEMENTATION_TYPE) may improve performance significantly.
  *
  * @sa
  * vtkContourFilter vtkFlyingEdges2D vtkSynchronizedTemplates3D
- * vtkMarchingCubes vtkSMPFlyingEdges3D
+ * vtkMarchingCubes vtkDiscreteFlyingEdges3D vtkContour3DLinearGrid
 */
 
 #ifndef vtkFlyingEdges3D_h
@@ -72,12 +76,12 @@ class VTKFILTERSCORE_EXPORT vtkFlyingEdges3D : public vtkPolyDataAlgorithm
 public:
   static vtkFlyingEdges3D *New();
   vtkTypeMacro(vtkFlyingEdges3D,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Because we delegate to vtkContourValues.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -86,9 +90,9 @@ public:
    * by filters that modify topology or geometry, it may be wise to turn
    * Normals and Gradients off.
    */
-  vtkSetMacro(ComputeNormals,int);
-  vtkGetMacro(ComputeNormals,int);
-  vtkBooleanMacro(ComputeNormals,int);
+  vtkSetMacro(ComputeNormals,vtkTypeBool);
+  vtkGetMacro(ComputeNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputeNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -100,18 +104,18 @@ public:
    * modify topology or geometry, it may be wise to turn Normals and
    * Gradients off.
    */
-  vtkSetMacro(ComputeGradients,int);
-  vtkGetMacro(ComputeGradients,int);
-  vtkBooleanMacro(ComputeGradients,int);
+  vtkSetMacro(ComputeGradients,vtkTypeBool);
+  vtkGetMacro(ComputeGradients,vtkTypeBool);
+  vtkBooleanMacro(ComputeGradients,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get the computation of scalars.
    */
-  vtkSetMacro(ComputeScalars,int);
-  vtkGetMacro(ComputeScalars,int);
-  vtkBooleanMacro(ComputeScalars,int);
+  vtkSetMacro(ComputeScalars,vtkTypeBool);
+  vtkGetMacro(ComputeScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeScalars,vtkTypeBool);
   //@}
 
   //@{
@@ -121,9 +125,9 @@ public:
    * the edge. This is independent of scalar interpolation, which is
    * controlled by the ComputeScalars flag.
    */
-  vtkSetMacro(InterpolateAttributes,int);
-  vtkGetMacro(InterpolateAttributes,int);
-  vtkBooleanMacro(InterpolateAttributes,int);
+  vtkSetMacro(InterpolateAttributes,vtkTypeBool);
+  vtkGetMacro(InterpolateAttributes,vtkTypeBool);
+  vtkBooleanMacro(InterpolateAttributes,vtkTypeBool);
   //@}
 
   /**
@@ -189,24 +193,24 @@ public:
 
 protected:
   vtkFlyingEdges3D();
-  ~vtkFlyingEdges3D() VTK_OVERRIDE;
+  ~vtkFlyingEdges3D() override;
 
-  int ComputeNormals;
-  int ComputeGradients;
-  int ComputeScalars;
-  int InterpolateAttributes;
+  vtkTypeBool ComputeNormals;
+  vtkTypeBool ComputeGradients;
+  vtkTypeBool ComputeScalars;
+  vtkTypeBool InterpolateAttributes;
   int ArrayComponent;
   vtkContourValues *ContourValues;
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-                  vtkInformationVector *) VTK_OVERRIDE;
+                  vtkInformationVector *) override;
   int RequestUpdateExtent(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
 private:
-  vtkFlyingEdges3D(const vtkFlyingEdges3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFlyingEdges3D&) VTK_DELETE_FUNCTION;
+  vtkFlyingEdges3D(const vtkFlyingEdges3D&) = delete;
+  void operator=(const vtkFlyingEdges3D&) = delete;
 };
 
 #endif

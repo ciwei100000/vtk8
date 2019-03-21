@@ -48,7 +48,7 @@ class VTKRENDERINGIMAGE_EXPORT vtkImageResliceMapper : public vtkImageMapper3D
 public:
   static vtkImageResliceMapper *New();
   vtkTypeMacro(vtkImageResliceMapper,vtkImageMapper3D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Set the slice that will be used to cut through the image.
@@ -65,9 +65,9 @@ public:
    * where a new slice is interpolated between the original slices.  This
    * flag is ignored if the slicing is oblique to the original slices.
    */
-  vtkSetMacro(JumpToNearestSlice, int);
-  vtkBooleanMacro(JumpToNearestSlice, int);
-  vtkGetMacro(JumpToNearestSlice, int);
+  vtkSetMacro(JumpToNearestSlice, vtkTypeBool);
+  vtkBooleanMacro(JumpToNearestSlice, vtkTypeBool);
+  vtkGetMacro(JumpToNearestSlice, vtkTypeBool);
   //@}
 
   //@{
@@ -127,9 +127,9 @@ public:
    * Automatically reduce the rendering quality for greater speed
    * when doing an interactive render.  This is on by default.
    */
-  vtkSetMacro(AutoAdjustImageQuality, int);
-  vtkBooleanMacro(AutoAdjustImageQuality, int);
-  vtkGetMacro(AutoAdjustImageQuality, int);
+  vtkSetMacro(AutoAdjustImageQuality, vtkTypeBool);
+  vtkBooleanMacro(AutoAdjustImageQuality, vtkTypeBool);
+  vtkGetMacro(AutoAdjustImageQuality, vtkTypeBool);
   //@}
 
   //@{
@@ -139,9 +139,9 @@ public:
    * slower and uses more memory, but provides high-quality results.
    * It is On by default.
    */
-  vtkSetMacro(ResampleToScreenPixels, int);
-  vtkBooleanMacro(ResampleToScreenPixels, int);
-  vtkGetMacro(ResampleToScreenPixels, int);
+  vtkSetMacro(ResampleToScreenPixels, vtkTypeBool);
+  vtkBooleanMacro(ResampleToScreenPixels, vtkTypeBool);
+  vtkGetMacro(ResampleToScreenPixels, vtkTypeBool);
   //@}
 
   //@{
@@ -151,9 +151,9 @@ public:
    * window/level operations, but it uses more memory and might slow down
    * interactive slicing operations.  On by default.
    */
-  vtkSetMacro(SeparateWindowLevelOperation, int);
-  vtkBooleanMacro(SeparateWindowLevelOperation, int);
-  vtkGetMacro(SeparateWindowLevelOperation, int);
+  vtkSetMacro(SeparateWindowLevelOperation, vtkTypeBool);
+  vtkBooleanMacro(SeparateWindowLevelOperation, vtkTypeBool);
+  vtkGetMacro(SeparateWindowLevelOperation, vtkTypeBool);
   //@}
 
   //@{
@@ -168,27 +168,27 @@ public:
   /**
    * This should only be called by the renderer.
    */
-  void Render(vtkRenderer *renderer, vtkImageSlice *prop) VTK_OVERRIDE;
+  void Render(vtkRenderer *renderer, vtkImageSlice *prop) override;
 
   /**
    * Release any graphics resources that are being consumed by
    * this mapper.  The parameter window is used to determine
    * which graphic resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   /**
    * Get the mtime for the mapper.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
    * The bounding box (array of six doubles) of the data expressed as
    * (xmin,xmax, ymin,ymax, zmin,zmax).
    */
-  double *GetBounds() VTK_OVERRIDE;
-  void GetBounds(double bounds[6]) VTK_OVERRIDE
+  double *GetBounds() override;
+  void GetBounds(double bounds[6]) override
     { this->vtkAbstractMapper3D::GetBounds(bounds); };
   //@}
 
@@ -197,11 +197,11 @@ public:
    */
   int ProcessRequest(vtkInformation* request,
                      vtkInformationVector** inInfo,
-                     vtkInformationVector* outInfo) VTK_OVERRIDE;
+                     vtkInformationVector* outInfo) override;
 
 protected:
   vtkImageResliceMapper();
-  ~vtkImageResliceMapper() VTK_OVERRIDE;
+  ~vtkImageResliceMapper() override;
 
   /**
    * Do a checkerboard pattern to the alpha of an RGBA image
@@ -250,27 +250,27 @@ protected:
   /**
    * Override Update to handle some tricky details.
    */
-  void Update(int port) VTK_OVERRIDE;
-  void Update() VTK_OVERRIDE;
-  int Update(int port, vtkInformationVector* requests) VTK_OVERRIDE;
-  int Update(vtkInformation* requests) VTK_OVERRIDE;
+  void Update(int port) override;
+  void Update() override;
+  int Update(int port, vtkInformationVector* requests) override;
+  int Update(vtkInformation* requests) override;
   //@}
 
   /**
    * Garbage collection for reference loops.
    */
-  void ReportReferences(vtkGarbageCollector*) VTK_OVERRIDE;
+  void ReportReferences(vtkGarbageCollector*) override;
 
   vtkImageSliceMapper *SliceMapper; // Does the OpenGL rendering
 
-  int JumpToNearestSlice; // Adjust SliceAtFocalPoint
-  int AutoAdjustImageQuality; // LOD-style behavior
-  int SeparateWindowLevelOperation; // Do window/level as a separate step
+  vtkTypeBool JumpToNearestSlice; // Adjust SliceAtFocalPoint
+  vtkTypeBool AutoAdjustImageQuality; // LOD-style behavior
+  vtkTypeBool SeparateWindowLevelOperation; // Do window/level as a separate step
   double SlabThickness; // Current slab thickness
   int SlabType; // Current slab mode
   int SlabSampleFactor; // Sampling factor for slab mode
   int ImageSampleFactor; // Sampling factor for image pixels
-  int ResampleToScreenPixels; // Use software interpolation only
+  vtkTypeBool ResampleToScreenPixels; // Use software interpolation only
   int InternalResampleToScreenPixels; // Use software interpolation only
   int ResliceNeedUpdate; // Execute reslice on next render
   vtkImageResliceToColors *ImageReslice; // For software interpolation
@@ -280,8 +280,8 @@ protected:
   vtkTimeStamp UpdateTime;
 
 private:
-  vtkImageResliceMapper(const vtkImageResliceMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageResliceMapper&) VTK_DELETE_FUNCTION;
+  vtkImageResliceMapper(const vtkImageResliceMapper&) = delete;
+  void operator=(const vtkImageResliceMapper&) = delete;
 };
 
 #endif

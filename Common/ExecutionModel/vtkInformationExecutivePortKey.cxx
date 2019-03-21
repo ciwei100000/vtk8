@@ -27,9 +27,7 @@ vtkInformationExecutivePortKey::vtkInformationExecutivePortKey(const char* name,
 }
 
 //----------------------------------------------------------------------------
-vtkInformationExecutivePortKey::~vtkInformationExecutivePortKey()
-{
-}
+vtkInformationExecutivePortKey::~vtkInformationExecutivePortKey() = default;
 
 //----------------------------------------------------------------------------
 void vtkInformationExecutivePortKey::PrintSelf(ostream& os, vtkIndent indent)
@@ -78,7 +76,7 @@ void vtkInformationExecutivePortKey::Set(vtkInformation* info,
   }
   else
   {
-    this->SetAsObjectBase(info, 0);
+    this->SetAsObjectBase(info, nullptr);
   }
 }
 
@@ -93,7 +91,7 @@ void vtkInformationExecutivePortKey::Get(vtkInformation *info, vtkExecutive*& ex
     return;
   }
 
-  executive = 0;
+  executive = nullptr;
   port = 0;
 }
 
@@ -107,7 +105,7 @@ vtkInformationExecutivePortKey::GetExecutive(vtkInformation* info)
   {
     return v->Executive;
   }
-  return 0;
+  return nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -141,7 +139,7 @@ void vtkInformationExecutivePortKey::Print(ostream& os, vtkInformation* info)
     }
     else
     {
-      os << "(NULL) port " << port;
+      os << "(nullptr) port " << port;
     }
   }
 }

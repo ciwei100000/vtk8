@@ -29,7 +29,7 @@
 
 #define VTK_INFORMATION_USE_HASH_MAP
 #ifdef VTK_INFORMATION_USE_HASH_MAP
-# include <vtksys/hash_map.hxx>
+# include <unordered_map>
 #else
 # include <map>
 #endif
@@ -45,10 +45,10 @@ public:
   {
     size_t operator()(KeyType key) const
     {
-      return static_cast<size_t>(key - KeyType(0));
+      return static_cast<size_t>(key - KeyType(nullptr));
     }
   };
-  typedef vtksys::hash_map<KeyType, DataType, HashFun> MapType;
+  typedef std::unordered_map<KeyType, DataType, HashFun> MapType;
 #else
   typedef std::map<KeyType, DataType> MapType;
 #endif
@@ -64,7 +64,7 @@ public:
     {
       if(vtkObjectBase* value = i->second)
       {
-        value->UnRegister(0);
+        value->UnRegister(nullptr);
       }
     }
   }

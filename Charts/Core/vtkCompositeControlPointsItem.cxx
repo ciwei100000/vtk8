@@ -40,9 +40,9 @@ vtkStandardNewMacro(vtkCompositeControlPointsItem);
 vtkCompositeControlPointsItem::vtkCompositeControlPointsItem()
 {
   this->PointsFunction = ColorAndOpacityPointsFunction;
-  this->OpacityFunction = 0;
+  this->OpacityFunction = nullptr;
   this->ColorFill = true;
-  this->OpacityPointHandle = NULL;
+  this->OpacityPointHandle = nullptr;
   this->UseOpacityPointHandles = false;
 }
 
@@ -53,12 +53,12 @@ vtkCompositeControlPointsItem::~vtkCompositeControlPointsItem()
   {
     this->OpacityFunction->RemoveObserver(this->Callback);
     this->OpacityFunction->Delete();
-    this->OpacityFunction = 0;
+    this->OpacityFunction = nullptr;
   }
   if (this->OpacityPointHandle)
   {
     this->OpacityPointHandle->Delete();
-    this->OpacityPointHandle = 0;
+    this->OpacityPointHandle = nullptr;
   }
 }
 
@@ -155,14 +155,6 @@ void vtkCompositeControlPointsItem::SetColorTransferFunction(vtkColorTransferFun
 }
 
 //-----------------------------------------------------------------------------
-bool vtkCompositeControlPointsItem::UsingLogScale()
-{
-  return (this->PointsFunction != OpacityPointsFunction &&
-    this->ColorTransferFunction &&
-    this->ColorTransferFunction->UsingLogScale());
-}
-
-//-----------------------------------------------------------------------------
 void vtkCompositeControlPointsItem::DrawPoint(vtkContext2D* painter, vtkIdType index)
 {
   if (this->PointsFunction == ColorPointsFunction ||
@@ -176,7 +168,7 @@ void vtkCompositeControlPointsItem::DrawPoint(vtkContext2D* painter, vtkIdType i
   {
     double xvms[4];
     this->OpacityFunction->GetNodeValue(index, xvms);
-    unsigned char* rgb = this->ColorTransferFunction->MapValue(xvms[0]);
+    const unsigned char* rgb = this->ColorTransferFunction->MapValue(xvms[0]);
     painter->GetBrush()->SetColorF(
       rgb[0] / 255., rgb[1] / 255., rgb[2] / 255., 0.55);
   }

@@ -12,33 +12,33 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-#include "vtkGPUVolumeRayCastMapper.h"
+#include <algorithm>
+#include <cassert>
 
 #include <vtkCamera.h>
 #include <vtkCellData.h>
-#include <vtkCommand.h> // for VolumeMapperRender{Start|End|Progress}Event
+#include <vtkCommand.h>
 #include <vtkContourValues.h>
 #include <vtkDataArray.h>
 #include <vtkGPUInfo.h>
 #include <vtkGPUInfoList.h>
+#include <vtkGPUVolumeRayCastMapper.h>
 #include <vtkImageData.h>
 #include <vtkImageResample.h>
-#include <vtkMultiThreader.h>
+#include <vtkInformation.h>
+#include <vtkMultiVolume.h>
 #include <vtkObjectFactory.h>
 #include <vtkPointData.h>
 #include <vtkRenderer.h>
 #include <vtkRendererCollection.h>
 #include <vtkRenderWindow.h>
 #include <vtkTimerLog.h>
-#include <vtkVolume.h>
 #include <vtkVolumeProperty.h>
 
-#include <cassert>
 
-// Return NULL if no override is supplied.
+// Return nullptr if no override is supplied.
 vtkAbstractObjectFactoryNewMacro(vtkGPUVolumeRayCastMapper)
 vtkCxxSetObjectMacro(vtkGPUVolumeRayCastMapper, MaskInput, vtkImageData);
-vtkCxxSetObjectMacro(vtkGPUVolumeRayCastMapper, TransformedInput, vtkImageData);
 
 vtkGPUVolumeRayCastMapper::vtkGPUVolumeRayCastMapper()
 : LockSampleDistanceToInputSpacing(0)
@@ -52,7 +52,7 @@ vtkGPUVolumeRayCastMapper::vtkGPUVolumeRayCastMapper()
   this->ClampDepthToBackface       = 0;
   this->UseJittering               = 0;
   this->UseDepthPass               = 0;
-  this->DepthPassContourValues     = NULL;
+  this->DepthPassContourValues     = nullptr;
   this->SampleDistance             = 1.0;
   this->SmallVolumeRender          = 0;
   this->BigTimeToDraw              = 0.0;
@@ -60,12 +60,16 @@ vtkGPUVolumeRayCastMapper::vtkGPUVolumeRayCastMapper()
   this->FinalColorWindow           = 1.0;
   this->FinalColorLevel            = 0.5;
   this->GeneratingCanonicalView    = 0;
-  this->CanonicalViewImageData     = NULL;
+  this->CanonicalViewImageData     = nullptr;
 
-  this->MaskInput                  = NULL;
+  this->MaskInput                  = nullptr;
   this->MaskBlendFactor            = 1.0f;
   this->MaskType
     = vtkGPUVolumeRayCastMapper::LabelMapMaskType;
+
+  this->ColorRangeType = TFRangeType::SCALAR;
+  this->ScalarOpacityRangeType = TFRangeType::SCALAR;
+  this->GradientOpacityRangeType = TFRangeType::SCALAR;
 
   this->AMRMode = 0;
   this->CellFlag = 0;
@@ -101,16 +105,21 @@ vtkGPUVolumeRayCastMapper::vtkGPUVolumeRayCastMapper()
 
   this->ReportProgress = true;
 
-  this->TransformedInput = NULL;
-  this->LastInput = NULL;
+  this->SetNumberOfInputPorts(10);
 }
 
 // ----------------------------------------------------------------------------
 vtkGPUVolumeRayCastMapper::~vtkGPUVolumeRayCastMapper()
 {
-  this->SetMaskInput(NULL);
-  this->SetTransformedInput(NULL);
-  this->LastInput = NULL;
+  this->SetMaskInput(nullptr);
+
+  for (auto& input : this->TransformedInputs)
+  {
+    input.second->Delete();
+  }
+  this->TransformedInputs.clear();
+
+  this->LastInputs.clear();
 
   if (this->DepthPassContourValues)
   {
@@ -140,7 +149,7 @@ void vtkGPUVolumeRayCastMapper::Render( vtkRenderer *ren, vtkVolume *vol )
   }
 
   // Invoke a VolumeMapperRenderStartEvent
-  this->InvokeEvent(vtkCommand::VolumeMapperRenderStartEvent,0);
+  this->InvokeEvent(vtkCommand::VolumeMapperRenderStartEvent,nullptr);
 
   // Start the timer to time the length of this render
   vtkTimerLog *timer = vtkTimerLog::New();
@@ -173,7 +182,7 @@ void vtkGPUVolumeRayCastMapper::Render( vtkRenderer *ren, vtkVolume *vol )
   }
 
   // Invoke a VolumeMapperRenderEndEvent
-  this->InvokeEvent(vtkCommand::VolumeMapperRenderEndEvent,0);
+  this->InvokeEvent(vtkCommand::VolumeMapperRenderEndEvent,nullptr);
 }
 
 // ----------------------------------------------------------------------------
@@ -220,24 +229,6 @@ int vtkGPUVolumeRayCastMapper::ValidateRender(vtkRenderer *ren,
     vtkErrorMacro("Volume cannot be null.");
   }
 
-  // Don't need to check if we have a volume property
-  // since the volume will create one if we don't. Also
-  // don't need to check for the scalar opacity function
-  // or the RGB transfer function since the property will
-  // create them if they do not yet exist.
-
-  // However we must currently check that the number of
-  // color channels is 3
-  // TODO: lift this restriction - should work with
-  // gray functions as well. Right now turning off test
-  // because otherwise 4 component rendering isn't working.
-  // Will revisit.
-  if ( goodSoFar && vol->GetProperty()->GetColorChannels() != 3 )
-  {
-//    goodSoFar = 0;
-//    vtkErrorMacro("Must have a color transfer function.");
-  }
-
   // Check the cropping planes. If they are invalid, just silently
   // fail. This will happen when an interactive widget is dragged
   // such that it defines 0 or negative volume - this can happen
@@ -252,75 +243,98 @@ int vtkGPUVolumeRayCastMapper::ValidateRender(vtkRenderer *ren,
     goodSoFar = 0;
   }
 
-  // Check that we have input data
-  vtkImageData *input=this->GetInput();
-
-  if(goodSoFar && input==0)
+  if (!goodSoFar)
   {
-    vtkErrorMacro("Input is NULL but is required");
+    return 0;
+  }
+
+  auto multiVol = vtkMultiVolume::SafeDownCast(vol);
+  bool success = true;
+  for (const auto& port : this->Ports)
+  {
+    auto currentVol = multiVol ? multiVol->GetVolume(port) : vol;
+    success &= this->ValidateInput(currentVol->GetProperty(), port) == 1;
+  }
+  return (success ? 1 : 0);
+}
+
+vtkImageData* vtkGPUVolumeRayCastMapper::FindData(int port, DataMap& container)
+{
+  const auto it = container.find(port);
+  if (it == container.cend())
+  {
+    return nullptr;
+  }
+  return it->second;
+}
+
+void vtkGPUVolumeRayCastMapper::CloneInputs()
+{
+  for (const auto& port : this->Ports)
+  {
+    vtkImageData* input  = this->GetInput(port);
+    this->CloneInput(input, port);
+  }
+}
+
+void vtkGPUVolumeRayCastMapper::CloneInput(vtkImageData* input,
+  const int port)
+{
+  // Clone input into a transformed input
+  vtkImageData* clone;
+  vtkImageData* currentData = this->FindData(port, this->TransformedInputs);
+  if (!currentData)
+  {
+    clone = vtkImageData::New();
+    clone->Register(this);
+    this->TransformedInputs[port] = clone;
+    clone->Delete();
+
+    this->LastInputs[port] = nullptr;
+  }
+  else
+  {
+    clone = this->TransformedInputs[port];
+  }
+
+  // If we have a timestamp change or data change then create a new clone
+  if(input != this->LastInputs[port] || input->GetMTime() > clone->GetMTime())
+  {
+    this->LastInputs[port] = input;
+    this->TransformInput(port);
+  }
+}
+
+int vtkGPUVolumeRayCastMapper::ValidateInput(vtkVolumeProperty* property,
+  const int port)
+{
+  vtkImageData* input  = this->GetInput(port);
+
+  int goodSoFar = 1;
+  if(goodSoFar && input==nullptr)
+  {
+    vtkErrorMacro("Input is nullptr but is required");
     goodSoFar = 0;
   }
 
   if(goodSoFar)
   {
-    this->GetInputAlgorithm()->Update();
+    this->GetInputAlgorithm(port, 0)->Update();
   }
 
-  // If we have a timestamp change or data change then create a new clone.
-  if(goodSoFar && (input != this->LastInput ||
-                   input->GetMTime() > this->TransformedInput->GetMTime()))
+  if (goodSoFar)
   {
-    this->LastInput = input;
-
-    vtkImageData* clone;
-    if(!this->TransformedInput)
-    {
-      clone = vtkImageData::New();
-      this->SetTransformedInput(clone);
-      clone->Delete();
-    }
-    else
-    {
-      clone = this->TransformedInput;
-    }
-
-    clone->ShallowCopy(input);
-
-    // @TODO: This is the workaround to deal with GPUVolumeRayCastMapper
-    // not able to handle extents starting from non zero values.
-    // There is not a easy fix in the GPU volume ray cast mapper hence
-    // this fix has been introduced.
-
-    // Get the current extents.
-    int extents[6], real_extents[6];
-    clone->GetExtent(extents);
-    clone->GetExtent(real_extents);
-
-    // Get the current origin and spacing.
-    double origin[3], spacing[3];
-    clone->GetOrigin(origin);
-    clone->GetSpacing(spacing);
-
-    for (int cc=0; cc < 3; cc++)
-    {
-      // Transform the origin and the extents.
-      origin[cc] = origin[cc] + extents[2*cc]*spacing[cc];
-      extents[2*cc+1] -= extents[2*cc];
-      extents[2*cc] = 0;
-    }
-
-    clone->SetOrigin(origin);
-    clone->SetExtent(extents);
+    this->CloneInput(input, port);
   }
 
   // Update the date then make sure we have scalars. Note
   // that we must have point or cell scalars because field
   // scalars are not supported.
-  vtkDataArray *scalars = NULL;
+  vtkDataArray *scalars = nullptr;
   if ( goodSoFar )
   {
     // Now make sure we can find scalars
-    scalars=this->GetScalars(this->TransformedInput,this->ScalarMode,
+    scalars=this->GetScalars(this->TransformedInputs[port], this->ScalarMode,
                              this->ArrayAccessMode,
                              this->ArrayId,
                              this->ArrayName,
@@ -379,7 +393,8 @@ int vtkGPUVolumeRayCastMapper::ValidateRender(vtkRenderer *ren,
        this->BlendMode!=vtkVolumeMapper::MAXIMUM_INTENSITY_BLEND &&
        this->BlendMode!=vtkVolumeMapper::MINIMUM_INTENSITY_BLEND &&
        this->BlendMode!=vtkVolumeMapper::AVERAGE_INTENSITY_BLEND &&
-       this->BlendMode!=vtkVolumeMapper::ADDITIVE_BLEND)
+       this->BlendMode!=vtkVolumeMapper::ADDITIVE_BLEND &&
+       this->BlendMode!=vtkVolumeMapper::ISOSURFACE_BLEND)
     {
       goodSoFar = 0;
       vtkErrorMacro(<< "Selected blend mode not supported. "
@@ -390,7 +405,6 @@ int vtkGPUVolumeRayCastMapper::ValidateRender(vtkRenderer *ren,
 
   int numberOfComponents = goodSoFar ? scalars->GetNumberOfComponents() : 0;
 
-#ifdef VTK_OPENGL2
   // This mapper supports anywhere from 1-4 components. Number of components
   // outside this range is not supported.
   if( goodSoFar )
@@ -409,7 +423,7 @@ int vtkGPUVolumeRayCastMapper::ValidateRender(vtkRenderer *ren,
   // only 2 or 4 component scalars are supported.
   if( goodSoFar )
   {
-    if( !(vol->GetProperty()->GetIndependentComponents()) &&
+    if( !(property->GetIndependentComponents()) &&
         (numberOfComponents == 1 || numberOfComponents == 3) )
     {
       goodSoFar = 0;
@@ -420,37 +434,6 @@ int vtkGPUVolumeRayCastMapper::ValidateRender(vtkRenderer *ren,
                     << " component(s).");
     }
   }
-#else
-  // This mapper supports 1 component data, or 4 component if it is not independent
-  // component (i.e. the four components define RGBA)
-  if ( goodSoFar )
-  {
-    if( !(numberOfComponents == 1 ||
-          numberOfComponents == 4) )
-    {
-      goodSoFar = 0;
-      vtkErrorMacro(<< "Only one component scalars, or four "
-                    << "component with non-independent components, "
-                    << "are supported by this mapper.");
-    }
-  }
-
-  // If this is four component data, then it better be unsigned char (RGBA).
-  if( goodSoFar &&
-      numberOfComponents == 4 &&
-      scalars->GetDataType() != VTK_UNSIGNED_CHAR)
-  {
-    goodSoFar = 0;
-    vtkErrorMacro("Only unsigned char is supported for 4-component scalars!");
-  }
-
-  if(goodSoFar && numberOfComponents!=1 &&
-     this->BlendMode==vtkVolumeMapper::ADDITIVE_BLEND)
-  {
-    goodSoFar=0;
-    vtkErrorMacro("Additive mode only works with 1-component scalars!");
-  }
-#endif
   // return our status
   return goodSoFar;
 }
@@ -602,7 +585,7 @@ void vtkGPUVolumeRayCastMapper::CreateCanonicalView(
   delete[] rendererVisibilities;
 
   ren->GetRenderWindow()->SetSwapBuffers(oldSwap);
-  this->CanonicalViewImageData = NULL;
+  this->CanonicalViewImageData = nullptr;
   this->GeneratingCanonicalView = 0;
 }
 
@@ -644,7 +627,7 @@ void vtkGPUVolumeRayCastMapper::PrintSelf(ostream& os, vtkIndent indent)
 //             this->CroppingRegionPlanes[4]<this->CroppingRegionPlanes[5])
 void vtkGPUVolumeRayCastMapper::ClipCroppingRegionPlanes()
 {
-  assert("pre: volume_exists" && this->GetInput()!=0);
+  assert("pre: volume_exists" && this->GetInput() != nullptr);
   assert("pre: valid_cropping" && this->Cropping &&
          this->CroppingRegionPlanes[0]<this->CroppingRegionPlanes[1] &&
          this->CroppingRegionPlanes[2]<this->CroppingRegionPlanes[3] &&
@@ -655,7 +638,7 @@ void vtkGPUVolumeRayCastMapper::ClipCroppingRegionPlanes()
 //                        this->CroppingRegionPlanes[2]>=this->CroppingRegionPlanes[3] ||
 //                        this->CroppingRegionPlanes[4]>=this->CroppingRegionPlanes[5]))
 //    {
-//    // silentely  stop because the cropping is not valid.
+//    // silently stop because the cropping is not valid.
 //    return;
 //    }
 
@@ -727,4 +710,110 @@ void vtkGPUVolumeRayCastMapper::SetDepthImageScalarTypeToUnsignedShort()
 void vtkGPUVolumeRayCastMapper::SetDepthImageScalarTypeToFloat()
 {
   this->SetDepthImageScalarType(VTK_FLOAT);
+}
+
+//----------------------------------------------------------------------------
+int vtkGPUVolumeRayCastMapper::FillInputPortInformation(int port,
+  vtkInformation* info)
+{
+  if (port > 0)
+  {
+    info->Set(vtkAlgorithm::INPUT_IS_OPTIONAL(), port);
+  }
+
+  return this->Superclass::FillInputPortInformation(port, info);
+}
+
+//----------------------------------------------------------------------------
+vtkImageData* vtkGPUVolumeRayCastMapper::GetInput(const int port)
+{
+  return static_cast<vtkImageData*>(this->GetInputDataObject(port, 0));
+}
+
+//----------------------------------------------------------------------------
+void vtkGPUVolumeRayCastMapper::TransformInput(const int port)
+{
+  vtkImageData* clone = this->TransformedInputs[port];
+  clone->ShallowCopy(this->GetInput(port));
+
+  // Get the current extents.
+  int extents[6], real_extents[6];
+  clone->GetExtent(extents);
+  clone->GetExtent(real_extents);
+
+  // Get the current origin and spacing.
+  double origin[3], spacing[3];
+  clone->GetOrigin(origin);
+  clone->GetSpacing(spacing);
+
+  for (int cc = 0; cc < 3; cc++)
+  {
+    // Transform the origin and the extents.
+    origin[cc] = origin[cc] + extents[2 * cc] * spacing[cc];
+    extents[2 * cc + 1] -= extents[2 * cc];
+    extents[2 * cc] = 0;
+  }
+
+  clone->SetOrigin(origin);
+  clone->SetExtent(extents);
+}
+
+vtkImageData* vtkGPUVolumeRayCastMapper::GetTransformedInput(const int port)
+{
+  const auto data = this->FindData(port, this->TransformedInputs);
+  return data;
+}
+
+void vtkGPUVolumeRayCastMapper::SetInputConnection(int port, vtkAlgorithmOutput* input)
+{
+  Superclass::SetInputConnection(port, input);
+  const auto it = std::find(this->Ports.begin(), this->Ports.end(), port);
+  if (it == this->Ports.cend())
+  {
+    this->Ports.push_back(port);
+  }
+  this->Modified();
+}
+
+void vtkGPUVolumeRayCastMapper::RemoveInputConnection(int port, vtkAlgorithmOutput* input)
+{
+  Superclass::RemoveInputConnection(port, input);
+  this->RemovePortInternal(port);
+}
+
+void vtkGPUVolumeRayCastMapper::RemoveInputConnection(int port, int idx)
+{
+  Superclass::RemoveInputConnection(port, idx);
+  this->RemovePortInternal(port);
+}
+
+void vtkGPUVolumeRayCastMapper::RemovePortInternal(const int port)
+{
+  const auto it = std::find(this->Ports.begin(), this->Ports.end(), port);
+  if (it != this->Ports.end())
+  {
+    this->Ports.erase(it);
+  }
+  this->RemovedPorts.push_back(port);
+  this->Modified();
+}
+
+double* vtkGPUVolumeRayCastMapper::GetBoundsFromPort(const int port)
+{
+  this->CloneInputs();
+
+  // Use bounds of a specific input
+  auto it = this->TransformedInputs.find(port);
+  if (it == this->TransformedInputs.cend())
+  {
+    vtkAbstractVolumeMapper::GetDataSetInput()->GetBounds(this->Bounds);
+    return this->Bounds;
+  }
+
+  return it->second->GetBounds();
+}
+
+int vtkGPUVolumeRayCastMapper::GetInputCount()
+{
+  return static_cast<int>(this->Ports.size());
 }

@@ -83,7 +83,7 @@ class VTKINTERACTIONWIDGETS_EXPORT vtkOrientationMarkerWidget : public vtkIntera
 public:
   static vtkOrientationMarkerWidget* New();
   vtkTypeMacro(vtkOrientationMarkerWidget, vtkInteractorObserver);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -96,7 +96,7 @@ public:
   /**
    * Enable/disable the widget. Default is 0 (disabled).
    */
-  void SetEnabled(int) VTK_OVERRIDE;
+  void SetEnabled(int) override;
 
   /**
    * Callback to keep the camera for the orientation marker up to date with the
@@ -109,9 +109,9 @@ public:
    * Set/get whether to allow this widget to be interactively moved/scaled.
    * Default is On.
    */
-  void SetInteractive(int state);
-  vtkGetMacro(Interactive, int);
-  vtkBooleanMacro(Interactive, int);
+  void SetInteractive(vtkTypeBool state);
+  vtkGetMacro(Interactive, vtkTypeBool);
+  vtkBooleanMacro(Interactive, vtkTypeBool);
   //@}
 
   //@{
@@ -156,12 +156,12 @@ public:
    * Need to reimplement this->Modified() because of the
    * vtkSetVector4Macro/vtkGetVector4Macro use
    */
-  void Modified() VTK_OVERRIDE;
+  void Modified() override;
   //@}
 
 protected:
   vtkOrientationMarkerWidget();
-  ~vtkOrientationMarkerWidget() VTK_OVERRIDE;
+  ~vtkOrientationMarkerWidget() override;
 
   vtkRenderer *Renderer;
   vtkProp     *OrientationMarker;
@@ -174,14 +174,14 @@ protected:
                             void *clientdata, void *calldata);
 
   // ProcessEvents() dispatches to these methods.
-  void OnLeftButtonDown();
-  void OnLeftButtonUp();
-  void OnMouseMove();
+  virtual void OnLeftButtonDown();
+  virtual void OnLeftButtonUp();
+  virtual void OnMouseMove();
 
   // observer to update the renderer's camera
   vtkOrientationMarkerWidgetObserver *Observer;
 
-  int Interactive;
+  vtkTypeBool Interactive;
   int Tolerance;
   int Moving;
 
@@ -207,10 +207,10 @@ protected:
 
   // use to determine what state the mouse is over, edge1 p1, etc.
   // returns a state from the WidgetState enum above
-  int ComputeStateBasedOnPosition(int X, int Y, int *pos1, int *pos2);
+  virtual int ComputeStateBasedOnPosition(int X, int Y, int *pos1, int *pos2);
 
   // set the cursor to the correct shape based on State argument
-  void SetCursor(int state);
+  virtual void SetCursor(int state);
 
   // adjust the viewport depending on state
   void MoveWidget(int X, int Y);
@@ -231,8 +231,13 @@ protected:
   void UpdateInternalViewport();
 
 private:
-  vtkOrientationMarkerWidget(const vtkOrientationMarkerWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOrientationMarkerWidget&) VTK_DELETE_FUNCTION;
+  vtkOrientationMarkerWidget(const vtkOrientationMarkerWidget&) = delete;
+  void operator=(const vtkOrientationMarkerWidget&) = delete;
+
+  //set up the actors and observers created by this widget
+  void SetupWindowInteraction();
+  //tear down up the actors and observers created by this widget
+  void TearDownWindowInteraction();
 };
 
 #endif

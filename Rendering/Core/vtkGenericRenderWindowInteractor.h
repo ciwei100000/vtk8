@@ -34,7 +34,7 @@ class VTKRENDERINGCORE_EXPORT vtkGenericRenderWindowInteractor : public vtkRende
 public:
   static vtkGenericRenderWindowInteractor *New();
   vtkTypeMacro(vtkGenericRenderWindowInteractor,vtkRenderWindowInteractor);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Fire TimerEvent. SetEventInformation should be called just prior
@@ -56,29 +56,29 @@ public:
    * additional work. Also, "natively repeating" timers still work with the
    * default setting, but with potentially many create and destroy calls.
    */
-  vtkSetMacro(TimerEventResetsTimer, int);
-  vtkGetMacro(TimerEventResetsTimer, int);
-  vtkBooleanMacro(TimerEventResetsTimer, int);
+  vtkSetMacro(TimerEventResetsTimer, vtkTypeBool);
+  vtkGetMacro(TimerEventResetsTimer, vtkTypeBool);
+  vtkBooleanMacro(TimerEventResetsTimer, vtkTypeBool);
   //@}
 
 protected:
   vtkGenericRenderWindowInteractor();
-  ~vtkGenericRenderWindowInteractor() VTK_OVERRIDE;
+  ~vtkGenericRenderWindowInteractor() override;
 
   //@{
   /**
    * Generic internal timer methods. See the superclass for detailed
    * documentation.
    */
-  int InternalCreateTimer(int timerId, int timerType, unsigned long duration) VTK_OVERRIDE;
-  int InternalDestroyTimer(int platformTimerId) VTK_OVERRIDE;
+  int InternalCreateTimer(int timerId, int timerType, unsigned long duration) override;
+  int InternalDestroyTimer(int platformTimerId) override;
   //@}
 
-  int TimerEventResetsTimer;
+  vtkTypeBool TimerEventResetsTimer;
 
 private:
-  vtkGenericRenderWindowInteractor(const vtkGenericRenderWindowInteractor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGenericRenderWindowInteractor&) VTK_DELETE_FUNCTION;
+  vtkGenericRenderWindowInteractor(const vtkGenericRenderWindowInteractor&) = delete;
+  void operator=(const vtkGenericRenderWindowInteractor&) = delete;
 };
 
 #endif

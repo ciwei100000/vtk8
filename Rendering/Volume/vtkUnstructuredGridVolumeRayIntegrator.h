@@ -42,7 +42,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkUnstructuredGridVolumeRayIntegrator : public 
 {
 public:
   vtkTypeMacro(vtkUnstructuredGridVolumeRayIntegrator,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Set up the integrator with the given properties and scalars.
@@ -52,8 +52,8 @@ public:
 
   /**
    * Given a set of intersections (defined by the three arrays), compute
-   * the peicewise integration of the array in front to back order.
-   * /c intersectionLengths holds the lengths of each peicewise segment.
+   * the piecewise integration of the array in front to back order.
+   * /c intersectionLengths holds the lengths of each piecewise segment.
    * /c nearIntersections and /c farIntersections hold the scalar values at
    * the front and back of each segment.  /c color should contain the RGBA
    * value of the volume in front of the segments passed in, and the result
@@ -66,11 +66,11 @@ public:
 
 protected:
   vtkUnstructuredGridVolumeRayIntegrator();
-  ~vtkUnstructuredGridVolumeRayIntegrator() VTK_OVERRIDE;
+  ~vtkUnstructuredGridVolumeRayIntegrator() override;
 
 private:
-  vtkUnstructuredGridVolumeRayIntegrator(const vtkUnstructuredGridVolumeRayIntegrator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkUnstructuredGridVolumeRayIntegrator&) VTK_DELETE_FUNCTION;
+  vtkUnstructuredGridVolumeRayIntegrator(const vtkUnstructuredGridVolumeRayIntegrator&) = delete;
+  void operator=(const vtkUnstructuredGridVolumeRayIntegrator&) = delete;
 };
 
 #endif

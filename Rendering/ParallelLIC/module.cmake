@@ -1,16 +1,13 @@
-if(VTK_RENDERING_BACKEND STREQUAL "OpenGL2")
-  set(_imp_backend OpenGL2)
-endif()
 vtk_module(vtkRenderingParallelLIC
   IMPLEMENTS
-    vtkRenderingLIC${_imp_backend}
+    vtkRenderingLICOpenGL2
   KIT
     vtkParallel
   DEPENDS
     vtkCommonCore
     vtkCommonDataModel
     vtkParallelMPI
-    vtkRendering${VTK_RENDERING_BACKEND}
+    vtkRenderingOpenGL2
   PRIVATE_DEPENDS
     vtkIOLegacy
     vtkParallelCore

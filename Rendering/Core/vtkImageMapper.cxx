@@ -25,7 +25,7 @@
 #include "vtkWindow.h"
 
 //----------------------------------------------------------------------------
-// Return NULL if no override is supplied.
+// Return nullptr if no override is supplied.
 vtkAbstractObjectFactoryNewMacro(vtkImageMapper)
 
 //----------------------------------------------------------------------------
@@ -49,9 +49,7 @@ vtkImageMapper::vtkImageMapper()
 
 }
 
-vtkImageMapper::~vtkImageMapper()
-{
-}
+vtkImageMapper::~vtkImageMapper() = default;
 
 //----------------------------------------------------------------------------
 void vtkImageMapper::SetInputData(vtkImageData *input)
@@ -64,7 +62,7 @@ vtkImageData *vtkImageMapper::GetInput()
 {
   if (this->GetNumberOfInputConnections(0) < 1)
   {
-    return 0;
+    return nullptr;
   }
   return vtkImageData::SafeDownCast(
     this->GetExecutive()->GetInputData(0, 0));

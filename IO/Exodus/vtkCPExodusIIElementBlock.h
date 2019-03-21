@@ -40,7 +40,7 @@ class VTKIOEXODUS_EXPORT vtkCPExodusIIElementBlockImpl : public vtkObject
 {
 public:
   static vtkCPExodusIIElementBlockImpl *New();
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
   vtkTypeMacro(vtkCPExodusIIElementBlockImpl, vtkObject)
 
   /**
@@ -66,18 +66,18 @@ public:
   // warning.
   void Allocate(vtkIdType numCells, int extSize = 1000);
   vtkIdType InsertNextCell(int type, vtkIdList *ptIds);
-  vtkIdType InsertNextCell(int type, vtkIdType npts, vtkIdType *ptIds);
-  vtkIdType InsertNextCell(int type, vtkIdType npts, vtkIdType *ptIds,
-                           vtkIdType nfaces, vtkIdType *faces);
-  void ReplaceCell(vtkIdType cellId, int npts, vtkIdType *pts);
+  vtkIdType InsertNextCell(int type, vtkIdType npts, const vtkIdType ptIds[]) VTK_SIZEHINT(ptIds, npts);
+  vtkIdType InsertNextCell(int type, vtkIdType npts, const vtkIdType ptIds[],
+                           vtkIdType nfaces, const vtkIdType faces[]) VTK_SIZEHINT(ptIds, npts) VTK_SIZEHINT(faces, nfaces);
+  void ReplaceCell(vtkIdType cellId, int npts, const vtkIdType pts[]) VTK_SIZEHINT(pts, npts);
 
 protected:
   vtkCPExodusIIElementBlockImpl();
-  ~vtkCPExodusIIElementBlockImpl() VTK_OVERRIDE;
+  ~vtkCPExodusIIElementBlockImpl() override;
 
 private:
-  vtkCPExodusIIElementBlockImpl(const vtkCPExodusIIElementBlockImpl &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCPExodusIIElementBlockImpl &) VTK_DELETE_FUNCTION;
+  vtkCPExodusIIElementBlockImpl(const vtkCPExodusIIElementBlockImpl &) = delete;
+  void operator=(const vtkCPExodusIIElementBlockImpl &) = delete;
 
   // Convert between Exodus node ids and VTK point ids.
   static vtkIdType NodeToPoint(const int &id)

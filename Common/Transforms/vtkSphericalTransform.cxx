@@ -21,13 +21,9 @@
 vtkStandardNewMacro(vtkSphericalTransform);
 
 //----------------------------------------------------------------------------
-vtkSphericalTransform::vtkSphericalTransform()
-{
-}
+vtkSphericalTransform::vtkSphericalTransform() = default;
 
-vtkSphericalTransform::~vtkSphericalTransform()
-{
-}
+vtkSphericalTransform::~vtkSphericalTransform() = default;
 
 void vtkSphericalTransform::PrintSelf(ostream& os, vtkIndent indent)
 {
@@ -119,13 +115,13 @@ void vtkRectangularToSpherical(const T inPoint[3], T outPoint[3])
 void vtkSphericalTransform::ForwardTransformPoint(const float inPoint[3],
                                                   float outPoint[3])
 {
-  vtkSphericalToRectangular(inPoint, outPoint, static_cast<float (*)[3]>(0));
+  vtkSphericalToRectangular(inPoint, outPoint, static_cast<float (*)[3]>(nullptr));
 }
 
 void vtkSphericalTransform::ForwardTransformPoint(const double inPoint[3],
                                                   double outPoint[3])
 {
-  vtkSphericalToRectangular(inPoint, outPoint, static_cast<double (*)[3]>(0));
+  vtkSphericalToRectangular(inPoint, outPoint, static_cast<double (*)[3]>(nullptr));
 }
 
 void vtkSphericalTransform::ForwardTransformDerivative(const float inPoint[3],

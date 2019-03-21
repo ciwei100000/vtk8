@@ -81,7 +81,7 @@ public:
   /**
    * Destructor.
    */
-  ~vtkStructuredAMRNeighbor() VTK_OVERRIDE {}
+  ~vtkStructuredAMRNeighbor() override {}
 
   /**
    * Overload assignment operator.
@@ -95,7 +95,7 @@ public:
   void GetReceiveExtentOnGrid(const int ng,int gridExtent[6],int ext[6]);
 
   /**
-   * Returns the neighbor relationship as a string (usefule for debugging).
+   * Returns the neighbor relationship as a string (useful for debugging).
    */
   std::string GetRelationShipString();
 
@@ -108,7 +108,7 @@ public:
    */
   void ComputeSendAndReceiveExtent(
       int gridRealExtent[6], int gridGhostedExtent[6], int neiRealExtent[6],
-      int WholeExtent[6], const int N) VTK_OVERRIDE;
+      int WholeExtent[6], const int N) override;
 };
   //@}
 

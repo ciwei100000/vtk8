@@ -44,7 +44,7 @@ class VTKIOXML_EXPORT vtkXMLReader : public vtkAlgorithm
 {
 public:
   vtkTypeMacro(vtkXMLReader, vtkAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   enum FieldType
   {
@@ -66,9 +66,9 @@ public:
   /**
    * Enable reading from an InputString instead of the default, a file.
    */
-  vtkSetMacro(ReadFromInputString, int);
-  vtkGetMacro(ReadFromInputString, int);
-  vtkBooleanMacro(ReadFromInputString, int);
+  vtkSetMacro(ReadFromInputString, vtkTypeBool);
+  vtkGetMacro(ReadFromInputString, vtkTypeBool);
+  vtkBooleanMacro(ReadFromInputString, vtkTypeBool);
   void SetInputString(const std::string& s) { this->InputString = s; }
   //@}
 
@@ -96,34 +96,39 @@ public:
    */
   vtkGetObjectMacro(PointDataArraySelection, vtkDataArraySelection);
   vtkGetObjectMacro(CellDataArraySelection, vtkDataArraySelection);
+  vtkGetObjectMacro(ColumnArraySelection, vtkDataArraySelection);
   //@}
 
   //@{
   /**
-   * Get the number of point or cell arrays available in the input.
+   * Get the number of point, cell or column arrays available in the input.
    */
   int GetNumberOfPointArrays();
   int GetNumberOfCellArrays();
+  int GetNumberOfColumnArrays();
   //@}
 
   //@{
   /**
-   * Get the name of the point or cell array with the given index in
+   * Get the name of the point, cell or column array with the given index in
    * the input.
    */
   const char* GetPointArrayName(int index);
   const char* GetCellArrayName(int index);
+  const char* GetColumnArrayName(int index);
   //@}
 
   //@{
   /**
-   * Get/Set whether the point or cell array with the given name is to
+   * Get/Set whether the point, cell or column array with the given name is to
    * be read.
    */
   int GetPointArrayStatus(const char* name);
   int GetCellArrayStatus(const char* name);
   void SetPointArrayStatus(const char* name, int status);
   void SetCellArrayStatus(const char* name, int status);
+  int GetColumnArrayStatus(const char* name);
+  void SetColumnArrayStatus(const char* name, int status);
   //@}
 
   // For the specified port, copy the information this reader sets up in
@@ -159,7 +164,7 @@ public:
 
   int ProcessRequest(vtkInformation *request,
                              vtkInformationVector **inputVector,
-                             vtkInformationVector *outputVector) VTK_OVERRIDE;
+                             vtkInformationVector *outputVector) override;
 
   //@{
   /**
@@ -181,7 +186,7 @@ public:
 
 protected:
   vtkXMLReader();
-  ~vtkXMLReader() VTK_OVERRIDE;
+  ~vtkXMLReader() override;
 
   // Pipeline execution methods to be defined by subclass.  Called by
   // corresponding RequestData methods after appropriate setup has been
@@ -216,7 +221,7 @@ protected:
   // Does not allocate.
   vtkAbstractArray* CreateArray(vtkXMLDataElement* da);
 
-  // Create a vtkInformationKey from its coresponding XML representation.
+  // Create a vtkInformationKey from its corresponding XML representation.
   // Stores it in the instance of vtkInformationProvided. Does not allocate.
   int CreateInformationKey(vtkXMLDataElement *eInfoKey, vtkInformation *info);
 
@@ -305,7 +310,7 @@ protected:
 
   // Whether this object is reading from a string or a file.
   // Default is 0: read from file.
-  int ReadFromInputString;
+  vtkTypeBool ReadFromInputString;
 
   // The input string.
   std::string InputString;
@@ -313,6 +318,7 @@ protected:
   // The array selections.
   vtkDataArraySelection* PointDataArraySelection;
   vtkDataArraySelection* CellDataArraySelection;
+  vtkDataArraySelection* ColumnArraySelection;
 
   // The observer to modify this object when the array selections are
   // modified.
@@ -396,8 +402,8 @@ private:
   vtkInformation* CurrentOutputInformation;
 
 private:
-  vtkXMLReader(const vtkXMLReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkXMLReader&) VTK_DELETE_FUNCTION;
+  vtkXMLReader(const vtkXMLReader&) = delete;
+  void operator=(const vtkXMLReader&) = delete;
 
   vtkCommand *ReaderErrorObserver;
   vtkCommand *ParserErrorObserver;

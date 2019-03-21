@@ -5,7 +5,8 @@ vtk_module(vtkRenderingVolume
     vtkFiltersModeling
     vtkTestingCore
     vtkTestingRendering
-    vtkRenderingVolume${VTK_RENDERING_BACKEND}
+    vtkRenderingAnnotation
+    vtkRenderingVolumeOpenGL2
     vtkRenderingFreeType
     vtkIOXML
     vtkImagingSources

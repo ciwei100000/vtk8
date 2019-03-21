@@ -19,7 +19,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 #include "vtkImageMapToColors.h"
-#include "math.h"
+#include <cmath>
 #include <algorithm>
 
 #include <sstream>
@@ -34,9 +34,7 @@ vtkResliceCursorThickLineRepresentation::vtkResliceCursorThickLineRepresentation
 }
 
 //----------------------------------------------------------------------
-vtkResliceCursorThickLineRepresentation::~vtkResliceCursorThickLineRepresentation()
-{
-}
+vtkResliceCursorThickLineRepresentation::~vtkResliceCursorThickLineRepresentation() = default;
 
 //----------------------------------------------------------------------
 void vtkResliceCursorThickLineRepresentation::CreateDefaultResliceAlgorithm()

@@ -48,9 +48,7 @@ vtkChartHistogram2D::vtkChartHistogram2D()
 }
 
 //-----------------------------------------------------------------------------
-vtkChartHistogram2D::~vtkChartHistogram2D()
-{
-}
+vtkChartHistogram2D::~vtkChartHistogram2D() = default;
 
 //-----------------------------------------------------------------------------
 void vtkChartHistogram2D::Update()
@@ -117,7 +115,7 @@ vtkPlot* vtkChartHistogram2D::GetPlot(vtkIdType index)
     return this->Histogram;
   }
 
-  return 0;
+  return nullptr;
 }
 
 //-----------------------------------------------------------------------------

@@ -43,7 +43,7 @@ vtkCleanPolyData::vtkCleanPolyData()
   this->ConvertPolysToLines  = 1;
   this->ConvertLinesToPoints = 1;
   this->ConvertStripsToPolys = 1;
-  this->Locator = NULL;
+  this->Locator = nullptr;
   this->PieceInvariant = 1;
   this->OutputPointsPrecision = vtkAlgorithm::DEFAULT_PRECISION;
 }
@@ -51,7 +51,7 @@ vtkCleanPolyData::vtkCleanPolyData()
 //--------------------------------------------------------------------------
 vtkCleanPolyData::~vtkCleanPolyData()
 {
-  this->SetLocator(NULL);
+  this->SetLocator(nullptr);
 }
 
 //--------------------------------------------------------------------------
@@ -133,7 +133,7 @@ int vtkCleanPolyData::RequestData(
   vtkIdType   numPts = input->GetNumberOfPoints();
 
   vtkDebugMacro(<<"Beginning PolyData clean");
-  if ( (numPts<1) || (inPts == NULL ) )
+  if ( (numPts<1) || (inPts == nullptr ) )
   {
     vtkDebugMacro(<<"No data to Operate On!");
     return 1;
@@ -162,18 +162,18 @@ int vtkCleanPolyData::RequestData(
 
   // we'll be needing these
   vtkIdType inCellID, newId;
-  int i;
+  vtkIdType i;
   vtkIdType ptId;
   vtkIdType npts = 0;
-  vtkIdType *pts = 0;
+  vtkIdType *pts = nullptr;
   double x[3];
   double newx[3];
-  vtkIdType *pointMap=0; //used if no merging
+  vtkIdType *pointMap=nullptr; //used if no merging
 
-  vtkCellArray *inVerts  = input->GetVerts(),  *newVerts  = NULL;
-  vtkCellArray *inLines  = input->GetLines(),  *newLines  = NULL;
-  vtkCellArray *inPolys  = input->GetPolys(),  *newPolys  = NULL;
-  vtkCellArray *inStrips = input->GetStrips(), *newStrips = NULL;
+  vtkCellArray *inVerts  = input->GetVerts(),  *newVerts  = nullptr;
+  vtkCellArray *inLines  = input->GetLines(),  *newLines  = nullptr;
+  vtkCellArray *inPolys  = input->GetPolys(),  *newPolys  = nullptr;
+  vtkCellArray *inStrips = input->GetStrips(), *newStrips = nullptr;
 
   vtkPointData *inputPD = input->GetPointData();
   vtkCellData  *inputCD = input->GetCellData();
@@ -199,7 +199,7 @@ int vtkCleanPolyData::RequestData(
   else
   {
     pointMap = new vtkIdType [numPts];
-    for (i=0; i < numPts; i++)
+    for (i=0; i < numPts; ++i)
     {
       pointMap[i] = -1; //initialize unused
     }
@@ -216,9 +216,9 @@ int vtkCleanPolyData::RequestData(
   // strips. We need to maintain separate cell data lists so we can
   // copy them all correctly. Tedious but easy to implement. We can
   // use outputCD for vertex cell data, then add the rest at the end.
-  vtkCellData  *outLineData = NULL;
-  vtkCellData  *outPolyData = NULL;
-  vtkCellData  *outStrpData = NULL;
+  vtkCellData  *outLineData = nullptr;
+  vtkCellData  *outPolyData = nullptr;
+  vtkCellData  *outStrpData = nullptr;
   vtkIdType vertIDcounter = 0, lineIDcounter = 0;
   vtkIdType polyIDcounter = 0, strpIDcounter = 0;
 
@@ -235,7 +235,7 @@ int vtkCleanPolyData::RequestData(
     for (inVerts->InitTraversal(); inVerts->GetNextCell(npts,pts);
          inCellID++)
     {
-      for ( numNewPts=0, i=0; i < npts; i++ )
+      for ( numNewPts=0, i=0; i < npts; ++i )
       {
         inPts->GetPoint(pts[i],x);
         this->OperateOnPoint(x, newx);
@@ -302,8 +302,10 @@ int vtkCleanPolyData::RequestData(
           updatedPts[numNewPts++] = ptId;
         }
       }//for all cell points
-      if ( (numNewPts>1) || !this->ConvertLinesToPoints )
+
+      if (numNewPts >= 2)
       {
+        // Cell is a proper line or polyline, always add
         newId = newLines->InsertNextCell(numNewPts,updatedPts);
         outLineData->CopyData(inputCD, inCellID, newId);
         if (lineIDcounter!=newId)
@@ -312,8 +314,9 @@ int vtkCleanPolyData::RequestData(
         }
         lineIDcounter++;
       }
-      else if ( numNewPts==1 )
+      else if (numNewPts == 1 && (npts == numNewPts || this->ConvertLinesToPoints))
       {
+        // Cell was either a vertex to begin with and we didn't modify it or a degenerated line and the user wanted it included as a vertex
         if (!newVerts)
         {
           newVerts = vtkCellArray::New();
@@ -372,8 +375,9 @@ int vtkCleanPolyData::RequestData(
       {
         numNewPts--;
       }
-      if ( (numNewPts > 2) || !this->ConvertPolysToLines )
+      if (numNewPts > 2)
       {
+        // Cell is a proper polygon, always add
         newId = newPolys->InsertNextCell(numNewPts,updatedPts);
         outPolyData->CopyData(inputCD, inCellID, newId);
         if (polyIDcounter!=newId)
@@ -382,8 +386,9 @@ int vtkCleanPolyData::RequestData(
         }
         polyIDcounter++;
       }
-      else if ( (numNewPts==2) || !this->ConvertLinesToPoints )
+      else if (numNewPts == 2 && (npts == numNewPts || this->ConvertPolysToLines))
       {
+        // Cell was either a line to begin with and we didn't modify it or a degenerated poly and the user wanted it included as a line
         if (!newLines)
         {
           newLines = vtkCellArray::New();
@@ -399,8 +404,9 @@ int vtkCleanPolyData::RequestData(
         }
         lineIDcounter++;
       }
-      else if ( numNewPts==1 )
+      else if (numNewPts == 1 && (npts == numNewPts || this->ConvertLinesToPoints))
       {
+        // Cell was either a vertex to begin with and we didn't modify it or a degenerated line and the user wanted it included as a vertex
         if (!newVerts)
         {
           newVerts = vtkCellArray::New();
@@ -454,8 +460,13 @@ int vtkCleanPolyData::RequestData(
           updatedPts[numNewPts++] = ptId;
         }
       }
-      if ( (numNewPts > 3) || !this->ConvertStripsToPolys )
+      if (numNewPts > 1 && updatedPts[0] == updatedPts[numNewPts - 1])
       {
+        numNewPts--;
+      }
+      if (numNewPts > 3)
+      {
+        // Cell is a proper triangle strip, always add
         newId = newStrips->InsertNextCell(numNewPts,updatedPts);
         outStrpData->CopyData(inputCD, inCellID, newId);
         if (strpIDcounter!=newId)
@@ -464,8 +475,9 @@ int vtkCleanPolyData::RequestData(
         }
         strpIDcounter++;
       }
-      else if ( (numNewPts==3) || !this->ConvertPolysToLines )
+      else if (numNewPts == 3 && (npts == numNewPts || this->ConvertStripsToPolys))
       {
+        // Cell was either a triangle to begin with and we didn't modify it or a degenerated triangle strip and the user wanted it included as a polygon
         if (!newPolys)
         {
           newPolys = vtkCellArray::New();
@@ -481,8 +493,9 @@ int vtkCleanPolyData::RequestData(
         }
         polyIDcounter++;
       }
-      else if ( (numNewPts==2) || !this->ConvertLinesToPoints )
+      else if (numNewPts == 2 && (npts == numNewPts || this->ConvertPolysToLines))
       {
+        // Cell was either a line to begin with and we didn't modify it or a degenerated triangle strip and the user wanted it included as a line
         if (!newLines)
         {
           newLines = vtkCellArray::New();
@@ -498,8 +511,9 @@ int vtkCleanPolyData::RequestData(
         }
         lineIDcounter++;
       }
-      else if ( numNewPts==1 )
+      else if (numNewPts == 1 && (npts == numNewPts || this->ConvertLinesToPoints))
       {
+        // Cell was either a vertex to begin with and we didn't modify it or a degenerated triangle strip and the user wanted it included as a vertex
         if (!newVerts)
         {
           newVerts = vtkCellArray::New();
@@ -537,28 +551,28 @@ int vtkCleanPolyData::RequestData(
 
   // Now transfer all CellData from Lines/Polys/Strips into final
   // Cell data output
-  int CombinedCellID = vertIDcounter;
+  vtkIdType combinedCellID = vertIDcounter;
   if (newLines)
   {
-    for (i=0; i<lineIDcounter; i++, CombinedCellID++)
+    for (i=0; i<lineIDcounter; ++i, ++combinedCellID)
     {
-      outputCD->CopyData(outLineData, i, CombinedCellID);
+      outputCD->CopyData(outLineData, i, combinedCellID);
     }
     outLineData->Delete();
   }
   if (newPolys)
   {
-    for (i=0; i<polyIDcounter; i++, CombinedCellID++)
+    for (i=0; i<polyIDcounter; ++i, ++combinedCellID)
     {
-      outputCD->CopyData(outPolyData, i, CombinedCellID);
+      outputCD->CopyData(outPolyData, i, combinedCellID);
     }
     outPolyData->Delete();
   }
   if (newStrips)
   {
-    for (i=0; i<strpIDcounter; i++, CombinedCellID++)
+    for (i=0; i<strpIDcounter; ++i, ++combinedCellID)
     {
-      outputCD->CopyData(outStrpData, i, CombinedCellID);
+      outputCD->CopyData(outStrpData, i, combinedCellID);
     }
     outStrpData->Delete();
   }
@@ -616,7 +630,7 @@ void vtkCleanPolyData::CreateDefaultLocator(vtkPolyData *input)
     }
   }
 
-  if ( this->Locator == NULL)
+  if ( this->Locator == nullptr)
   {
     if (tol==0.0)
     {
@@ -636,7 +650,7 @@ void vtkCleanPolyData::CreateDefaultLocator(vtkPolyData *input)
     // check that the tolerance wasn't changed from zero to non-zero
     if ((tol>0.0) && (this->GetLocator()->GetTolerance()==0.0))
     {
-      this->SetLocator(NULL);
+      this->SetLocator(nullptr);
       this->Locator = vtkPointLocator::New();
       this->Locator->Register(this);
       this->Locator->Delete();
@@ -682,7 +696,7 @@ vtkMTimeType vtkCleanPolyData::GetMTime()
 {
   vtkMTimeType mTime=this->vtkObject::GetMTime();
   vtkMTimeType time;
-  if ( this->Locator != NULL )
+  if ( this->Locator != nullptr )
   {
     time = this->Locator->GetMTime();
     mTime = ( time > mTime ? time : mTime );

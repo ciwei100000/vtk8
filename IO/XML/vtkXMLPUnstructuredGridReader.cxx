@@ -27,14 +27,10 @@
 vtkStandardNewMacro(vtkXMLPUnstructuredGridReader);
 
 //----------------------------------------------------------------------------
-vtkXMLPUnstructuredGridReader::vtkXMLPUnstructuredGridReader()
-{
-}
+vtkXMLPUnstructuredGridReader::vtkXMLPUnstructuredGridReader() = default;
 
 //----------------------------------------------------------------------------
-vtkXMLPUnstructuredGridReader::~vtkXMLPUnstructuredGridReader()
-{
-}
+vtkXMLPUnstructuredGridReader::~vtkXMLPUnstructuredGridReader() = default;
 
 //----------------------------------------------------------------------------
 void vtkXMLPUnstructuredGridReader::PrintSelf(ostream& os, vtkIndent indent)
@@ -175,6 +171,11 @@ int vtkXMLPUnstructuredGridReader::ReadPieceData()
     {
       outputFaceLocations->InsertNextValue(outputFaces->GetMaxId() + 1);
       vtkIdType location = inputFaceLocations->GetValue(i);
+      if (location < 0) // the face offsets array contains -1 for regular cells
+      {
+        continue;
+      }
+
       vtkIdType numFaces = inputFaces->GetValue(location);
       location++;
       outputFaces->InsertNextValue(numFaces);

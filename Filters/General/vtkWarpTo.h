@@ -31,7 +31,7 @@ class VTKFILTERSGENERAL_EXPORT vtkWarpTo : public vtkPointSetAlgorithm
 public:
   static vtkWarpTo *New();
   vtkTypeMacro(vtkWarpTo,vtkPointSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -54,29 +54,29 @@ public:
    * Set/Get the Absolute ivar. Turning Absolute on causes scale factor
    * of the new position to be one unit away from Position.
    */
-  vtkSetMacro(Absolute,int);
-  vtkGetMacro(Absolute,int);
-  vtkBooleanMacro(Absolute,int);
+  vtkSetMacro(Absolute,vtkTypeBool);
+  vtkGetMacro(Absolute,vtkTypeBool);
+  vtkBooleanMacro(Absolute,vtkTypeBool);
   //@}
 
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
 protected:
   vtkWarpTo();
-  ~vtkWarpTo() VTK_OVERRIDE {}
+  ~vtkWarpTo() override {}
 
   int RequestDataObject(vtkInformation *request,
                         vtkInformationVector **inputVector,
-                        vtkInformationVector *outputVector) VTK_OVERRIDE;
+                        vtkInformationVector *outputVector) override;
   int RequestData(vtkInformation *,
                   vtkInformationVector **,
-                  vtkInformationVector *) VTK_OVERRIDE;
+                  vtkInformationVector *) override;
   double ScaleFactor;
   double Position[3];
-  int   Absolute;
+  vtkTypeBool   Absolute;
 private:
-  vtkWarpTo(const vtkWarpTo&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkWarpTo&) VTK_DELETE_FUNCTION;
+  vtkWarpTo(const vtkWarpTo&) = delete;
+  void operator=(const vtkWarpTo&) = delete;
 };
 
 #endif

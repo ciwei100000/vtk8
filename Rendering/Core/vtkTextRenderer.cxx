@@ -27,18 +27,16 @@
 
 //----------------------------------------------------------------------------
 // The singleton, and the singleton cleanup
-vtkTextRenderer *vtkTextRenderer::Instance = NULL;
+vtkTextRenderer *vtkTextRenderer::Instance = nullptr;
 vtkTextRendererCleanup vtkTextRenderer::Cleanup;
 
 //----------------------------------------------------------------------------
-vtkTextRendererCleanup::vtkTextRendererCleanup()
-{
-}
+vtkTextRendererCleanup::vtkTextRendererCleanup() = default;
 
 //----------------------------------------------------------------------------
 vtkTextRendererCleanup::~vtkTextRendererCleanup()
 {
-  vtkTextRenderer::SetInstance(NULL);
+  vtkTextRenderer::SetInstance(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -57,7 +55,7 @@ vtkTextRenderer *vtkTextRenderer::New()
   vtkTextRenderer *instance = vtkTextRenderer::GetInstance();
   if (instance)
   {
-    instance->Register(NULL);
+    instance->Register(nullptr);
   }
   return instance;
 }
@@ -93,7 +91,7 @@ void vtkTextRenderer::SetInstance(vtkTextRenderer *instance)
 
   if (instance)
   {
-    instance->Register(NULL);
+    instance->Register(nullptr);
   }
 }
 

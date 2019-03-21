@@ -74,7 +74,7 @@ public:
   static vtkWindowToImageFilter *New();
 
   vtkTypeMacro(vtkWindowToImageFilter,vtkAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Indicates what renderer to get the pixel data from. Initial value is 0.
@@ -91,15 +91,21 @@ public:
 
   //@{
   /**
-   * The magnification of the current render window. Initial value is 1.
+   * Get/Set the scale (or magnification) factors in X and Y.
    */
-  vtkSetClampMacro(Magnification,int,1,2048);
-  vtkGetMacro(Magnification,int);
+  vtkSetVector2Macro(Scale, int);
+  vtkGetVector2Macro(Scale, int);
   //@}
+
+  /**
+   * Convenience method to set same scale factors for x and y.
+   * i.e. same as calling this->SetScale(scale, scale).
+   */
+  void SetScale(int scale) { this->SetScale(scale, scale); }
 
   //@{
   /**
-   * When this->Magnification > 1, this class render the full image in tiles.
+   * When scale factor > 1, this class render the full image in tiles.
    * Sometimes that results in artificial artifacts at internal tile seams.
    * To overcome this issue, set this flag to true.
    */
@@ -113,25 +119,25 @@ public:
    * Set/Get the flag that determines which buffer to read from.
    * The default is to read from the front buffer.
    */
-  vtkBooleanMacro(ReadFrontBuffer, int);
-  vtkGetMacro(ReadFrontBuffer, int);
-  vtkSetMacro(ReadFrontBuffer, int);
+  vtkBooleanMacro(ReadFrontBuffer, vtkTypeBool);
+  vtkGetMacro(ReadFrontBuffer, vtkTypeBool);
+  vtkSetMacro(ReadFrontBuffer, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/get whether to re-render the input window. Initial value is true.
-   * (This option makes no difference if Magnification > 1.)
+   * (This option makes no difference if scale factor > 1.)
    */
-  vtkBooleanMacro(ShouldRerender, int);
-  vtkSetMacro(ShouldRerender, int);
-  vtkGetMacro(ShouldRerender, int);
+  vtkBooleanMacro(ShouldRerender, vtkTypeBool);
+  vtkSetMacro(ShouldRerender, vtkTypeBool);
+  vtkGetMacro(ShouldRerender, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/get the extents to be used to generate the image. Initial value is
-   * {0,0,1,1} (This option does not work if Magnification > 1.)
+   * {0,0,1,1} (This option does not work if scale factor > 1.)
    */
   void SetViewport(double, double, double, double);
   void SetViewport(double*);
@@ -163,17 +169,17 @@ public:
    */
   int ProcessRequest(vtkInformation*,
                              vtkInformationVector**,
-                             vtkInformationVector*) VTK_OVERRIDE;
+                             vtkInformationVector*) override;
 
 protected:
   vtkWindowToImageFilter();
-  ~vtkWindowToImageFilter() VTK_OVERRIDE;
+  ~vtkWindowToImageFilter() override;
 
   // vtkWindow is not a vtkDataObject, so we need our own ivar.
   vtkWindow *Input;
-  int Magnification;
-  int ReadFrontBuffer;
-  int ShouldRerender;
+  int Scale[2];
+  vtkTypeBool ReadFrontBuffer;
+  vtkTypeBool ShouldRerender;
   double Viewport[4];
   int InputBufferType;
   bool FixBoundary;
@@ -186,14 +192,14 @@ protected:
                                   vtkInformationVector*);
 
   // see algorithm for more info
-  int FillOutputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillOutputPortInformation(int port, vtkInformation* info) override;
 
   /**
    * Allows subclasses to customize how a request for render is handled.
    * Default implementation checks if the render window has an interactor, if
    * so, call interactor->Render(). If not, then renderWindow->Render() is
    * called. Note, this may be called even when this->ShouldRerender is false,
-   * e.g. when saving images magnification > 1.
+   * e.g. when saving images Scale > 1.
    */
   virtual void Render();
 
@@ -204,8 +210,8 @@ protected:
   vtkWTI2DHelperClass *StoredData;
 
 private:
-  vtkWindowToImageFilter(const vtkWindowToImageFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkWindowToImageFilter&) VTK_DELETE_FUNCTION;
+  vtkWindowToImageFilter(const vtkWindowToImageFilter&) = delete;
+  void operator=(const vtkWindowToImageFilter&) = delete;
 };
 
 #endif

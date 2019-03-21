@@ -33,6 +33,7 @@ vtkStandardNewMacro(vtkGeoCamera);
 //----------------------------------------------------------------------------
 vtkGeoCamera::vtkGeoCamera()
 {
+  VTK_LEGACY_BODY(vtkGeoCamera::vtkGeoCamera, "VTK 8.2");
   this->VTKCamera = vtkSmartPointer<vtkCamera>::New();
   this->Transform = vtkSmartPointer<vtkTransform>::New();
 
@@ -58,9 +59,7 @@ vtkGeoCamera::vtkGeoCamera()
 }
 
 //-----------------------------------------------------------------------------
-vtkGeoCamera::~vtkGeoCamera()
-{
-}
+vtkGeoCamera::~vtkGeoCamera() = default;
 
 //-----------------------------------------------------------------------------
 void vtkGeoCamera::PrintSelf(ostream& os, vtkIndent indent)
@@ -435,4 +434,3 @@ vtkCamera* vtkGeoCamera::GetVTKCamera()
 {
   return this->VTKCamera;
 }
-

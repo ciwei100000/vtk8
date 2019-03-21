@@ -43,7 +43,7 @@ public:
   static vtkImageViewer *New();
 
   vtkTypeMacro(vtkImageViewer,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get name of rendering window
@@ -104,7 +104,7 @@ public:
   /**
    * Set/Get the position in screen coordinates of the rendering window.
    */
-  int *GetPosition() {return this->RenderWindow->GetPosition();};
+  int *GetPosition() VTK_SIZEHINT(2) {return this->RenderWindow->GetPosition();};
   void SetPosition(int a,int b) {this->RenderWindow->SetPosition(a,b);};
   virtual void SetPosition(int a[2]);
   //@}
@@ -113,7 +113,7 @@ public:
   /**
    * Set/Get the size of the window in screen coordinates in pixels.
    */
-  int *GetSize() {return this->RenderWindow->GetSize();};
+  int *GetSize() VTK_SIZEHINT(2) {return this->RenderWindow->GetSize();};
   void SetSize(int a,int b) {this->RenderWindow->SetSize(a,b);};
   virtual void SetSize(int a[2]);
   //@}
@@ -123,6 +123,7 @@ public:
    * Get the internal objects
    */
   vtkGetObjectMacro(RenderWindow,vtkRenderWindow);
+  void SetRenderWindow(vtkRenderWindow* renWin);
   vtkGetObjectMacro(Renderer, vtkRenderer);
   vtkGetObjectMacro(ImageMapper,vtkImageMapper);
   vtkGetObjectMacro(Actor2D,vtkActor2D);
@@ -139,15 +140,15 @@ public:
    * be supported for every type of window and on some windows you may
    * need to invoke this prior to the first render.
    */
-  void SetOffScreenRendering(int);
-  int GetOffScreenRendering();
+  void SetOffScreenRendering(vtkTypeBool);
+  vtkTypeBool GetOffScreenRendering();
   void OffScreenRenderingOn();
   void OffScreenRenderingOff();
   //@}
 
 protected:
   vtkImageViewer();
-  ~vtkImageViewer() VTK_OVERRIDE;
+  ~vtkImageViewer() override;
 
   vtkRenderWindow *RenderWindow;
   vtkRenderer *Renderer;
@@ -161,8 +162,8 @@ protected:
   vtkAlgorithm* GetInputAlgorithm();
 
 private:
-  vtkImageViewer(const vtkImageViewer&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageViewer&) VTK_DELETE_FUNCTION;
+  vtkImageViewer(const vtkImageViewer&) = delete;
+  void operator=(const vtkImageViewer&) = delete;
 };
 
 #endif

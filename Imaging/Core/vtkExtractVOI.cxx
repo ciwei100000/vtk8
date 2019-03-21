@@ -41,7 +41,7 @@ vtkExtractVOI::vtkExtractVOI()
 //------------------------------------------------------------------------------
 vtkExtractVOI::~vtkExtractVOI()
 {
-  if( this->Internal != NULL )
+  if( this->Internal != nullptr )
   {
     this->Internal->Delete();
   }
@@ -213,7 +213,7 @@ bool vtkExtractVOI::RequestDataImpl(vtkInformationVector **inputVector,
       (this->SampleRate[1] < 1) ||
       (this->SampleRate[2] < 1) )
   {
-    vtkErrorMacro("SampleRate must be >= 1 in all 3 dimenstions!");
+    vtkErrorMacro("SampleRate must be >= 1 in all 3 dimensions!");
     return false;
   }
 
@@ -272,7 +272,7 @@ bool vtkExtractVOI::RequestDataImpl(vtkInformationVector **inputVector,
   output->SetOrigin( outOrigin );
 
   vtkDebugMacro(<< "Extracting Grid");
-  this->Internal->CopyPointsAndPointData(inExt,outExt,pd,NULL,outPD,NULL);
+  this->Internal->CopyPointsAndPointData(inExt,outExt,pd,nullptr,outPD,nullptr);
   this->Internal->CopyCellData(inExt,outExt,cd,outCD);
 
   return 1;

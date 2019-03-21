@@ -33,7 +33,7 @@ class VTKIMAGINGSTENCIL_EXPORT vtkImageStencil : public vtkThreadedImageAlgorith
 public:
   static vtkImageStencil *New();
   vtkTypeMacro(vtkImageStencil, vtkThreadedImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -57,9 +57,9 @@ public:
   /**
    * Reverse the stencil.
    */
-  vtkSetMacro(ReverseStencil, int);
-  vtkBooleanMacro(ReverseStencil, int);
-  vtkGetMacro(ReverseStencil, int);
+  vtkSetMacro(ReverseStencil, vtkTypeBool);
+  vtkBooleanMacro(ReverseStencil, vtkTypeBool);
+  vtkGetMacro(ReverseStencil, vtkTypeBool);
   //@}
 
   //@{
@@ -93,22 +93,22 @@ public:
 
 protected:
   vtkImageStencil();
-  ~vtkImageStencil() VTK_OVERRIDE;
+  ~vtkImageStencil() override;
 
   void ThreadedRequestData(vtkInformation *request,
                            vtkInformationVector **inputVector,
                            vtkInformationVector *outputVector,
                            vtkImageData ***inData, vtkImageData **outData,
-                           int extent[6], int id) VTK_OVERRIDE;
+                           int extent[6], int id) override;
 
-  int ReverseStencil;
+  vtkTypeBool ReverseStencil;
   double BackgroundColor[4];
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
 private:
-  vtkImageStencil(const vtkImageStencil&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageStencil&) VTK_DELETE_FUNCTION;
+  vtkImageStencil(const vtkImageStencil&) = delete;
+  void operator=(const vtkImageStencil&) = delete;
 };
 
 #endif

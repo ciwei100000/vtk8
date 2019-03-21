@@ -25,8 +25,11 @@
 #include "vtkXMLDataHeaderPrivate.h"
 #undef vtkXMLDataHeaderPrivate_DoNotInclude
 
+#include <algorithm>
+#include <cassert>
 #include <memory>
 #include <sstream>
+#include <vector>
 
 #include "vtkXMLUtilities.h"
 
@@ -40,18 +43,18 @@ vtkXMLDataParser::vtkXMLDataParser()
   this->NumberOfOpenElements = 0;
   this->OpenElementsSize = 10;
   this->OpenElements = new vtkXMLDataElement*[this->OpenElementsSize];
-  this->RootElement = 0;
+  this->RootElement = nullptr;
   this->AppendedDataPosition = 0;
   this->AppendedDataMatched = 0;
-  this->DataStream = 0;
+  this->DataStream = nullptr;
   this->InlineDataStream = vtkBase64InputStream::New();
   this->AppendedDataStream = vtkBase64InputStream::New();
 
-  this->BlockCompressedSizes = 0;
-  this->BlockStartOffsets = 0;
-  this->Compressor = 0;
+  this->BlockCompressedSizes = nullptr;
+  this->BlockStartOffsets = nullptr;
+  this->Compressor = nullptr;
 
-  this->AsciiDataBuffer = 0;
+  this->AsciiDataBuffer = nullptr;
   this->AsciiDataBufferLength = 0;
   this->AsciiDataPosition = 0;
 
@@ -83,7 +86,7 @@ vtkXMLDataParser::~vtkXMLDataParser()
   this->AppendedDataStream->Delete();
   delete [] this->BlockCompressedSizes;
   delete [] this->BlockStartOffsets;
-  this->SetCompressor(0);
+  this->SetCompressor(nullptr);
   if(this->AsciiDataBuffer) { this->FreeAsciiBuffer(); }
 }
 
@@ -334,7 +337,7 @@ vtkXMLDataElement* vtkXMLDataParser::PopOpenElement()
     --this->NumberOfOpenElements;
     return this->OpenElements[this->NumberOfOpenElements];
   }
-  return 0;
+  return nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -344,12 +347,12 @@ void vtkXMLDataParser::FreeAllElements()
   {
     --this->NumberOfOpenElements;
     this->OpenElements[this->NumberOfOpenElements]->Delete();
-    this->OpenElements[this->NumberOfOpenElements] = 0;
+    this->OpenElements[this->NumberOfOpenElements] = nullptr;
   }
   if(this->RootElement)
   {
     this->RootElement->Delete();
-    this->RootElement = 0;
+    this->RootElement = nullptr;
   }
 }
 
@@ -426,8 +429,13 @@ size_t vtkXMLDataParser::GetWordTypeSize(int wordType)
   switch (wordType)
   {
     vtkTemplateMacro(
-      size = vtkXMLDataParserGetWordTypeSize(static_cast<VTK_TT*>(0))
+      size = vtkXMLDataParserGetWordTypeSize(static_cast<VTK_TT*>(nullptr))
       );
+
+    case VTK_BIT:
+      size = 1;
+      break;
+
     default:
       { vtkWarningMacro("Unsupported data type: " << wordType); } break;
   }
@@ -499,9 +507,9 @@ int vtkXMLDataParser::ReadCompressionHeader()
   // Allocate the size and offset parts of the header.
   ch->Resize(this->NumberOfBlocks);
   delete [] this->BlockCompressedSizes;
-  this->BlockCompressedSizes = 0;
+  this->BlockCompressedSizes = nullptr;
   delete [] this->BlockStartOffsets;
-  this->BlockStartOffsets = 0;
+  this->BlockStartOffsets = nullptr;
   if(this->NumberOfBlocks > 0)
   {
     this->BlockCompressedSizes = new size_t[this->NumberOfBlocks];
@@ -582,7 +590,7 @@ unsigned char* vtkXMLDataParser::ReadBlock(vtkTypeUInt64 block)
   if(!this->ReadBlock(block, decompressBuffer))
   {
     delete [] decompressBuffer;
-    return 0;
+    return nullptr;
   }
   return decompressBuffer;
 }
@@ -888,7 +896,10 @@ size_t vtkXMLDataParser::ReadAsciiData(void* buffer,
   this->UpdateProgress(0.5);
 
   // Copy the data from the pre-parsed ascii data buffer.
-  memcpy(buffer, this->AsciiDataBuffer+startByte, actualBytes);
+  if (buffer && actualBytes)
+  {
+    memcpy(buffer, this->AsciiDataBuffer+startByte, actualBytes);
+  }
 
   this->UpdateProgress(1);
 
@@ -1068,6 +1079,62 @@ static signed char* vtkXMLParseAsciiData(istream& is,
 }
 
 //----------------------------------------------------------------------------
+static unsigned char* vtkXMLParseAsciiBitData(istream& is, int* length)
+{
+  size_t arrayCapacity = 64; // capacity in bytes
+  unsigned char *array = new unsigned char[arrayCapacity];
+  std::fill(array, array + arrayCapacity, static_cast<unsigned char>(0));
+
+  size_t fullBytesRead = 0;
+  unsigned char currentBitInByte = 0;
+  unsigned char *currentByte = array;
+
+  int value;
+  while (is >> value)
+  {
+    // Realloc array buffer if needed:
+    if (fullBytesRead == arrayCapacity)
+    {
+      assert("sanity check" && currentBitInByte == 0);
+      size_t newSize = arrayCapacity * 2;
+      unsigned char *tmp = new unsigned char[newSize];
+      std::copy(array, array + arrayCapacity, tmp);
+      std::fill(tmp + arrayCapacity, tmp + newSize,
+                static_cast<unsigned char>(0));
+
+      delete [] array;
+      array = tmp;
+      currentByte = array + fullBytesRead;
+      arrayCapacity = newSize;
+    }
+
+    // Set the current bit:
+    assert("sanity check" && currentBitInByte < 8);
+    if (value != 0)
+    { // Mimic the storage mechanism used by vtkBitArray
+      *currentByte = *currentByte | (0x80 >> currentBitInByte);
+    }
+
+    // Update bookkeeping:
+    if (++currentBitInByte == 8)
+    {
+      ++currentByte;
+      ++fullBytesRead;
+      currentBitInByte = 0;
+    }
+  }
+
+  if (length)
+  {
+    // We fudge the 'word size' to 1 byte for bit arrays (since it's integral)
+    // so return the length in bytes here:
+    *length = static_cast<int>(fullBytesRead + (currentBitInByte != 0 ? 1 : 0));
+  }
+
+  return array;
+}
+
+//----------------------------------------------------------------------------
 int vtkXMLDataParser::ParseAsciiData(int wordType)
 {
   istream& is = *(this->Stream);
@@ -1083,12 +1150,16 @@ int vtkXMLDataParser::ParseAsciiData(int wordType)
   if(this->AsciiDataBuffer) { this->FreeAsciiBuffer(); }
 
   int length = 0;
-  void* buffer = 0;
+  void* buffer = nullptr;
   switch (wordType)
   {
     vtkTemplateMacro(
-      buffer = vtkXMLParseAsciiData(is, &length, static_cast<VTK_TT*>(0), 1)
+      buffer = vtkXMLParseAsciiData(is, &length, static_cast<VTK_TT*>(nullptr), 1)
       );
+
+    case VTK_BIT:
+      buffer = vtkXMLParseAsciiBitData(is, &length);
+      break;
   }
 
   // Read terminated from failure.  Clear the fail bit so another read
@@ -1118,8 +1189,12 @@ void vtkXMLDataParser::FreeAsciiBuffer()
     vtkTemplateMacro(
       vtkXMLDataParserFreeAsciiBuffer(static_cast<VTK_TT*>(buffer))
       );
+
+    case VTK_BIT:
+      vtkXMLDataParserFreeAsciiBuffer(static_cast<unsigned char *>(buffer));
+      break;
   }
-  this->AsciiDataBuffer = 0;
+  this->AsciiDataBuffer = nullptr;
 }
 
 //----------------------------------------------------------------------------

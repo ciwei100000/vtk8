@@ -99,7 +99,7 @@ namespace
 
   //split the blocks into a tree that starts out as a single stem
   //than turn a full tree. This shape is designed so that numLevels and maxNumBlocks
-  //constraint can be satisifed
+  //constraint can be satisfied
   void Split(const vtkAMRBox& rootBox, int numLevels, int refinementRatio, int maxNumBlocks,
              std::vector<std::vector<vtkAMRBox> >& out)
   {
@@ -221,9 +221,7 @@ vtkImageToAMR::vtkImageToAMR()
 }
 
 //----------------------------------------------------------------------------
-vtkImageToAMR::~vtkImageToAMR()
-{
-}
+vtkImageToAMR::~vtkImageToAMR() = default;
 
 //----------------------------------------------------------------------------
 int vtkImageToAMR::FillInputPortInformation(int , vtkInformation* info)
@@ -334,7 +332,7 @@ int vtkImageToAMR::RequestData(vtkInformation* vtkNotUsed(request),
   {
     double spacing[3];
     amr->GetSpacing(level, spacing);
-    int coarsenRatio = (int)pow( static_cast<double>(this->RefinementRatio), static_cast<int>(numLevels- 1 - level));//againt the finest level
+    int coarsenRatio = (int)pow( static_cast<double>(this->RefinementRatio), static_cast<int>(numLevels- 1 - level));//against the finest level
     for(size_t i=0; i<amr->GetNumberOfDataSets(level);i++)
     {
       const vtkAMRBox& box = amr->GetAMRBox(level,static_cast<unsigned int>(i));

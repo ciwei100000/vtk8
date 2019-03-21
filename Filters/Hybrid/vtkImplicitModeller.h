@@ -101,7 +101,7 @@ class VTKFILTERSHYBRID_EXPORT vtkImplicitModeller : public vtkImageAlgorithm
 {
 public:
   vtkTypeMacro(vtkImplicitModeller,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with sample dimensions=(50,50,50), and so that model bounds are
@@ -114,7 +114,7 @@ public:
    * Compute ModelBounds from input geometry. If input is not specified, the
    * input of the filter will be used.
    */
-  double ComputeModelBounds(vtkDataSet *input = NULL);
+  double ComputeModelBounds(vtkDataSet *input = nullptr);
 
   //@{
   /**
@@ -152,9 +152,9 @@ public:
    * by the fraction given by AdjustDistance. This means that the model
    * bounds is expanded in each of the x-y-z directions.
    */
-  vtkSetMacro(AdjustBounds,int);
-  vtkGetMacro(AdjustBounds,int);
-  vtkBooleanMacro(AdjustBounds,int);
+  vtkSetMacro(AdjustBounds,vtkTypeBool);
+  vtkGetMacro(AdjustBounds,vtkTypeBool);
+  vtkBooleanMacro(AdjustBounds,vtkTypeBool);
   //@}
 
   //@{
@@ -172,9 +172,9 @@ public:
    * The outer boundary of the structured point set can be assigned a
    * particular value. This can be used to close or "cap" all surfaces.
    */
-  vtkSetMacro(Capping,int);
-  vtkGetMacro(Capping,int);
-  vtkBooleanMacro(Capping,int);
+  vtkSetMacro(Capping,vtkTypeBool);
+  vtkGetMacro(Capping,vtkTypeBool);
+  vtkBooleanMacro(Capping,vtkTypeBool);
   //@}
 
   //@{
@@ -194,12 +194,12 @@ public:
    * unless modified by the user).  For example, if ScaleToMaximumDistance
    * is On and the OutputScalarType is UnsignedChar the distances saved in the
    * output would be linearly scaled between 0 (for distances "very close" to
-   * the surface) and 255 (at the specifed maximum distance)... assuming the
+   * the surface) and 255 (at the specified maximum distance)... assuming the
    * CapValue is not changed from 255.
    */
-  vtkSetMacro(ScaleToMaximumDistance, int);
-  vtkGetMacro(ScaleToMaximumDistance, int);
-  vtkBooleanMacro(ScaleToMaximumDistance,int);
+  vtkSetMacro(ScaleToMaximumDistance, vtkTypeBool);
+  vtkGetMacro(ScaleToMaximumDistance, vtkTypeBool);
+  vtkBooleanMacro(ScaleToMaximumDistance,vtkTypeBool);
   //@}
 
   //@{
@@ -279,22 +279,22 @@ public:
    */
   void EndAppend();
 
-  // See the vtkAlgorithm for a desciption of what these do
+  // See the vtkAlgorithm for a description of what these do
   int ProcessRequest(vtkInformation*,
                      vtkInformationVector**,
-                     vtkInformationVector*) VTK_OVERRIDE;
+                     vtkInformationVector*) override;
 
 protected:
   vtkImplicitModeller();
-  ~vtkImplicitModeller() VTK_OVERRIDE;
+  ~vtkImplicitModeller() override;
 
   double GetScalarTypeMax(int type);
 
   int RequestInformation (vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   int RequestData (vtkInformation *,
-                           vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+                           vtkInformationVector **, vtkInformationVector *) override;
 
   void StartAppend(int internal);
   void Cap(vtkDataArray *s);
@@ -305,15 +305,15 @@ protected:
   int SampleDimensions[3];
   double MaximumDistance;
   double ModelBounds[6];
-  int Capping;
+  vtkTypeBool Capping;
   double CapValue;
   int DataAppended;
-  int AdjustBounds;
+  vtkTypeBool AdjustBounds;
   double AdjustDistance;
   int ProcessMode;
   int LocatorMaxLevel;
   int OutputScalarType;
-  int ScaleToMaximumDistance;
+  vtkTypeBool ScaleToMaximumDistance;
 
   // flag to limit to one ComputeModelBounds per StartAppend
   int BoundsComputed;
@@ -321,11 +321,11 @@ protected:
   // the max distance computed during that one call
   double InternalMaxDistance;
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
 private:
-  vtkImplicitModeller(const vtkImplicitModeller&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImplicitModeller&) VTK_DELETE_FUNCTION;
+  vtkImplicitModeller(const vtkImplicitModeller&) = delete;
+  void operator=(const vtkImplicitModeller&) = delete;
 };
 
 #endif

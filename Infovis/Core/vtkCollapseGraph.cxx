@@ -30,7 +30,6 @@
 #include "vtkSelection.h"
 #include "vtkSmartPointer.h"
 
-//#include <iterator>
 #include <vector>
 
 /// Defines storage for a collection of edges
@@ -81,9 +80,7 @@ vtkCollapseGraph::vtkCollapseGraph()
 }
 
 
-vtkCollapseGraph::~vtkCollapseGraph()
-{
-}
+vtkCollapseGraph::~vtkCollapseGraph() = default;
 
 void vtkCollapseGraph::PrintSelf(ostream& os, vtkIndent indent)
 {

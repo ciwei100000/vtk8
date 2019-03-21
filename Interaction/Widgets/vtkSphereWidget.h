@@ -79,18 +79,18 @@ public:
   static vtkSphereWidget *New();
 
   vtkTypeMacro(vtkSphereWidget,vtk3DWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Methods that satisfy the superclass' API.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void PlaceWidget() VTK_OVERRIDE
+  void SetEnabled(int) override;
+  void PlaceWidget(double bounds[6]) override;
+  void PlaceWidget() override
     {this->Superclass::PlaceWidget();}
   void PlaceWidget(double xmin, double xmax, double ymin, double ymax,
-                   double zmin, double zmax) VTK_OVERRIDE
+                   double zmin, double zmax) override
     {this->Superclass::PlaceWidget(xmin,xmax,ymin,ymax,zmin,zmax);}
   //@}
 
@@ -156,7 +156,7 @@ public:
   {
     this->SetCenter(x[0], x[1], x[2]);
   }
-  double* GetCenter()
+  double* GetCenter() VTK_SIZEHINT(3)
     {return this->SphereSource->GetCenter();}
   void GetCenter(double xyz[3])
     {this->SphereSource->GetCenter(xyz);}
@@ -167,12 +167,12 @@ public:
    * Enable translation and scaling of the widget. By default, the widget
    * can be translated and rotated.
    */
-  vtkSetMacro(Translation,int);
-  vtkGetMacro(Translation,int);
-  vtkBooleanMacro(Translation,int);
-  vtkSetMacro(Scale,int);
-  vtkGetMacro(Scale,int);
-  vtkBooleanMacro(Scale,int);
+  vtkSetMacro(Translation,vtkTypeBool);
+  vtkGetMacro(Translation,vtkTypeBool);
+  vtkBooleanMacro(Translation,vtkTypeBool);
+  vtkSetMacro(Scale,vtkTypeBool);
+  vtkGetMacro(Scale,vtkTypeBool);
+  vtkBooleanMacro(Scale,vtkTypeBool);
   //@}
 
   //@{
@@ -182,9 +182,9 @@ public:
    * of the handle can be retrieved, this is useful for positioning cameras
    * and lights. By default, the handle is turned off.
    */
-  vtkSetMacro(HandleVisibility,int);
-  vtkGetMacro(HandleVisibility,int);
-  vtkBooleanMacro(HandleVisibility,int);
+  vtkSetMacro(HandleVisibility,vtkTypeBool);
+  vtkGetMacro(HandleVisibility,vtkTypeBool);
+  vtkBooleanMacro(HandleVisibility,vtkTypeBool);
   //@}
 
   //@{
@@ -234,7 +234,7 @@ public:
   /**
    * Get the handle properties (the little ball on the sphere is the
    * handle). The properties of the handle when selected and unselected
-   * can be  manipulated.
+   * can be manipulated.
    */
   vtkGetObjectMacro(HandleProperty,vtkProperty);
   vtkGetObjectMacro(SelectedHandleProperty,vtkProperty);
@@ -242,7 +242,7 @@ public:
 
 protected:
   vtkSphereWidget();
-  ~vtkSphereWidget() VTK_OVERRIDE;
+  ~vtkSphereWidget() override;
 
   // Manage the state of the widget
   int State;
@@ -282,11 +282,11 @@ protected:
   vtkCellPicker *Picker;
 
   // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  void RegisterPickers() override;
 
   // Methods to manipulate the sphere widget
-  int Translation;
-  int Scale;
+  vtkTypeBool Translation;
+  vtkTypeBool Scale;
   void Translate(double *p1, double *p2);
   void ScaleSphere(double *p1, double *p2, int X, int Y);
   void MoveHandle(double *p1, double *p2, int X, int Y);
@@ -305,14 +305,14 @@ protected:
   vtkPolyDataMapper *HandleMapper;
   vtkSphereSource   *HandleSource;
   void HighlightHandle(int);
-  int HandleVisibility;
+  vtkTypeBool HandleVisibility;
   double HandleDirection[3];
   double HandlePosition[3];
-  void SizeHandles() VTK_OVERRIDE;
+  void SizeHandles() override;
 
 private:
-  vtkSphereWidget(const vtkSphereWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSphereWidget&) VTK_DELETE_FUNCTION;
+  vtkSphereWidget(const vtkSphereWidget&) = delete;
+  void operator=(const vtkSphereWidget&) = delete;
 };
 
 #endif

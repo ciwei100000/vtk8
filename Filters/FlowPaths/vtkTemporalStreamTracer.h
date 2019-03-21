@@ -86,7 +86,7 @@ class VTKFILTERSFLOWPATHS_EXPORT vtkTemporalStreamTracer : public vtkStreamTrace
 public:
 
     vtkTypeMacro(vtkTemporalStreamTracer,vtkStreamTracer);
-    void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+    void PrintSelf(ostream& os, vtkIndent indent) override;
 
     /**
      * Construct object using 2nd order Runge Kutta
@@ -108,9 +108,9 @@ public:
      * To get around problems with the Paraview Animation controls
      * we can just animate the time step and ignore the TIME_ requests
      */
-    vtkSetMacro(IgnorePipelineTime, int);
-    vtkGetMacro(IgnorePipelineTime, int);
-    vtkBooleanMacro(IgnorePipelineTime, int);
+    vtkSetMacro(IgnorePipelineTime, vtkTypeBool);
+    vtkGetMacro(IgnorePipelineTime, vtkTypeBool);
+    vtkBooleanMacro(IgnorePipelineTime, vtkTypeBool);
     //@}
 
     //@{
@@ -149,7 +149,7 @@ public:
     /**
      * Setting TerminationTime to a positive value will cause particles
      * to terminate when the time is reached. Use a vlue of zero to
-     * diable termination. The units of time should be consistent with the
+     * disable termination. The units of time should be consistent with the
      * primary time variable.
      */
     vtkSetMacro(TerminationTime,double);
@@ -178,9 +178,9 @@ public:
      * If StaticSeeds is set and a moving seed source is specified
      * the motion will be ignored and results will not be as expected.
      */
-    vtkSetMacro(StaticSeeds,int);
-    vtkGetMacro(StaticSeeds,int);
-    vtkBooleanMacro(StaticSeeds,int);
+    vtkSetMacro(StaticSeeds,vtkTypeBool);
+    vtkGetMacro(StaticSeeds,vtkTypeBool);
+    vtkBooleanMacro(StaticSeeds,vtkTypeBool);
     //@}
 
     //@{
@@ -192,9 +192,9 @@ public:
      * Do not Set StaticMesh to true if a dynamic mesh is being used
      * as this will invalidate all results.
      */
-    vtkSetMacro(StaticMesh,int);
-    vtkGetMacro(StaticMesh,int);
-    vtkBooleanMacro(StaticMesh,int);
+    vtkSetMacro(StaticMesh,vtkTypeBool);
+    vtkGetMacro(StaticMesh,vtkTypeBool);
+    vtkBooleanMacro(StaticMesh,vtkTypeBool);
     //@}
 
     //@{
@@ -222,9 +222,9 @@ public:
      * Set/Get the filename to be used with the particle writer when
      * dumping particles to disk
      */
-    vtkSetMacro(EnableParticleWriting,int);
-    vtkGetMacro(EnableParticleWriting,int);
-    vtkBooleanMacro(EnableParticleWriting,int);
+    vtkSetMacro(EnableParticleWriting,vtkTypeBool);
+    vtkGetMacro(EnableParticleWriting,vtkTypeBool);
+    vtkBooleanMacro(EnableParticleWriting,vtkTypeBool);
     //@}
 
     //@{
@@ -238,19 +238,19 @@ public:
   protected:
 
      vtkTemporalStreamTracer();
-    ~vtkTemporalStreamTracer() VTK_OVERRIDE;
+    ~vtkTemporalStreamTracer() override;
 
     //
     // Make sure the pipeline knows what type we expect as input
     //
-    int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+    int FillInputPortInformation(int port, vtkInformation* info) override;
 
     //
     // The usual suspects
     //
     int ProcessRequest(vtkInformation* request,
                                vtkInformationVector** inputVector,
-                               vtkInformationVector* outputVector) VTK_OVERRIDE;
+                               vtkInformationVector* outputVector) override;
 
     //
     // Store any information we need in the output and fetch what we can
@@ -258,21 +258,21 @@ public:
     //
     int RequestInformation(vtkInformation* request,
                                   vtkInformationVector** inputVector,
-                                  vtkInformationVector* outputVector) VTK_OVERRIDE;
+                                  vtkInformationVector* outputVector) override;
 
     //
     // Compute input time steps given the output step
     //
     int RequestUpdateExtent(vtkInformation* request,
                                     vtkInformationVector** inputVector,
-                                    vtkInformationVector* outputVector) VTK_OVERRIDE;
+                                    vtkInformationVector* outputVector) override;
 
     //
     // what the pipeline calls for each time step
     //
     int RequestData(vtkInformation* request,
                             vtkInformationVector** inputVector,
-                            vtkInformationVector* outputVector) VTK_OVERRIDE;
+                            vtkInformationVector* outputVector) override;
 
     //
     // these routines are internally called to actually generate the output
@@ -381,13 +381,13 @@ public:
 
     // Important for Caching of Cells/Ids/Weights etc
     int           AllFixedGeometry;
-    int           StaticMesh;
-    int           StaticSeeds;
+    vtkTypeBool           StaticMesh;
+    vtkTypeBool           StaticSeeds;
 
     // Support 'pipeline' time or manual SetTimeStep
     unsigned int  TimeStep;
     unsigned int  ActualTimeStep;
-    int           IgnorePipelineTime;
+    vtkTypeBool           IgnorePipelineTime;
     unsigned int  NumberOfInputTimeSteps;
 
     std::vector<double>  InputTimeValues;
@@ -411,7 +411,7 @@ public:
     // Particle writing to disk
     vtkAbstractParticleWriter *ParticleWriter;
     char                      *ParticleFileName;
-    int                        EnableParticleWriting;
+    vtkTypeBool                        EnableParticleWriting;
 
     // The main lists which are held during operation- between time step updates
     unsigned int                                        NumberOfParticles;
@@ -426,7 +426,7 @@ public:
     vtkSmartPointer<vtkCharArray>     ParticleSourceIds;
     vtkSmartPointer<vtkIntArray>      InjectedPointIds;
     vtkSmartPointer<vtkIntArray>      InjectedStepIds;
-    vtkSmartPointer<vtkIntArray>      ErrorCode;
+    vtkSmartPointer<vtkIntArray>      ErrorCodeArray;
     vtkSmartPointer<vtkFloatArray>    ParticleVorticity;
     vtkSmartPointer<vtkFloatArray>    ParticleRotation;
     vtkSmartPointer<vtkFloatArray>    ParticleAngularVel;
@@ -470,8 +470,8 @@ private:
   void SetInterpolatorPrototype(vtkAbstractInterpolatedVelocityField*) {}
 
 private:
-  vtkTemporalStreamTracer(const vtkTemporalStreamTracer&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTemporalStreamTracer&) VTK_DELETE_FUNCTION;
+  vtkTemporalStreamTracer(const vtkTemporalStreamTracer&) = delete;
+  void operator=(const vtkTemporalStreamTracer&) = delete;
 };
 
 #endif

@@ -35,13 +35,14 @@ class vtkDoubleArray;
 class vtkPolyData;
 class vtkRenderer;
 
+#if !defined(VTK_LEGACY_REMOVE)
 class VTKGEOVISCORE_EXPORT vtkGeoAdaptiveArcs : public vtkPolyDataAlgorithm
 {
 public:
   static vtkGeoAdaptiveArcs *New();
 
   vtkTypeMacro(vtkGeoAdaptiveArcs,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -86,16 +87,16 @@ public:
   /**
    * Return the modified time of this object.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkGeoAdaptiveArcs();
-  ~vtkGeoAdaptiveArcs() VTK_OVERRIDE;
+  ~vtkGeoAdaptiveArcs() override;
 
   /**
    * Convert the vtkGraph into vtkPolyData.
    */
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   vtkRenderer *Renderer;
   double GlobeRadius;
@@ -107,8 +108,9 @@ protected:
   vtkDoubleArray* InputLongitude;
 
 private:
-  vtkGeoAdaptiveArcs(const vtkGeoAdaptiveArcs&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGeoAdaptiveArcs&) VTK_DELETE_FUNCTION;
+  vtkGeoAdaptiveArcs(const vtkGeoAdaptiveArcs&) = delete;
+  void operator=(const vtkGeoAdaptiveArcs&) = delete;
 };
 
+#endif //VTK_LEGACY_REMOVE
 #endif

@@ -113,8 +113,8 @@ namespace {
 }
 //----------------------------------------------------------------------------
 vtkParticleReader::vtkParticleReader() :
-  FileName(NULL)
-  , File(NULL)
+  FileName(nullptr)
+  , File(nullptr)
   , HasScalar(1)
   , FileType(FILE_TYPE_IS_UNKNOWN)
   , DataType(VTK_FLOAT)
@@ -133,11 +133,11 @@ vtkParticleReader::~vtkParticleReader()
   {
     this->File->close();
     delete this->File;
-    this->File = NULL;
+    this->File = nullptr;
   }
 
   delete [] this->FileName;
-  this->FileName = NULL;
+  this->FileName = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -154,7 +154,7 @@ void vtkParticleReader::OpenFile()
   {
     this->File->close();
     delete this->File;
-    this->File = NULL;
+    this->File = nullptr;
   }
 
   // Open the new file.
@@ -201,7 +201,7 @@ int vtkParticleReader::RequestInformation(
   }
   this->File->close();
   delete this->File;
-  this->File = NULL;
+  this->File = nullptr;
 
 
   if (ft == FILE_TYPE_IS_BINARY)
@@ -350,7 +350,7 @@ int vtkParticleReader::DetermineFileType()
     otherASCII++;
   }
 
-  // NULL shouldn't ever appear in a text file.
+  // nullptr shouldn't ever appear in a text file.
   if ( zero != 0 || otherASCII > 0 || conventionalASCII == 0 )
   {
     return FILE_TYPE_IS_BINARY;
@@ -396,7 +396,7 @@ int vtkParticleReader::ProduceOutputFromTextFileDouble(vtkInformationVector *out
   while ( this->File->getline(buffer,256,'\n') )
   {
     s = buffer;
-    if ( s.size() != 0 )
+    if ( !s.empty() )
     {
       bytesRead += s.size();
       this->DoProgressUpdate( bytesRead, fileLength );
@@ -426,7 +426,7 @@ int vtkParticleReader::ProduceOutputFromTextFileDouble(vtkInformationVector *out
    // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -473,7 +473,7 @@ int vtkParticleReader::ProduceOutputFromTextFileFloat(vtkInformationVector *outp
   while ( this->File->getline(buffer,256,'\n') )
   {
     s = buffer;
-    if ( s.size() != 0 )
+    if ( !s.empty() )
     {
       bytesRead += s.size();
       this->DoProgressUpdate( bytesRead, fileLength );
@@ -504,7 +504,7 @@ int vtkParticleReader::ProduceOutputFromTextFileFloat(vtkInformationVector *outp
    // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -690,7 +690,7 @@ int vtkParticleReader::ProduceOutputFromBinaryFileDouble(vtkInformationVector *o
   }
   delete [] data;
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -873,7 +873,7 @@ int vtkParticleReader::ProduceOutputFromBinaryFileFloat(vtkInformationVector *ou
   }
   delete [] data;
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 

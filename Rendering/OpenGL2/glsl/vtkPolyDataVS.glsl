@@ -15,7 +15,7 @@
 
 =========================================================================*/
 
-attribute vec4 vertexMC;
+in vec4 vertexMC;
 
 // frag position in VC
 //VTK::PositionVC::Dec
@@ -44,6 +44,9 @@ attribute vec4 vertexMC;
 // Value raster
 //VTK::ValuePass::Dec
 
+// picking support
+//VTK::Picking::Dec
+
 void main()
 {
   //VTK::Color::Impl
@@ -61,4 +64,6 @@ void main()
   //VTK::ValuePass::Impl
 
   //VTK::Light::Impl
+
+  //VTK::Picking::Impl
 }

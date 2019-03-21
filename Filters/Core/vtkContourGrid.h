@@ -34,6 +34,10 @@
  * contours are being extracted. If you want to use a scalar tree,
  * invoke the method UseScalarTreeOn().
  *
+ * @warning
+ * If the input vtkUnstructuredGrid contains 3D linear cells, the class
+ * vtkContour3DLinearGrid is much faster and may be preferred in certain
+ * applications.
  *
  * @warning
  * For unstructured data or structured grids, normals and gradients
@@ -41,9 +45,9 @@
  * normals of the resulting isosurface.
  *
  * @sa
- * vtkMarchingContourFilter
- * vtkMarchingCubes vtkSliceCubes vtkDividingCubes vtkMarchingSquares
- * vtkImageMarchingCubes
+ * vtkContour3DLinearGrid vtkContourFilter vtkMarchingContourFilter
+ * vtkFlyingEdges3D vtkMarchingCubes vtkSliceCubes vtkDividingCubes
+ * vtkMarchingSquares vtkImageMarchingCubes
 */
 
 #ifndef vtkContourGrid_h
@@ -62,7 +66,7 @@ class VTKFILTERSCORE_EXPORT vtkContourGrid : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkContourGrid,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with initial range (0,1) and single contour value
@@ -87,7 +91,7 @@ public:
   /**
    * Modified GetMTime Because we delegate to vtkContourValues
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -96,9 +100,9 @@ public:
    * processed by filters that modify topology or geometry, it may be
    * wise to turn Normals and Gradients off.
    */
-  vtkSetMacro(ComputeNormals,int);
-  vtkGetMacro(ComputeNormals,int);
-  vtkBooleanMacro(ComputeNormals,int);
+  vtkSetMacro(ComputeNormals,vtkTypeBool);
+  vtkGetMacro(ComputeNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputeNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -112,27 +116,27 @@ public:
    * ComputeGradients is not used so these methods don't affect
    * anything (VTK 6.0).
    */
-  vtkSetMacro(ComputeGradients,int);
-  vtkGetMacro(ComputeGradients,int);
-  vtkBooleanMacro(ComputeGradients,int);
+  vtkSetMacro(ComputeGradients,vtkTypeBool);
+  vtkGetMacro(ComputeGradients,vtkTypeBool);
+  vtkBooleanMacro(ComputeGradients,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get the computation of scalars.
    */
-  vtkSetMacro(ComputeScalars,int);
-  vtkGetMacro(ComputeScalars,int);
-  vtkBooleanMacro(ComputeScalars,int);
+  vtkSetMacro(ComputeScalars,vtkTypeBool);
+  vtkGetMacro(ComputeScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeScalars,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Enable the use of a scalar tree to accelerate contour extraction.
    */
-  vtkSetMacro(UseScalarTree,int);
-  vtkGetMacro(UseScalarTree,int);
-  vtkBooleanMacro(UseScalarTree,int);
+  vtkSetMacro(UseScalarTree,vtkTypeBool);
+  vtkGetMacro(UseScalarTree,vtkTypeBool);
+  vtkBooleanMacro(UseScalarTree,vtkTypeBool);
   //@}
 
   //@{
@@ -155,15 +159,15 @@ public:
 
   //@{
   /**
-   * If this is enabled (by default), the output will be triangles
-   * otherwise, the output will be the intersection polygons
-   * WARNING: if the cutting function is not a plane, the output
-   * will be 3D poygons, which might be nice to look at but hard
-   * to compute with downstream.
+   * If this is enabled (by default), the output will be triangles otherwise,
+   * the output may be represented by one or more polygons. WARNING: if the
+   * resulting isocontour is not planar, and GenerateTriangles is false, the
+   * output may consist of some 3D polygons (i.e., which may be non-planar) -
+   * which might be nice to look at but hard to compute with downstream.
    */
-  vtkSetMacro(GenerateTriangles,int);
-  vtkGetMacro(GenerateTriangles,int);
-  vtkBooleanMacro(GenerateTriangles,int);
+  vtkSetMacro(GenerateTriangles,vtkTypeBool);
+  vtkGetMacro(GenerateTriangles,vtkTypeBool);
+  vtkBooleanMacro(GenerateTriangles,vtkTypeBool);
   //@}
 
   /**
@@ -184,28 +188,28 @@ public:
 
 protected:
   vtkContourGrid();
-  ~vtkContourGrid() VTK_OVERRIDE;
+  ~vtkContourGrid() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   vtkContourValues *ContourValues;
-  int ComputeNormals;
-  int ComputeGradients;
-  int ComputeScalars;
-  int GenerateTriangles;
+  vtkTypeBool ComputeNormals;
+  vtkTypeBool ComputeGradients;
+  vtkTypeBool ComputeScalars;
+  vtkTypeBool GenerateTriangles;
 
   vtkIncrementalPointLocator *Locator;
 
-  int UseScalarTree;
+  vtkTypeBool UseScalarTree;
   vtkScalarTree *ScalarTree;
 
   int OutputPointsPrecision;
   vtkEdgeTable *EdgeTable;
 
 private:
-  vtkContourGrid(const vtkContourGrid&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkContourGrid&) VTK_DELETE_FUNCTION;
+  vtkContourGrid(const vtkContourGrid&) = delete;
+  void operator=(const vtkContourGrid&) = delete;
 };
 
 /**
@@ -267,5 +271,3 @@ inline void vtkContourGrid::GenerateValues(int numContours, double
 
 
 #endif
-
-

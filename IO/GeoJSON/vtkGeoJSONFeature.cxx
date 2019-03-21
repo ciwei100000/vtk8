@@ -40,8 +40,12 @@ namespace
 {
   vtkOStreamWrapper& operator<<(vtkOStreamWrapper& os, const Json::Value& root)
   {
-    Json::StyledStreamWriter writer;
-    writer.write(os,root);
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "All";
+    builder["indentation"] = "  ";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+
+    writer->write(root, &os.GetOStream());
     return os;
   }
 }
@@ -49,7 +53,7 @@ namespace
 //----------------------------------------------------------------------------
 vtkGeoJSONFeature::vtkGeoJSONFeature()
 {
-  this->FeatureId = NULL;
+  this->FeatureId = nullptr;
   this->OutlinePolygons = false;
 }
 
@@ -113,7 +117,7 @@ ExtractPoint(const Json::Value& coordinates, vtkPolyData *outputData)
   if ( ! IsPoint( coordinates ) )
   {
     vtkErrorMacro (<< "Wrong data format for a point!");
-    return NULL;
+    return nullptr;
   }
 
   //Obtain point data from Json structure and add to outputData
@@ -144,7 +148,7 @@ ExtractMultiPoint(const Json::Value& coordinates, vtkPolyData *outputData)
   if ( ! IsMultiPoint( coordinates ) )
   {
     vtkErrorMacro (<< "Wrong data format for a Multi Point!");
-    return NULL;
+    return nullptr;
   }
 
   if ( coordinates.isArray() )
@@ -186,7 +190,7 @@ ExtractLineString(const Json::Value& coordinates, vtkPolyData *outputData)
   if (!IsLineString(coordinates))
   {
     vtkErrorMacro (<< "Wrong data format for a Line String!");
-    return NULL;
+    return nullptr;
   }
 
   vtkPoints *points = outputData->GetPoints();
@@ -200,7 +204,7 @@ ExtractLineString(const Json::Value& coordinates, vtkPolyData *outputData)
     pointId = points->InsertNextPoint(xyz);
     pointIdList->InsertNextId(pointId);
   }
-  outputData->GetLines()->InsertNextCell(polyLine.GetPointer());
+  outputData->GetLines()->InsertNextCell(polyLine);
   vtkAbstractArray *array =
     outputData->GetCellData()->GetAbstractArray("feature-id");
   vtkStringArray *ids = vtkArrayDownCast<vtkStringArray>(array);
@@ -218,7 +222,7 @@ ExtractMultiLineString(const Json::Value& coordinateArray,
   if ( ! IsMultiLineString( coordinateArray ) )
   {
     vtkErrorMacro(<< "Wrong data format for a Multi Line String!");
-    return NULL;
+    return nullptr;
   }
 
   for (Json::Value::ArrayIndex i = 0; i < coordinateArray.size(); i++)
@@ -237,7 +241,7 @@ ExtractPolygon(const Json::Value& coordinate, vtkPolyData *outputData)
   if ( ! IsPolygon( coordinate ) )
   {
     vtkErrorMacro (<< "Wrong data format for a Polygon!");
-    return NULL;
+    return nullptr;
   }
 
   bool POLYGON_WITH_HOLES = coordinate.size() > 1 ? true : false;
@@ -249,8 +253,8 @@ ExtractPolygon(const Json::Value& coordinate, vtkPolyData *outputData)
 
   // Output is either vtkPolygon or vtkPolyLine,
   // depending on OutputPolygons option.
-  vtkCellArray *polys = NULL;
-  vtkCell *exteriorPoly = NULL;
+  vtkCellArray *polys = nullptr;
+  vtkCell *exteriorPoly = nullptr;
   if (this->OutlinePolygons)
   {
     polys = outputData->GetLines();
@@ -308,7 +312,7 @@ ExtractMultiPolygon(const Json::Value& coordinateArray, vtkPolyData *outputData)
   if ( ! IsMultiPolygon( coordinateArray ) )
   {
     vtkErrorMacro (<< "Wrong data format for a Multi Polygon!");
-    return NULL;
+    return nullptr;
   }
 
   for (Json::Value::ArrayIndex i = 0; i < coordinateArray.size(); i++)
@@ -458,7 +462,7 @@ bool vtkGeoJSONFeature::IsLineString(const Json::Value& root)
 
   if ( root.size() < 1 )
   {
-    vtkErrorMacro (<< "Expected atleast 1 value at " << root);
+    vtkErrorMacro (<< "Expected at least 1 value at " << root);
     return false;
   }
 
@@ -485,7 +489,7 @@ bool vtkGeoJSONFeature::IsMultiLineString(const Json::Value& root)
 
   if ( root.size() < 1 )
   {
-    vtkErrorMacro (<< "Expected atleast 1 value at " << root);
+    vtkErrorMacro (<< "Expected at least 1 value at " << root);
     return false;
   }
 
@@ -540,7 +544,7 @@ bool vtkGeoJSONFeature::IsMultiPoint(const Json::Value& root)
 
   if( root.size() < 1 )
   {
-      vtkErrorMacro (<< "Expected atleast 1 value at " << root << " for multipoint");
+      vtkErrorMacro (<< "Expected at least 1 value at " << root << " for multipoint");
     return false;
   }
 
@@ -567,7 +571,7 @@ bool vtkGeoJSONFeature::IsPolygon(const Json::Value& root)
 
   if ( root.size() < 1 )
   {
-    vtkErrorMacro (<< "Expected atleast 1 value at " << root << "for polygon");
+    vtkErrorMacro (<< "Expected at least 1 value at " << root << "for polygon");
     return false;
   }
 
@@ -596,7 +600,7 @@ bool vtkGeoJSONFeature::IsMultiPolygon(const Json::Value& root)
 
   if ( root.size() < 1 )
   {
-      vtkErrorMacro (<< "Expected atleast 1 value at " << root << " for multi polygon");
+      vtkErrorMacro (<< "Expected at least 1 value at " << root << " for multi polygon");
     return false;
   }
 
@@ -618,6 +622,11 @@ void vtkGeoJSONFeature::PrintSelf(ostream &os, vtkIndent indent)
     Superclass::PrintSelf(os, indent);
     os << indent << "vtkGeoJSONFeature" << std::endl;
     os << indent << "Root: ";
-    Json::StyledStreamWriter writer;
-    writer.write(os,this->featureRoot);
+
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "All";
+    builder["indentation"] = "  ";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+
+    writer->write(this->featureRoot, &os);
 }

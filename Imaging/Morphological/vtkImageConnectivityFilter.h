@@ -108,7 +108,7 @@ class VTKIMAGINGMORPHOLOGICAL_EXPORT vtkImageConnectivityFilter :
 public:
   static vtkImageConnectivityFilter *New();
   vtkTypeMacro(vtkImageConnectivityFilter, vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Enum constants for SetLabelMode().
@@ -199,7 +199,7 @@ public:
   /**
    * Set which regions to output from this filter.
    * This can be all the regions, just the seeded regions, or the largest
-   * region (which will the the largest seeded region, if there are seeds).
+   * region (which will be the largest seeded region, if there are seeds).
    * The default is to output all the seeded regions, if there are seeds,
    * or to output all the regions, if there are no seeds.
    */
@@ -234,7 +234,7 @@ public:
   vtkIdTypeArray *GetExtractedRegionLabels() {
     return this->ExtractedRegionLabels; }
 
-  // Desciption:
+  // Description:
   // Get the size of each extracted region, as a voxel count.
   vtkIdTypeArray *GetExtractedRegionSizes() {
     return this->ExtractedRegionSizes; }
@@ -258,9 +258,9 @@ public:
   /**
    * Turn this on to request creation of the ExtractedRegionExtents array.
    */
-  vtkSetMacro(GenerateRegionExtents, int);
-  vtkBooleanMacro(GenerateRegionExtents, int);
-  vtkGetMacro(GenerateRegionExtents, int);
+  vtkSetMacro(GenerateRegionExtents, vtkTypeBool);
+  vtkBooleanMacro(GenerateRegionExtents, vtkTypeBool);
+  vtkGetMacro(GenerateRegionExtents, vtkTypeBool);
   //@}
 
   //@{
@@ -295,7 +295,7 @@ public:
 
 protected:
   vtkImageConnectivityFilter();
-  ~vtkImageConnectivityFilter() VTK_OVERRIDE;
+  ~vtkImageConnectivityFilter() override;
 
   int LabelMode;
   int ExtractionMode;
@@ -305,7 +305,7 @@ protected:
   int LabelConstantValue;
   int ActiveComponent;
   int LabelScalarType;
-  int GenerateRegionExtents;
+  vtkTypeBool GenerateRegionExtents;
 
   vtkIdTypeArray *ExtractedRegionLabels;
   vtkIdTypeArray *ExtractedRegionSizes;
@@ -314,17 +314,17 @@ protected:
 
   void ComputeInputUpdateExtent(int inExt[6], int outExt[6]);
 
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
   int RequestInformation(
-    vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   int RequestUpdateExtent(
-    vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   int RequestData(
-    vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
 private:
-  vtkImageConnectivityFilter(const vtkImageConnectivityFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageConnectivityFilter&) VTK_DELETE_FUNCTION;
+  vtkImageConnectivityFilter(const vtkImageConnectivityFilter&) = delete;
+  void operator=(const vtkImageConnectivityFilter&) = delete;
 };
 
 #endif

@@ -65,24 +65,25 @@ int TestCustomArrayRadius(int, char *[])
 
   // build custom radii array
   vtkNew<vtkFloatArray> radii;
-  radii->SetName("radii");
+  radii->SetName("radii_array");
   radii->SetNumberOfTuples(mol->GetNumberOfAtoms());
   for (vtkIdType i = 0; i < mol->GetNumberOfAtoms(); ++i)
   {
     radii->SetTypedComponent(i, 0, (i % 2) ? 0.5f : 1.0f);
   }
-  mol->GetVertexData()->AddArray(radii.Get());
+  mol->GetVertexData()->AddArray(radii);
 
   vtkNew<vtkMoleculeMapper> molmapper;
-  molmapper->SetInputData(mol.GetPointer());
+  molmapper->SetInputData(mol);
 
   molmapper->UseBallAndStickSettings();
+  molmapper->SetAtomicRadiusArrayName("radii_array");
   molmapper->SetAtomicRadiusTypeToCustomArrayRadius();
 
   vtkNew<vtkActor> actor;
-  actor->SetMapper(molmapper.GetPointer());
+  actor->SetMapper(molmapper);
   actor->GetProperty()->SetAmbient(0.0);
-  actor->GetProperty()->SetDiffuse(0.0);
+  actor->GetProperty()->SetDiffuse(1.0);
   actor->GetProperty()->SetSpecular(0.0);
   actor->GetProperty()->SetSpecularPower(40);
 
@@ -92,11 +93,11 @@ int TestCustomArrayRadius(int, char *[])
 
   vtkNew<vtkRenderer> ren;
   vtkNew<vtkRenderWindow> win;
-  win->AddRenderer(ren.GetPointer());
+  win->AddRenderer(ren);
   vtkNew<vtkRenderWindowInteractor> iren;
-  iren->SetRenderWindow(win.GetPointer());
+  iren->SetRenderWindow(win);
 
-  ren->AddActor(actor.GetPointer());
+  ren->AddActor(actor);
 
   ren->SetBackground(0.0, 0.0, 0.0);
   win->SetSize(450, 450);

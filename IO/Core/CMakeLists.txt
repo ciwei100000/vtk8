@@ -23,17 +23,7 @@ SET(Module_SRCS
   vtkZLibDataCompressor.cxx
   vtkArrayDataReader.cxx
   vtkArrayDataWriter.cxx
+  vtkLZMADataCompressor.cxx
+  vtkNumberToString.cxx
   )
-
-include_directories(${VTK_SOURCE_DIR}/ThirdParty/utf8/source)
-
-set_source_files_properties(
-  vtkAbstractParticleWriter
-  vtkDataCompressor
-  vtkTextCodec
-  vtkWriter
-  vtkAbstractPolyDataReader
-  ABSTRACT
-  )
-
 vtk_module_library(vtkIOCore ${Module_SRCS})

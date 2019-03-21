@@ -65,7 +65,7 @@ class VTKCOMMONCORE_EXPORT vtkArray : public vtkObject
 {
 public:
   vtkTypeMacro(vtkArray, vtkObject);
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   typedef vtkArrayExtents::CoordinateT CoordinateT;
   typedef vtkArrayExtents::DimensionT DimensionT;
@@ -101,7 +101,7 @@ public:
   /**
    * Resizes the array to the given extents (number of dimensions and
    * size of each dimension).  Note that concrete implementations of
-   * vtkArray may place constraints on the the extents that they will
+   * vtkArray may place constraints on the extents that they will
    * store, so you cannot assume that GetExtents() will always return
    * the same value passed to Resize().
 
@@ -140,7 +140,7 @@ public:
    * Returns the number of values stored in the array.  Note that this is
    * the same as calling GetExtents().GetSize(), and represents the
    * maximum number of values that could ever be stored using the current
-   * extents.  This is equal to the number of values stored in a  dense
+   * extents.  This is equal to the number of values stored in a dense
    * array, but may be larger than the number of values stored in a
    * sparse array.
    */
@@ -240,11 +240,11 @@ public:
 
 protected:
   vtkArray();
-  ~vtkArray() VTK_OVERRIDE;
+  ~vtkArray() override;
 
 private:
-  vtkArray(const vtkArray&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkArray&) VTK_DELETE_FUNCTION;
+  vtkArray(const vtkArray&) = delete;
+  void operator=(const vtkArray&) = delete;
 
   /**
    * Stores the array name.

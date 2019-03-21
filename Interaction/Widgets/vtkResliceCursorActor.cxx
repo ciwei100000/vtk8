@@ -122,7 +122,7 @@ int vtkResliceCursorActor::RenderOpaqueGeometry(vtkViewport *viewport)
 // ----------------------------------------------------------------------------
 // Description:
 // Does this prop have some translucent polygonal geometry? No.
-int vtkResliceCursorActor::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkResliceCursorActor::HasTranslucentPolygonalGeometry()
 {
   return false;
 }
@@ -243,7 +243,7 @@ void vtkResliceCursorActor::UpdateHoleSize( vtkViewport * v )
 // ----------------------------------------------------------------------------
 void vtkResliceCursorActor::UpdateViewProps(vtkViewport *v)
 {
-  if (this->CursorAlgorithm->GetResliceCursor() == 0)
+  if (this->CursorAlgorithm->GetResliceCursor() == nullptr)
   {
     vtkDebugMacro(<< "no cursor to represent.");
     return;
@@ -317,7 +317,7 @@ vtkActor * vtkResliceCursorActor::GetCenterlineActor( int axis )
 //----------------------------------------------------------------------
 // Prints an object if it exists.
 #define vtkPrintMemberObjectMacro( obj, os, indent ) \
-  os << indent << #obj << ": "; \
+  os << (indent) << #obj << ": "; \
   if (this->obj) \
   { \
     os << this->obj << "\n"; \

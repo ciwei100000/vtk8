@@ -34,16 +34,16 @@ class VTKIOMYSQL_EXPORT vtkMySQLToTableReader :
 public:
   static vtkMySQLToTableReader *New();
   vtkTypeMacro(vtkMySQLToTableReader,vtkDatabaseToTableReader);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
 protected:
    vtkMySQLToTableReader();
   ~vtkMySQLToTableReader();
   int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *);
+                          vtkInformationVector *) override;
 private:
-  vtkMySQLToTableReader(const vtkMySQLToTableReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMySQLToTableReader&) VTK_DELETE_FUNCTION;
+  vtkMySQLToTableReader(const vtkMySQLToTableReader&) = delete;
+  void operator=(const vtkMySQLToTableReader&) = delete;
 
 };
 

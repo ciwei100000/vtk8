@@ -34,13 +34,6 @@
  * Companion", ISBN 0-201-50868, 1989 for details on writing shaders.
  * vtkRIBProperty specifies the declarations and parameter settings for
  * custom shaders.
- * Tcl Example: generate a rib file for the current rendering.
- * vtkRIBExporter myRIB
- *   myRIB SetInput $renWin
- *   myRIB SetFilePrefix mine
- *   myRIB Write
- * This will create a file mine.rib. After running this file through
- * a Renderman renderer a file mine.tif will contain the rendered image.
  *
  * @sa
  * vtkExporter vtkRIBProperty vtkRIBLight
@@ -66,7 +59,7 @@ class VTKIOEXPORT_EXPORT vtkRIBExporter : public vtkExporter
 public:
   static vtkRIBExporter *New();
   vtkTypeMacro(vtkRIBExporter,vtkExporter);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -120,9 +113,9 @@ public:
    * off. Otherwise, try setting BackGroundOn and see if you get the
    * desired results.
    */
-  vtkSetMacro(Background,int);
-  vtkGetMacro(Background,int);
-  vtkBooleanMacro(Background,int);
+  vtkSetMacro(Background,vtkTypeBool);
+  vtkGetMacro(Background,vtkTypeBool);
+  vtkBooleanMacro(Background,vtkTypeBool);
   //@}
 
   //@{
@@ -131,23 +124,23 @@ public:
    * all point data, field data, and cell data arrays will get
    * exported together with polygons. Default is Off (0).
    */
-  vtkSetClampMacro(ExportArrays, int, 0, 1);
-  vtkBooleanMacro(ExportArrays, int);
-  vtkGetMacro(ExportArrays, int);
+  vtkSetClampMacro(ExportArrays, vtkTypeBool, 0, 1);
+  vtkBooleanMacro(ExportArrays, vtkTypeBool);
+  vtkGetMacro(ExportArrays, vtkTypeBool);
   //@}
 
 protected:
   vtkRIBExporter();
-  ~vtkRIBExporter() VTK_OVERRIDE;
+  ~vtkRIBExporter() override;
 
-  int Background;
+  vtkTypeBool Background;
   int Size[2];
   int PixelSamples[2];
 
   /**
    * This variable defines whether the arrays are exported or not.
    */
-  int ExportArrays;
+  vtkTypeBool ExportArrays;
 
   //@{
   /**
@@ -167,7 +160,7 @@ protected:
                     vtkProperty *aProperty);
   //@}
 
-  void WriteData() VTK_OVERRIDE;
+  void WriteData() override;
   void WriteActor(vtkActor *anActor);
 
   /**
@@ -184,8 +177,8 @@ protected:
   FILE *FilePtr;
   char *TexturePrefix;
 private:
-  vtkRIBExporter(const vtkRIBExporter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRIBExporter&) VTK_DELETE_FUNCTION;
+  vtkRIBExporter(const vtkRIBExporter&) = delete;
+  void operator=(const vtkRIBExporter&) = delete;
 };
 
 #endif

@@ -26,6 +26,7 @@
 #include "vtkOpenGLError.h"
 #include "vtkShaderProgram.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLVertexArrayObject.h"
 
@@ -39,25 +40,25 @@ vtkStandardNewMacro(vtkDepthOfFieldPass);
 // ----------------------------------------------------------------------------
 vtkDepthOfFieldPass::vtkDepthOfFieldPass()
 {
-  this->FrameBufferObject=0;
-  this->Pass1=0;
-  this->Pass1Depth=0;
-  this->BlurProgram = NULL;
+  this->FrameBufferObject=nullptr;
+  this->Pass1=nullptr;
+  this->Pass1Depth=nullptr;
+  this->BlurProgram = nullptr;
   this->AutomaticFocalDistance = true;
 }
 
 // ----------------------------------------------------------------------------
 vtkDepthOfFieldPass::~vtkDepthOfFieldPass()
 {
-  if(this->FrameBufferObject!=0)
+  if(this->FrameBufferObject!=nullptr)
   {
     vtkErrorMacro(<<"FrameBufferObject should have been deleted in ReleaseGraphicsResources().");
   }
-   if(this->Pass1!=0)
+   if(this->Pass1!=nullptr)
    {
     vtkErrorMacro(<<"Pass1 should have been deleted in ReleaseGraphicsResources().");
    }
-   if(this->Pass1Depth!=0)
+   if(this->Pass1Depth!=nullptr)
    {
     vtkErrorMacro(<<"Pass1Depth should have been deleted in ReleaseGraphicsResources().");
    }
@@ -75,7 +76,7 @@ void vtkDepthOfFieldPass::PrintSelf(ostream& os, vtkIndent indent)
 // \pre s_exists: s!=0
 void vtkDepthOfFieldPass::Render(const vtkRenderState *s)
 {
-  assert("pre: s_exists" && s!=0);
+  assert("pre: s_exists" && s!=nullptr);
 
   vtkOpenGLClearErrorMacro();
 
@@ -84,7 +85,7 @@ void vtkDepthOfFieldPass::Render(const vtkRenderState *s)
   vtkRenderer *r=s->GetRenderer();
   vtkOpenGLRenderWindow *renWin = static_cast<vtkOpenGLRenderWindow *>(r->GetRenderWindow());
 
-  if(this->DelegatePass == 0)
+  if(this->DelegatePass == nullptr)
   {
     vtkWarningMacro(<<" no delegate.");
     return;
@@ -108,7 +109,7 @@ void vtkDepthOfFieldPass::Render(const vtkRenderState *s)
   int w = width + extraPixels*2;
   int h = height + extraPixels*2;
 
-  if(this->Pass1==0)
+  if(this->Pass1==nullptr)
   {
     this->Pass1 = vtkTextureObject::New();
     this->Pass1->SetContext(renWin);
@@ -122,7 +123,7 @@ void vtkDepthOfFieldPass::Render(const vtkRenderState *s)
   }
 
   // Depth texture
-  if (this->Pass1Depth == 0)
+  if (this->Pass1Depth == nullptr)
   {
     this->Pass1Depth = vtkTextureObject::New();
     this->Pass1Depth->SetContext(renWin);
@@ -134,7 +135,7 @@ void vtkDepthOfFieldPass::Render(const vtkRenderState *s)
       w, h, vtkTextureObject::Float32);
   }
 
-  if(this->FrameBufferObject==0)
+  if(this->FrameBufferObject==nullptr)
   {
     this->FrameBufferObject=vtkOpenGLFramebufferObject::New();
     this->FrameBufferObject->SetContext(renWin);
@@ -182,8 +183,8 @@ void vtkDepthOfFieldPass::Render(const vtkRenderState *s)
     return;
   }
 
-  glDisable(GL_BLEND);
-  glDisable(GL_DEPTH_TEST);
+  renWin->GetState()->vtkglDisable(GL_BLEND);
+  renWin->GetState()->vtkglDisable(GL_DEPTH_TEST);
 
   this->Pass1->Activate();
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -253,29 +254,29 @@ void vtkDepthOfFieldPass::Render(const vtkRenderState *s)
 // \pre w_exists: w!=0
 void vtkDepthOfFieldPass::ReleaseGraphicsResources(vtkWindow *w)
 {
-  assert("pre: w_exists" && w!=0);
+  assert("pre: w_exists" && w!=nullptr);
 
   this->Superclass::ReleaseGraphicsResources(w);
 
-  if (this->BlurProgram !=0)
+  if (this->BlurProgram !=nullptr)
   {
     this->BlurProgram->ReleaseGraphicsResources(w);
     delete this->BlurProgram;
-    this->BlurProgram = 0;
+    this->BlurProgram = nullptr;
   }
-  if(this->FrameBufferObject!=0)
+  if(this->FrameBufferObject!=nullptr)
   {
     this->FrameBufferObject->Delete();
-    this->FrameBufferObject=0;
+    this->FrameBufferObject=nullptr;
   }
-   if(this->Pass1!=0)
+   if(this->Pass1!=nullptr)
    {
     this->Pass1->Delete();
-    this->Pass1=0;
+    this->Pass1=nullptr;
    }
-   if(this->Pass1Depth!=0)
+   if(this->Pass1Depth!=nullptr)
    {
     this->Pass1Depth->Delete();
-    this->Pass1Depth=0;
+    this->Pass1Depth=nullptr;
    }
 }

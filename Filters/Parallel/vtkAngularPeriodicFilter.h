@@ -53,7 +53,7 @@ class VTKFILTERSPARALLEL_EXPORT vtkAngularPeriodicFilter : public vtkPeriodicFil
 public:
   static vtkAngularPeriodicFilter* New();
   vtkTypeMacro(vtkAngularPeriodicFilter, vtkPeriodicFilter);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -69,7 +69,7 @@ public:
   //@{
   /**
    * Set/Get The rotation mode.
-   * VTK_ROTATION_MODE_DIRECT_ANGLE to specifiy a angle value (default),
+   * VTK_ROTATION_MODE_DIRECT_ANGLE to specify an angle value (default),
    * VTK_ROTATION_MODE_ARRAY_VALUE to use value from an array in the input dataset.
    */
   vtkSetClampMacro(RotationMode, int,
@@ -121,11 +121,11 @@ public:
 
 protected:
   vtkAngularPeriodicFilter();
-  ~vtkAngularPeriodicFilter() VTK_OVERRIDE;
+  ~vtkAngularPeriodicFilter() override;
 
   int RequestData(vtkInformation *,
                           vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
 
   /**
    * Create a transform copy of the provided data array
@@ -147,7 +147,7 @@ protected:
    */
   void SetPeriodNumber(vtkCompositeDataIterator* loc,
                                vtkCompositeDataSet* output,
-                               int nbPeriod) VTK_OVERRIDE;
+                               int nbPeriod) override;
 
   /**
    * Compute periodic pointset, rotating point, using provided angle
@@ -167,7 +167,7 @@ protected:
    */
   void CreatePeriodicDataSet(vtkCompositeDataIterator* loc,
                              vtkCompositeDataSet* output,
-                             vtkCompositeDataSet* input) VTK_OVERRIDE;
+                             vtkCompositeDataSet* input) override;
 
   /**
    * Generate a name for a piece in the periodic dataset from the input dataset
@@ -178,8 +178,8 @@ protected:
                                  vtkIdType outputId);
 
 private:
-  vtkAngularPeriodicFilter(const vtkAngularPeriodicFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAngularPeriodicFilter&) VTK_DELETE_FUNCTION;
+  vtkAngularPeriodicFilter(const vtkAngularPeriodicFilter&) = delete;
+  void operator=(const vtkAngularPeriodicFilter&) = delete;
 
   bool ComputeRotationsOnTheFly;
 

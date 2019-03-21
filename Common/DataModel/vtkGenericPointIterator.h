@@ -44,7 +44,7 @@ public:
    * Standard VTK construction and type macros.
    */
   vtkTypeMacro(vtkGenericPointIterator,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -55,7 +55,7 @@ public:
   /**
    * Is the iterator at the end of traversal?
    */
-  virtual int IsAtEnd() = 0;
+  virtual vtkTypeBool IsAtEnd() = 0;
 
   /**
    * Move the iterator to the next position in the list.
@@ -89,12 +89,12 @@ protected:
    * Destructor.
    */
   vtkGenericPointIterator();
-  ~vtkGenericPointIterator() VTK_OVERRIDE;
+  ~vtkGenericPointIterator() override;
   //@}
 
 private:
-  vtkGenericPointIterator(const vtkGenericPointIterator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGenericPointIterator&) VTK_DELETE_FUNCTION;
+  vtkGenericPointIterator(const vtkGenericPointIterator&) = delete;
+  void operator=(const vtkGenericPointIterator&) = delete;
 };
 
 #endif

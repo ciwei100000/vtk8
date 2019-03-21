@@ -17,28 +17,12 @@ set(module_SRCS
   vtkContextTransform.cxx
   vtkImageItem.cxx
   vtkMarkerUtilities.cxx
+  vtkLabeledContourPolyDataItem.cxx
   vtkPen.cxx
 #  vtkPiecewisePointHandleItem.cxx
   vtkPolyDataItem.cxx
   vtkPropItem.cxx
   vtkTooltipItem.cxx
-  )
-
-set_source_files_properties(
-  vtkAbstractContextBufferId
-  vtkAbstractContextItem
-  vtkContextItem
-  vtkMarkerUtilities
-  ABSTRACT
-  )
-
-set_source_files_properties(
-  vtkContextDevice2D
-  vtkContextDevice3D
-  vtkContext3D
-  vtkContextKeyEvent
-  vtkContextMouseEvent
-  WRAP_EXCLUDE
   )
 
 vtk_module_library(vtkRenderingContext2D ${module_SRCS})

@@ -34,7 +34,7 @@ vtkSOADataArrayTemplate<ValueType>::New()
 //-----------------------------------------------------------------------------
 template<class ValueType>
 vtkSOADataArrayTemplate<ValueType>::vtkSOADataArrayTemplate()
-  : AoSCopy(NULL),
+  : AoSCopy(nullptr),
     NumberOfComponentsReciprocal(1.0)
 {
 }
@@ -51,7 +51,7 @@ vtkSOADataArrayTemplate<ValueType>::~vtkSOADataArrayTemplate()
   if (this->AoSCopy)
   {
     this->AoSCopy->Delete();
-    this->AoSCopy = NULL;
+    this->AoSCopy = nullptr;
   }
 }
 
@@ -104,7 +104,7 @@ void vtkSOADataArrayTemplate<ValueType>::ShallowCopy(vtkDataArray *other)
       {
         thisBuffer->Delete();
         this->Data[cc] = otherBuffer;
-        otherBuffer->Register(NULL);
+        otherBuffer->Register(nullptr);
       }
     }
     this->DataChanged();
@@ -202,21 +202,24 @@ void vtkSOADataArrayTemplate<ValueType>::SetArray(int comp, ValueType* array,
     return;
   }
 
+  this->Data[comp]->SetBuffer(array, size);
+
   if(deleteMethod == VTK_DATA_ARRAY_DELETE)
   {
-    this->Data[comp]->SetBuffer(array, size, save, ::operator delete[] );
+    this->Data[comp]->SetFreeFunction(save != 0, ::operator delete[] );
   }
   else if(deleteMethod == VTK_DATA_ARRAY_ALIGNED_FREE)
   {
 #ifdef _WIN32
-    this->Data[comp]->SetBuffer(array, size, save, _aligned_free);
+    this->Data[comp]->SetFreeFunction(save != 0, _aligned_free);
 #else
-    this->Data[comp]->SetBuffer(array, size, save, free);
+    this->Data[comp]->SetFreeFunction(save != 0, free);
 #endif
   }
-  else
+  else if(deleteMethod == VTK_DATA_ARRAY_USER_DEFINED ||
+          deleteMethod == VTK_DATA_ARRAY_FREE)
   {
-    this->Data[comp]->SetBuffer(array, size, save, free);
+    this->Data[comp]->SetFreeFunction(save != 0, free);
   }
 
   if (updateMaxId)
@@ -228,6 +231,31 @@ void vtkSOADataArrayTemplate<ValueType>::SetArray(int comp, ValueType* array,
 }
 
 //-----------------------------------------------------------------------------
+template<class ValueType>
+void vtkSOADataArrayTemplate<ValueType>::SetArrayFreeFunction(void (*callback)(void *))
+{
+  const int numComps =  this->GetNumberOfComponents();
+  for(int i=0; i < numComps; ++i)
+  {
+    this->SetArrayFreeFunction(i, callback);
+  }
+}
+
+//-----------------------------------------------------------------------------
+template<class ValueType>
+void vtkSOADataArrayTemplate<ValueType>::SetArrayFreeFunction(int comp, void (*callback)(void *))
+{
+  const int numComps = this->GetNumberOfComponents();
+  if (comp >= numComps || comp < 0)
+  {
+    vtkErrorMacro("Invalid component number '" << comp << "' specified. "
+      "Use `SetNumberOfComponents` first to set the number of components.");
+    return;
+  }
+  this->Data[comp]->SetFreeFunction(false, callback);
+}
+
+//-----------------------------------------------------------------------------
 template <class ValueType>
 typename vtkSOADataArrayTemplate<ValueType>::ValueType*
 vtkSOADataArrayTemplate<ValueType>::GetComponentArrayPointer(int comp)
@@ -236,7 +264,7 @@ vtkSOADataArrayTemplate<ValueType>::GetComponentArrayPointer(int comp)
   if (comp >= numComps || comp < 0)
   {
     vtkErrorMacro("Invalid component number '" << comp << "' specified.");
-    return NULL;
+    return nullptr;
   }
 
   return this->Data[comp]->GetBuffer();
@@ -298,7 +326,7 @@ void *vtkSOADataArrayTemplate<ValueType>::GetVoidPointer(vtkIdType valueIdx)
   {
     vtkErrorMacro(<<"Error allocating a buffer of " << numValues << " '"
                   << this->GetDataTypeAsString() << "' elements.");
-    return NULL;
+    return nullptr;
   }
 
   this->ExportToVoidPointer(static_cast<void*>(this->AoSCopy->GetBuffer()));
@@ -319,7 +347,7 @@ void vtkSOADataArrayTemplate<ValueType>::ExportToVoidPointer(void *voidPtr)
 
   if (!voidPtr)
   {
-    vtkErrorMacro(<< "Buffer is NULL.");
+    vtkErrorMacro(<< "Buffer is nullptr.");
     return;
   }
 

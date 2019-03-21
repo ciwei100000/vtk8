@@ -45,9 +45,7 @@ vtkResampleWithDataSet::vtkResampleWithDataSet()
 }
 
 //-----------------------------------------------------------------------------
-vtkResampleWithDataSet::~vtkResampleWithDataSet()
-{
-}
+vtkResampleWithDataSet::~vtkResampleWithDataSet() = default;
 
 //-----------------------------------------------------------------------------
 void vtkResampleWithDataSet::PrintSelf(ostream& os, vtkIndent indent)
@@ -112,6 +110,16 @@ void vtkResampleWithDataSet::SetPassFieldArrays(bool arg)
 bool vtkResampleWithDataSet::GetPassFieldArrays()
 {
   return this->Prober->GetPassFieldArrays() ? true : false;
+}
+
+void vtkResampleWithDataSet::SetCellLocatorPrototype(vtkAbstractCellLocator* locator)
+{
+  this->Prober->SetCellLocatorPrototype(locator);
+}
+
+vtkAbstractCellLocator* vtkResampleWithDataSet::GetCellLocatorPrototype() const
+{
+  return this->Prober->GetCellLocatorPrototype();
 }
 
 //----------------------------------------------------------------------------
@@ -300,7 +308,7 @@ void vtkResampleWithDataSet::SetBlankPointsAndCells(vtkDataSet *dataset)
   // GetCellPoints needs to be called once from a single thread for safe
   // multi-threaded calls
   vtkNew<vtkIdList> cpts;
-  dataset->GetCellPoints(0, cpts.GetPointer());
+  dataset->GetCellPoints(0, cpts);
 
   MarkHiddenCells cellWorklet(dataset, mask, cellGhostArray);
   vtkSMPTools::For(0, numCells, cellWorklet);
@@ -359,7 +367,7 @@ int vtkResampleWithDataSet::RequestData(vtkInformation *vtkNotUsed(request),
         {
           this->SetBlankPointsAndCells(block);
         }
-        output->SetDataSet(iter.GetPointer(), block);
+        output->SetDataSet(iter, block);
         block->Delete();
       }
     }

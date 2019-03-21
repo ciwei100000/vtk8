@@ -43,9 +43,7 @@ vtkExtractSelectedThresholds::vtkExtractSelectedThresholds()
 }
 
 //----------------------------------------------------------------------------
-vtkExtractSelectedThresholds::~vtkExtractSelectedThresholds()
-{
-}
+vtkExtractSelectedThresholds::~vtkExtractSelectedThresholds() = default;
 
 //----------------------------------------------------------------------------
 int vtkExtractSelectedThresholds::RequestData(
@@ -61,7 +59,7 @@ int vtkExtractSelectedThresholds::RequestData(
 
   vtkDataObject* inputDO = vtkDataObject::GetData(inInfo);
 
-  // verify the input, selection and ouptut
+  // verify the input, selection and output
   if ( ! selInfo )
   {
     //When not given a selection, quietly select nothing.
@@ -69,7 +67,7 @@ int vtkExtractSelectedThresholds::RequestData(
   }
 
   vtkSelection *sel = vtkSelection::GetData(selInfo);
-  vtkSelectionNode *node = 0;
+  vtkSelectionNode *node = nullptr;
   if (sel->GetNumberOfNodes() == 1)
   {
     node = sel->GetNode(0);
@@ -143,14 +141,14 @@ int vtkExtractSelectedThresholds::ExtractCells(
 {
   //find the values to threshold within
   vtkDataArray *lims = vtkArrayDownCast<vtkDataArray>(sel->GetSelectionList());
-  if (lims == NULL)
+  if (lims == nullptr)
   {
     vtkErrorMacro(<<"No values to threshold with");
     return 1;
   }
 
   //find out what array we are supposed to threshold in
-  vtkDataArray *inScalars = NULL;
+  vtkDataArray *inScalars = nullptr;
   bool use_ids = false;
   if (usePointScalars)
   {
@@ -198,7 +196,7 @@ int vtkExtractSelectedThresholds::ExtractCells(
       inScalars = input->GetCellData()->GetScalars();
     }
   }
-  if (inScalars == NULL && !use_ids)
+  if (inScalars == nullptr && !use_ids)
   {
     vtkErrorMacro("Could not figure out what array to threshold in.");
     return 1;
@@ -223,10 +221,10 @@ int vtkExtractSelectedThresholds::ExtractCells(
   }
 
   vtkIdType cellId, newCellId;
-  vtkIdList *cellPts, *pointMap = NULL;
-  vtkIdList *newCellPts = NULL;
-  vtkCell *cell = 0;
-  vtkPoints *newPoints = 0;
+  vtkIdList *cellPts, *pointMap = nullptr;
+  vtkIdList *newCellPts = nullptr;
+  vtkCell *cell = nullptr;
+  vtkPoints *newPoints = nullptr;
   vtkIdType i, ptId, newId, numPts, numCells;
   vtkIdType numCellPts;
   double x[3];
@@ -245,12 +243,12 @@ int vtkExtractSelectedThresholds::ExtractCells(
   numCells = input->GetNumberOfCells();
 
   vtkDataSet *outputDS = output;
-  vtkSignedCharArray *pointInArray = NULL;
-  vtkSignedCharArray *cellInArray = NULL;
+  vtkSignedCharArray *pointInArray = nullptr;
+  vtkSignedCharArray *cellInArray = nullptr;
 
-  vtkUnstructuredGrid *outputUG = NULL;
-  vtkIdTypeArray *originalCellIds = NULL;
-  vtkIdTypeArray *originalPointIds = NULL;
+  vtkUnstructuredGrid *outputUG = nullptr;
+  vtkIdTypeArray *originalCellIds = nullptr;
+  vtkIdTypeArray *originalPointIds = nullptr;
 
   signed char flag = inverse ? 1 : -1;
 
@@ -334,7 +332,7 @@ int vtkExtractSelectedThresholds::ExtractCells(
         int below = 0;
         ptId = cellPts->GetId(i);
         int inside = this->EvaluateValue(
-          inScalars, comp_no, ptId, lims, &above, &below, NULL);
+          inScalars, comp_no, ptId, lims, &above, &below, nullptr);
         totalAbove += above;
         totalBelow += below;
         // Have we detected a cell that straddles the threshold?
@@ -413,14 +411,14 @@ int vtkExtractSelectedThresholds::ExtractPoints(
 {
   //find the values to threshold within
   vtkDataArray *lims = vtkArrayDownCast<vtkDataArray>(sel->GetSelectionList());
-  if (lims == NULL)
+  if (lims == nullptr)
   {
     vtkErrorMacro(<<"No values to threshold with");
     return 1;
   }
 
   //find out what array we are supposed to threshold in
-  vtkDataArray *inScalars = NULL;
+  vtkDataArray *inScalars = nullptr;
   bool use_ids = false;
   if (sel->GetSelectionList()->GetName())
   {
@@ -442,7 +440,7 @@ int vtkExtractSelectedThresholds::ExtractPoints(
   {
     inScalars = input->GetPointData()->GetScalars();
   }
-  if (inScalars == NULL && !use_ids)
+  if (inScalars == nullptr && !use_ids)
   {
     vtkErrorMacro("Could not figure out what array to threshold in.");
     return 1;
@@ -471,12 +469,12 @@ int vtkExtractSelectedThresholds::ExtractPoints(
   vtkPointData *outPD = output->GetPointData();
 
   vtkDataSet *outputDS = output;
-  vtkSignedCharArray *pointInArray = NULL;
+  vtkSignedCharArray *pointInArray = nullptr;
 
-  vtkUnstructuredGrid * outputUG = NULL;
+  vtkUnstructuredGrid * outputUG = nullptr;
   vtkPoints *newPts = vtkPoints::New();
 
-  vtkIdTypeArray* originalPointIds = 0;
+  vtkIdTypeArray* originalPointIds = nullptr;
 
   signed char flag = inverse ? 1 : -1;
 
@@ -553,14 +551,14 @@ int vtkExtractSelectedThresholds::ExtractRows(
 {
   //find the values to threshold within
   vtkDataArray *lims = vtkArrayDownCast<vtkDataArray>(sel->GetSelectionList());
-  if (lims == NULL)
+  if (lims == nullptr)
   {
     vtkErrorMacro(<<"No values to threshold with");
     return 1;
   }
 
   // Determine the array to threshold.
-  vtkDataArray *inScalars = NULL;
+  vtkDataArray *inScalars = nullptr;
   bool use_ids = false;
   if (sel->GetSelectionList()->GetName())
   {
@@ -579,7 +577,7 @@ int vtkExtractSelectedThresholds::ExtractRows(
     }
   }
 
-  if (inScalars == NULL && !use_ids)
+  if (inScalars == nullptr && !use_ids)
   {
     vtkErrorMacro("Could not figure out what array to threshold in.");
     return 1;

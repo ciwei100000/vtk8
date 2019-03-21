@@ -45,7 +45,7 @@ public:
   static vtkAppendPolyData *New();
 
   vtkTypeMacro(vtkAppendPolyData,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -54,9 +54,9 @@ public:
    * SetNumberOfInputs/SetInputConnectionByNumber should not be mixed with calls
    * to AddInput/RemoveInput. By default, UserManagedInputs is false.
    */
-  vtkSetMacro(UserManagedInputs,int);
-  vtkGetMacro(UserManagedInputs,int);
-  vtkBooleanMacro(UserManagedInputs,int);
+  vtkSetMacro(UserManagedInputs,vtkTypeBool);
+  vtkGetMacro(UserManagedInputs,vtkTypeBool);
+  vtkBooleanMacro(UserManagedInputs,vtkTypeBool);
   //@}
 
   /**
@@ -67,7 +67,7 @@ public:
 
   /**
    * Remove a dataset from the list of data to append. Should not be
-   * used when UserManagedInputs is true, use SetInputByNumber (NULL) instead.
+   * used when UserManagedInputs is true, use SetInputByNumber (nullptr) instead.
    */
   void RemoveInputData(vtkPolyData *);
 
@@ -100,9 +100,9 @@ public:
    * data parallelism at a course scale.  Each of the inputs
    * can be generated in a different process at the same time.
    */
-  vtkSetMacro(ParallelStreaming, int);
-  vtkGetMacro(ParallelStreaming, int);
-  vtkBooleanMacro(ParallelStreaming, int);
+  vtkSetMacro(ParallelStreaming, vtkTypeBool);
+  vtkGetMacro(ParallelStreaming, vtkTypeBool);
+  vtkBooleanMacro(ParallelStreaming, vtkTypeBool);
   //@}
 
   //@{
@@ -116,22 +116,22 @@ public:
   //@}
 
   int ExecuteAppend(vtkPolyData* output,
-    vtkPolyData* inputs[], int numInputs);
+    vtkPolyData* inputs[], int numInputs) VTK_SIZEHINT(inputs, numInputs);
 
 protected:
   vtkAppendPolyData();
-  ~vtkAppendPolyData() VTK_OVERRIDE;
+  ~vtkAppendPolyData() override;
 
   // Flag for selecting parallel streaming behavior
-  int ParallelStreaming;
+  vtkTypeBool ParallelStreaming;
   int OutputPointsPrecision;
 
   // Usual data generation method
   int RequestData(vtkInformation *,
-                  vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+                  vtkInformationVector **, vtkInformationVector *) override;
   int RequestUpdateExtent(vtkInformation *,
-                          vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int, vtkInformation *) VTK_OVERRIDE;
+                          vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int, vtkInformation *) override;
 
   // An efficient templated way to append data.
   void AppendData(vtkDataArray *dest, vtkDataArray *src, vtkIdType offset);
@@ -146,11 +146,11 @@ protected:
   void AddInputData(vtkDataObject *)
     { vtkErrorMacro( << "AddInput() must be called with a vtkPolyData not a vtkDataObject."); };
 
-  int UserManagedInputs;
+  vtkTypeBool UserManagedInputs;
 
 private:
-  vtkAppendPolyData(const vtkAppendPolyData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAppendPolyData&) VTK_DELETE_FUNCTION;
+  vtkAppendPolyData(const vtkAppendPolyData&) = delete;
+  void operator=(const vtkAppendPolyData&) = delete;
 };
 
 #endif

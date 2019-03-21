@@ -23,7 +23,7 @@
  * take the values in those arrays and convert them to x,y,z world coordinates.
  *
  *
- * Givem latitude and longitude arrays,
+ * Given latitude and longitude arrays,
  * take the values in those arrays and convert them to x,y,z world coordinates.
  * Uses a spherical model of the earth to do the conversion.
  * The position is in meters relative to the center of the earth.
@@ -40,13 +40,14 @@
 
 class vtkAbstractTransform;
 
+#if !defined(VTK_LEGACY_REMOVE)
 class VTKGEOVISCORE_EXPORT vtkGeoAssignCoordinates : public vtkPassInputTypeAlgorithm
 {
 public:
   static vtkGeoAssignCoordinates *New();
 
   vtkTypeMacro(vtkGeoAssignCoordinates, vtkPassInputTypeAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -76,7 +77,7 @@ public:
   //@{
   /**
    * The transform to use to convert coordinates of the form
-   * (lat, long, 0) to (x, y z). If this is NULL (the default),
+   * (lat, long, 0) to (x, y z). If this is nullptr (the default),
    * use GlobeRadius to perform a spherical embedding.
    */
   virtual void SetTransform(vtkAbstractTransform* trans);
@@ -97,10 +98,10 @@ public:
 
 protected:
   vtkGeoAssignCoordinates();
-  ~vtkGeoAssignCoordinates() VTK_OVERRIDE;
+  ~vtkGeoAssignCoordinates() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
 
 private:
 
@@ -110,9 +111,9 @@ private:
   bool CoordinatesInArrays;
   vtkAbstractTransform* Transform;
 
-  vtkGeoAssignCoordinates(const vtkGeoAssignCoordinates&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGeoAssignCoordinates&) VTK_DELETE_FUNCTION;
+  vtkGeoAssignCoordinates(const vtkGeoAssignCoordinates&) = delete;
+  void operator=(const vtkGeoAssignCoordinates&) = delete;
 };
 
+#endif //VTK_LEGACY_REMOVE
 #endif
-

@@ -56,10 +56,10 @@ public:
 
   //@{
   /**
-   * Standard methids for printing and determining type information.
+   * Standard methods for printing and determining type information.
    */
   vtkTypeMacro(vtkDijkstraGraphGeodesicPath,vtkGraphGeodesicPath);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -74,27 +74,27 @@ public:
    * Stop when the end vertex is reached
    * or calculate shortest path to all vertices
    */
-  vtkSetMacro(StopWhenEndReached, int);
-  vtkGetMacro(StopWhenEndReached, int);
-  vtkBooleanMacro(StopWhenEndReached, int);
+  vtkSetMacro(StopWhenEndReached, vtkTypeBool);
+  vtkGetMacro(StopWhenEndReached, vtkTypeBool);
+  vtkBooleanMacro(StopWhenEndReached, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Use scalar values in the edge weight (experimental)
    */
-  vtkSetMacro(UseScalarWeights, int);
-  vtkGetMacro(UseScalarWeights, int);
-  vtkBooleanMacro(UseScalarWeights, int);
+  vtkSetMacro(UseScalarWeights, vtkTypeBool);
+  vtkGetMacro(UseScalarWeights, vtkTypeBool);
+  vtkBooleanMacro(UseScalarWeights, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Use the input point to repel the path by assigning high costs.
    */
-  vtkSetMacro(RepelPathFromVertices, int);
-  vtkGetMacro(RepelPathFromVertices, int);
-  vtkBooleanMacro(RepelPathFromVertices, int);
+  vtkSetMacro(RepelPathFromVertices, vtkTypeBool);
+  vtkGetMacro(RepelPathFromVertices, vtkTypeBool);
+  vtkBooleanMacro(RepelPathFromVertices, vtkTypeBool);
   //@}
 
   //@{
@@ -112,10 +112,10 @@ public:
 
 protected:
   vtkDijkstraGraphGeodesicPath();
-  ~vtkDijkstraGraphGeodesicPath() VTK_OVERRIDE;
+  ~vtkDijkstraGraphGeodesicPath() override;
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
 
   // Build a graph description of the input.
   virtual void BuildAdjacency( vtkDataSet *inData );
@@ -153,15 +153,15 @@ protected:
   //Internalized STL containers.
   vtkDijkstraGraphInternals *Internals;
 
-  int StopWhenEndReached;
-  int UseScalarWeights;
-  int RepelPathFromVertices;
+  vtkTypeBool StopWhenEndReached;
+  vtkTypeBool UseScalarWeights;
+  vtkTypeBool RepelPathFromVertices;
 
   vtkPoints* RepelVertices;
 
 private:
-  vtkDijkstraGraphGeodesicPath(const vtkDijkstraGraphGeodesicPath&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDijkstraGraphGeodesicPath&) VTK_DELETE_FUNCTION;
+  vtkDijkstraGraphGeodesicPath(const vtkDijkstraGraphGeodesicPath&) = delete;
+  void operator=(const vtkDijkstraGraphGeodesicPath&) = delete;
 
 };
 

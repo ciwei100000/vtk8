@@ -19,7 +19,7 @@
  * vtkFunctionSet specifies an abstract interface for set of functions
  * of the form F_i = F_i(x_j) where F (with i=1..m) are the functions
  * and x (with j=1..n) are the independent variables.
- * The only supported operation is the  function evaluation at x_j.
+ * The only supported operation is the function evaluation at x_j.
  *
  * @sa
  * vtkImplicitDataSet vtkInterpolatedVelocityField
@@ -36,7 +36,7 @@ class VTKCOMMONMATH_EXPORT vtkFunctionSet : public vtkObject
 {
 public:
   vtkTypeMacro(vtkFunctionSet,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Evaluate functions at x_j.
@@ -64,14 +64,14 @@ public:
 
 protected:
   vtkFunctionSet();
-  ~vtkFunctionSet() VTK_OVERRIDE {}
+  ~vtkFunctionSet() override {}
 
   int NumFuncs;
   int NumIndepVars;
 
 private:
-  vtkFunctionSet(const vtkFunctionSet&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFunctionSet&) VTK_DELETE_FUNCTION;
+  vtkFunctionSet(const vtkFunctionSet&) = delete;
+  void operator=(const vtkFunctionSet&) = delete;
 };
 
 #endif

@@ -28,7 +28,7 @@ class VTKFILTERSPARALLEL_EXPORT vtkPPolyDataNormals : public vtkPolyDataNormals
 {
 public:
   vtkTypeMacro(vtkPPolyDataNormals,vtkPolyDataNormals);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkPPolyDataNormals *New();
 
@@ -37,23 +37,23 @@ public:
    * To get piece invariance, this filter has to request an
    * extra ghost level.  By default piece invariance is on.
    */
-  vtkSetMacro(PieceInvariant, int);
-  vtkGetMacro(PieceInvariant, int);
-  vtkBooleanMacro(PieceInvariant, int);
+  vtkSetMacro(PieceInvariant, vtkTypeBool);
+  vtkGetMacro(PieceInvariant, vtkTypeBool);
+  vtkBooleanMacro(PieceInvariant, vtkTypeBool);
   //@}
 
 protected:
   vtkPPolyDataNormals();
-  ~vtkPPolyDataNormals() VTK_OVERRIDE {}
+  ~vtkPPolyDataNormals() override {}
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-  int PieceInvariant;
+  vtkTypeBool PieceInvariant;
 private:
-  vtkPPolyDataNormals(const vtkPPolyDataNormals&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPPolyDataNormals&) VTK_DELETE_FUNCTION;
+  vtkPPolyDataNormals(const vtkPPolyDataNormals&) = delete;
+  void operator=(const vtkPPolyDataNormals&) = delete;
 };
 
 #endif

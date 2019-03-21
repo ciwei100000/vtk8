@@ -126,10 +126,10 @@ vtkSmartPointer<vtkHexagonalPrism> MakeHexagonalPrism()
 template<typename T> int TestCell(const VTKCellType cellType,
                                   vtkSmartPointer<T> aCell)
 {
-  int status = 0;;
+  int status = 0;
   std::cout << "Testing " << aCell->GetClassName() << std::endl;
 
-  std::cout << "  Testing Print of an unitialized cell...";
+  std::cout << "  Testing Print of an uninitialized cell...";
   std::ostringstream cellPrint;
   aCell->Print(cellPrint);
   std::cout << "PASSED" << std::endl;
@@ -196,7 +196,7 @@ template<typename T> int TestCell(const VTKCellType cellType,
 
   std::cout << "  Testing GetParametricCoords...";
   double *parametricCoords = aCell->GetParametricCoords();
-  if (aCell->IsPrimaryCell() && parametricCoords == NULL)
+  if (aCell->IsPrimaryCell() && parametricCoords == nullptr)
   {
     ++status;
     std::cout << "...FAILED" << std::endl;

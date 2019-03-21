@@ -76,9 +76,7 @@ vtkImplicitCylinderWidget::vtkImplicitCylinderWidget()
 }
 
 //----------------------------------------------------------------------------
-vtkImplicitCylinderWidget::~vtkImplicitCylinderWidget()
-{
-}
+vtkImplicitCylinderWidget::~vtkImplicitCylinderWidget() = default;
 
 //----------------------------------------------------------------------
 void vtkImplicitCylinderWidget::SelectAction(vtkAbstractWidget *w)
@@ -117,7 +115,7 @@ void vtkImplicitCylinderWidget::SelectAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->StartInteraction();
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   self->Render();
 }
 
@@ -151,7 +149,7 @@ void vtkImplicitCylinderWidget::TranslateAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->StartInteraction();
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   self->Render();
 }
 
@@ -185,7 +183,7 @@ void vtkImplicitCylinderWidget::ScaleAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->StartInteraction();
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   self->Render();
 }
 
@@ -234,7 +232,7 @@ void vtkImplicitCylinderWidget::MoveAction(vtkAbstractWidget *w)
 
   // moving something
   self->EventCallbackCommand->SetAbortFlag(1);
-  self->InvokeEvent(vtkCommand::InteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::InteractionEvent,nullptr);
   self->Render();
 }
 
@@ -261,7 +259,7 @@ void vtkImplicitCylinderWidget::EndSelectAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->EndInteraction();
-  self->InvokeEvent(vtkCommand::EndInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::EndInteractionEvent,nullptr);
   self->Render();
 }
 
@@ -284,7 +282,7 @@ void vtkImplicitCylinderWidget::MoveCylinderAction(vtkAbstractWidget *w)
   }
 
   // Invoke all of the events associated with moving the cylinder
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
 
   // Move the cylinder
   double factor = ( self->Interactor->GetControlKey() ? 0.5 : 1.0);
@@ -297,10 +295,10 @@ void vtkImplicitCylinderWidget::MoveCylinderAction(vtkAbstractWidget *w)
   {
     self->GetCylinderRepresentation()->BumpCylinder(1,factor);
   }
-  self->InvokeEvent(vtkCommand::InteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::InteractionEvent,nullptr);
 
   self->EventCallbackCommand->SetAbortFlag(1);
-  self->InvokeEvent(vtkCommand::EndInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::EndInteractionEvent,nullptr);
   self->Render();
 }
 

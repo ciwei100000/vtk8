@@ -24,7 +24,7 @@ void vtkActor2DCollection::DeleteElement(vtkCollectionElement *e)
   vtkCollection::DeleteElement(e);
 }
 
-// Desctructor for the vtkActor2DCollection class. This removes all
+// Destructor for the vtkActor2DCollection class. This removes all
 // objects from the collection.
 vtkActor2DCollection::~vtkActor2DCollection()
 {
@@ -59,14 +59,14 @@ void vtkActor2DCollection::AddItem(vtkActor2D *a)
   vtkCollectionElement* indexElem;
   vtkCollectionElement* elem = new vtkCollectionElement;
 
-  // Check if the top item is NULL
-  if (this->Top == NULL)
+  // Check if the top item is nullptr
+  if (this->Top == nullptr)
   {
     vtkDebugMacro(<<"vtkActor2DCollection::AddItem - Adding item to top of the list");
 
     this->Top = elem;
     elem->Item = a;
-    elem->Next = NULL;
+    elem->Next = nullptr;
     this->Bottom = elem;
     this->NumberOfItems++;
     a->Register(this);
@@ -74,7 +74,7 @@ void vtkActor2DCollection::AddItem(vtkActor2D *a)
   }
 
   for (indexElem = this->Top;
-         indexElem != NULL;
+         indexElem != nullptr;
            indexElem = indexElem->Next)
   {
 
@@ -98,7 +98,7 @@ void vtkActor2DCollection::AddItem(vtkActor2D *a)
   //End of list found before a larger layer number
   vtkDebugMacro(<<"vtkActor2DCollection::AddItem - Adding item to end of the list");
   elem->Item = a;
-  elem->Next = NULL;
+  elem->Next = nullptr;
   this->Bottom->Next = elem;
   this->Bottom = elem;
   this->NumberOfItems++;

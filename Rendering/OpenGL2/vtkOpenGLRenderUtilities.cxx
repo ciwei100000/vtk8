@@ -17,18 +17,17 @@
 
 #include "vtkNew.h"
 #include "vtkOpenGLBufferObject.h"
+#include "vtkOpenGLError.h"
+#include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLVertexArrayObject.h"
+#include "vtkRenderingOpenGLConfigure.h"
 #include "vtkShaderProgram.h"
 
 // ----------------------------------------------------------------------------
-vtkOpenGLRenderUtilities::vtkOpenGLRenderUtilities()
-{
-}
+vtkOpenGLRenderUtilities::vtkOpenGLRenderUtilities() = default;
 
 // ----------------------------------------------------------------------------
-vtkOpenGLRenderUtilities::~vtkOpenGLRenderUtilities()
-{
-}
+vtkOpenGLRenderUtilities::~vtkOpenGLRenderUtilities() = default;
 
 void vtkOpenGLRenderUtilities::PrintSelf(ostream& os, vtkIndent indent)
 {
@@ -73,7 +72,7 @@ void vtkOpenGLRenderUtilities::RenderTriangles(
   vtkNew<vtkOpenGLBufferObject> vbo;
   vbo->Upload(verts, numVerts*3, vtkOpenGLBufferObject::ArrayBuffer);
   vao->Bind();
-  if (!vao->AddAttributeArray(program, vbo.Get(), "vertexMC", 0,
+  if (!vao->AddAttributeArray(program, vbo, "vertexMC", 0,
       sizeof(float)*3, VTK_FLOAT, 3, false))
   {
     vtkGenericWarningMacro(<< "Error setting 'vertexMC' in shader VAO.");
@@ -83,7 +82,7 @@ void vtkOpenGLRenderUtilities::RenderTriangles(
   if (tcoords)
   {
     tvbo->Upload(tcoords, numVerts*2, vtkOpenGLBufferObject::ArrayBuffer);
-    if (!vao->AddAttributeArray(program, tvbo.Get(), "tcoordMC", 0,
+    if (!vao->AddAttributeArray(program, tvbo, "tcoordMC", 0,
         sizeof(float)*2, VTK_FLOAT, 2, false))
     {
       vtkGenericWarningMacro(<< "Error setting 'tcoordMC' in shader VAO.");
@@ -93,8 +92,7 @@ void vtkOpenGLRenderUtilities::RenderTriangles(
   vtkNew<vtkOpenGLBufferObject> ibo;
   vao->Bind();
   ibo->Upload(iboData, numIndices, vtkOpenGLBufferObject::ElementArrayBuffer);
-  glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT,
-    reinterpret_cast<const GLvoid *>(NULL));
+  glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, nullptr);
   ibo->Release();
   ibo->ReleaseGraphicsResources();
   vao->RemoveAttributeArray("vertexMC");
@@ -114,9 +112,9 @@ std::string vtkOpenGLRenderUtilities::GetFullScreenQuadVertexShader()
 {
   // Pass through:
   return "//VTK::System::Dec\n"
-         "attribute vec4 ndCoordIn;\n"
-         "attribute vec2 texCoordIn;\n"
-         "varying vec2 texCoord;\n"
+         "in vec4 ndCoordIn;\n"
+         "in vec2 texCoordIn;\n"
+         "out vec2 texCoord;\n"
          "void main()\n"
          "{\n"
          "  gl_Position = ndCoordIn;\n"
@@ -188,8 +186,54 @@ bool vtkOpenGLRenderUtilities::PrepFullScreenVAO(vtkOpenGLBufferObject *vertBuf,
   return true;
 }
 
+bool vtkOpenGLRenderUtilities::PrepFullScreenVAO(
+  vtkOpenGLRenderWindow *renWin,
+  vtkOpenGLVertexArrayObject *vao,
+  vtkShaderProgram *prog)
+{
+  bool res;
+
+  vao->Bind();
+
+  vtkOpenGLBufferObject *vertBuf = renWin->GetTQuad2DVBO();
+  res = vao->AddAttributeArray(prog, vertBuf, "ndCoordIn", 0, 4 * sizeof(float),
+                               VTK_FLOAT, 2, false);
+  if (!res)
+  {
+    vao->Release();
+    vtkGenericWarningMacro("Error binding ndCoords to VAO.");
+    return false;
+  }
+
+  res = vao->AddAttributeArray(prog, vertBuf, "texCoordIn", 2 * sizeof(float),
+                               4 * sizeof(float), VTK_FLOAT, 2, false);
+  if (!res)
+  {
+    vao->Release();
+    vtkGenericWarningMacro("Error binding texCoords to VAO.");
+    return false;
+  }
+
+  vao->Release();
+  return true;
+}
+
 //------------------------------------------------------------------------------
 void vtkOpenGLRenderUtilities::DrawFullScreenQuad()
 {
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+//------------------------------------------------------------------------------
+void vtkOpenGLRenderUtilities::MarkDebugEvent(const std::string &event)
+{
+#ifndef VTK_OPENGL_ENABLE_STREAM_ANNOTATIONS
+  (void)event;
+#else // VTK_OPENGL_ENABLE_STREAM_ANNOTATIONS
+  vtkOpenGLStaticCheckErrorMacro("Error before glDebugMessageInsert.")
+  glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER,
+                       GL_DEBUG_SEVERITY_NOTIFICATION,
+                       0, static_cast<GLsizei>(event.size()), event.c_str());
+  vtkOpenGLClearErrorMacro();
+#endif // VTK_OPENGL_ENABLE_STREAM_ANNOTATIONS
 }

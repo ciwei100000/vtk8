@@ -74,7 +74,7 @@ class VTKFILTERSGENERIC_EXPORT vtkGenericClip : public vtkUnstructuredGridAlgori
 {
 public:
   vtkTypeMacro(vtkGenericClip,vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with user-specified implicit function; InsideOut turned off;
@@ -101,9 +101,9 @@ public:
    * value is less than or equal to the Value ivar.  InsideOut is off
    * by default.
    */
-  vtkSetMacro(InsideOut,int);
-  vtkGetMacro(InsideOut,int);
-  vtkBooleanMacro(InsideOut,int);
+  vtkSetMacro(InsideOut,vtkTypeBool);
+  vtkGetMacro(InsideOut,vtkTypeBool);
+  vtkBooleanMacro(InsideOut,vtkTypeBool);
   //@}
 
   //@{
@@ -123,9 +123,9 @@ public:
    * input scalar data. If you enable this flag but do not provide an
    * implicit function an error will be reported.
    */
-  vtkSetMacro(GenerateClipScalars,int);
-  vtkGetMacro(GenerateClipScalars,int);
-  vtkBooleanMacro(GenerateClipScalars,int);
+  vtkSetMacro(GenerateClipScalars,vtkTypeBool);
+  vtkGetMacro(GenerateClipScalars,vtkTypeBool);
+  vtkBooleanMacro(GenerateClipScalars,vtkTypeBool);
   //@}
 
   //@{
@@ -133,9 +133,9 @@ public:
    * Control whether a second output is generated. The second output
    * contains the polygonal data that's been clipped away.
    */
-  vtkSetMacro(GenerateClippedOutput,int);
-  vtkGetMacro(GenerateClippedOutput,int);
-  vtkBooleanMacro(GenerateClippedOutput,int);
+  vtkSetMacro(GenerateClippedOutput,vtkTypeBool);
+  vtkGetMacro(GenerateClippedOutput,vtkTypeBool);
+  vtkBooleanMacro(GenerateClippedOutput,vtkTypeBool);
   //@}
 
   //@{
@@ -175,12 +175,12 @@ public:
   /**
    * Return the mtime also considering the locator and clip function.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
    * If you want to clip by an arbitrary array, then set its name here.
-   * By default this in NULL and the filter will use the active scalar array.
+   * By default this in nullptr and the filter will use the active scalar array.
    */
   vtkGetStringMacro(InputScalarsSelection);
   void SelectInputScalars(const char *fieldName)
@@ -188,20 +188,20 @@ public:
   //@}
 
 protected:
-  vtkGenericClip(vtkImplicitFunction *cf=NULL);
-  ~vtkGenericClip() VTK_OVERRIDE;
+  vtkGenericClip(vtkImplicitFunction *cf=nullptr);
+  ~vtkGenericClip() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
   vtkImplicitFunction *ClipFunction;
 
   vtkIncrementalPointLocator *Locator;
-  int InsideOut;
+  vtkTypeBool InsideOut;
   double Value;
-  int GenerateClipScalars;
+  vtkTypeBool GenerateClipScalars;
 
-  int GenerateClippedOutput;
+  vtkTypeBool GenerateClippedOutput;
   double MergeTolerance;
 
   char *InputScalarsSelection;
@@ -213,8 +213,8 @@ protected:
   vtkCellData  *SecondaryCD;
 
 private:
-  vtkGenericClip(const vtkGenericClip&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGenericClip&) VTK_DELETE_FUNCTION;
+  vtkGenericClip(const vtkGenericClip&) = delete;
+  void operator=(const vtkGenericClip&) = delete;
 };
 
 #endif

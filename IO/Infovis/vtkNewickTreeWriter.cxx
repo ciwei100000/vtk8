@@ -29,8 +29,8 @@ vtkNewickTreeWriter::vtkNewickTreeWriter()
   this->EdgeWeightArrayName = "weight";
   this->NodeNameArrayName = "node name";
 
-  this->EdgeWeightArray = NULL;
-  this->NodeNameArray = NULL;
+  this->EdgeWeightArray = nullptr;
+  this->NodeNameArray = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -49,7 +49,7 @@ void vtkNewickTreeWriter::WriteData()
   ostream *fp = this->OpenVTKFile();
   if(!fp)
   {
-    vtkErrorMacro("Falied to open output stream");
+    vtkErrorMacro("Failed to open output stream");
     return;
   }
 
@@ -83,7 +83,7 @@ void vtkNewickTreeWriter::WriteVertex(ostream *fp, vtkTree* const input,
   if (this->NodeNameArray)
   {
     vtkStdString name = this->NodeNameArray->GetVariantValue(vertex).ToString();
-    if (name != "")
+    if (!name.empty())
     {
       *fp << name;
     }

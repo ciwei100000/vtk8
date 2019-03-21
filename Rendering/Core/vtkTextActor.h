@@ -51,7 +51,7 @@ class VTKRENDERINGCORE_EXPORT vtkTextActor : public vtkTexturedActor2D
 {
 public:
   vtkTypeMacro(vtkTextActor,vtkTexturedActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate object with a rectangle in normaled view coordinates
@@ -63,7 +63,7 @@ public:
    * Shallow copy of this text actor. Overloads the virtual
    * vtkProp method.
    */
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE;
+  void ShallowCopy(vtkProp *prop) override;
 
   //@{
   /**
@@ -100,7 +100,7 @@ public:
   //@{
   /**
    * Set how text should be scaled.  If set to
-   * vtkTextActor::TEXT_SCALE_MODE_NONE, the the font size will be fixed by the
+   * vtkTextActor::TEXT_SCALE_MODE_NONE, the font size will be fixed by the
    * size given in TextProperty.  If set to vtkTextActor::TEXT_SCALE_MODE_PROP,
    * the text will be scaled to fit exactly in the prop as specified by the
    * position 1 & 2 coordinates.  If set to
@@ -130,14 +130,14 @@ public:
    * When UseBorderAlign is on, the bounding rectangle is used to align the text,
    * which is the proper behavior when using vtkTextRepresentation
    */
-  vtkSetMacro(UseBorderAlign,int);
-  vtkGetMacro(UseBorderAlign,int);
-  vtkBooleanMacro(UseBorderAlign,int);
+  vtkSetMacro(UseBorderAlign,vtkTypeBool);
+  vtkGetMacro(UseBorderAlign,vtkTypeBool);
+  vtkBooleanMacro(UseBorderAlign,vtkTypeBool);
   //@}
 
   //@{
   /**
-   * This method is being depricated.  Use SetJustification and
+   * This method is being deprecated.  Use SetJustification and
    * SetVerticalJustification in text property instead.
    * Set/Get the Alignment point
    * if zero (default), the text aligns itself to the bottom left corner
@@ -262,7 +262,7 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   //@{
   /**
@@ -270,15 +270,15 @@ public:
    * DO NOT USE THIS METHOD OUTSIDE OF THE RENDERING PROCESS.
    * Draw the text actor to the screen.
    */
-  int RenderOpaqueGeometry(vtkViewport* viewport) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport* ) VTK_OVERRIDE {return 0;};
-  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  int RenderOpaqueGeometry(vtkViewport* viewport) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport* ) override {return 0;};
+  int RenderOverlay(vtkViewport* viewport) override;
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
 protected:
   /**
@@ -293,14 +293,14 @@ protected:
     vtkTextProperty *tprop, vtkViewport *viewport, int bbox[4]);
 
    vtkTextActor();
-  ~vtkTextActor() VTK_OVERRIDE;
+  ~vtkTextActor() override;
 
   int     MinimumSize[2];
   float   MaximumLineHeight;
   double  FontScaleExponent;
   int     TextScaleMode;
   float   Orientation;
-  int     UseBorderAlign;
+  vtkTypeBool     UseBorderAlign;
 
   vtkTextProperty *TextProperty;
   vtkImageData *ImageData;
@@ -338,8 +338,8 @@ protected:
   virtual int UpdateRectangle(vtkViewport* viewport);
 
 private:
-  vtkTextActor(const vtkTextActor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTextActor&) VTK_DELETE_FUNCTION;
+  vtkTextActor(const vtkTextActor&) = delete;
+  void operator=(const vtkTextActor&) = delete;
 };
 
 

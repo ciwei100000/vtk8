@@ -20,9 +20,7 @@
 vtkStandardNewMacro(vtkWidgetSet);
 
 //----------------------------------------------------------------------
-vtkWidgetSet::vtkWidgetSet()
-{
-}
+vtkWidgetSet::vtkWidgetSet() = default;
 
 //----------------------------------------------------------------------
 vtkWidgetSet::~vtkWidgetSet()
@@ -35,7 +33,7 @@ vtkWidgetSet::~vtkWidgetSet()
 }
 
 //----------------------------------------------------------------------
-void vtkWidgetSet::SetEnabled(int enabling)
+void vtkWidgetSet::SetEnabled(vtkTypeBool enabling)
 {
   for (WidgetIteratorType it  = this->Widget.begin();
                           it != this->Widget.end()  ; ++it)
@@ -71,7 +69,7 @@ void vtkWidgetSet::RemoveWidget( vtkAbstractWidget * w)
     if (*it == w)
     {
       this->Widget.erase(it);
-      static_cast<vtkParallelopipedWidget*>(w)->WidgetSet = NULL;
+      static_cast<vtkParallelopipedWidget*>(w)->WidgetSet = nullptr;
       w->UnRegister(this);
       break;
     }

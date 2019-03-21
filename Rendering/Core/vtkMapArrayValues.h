@@ -49,7 +49,7 @@ class VTKRENDERINGCORE_EXPORT vtkMapArrayValues : public vtkPassInputTypeAlgorit
 {
 public:
   vtkTypeMacro(vtkMapArrayValues,vtkPassInputTypeAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkMapArrayValues *New();
 
@@ -69,9 +69,9 @@ public:
    * before the mapping occurs. If turned off, FillValue is used to initialize
    * any unmapped array indices. Default is off.
    */
-  vtkSetMacro(PassArray, int);
-  vtkGetMacro(PassArray, int);
-  vtkBooleanMacro(PassArray, int);
+  vtkSetMacro(PassArray, vtkTypeBool);
+  vtkGetMacro(PassArray, vtkTypeBool);
+  vtkBooleanMacro(PassArray, vtkTypeBool);
   //@}
 
   //@{
@@ -116,9 +116,9 @@ public:
  */
   void AddToMap(vtkVariant from, vtkVariant to);
   void AddToMap(int from, int to);
-  void AddToMap(int from, char *to);
-  void AddToMap(char *from, int to);
-  void AddToMap(char *from, char *to);
+  void AddToMap(int from, const char *to);
+  void AddToMap(const char *from, int to);
+  void AddToMap(const char *from, const char *to);
 //@}
 
   /**
@@ -145,25 +145,25 @@ public:
 protected:
 
   vtkMapArrayValues();
-  ~vtkMapArrayValues() VTK_OVERRIDE;
+  ~vtkMapArrayValues() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int, vtkInformation *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int, vtkInformation *) override;
 
   char* InputArrayName;
   char* OutputArrayName;
   int OutputArrayType;
   int FieldType;
   int MapType;
-  int PassArray;
+  vtkTypeBool PassArray;
   double FillValue;
 
   // PIMPL idiom to hide map implementation.
   vtkMapType *Map;
 
 private:
-  vtkMapArrayValues(const vtkMapArrayValues&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMapArrayValues&) VTK_DELETE_FUNCTION;
+  vtkMapArrayValues(const vtkMapArrayValues&) = delete;
+  void operator=(const vtkMapArrayValues&) = delete;
 };
 
 #endif

@@ -37,9 +37,7 @@ vtkImageAlgorithm::vtkImageAlgorithm()
 }
 
 //----------------------------------------------------------------------------
-vtkImageAlgorithm::~vtkImageAlgorithm()
-{
-}
+vtkImageAlgorithm::~vtkImageAlgorithm() = default;
 
 //----------------------------------------------------------------------------
 void vtkImageAlgorithm::PrintSelf(ostream& os, vtkIndent indent)
@@ -81,7 +79,7 @@ int vtkImageAlgorithm::RequestData(
   }
   else
   {
-    this->ExecuteData(NULL);
+    this->ExecuteData(nullptr);
   }
   // Check for any error set by downstream filter (IO in most case)
   if ( this->GetErrorCode() )
@@ -278,7 +276,7 @@ void vtkImageAlgorithm::CopyAttributeData(vtkImageData *input,
       // Cache the scalars otherwise it may get overwritten
       // during CopyAttributes()
       outArray->Register(this);
-      output->GetPointData()->SetScalars(0);
+      output->GetPointData()->SetScalars(nullptr);
       output->CopyAttributes(input);
       // Restore the scalars
       int idx = output->GetPointData()->AddArray(outArray);
@@ -303,7 +301,7 @@ void vtkImageAlgorithm::CopyAttributeData(vtkImageData *input,
           tmp->SetName(inArray->GetName());
         }
         tmp->Register(this);
-        output->GetPointData()->SetScalars(0);
+        output->GetPointData()->SetScalars(nullptr);
         output->GetPointData()->CopyAllocate(input->GetPointData(),
                                              output->GetNumberOfPoints());
         // Restore the scalars

@@ -76,7 +76,7 @@ int vtkOutlineSource::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -85,7 +85,7 @@ int vtkOutlineSource::RequestData(
   vtkIdType pts[4];
   vtkPoints *newPts;
   vtkCellArray *newLines;
-  vtkCellArray *newPolys = 0;
+  vtkCellArray *newPolys = nullptr;
 
   //
   // Initialize

@@ -16,30 +16,11 @@ set(Module_SRCS
   )
 
 # Generate "vtkSocketCommunicatorHash.h".
-add_custom_command(
-  OUTPUT ${VTK_BINARY_DIR}/Parallel/Core/vtkSocketCommunicatorHash.h
-  DEPENDS ${VTK_SOURCE_DIR}/Parallel/Core/vtkSocketCommunicator.cxx
-          vtkHashSource
-  COMMAND vtkHashSource
-    ${VTK_SOURCE_DIR}/Parallel/Core/vtkSocketCommunicator.cxx
-    vtkSocketCommunicatorHash vtkSocketCommunicatorHash.h
-  )
+include(vtkHashSource)
+vtk_hash_source(
+  INPUT "vtkSocketCommunicator.cxx"
+  NAME "vtkSocketCommunicatorHash"
+  HEADER_OUTPUT hash_header)
 
-list(APPEND Module_SRCS
-  ${VTK_BINARY_DIR}/Parallel/Core/vtkSocketCommunicatorHash.h
-  )
-
-set_source_files_properties(
-  vtkMultiProcessStream
-  vtkSocketCommunicatorHash
-  WRAP_EXCLUDE
-  )
-
-set_source_files_properties(
-  vtkCommunicator
-  vtkMultiProcessController
-  vtkProcess
-  ABSTRACT
-  )
-
+list(APPEND Module_SRCS ${hash_header})
 vtk_module_library(vtkParallelCore ${Module_SRCS})

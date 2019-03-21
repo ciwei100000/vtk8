@@ -45,7 +45,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkUnstructuredGridVolumeRayCastMapper : public 
 public:
   static vtkUnstructuredGridVolumeRayCastMapper *New();
   vtkTypeMacro(vtkUnstructuredGridVolumeRayCastMapper,vtkUnstructuredGridVolumeMapper);
-  void PrintSelf( ostream& os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream& os, vtkIndent indent ) override;
 
   //@{
   /**
@@ -77,14 +77,14 @@ public:
 
   //@{
   /**
-   * If AutoAdjustSampleDistances is on, the the ImageSampleDistance
+   * If AutoAdjustSampleDistances is on, the ImageSampleDistance
    * will be varied to achieve the allocated render time of this
    * prop (controlled by the desired update rate and any culling in
    * use).
    */
-  vtkSetClampMacro( AutoAdjustSampleDistances, int, 0, 1 );
-  vtkGetMacro( AutoAdjustSampleDistances, int );
-  vtkBooleanMacro( AutoAdjustSampleDistances, int );
+  vtkSetClampMacro( AutoAdjustSampleDistances, vtkTypeBool, 0, 1 );
+  vtkGetMacro( AutoAdjustSampleDistances, vtkTypeBool );
+  vtkBooleanMacro( AutoAdjustSampleDistances, vtkTypeBool );
   //@}
 
   //@{
@@ -101,9 +101,9 @@ public:
    * If IntermixIntersectingGeometry is turned on, the zbuffer will be
    * captured and used to limit the traversal of the rays.
    */
-  vtkSetClampMacro( IntermixIntersectingGeometry, int, 0, 1 );
-  vtkGetMacro( IntermixIntersectingGeometry, int );
-  vtkBooleanMacro( IntermixIntersectingGeometry, int );
+  vtkSetClampMacro( IntermixIntersectingGeometry, vtkTypeBool, 0, 1 );
+  vtkGetMacro( IntermixIntersectingGeometry, vtkTypeBool );
+  vtkBooleanMacro( IntermixIntersectingGeometry, vtkTypeBool );
   //@}
 
   //@{
@@ -127,7 +127,7 @@ public:
    * WARNING: INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
    * Initialize rendering for this volume.
    */
-  void Render( vtkRenderer *, vtkVolume * ) VTK_OVERRIDE;
+  void Render( vtkRenderer *, vtkVolume * ) override;
 
   /**
    * WARNING: INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
@@ -135,7 +135,7 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   vtkGetVectorMacro( ImageInUseSize, int, 2 );
   vtkGetVectorMacro( ImageOrigin, int, 2 );
@@ -145,12 +145,12 @@ public:
 
 protected:
   vtkUnstructuredGridVolumeRayCastMapper();
-  ~vtkUnstructuredGridVolumeRayCastMapper() VTK_OVERRIDE;
+  ~vtkUnstructuredGridVolumeRayCastMapper() override;
 
   float                        ImageSampleDistance;
   float                        MinimumImageSampleDistance;
   float                        MaximumImageSampleDistance;
-  int                          AutoAdjustSampleDistances;
+  vtkTypeBool                          AutoAdjustSampleDistances;
 
   vtkMultiThreader  *Threader;
   int               NumberOfThreads;
@@ -188,7 +188,7 @@ protected:
   void StoreRenderTime( vtkRenderer *ren, vtkVolume *vol, float t );
   float RetrieveRenderTime( vtkRenderer *ren, vtkVolume *vol );
 
-  int           IntermixIntersectingGeometry;
+  vtkTypeBool           IntermixIntersectingGeometry;
 
   float        *ZBuffer;
   int           ZBufferSize[2];
@@ -219,8 +219,8 @@ protected:
   int           CellScalars;
 
 private:
-  vtkUnstructuredGridVolumeRayCastMapper(const vtkUnstructuredGridVolumeRayCastMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkUnstructuredGridVolumeRayCastMapper&) VTK_DELETE_FUNCTION;
+  vtkUnstructuredGridVolumeRayCastMapper(const vtkUnstructuredGridVolumeRayCastMapper&) = delete;
+  void operator=(const vtkUnstructuredGridVolumeRayCastMapper&) = delete;
 };
 
 #endif

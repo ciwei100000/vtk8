@@ -65,9 +65,7 @@ vtkMassProperties::vtkMassProperties()
 
 //----------------------------------------------------------------------------
 // Destroy any allocated memory.
-vtkMassProperties::~vtkMassProperties()
-{
-}
+vtkMassProperties::~vtkMassProperties() = default;
 
 //----------------------------------------------------------------------------
 // Description:
@@ -257,7 +255,7 @@ int vtkMassProperties::RequestData(
   this->MinCellArea = mincellarea;
   this->MaxCellArea = maxcellarea;
 
-  // Weighting factors in Discrete Divergence theorem for volume calculation..
+  // Weighting factors in Discrete Divergence theorem for volume calculation.
   //
   kxyz[0] = (munc[0] + (wxyz/3.0) + ((wxy+wxz)/2.0)) /numCells;
   kxyz[1] = (munc[1] + (wxyz/3.0) + ((wxy+wyz)/2.0)) /numCells;

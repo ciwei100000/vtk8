@@ -48,7 +48,7 @@ class VTKRENDERINGANNOTATION_EXPORT vtkCornerAnnotation : public vtkActor2D
 {
 public:
   vtkTypeMacro(vtkCornerAnnotation,vtkActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate object with a rectangle in normaled view coordinates
@@ -60,15 +60,15 @@ public:
   /**
    * Draw the scalar bar and annotation text to the screen.
    */
-  int RenderOpaqueGeometry(vtkViewport* viewport) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport* ) VTK_OVERRIDE {return 0;};
-  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  int RenderOpaqueGeometry(vtkViewport* viewport) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport* ) override {return 0;};
+  int RenderOverlay(vtkViewport* viewport) override;
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
   //@{
   /**
@@ -112,7 +112,7 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   //@{
   /**
@@ -189,14 +189,14 @@ public:
   /**
    * Even if there is an image actor, should `slice' and `image' be displayed?
    */
-  vtkBooleanMacro(ShowSliceAndImage, int);
-  vtkSetMacro(ShowSliceAndImage, int);
-  vtkGetMacro(ShowSliceAndImage, int);
+  vtkBooleanMacro(ShowSliceAndImage, vtkTypeBool);
+  vtkSetMacro(ShowSliceAndImage, vtkTypeBool);
+  vtkGetMacro(ShowSliceAndImage, vtkTypeBool);
   //@}
 
 protected:
   vtkCornerAnnotation();
-  ~vtkCornerAnnotation() VTK_OVERRIDE;
+  ~vtkCornerAnnotation() override;
 
   double MaximumLineHeight;
 
@@ -222,10 +222,10 @@ protected:
   double LinearFontScaleFactor;
   double NonlinearFontScaleFactor;
 
-  int ShowSliceAndImage;
+  vtkTypeBool ShowSliceAndImage;
 
   /**
-   * Search for replacable tokens and replace
+   * Search for replaceable tokens and replace
    */
   virtual void TextReplace(
     vtkImageActor *ia, vtkImageMapToWindowLevelColors *wl);
@@ -239,8 +239,8 @@ protected:
   //@}
 
 private:
-  vtkCornerAnnotation(const vtkCornerAnnotation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCornerAnnotation&) VTK_DELETE_FUNCTION;
+  vtkCornerAnnotation(const vtkCornerAnnotation&) = delete;
+  void operator=(const vtkCornerAnnotation&) = delete;
 };
 
 

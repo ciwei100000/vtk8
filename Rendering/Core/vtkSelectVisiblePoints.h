@@ -55,7 +55,7 @@ class VTKRENDERINGCORE_EXPORT vtkSelectVisiblePoints : public vtkPolyDataAlgorit
 {
 public:
   vtkTypeMacro(vtkSelectVisiblePoints, vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate object with no renderer; window selection turned off;
@@ -85,9 +85,9 @@ public:
    * Set/Get the flag which enables selection in a rectangular display
    * region.
    */
-  vtkSetMacro(SelectionWindow, int);
-  vtkGetMacro(SelectionWindow, int);
-  vtkBooleanMacro(SelectionWindow, int);
+  vtkSetMacro(SelectionWindow, vtkTypeBool);
+  vtkGetMacro(SelectionWindow, vtkTypeBool);
+  vtkBooleanMacro(SelectionWindow, vtkTypeBool);
   //@}
 
   //@{
@@ -104,9 +104,9 @@ public:
    * Set/Get the flag which enables inverse selection; i.e., invisible points
    * are selected.
    */
-  vtkSetMacro(SelectInvisible, int);
-  vtkGetMacro(SelectInvisible, int);
-  vtkBooleanMacro(SelectInvisible, int);
+  vtkSetMacro(SelectInvisible, vtkTypeBool);
+  vtkGetMacro(SelectInvisible, vtkTypeBool);
+  vtkBooleanMacro(SelectInvisible, vtkTypeBool);
   //@}
 
   //@{
@@ -134,27 +134,27 @@ public:
   /**
    * Return MTime also considering the renderer.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkSelectVisiblePoints();
-  ~vtkSelectVisiblePoints() VTK_OVERRIDE;
+  ~vtkSelectVisiblePoints() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   vtkRenderer *Renderer;
   vtkMatrix4x4 *CompositePerspectiveTransform;
 
-  int SelectionWindow;
+  vtkTypeBool SelectionWindow;
   int Selection[4];
   int InternalSelection[4];
-  int SelectInvisible;
+  vtkTypeBool SelectInvisible;
   double Tolerance;
 
 private:
-  vtkSelectVisiblePoints(const vtkSelectVisiblePoints&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSelectVisiblePoints&) VTK_DELETE_FUNCTION;
+  vtkSelectVisiblePoints(const vtkSelectVisiblePoints&) = delete;
+  void operator=(const vtkSelectVisiblePoints&) = delete;
 };
 
 #endif

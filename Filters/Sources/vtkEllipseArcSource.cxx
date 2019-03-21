@@ -70,7 +70,7 @@ int vtkEllipseArcSource::RequestData(vtkInformation* vtkNotUsed(request),
   // get the info object
   vtkInformation* outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData* output =
     vtkPolyData::SafeDownCast(outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -145,7 +145,7 @@ int vtkEllipseArcSource::RequestData(vtkInformation* vtkNotUsed(request),
     theta = theta - quotient * 2.0 * vtkMath::Pi();
 
     // result range: -pi/2, pi/2
-    thetaEllipse = atan(tan(theta) / this->Ratio);
+    thetaEllipse = atan(tan(theta) * this->Ratio);
 
     //theta range: 0, 2 * pi
     if (theta > vtkMath::Pi() / 2 && theta <= vtkMath::Pi())
@@ -177,9 +177,9 @@ int vtkEllipseArcSource::RequestData(vtkInformation* vtkNotUsed(request),
     newLines->InsertCellPoint(k);
   }
 
-  output->SetPoints(newPoints.Get());
-  output->GetPointData()->SetTCoords(newTCoords.Get());
-  output->SetLines(newLines.Get());
+  output->SetPoints(newPoints);
+  output->GetPointData()->SetTCoords(newTCoords);
+  output->SetLines(newLines);
   return 1;
 }
 

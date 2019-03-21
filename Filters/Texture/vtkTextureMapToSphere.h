@@ -51,7 +51,7 @@ class VTKFILTERSTEXTURE_EXPORT vtkTextureMapToSphere : public vtkDataSetAlgorith
 {
 public:
   vtkTypeMacro(vtkTextureMapToSphere,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Create object with Center (0,0,0) and the PreventSeam ivar is set to
@@ -72,9 +72,9 @@ public:
    * Turn on/off automatic sphere generation. This means it automatically
    * finds the sphere center.
    */
-  vtkSetMacro(AutomaticSphereGeneration,int);
-  vtkGetMacro(AutomaticSphereGeneration,int);
-  vtkBooleanMacro(AutomaticSphereGeneration,int);
+  vtkSetMacro(AutomaticSphereGeneration,vtkTypeBool);
+  vtkGetMacro(AutomaticSphereGeneration,vtkTypeBool);
+  vtkBooleanMacro(AutomaticSphereGeneration,vtkTypeBool);
   //@}
 
   //@{
@@ -84,24 +84,24 @@ public:
    * theta angle variation between 0->180 and 180->0 degrees. Otherwise, the
    * s-coordinate ranges from 0->1 between 0->360 degrees.
    */
-  vtkSetMacro(PreventSeam,int);
-  vtkGetMacro(PreventSeam,int);
-  vtkBooleanMacro(PreventSeam,int);
+  vtkSetMacro(PreventSeam,vtkTypeBool);
+  vtkGetMacro(PreventSeam,vtkTypeBool);
+  vtkBooleanMacro(PreventSeam,vtkTypeBool);
   //@}
 
 protected:
   vtkTextureMapToSphere();
-  ~vtkTextureMapToSphere() VTK_OVERRIDE {}
+  ~vtkTextureMapToSphere() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double Center[3];
-  int AutomaticSphereGeneration;
-  int PreventSeam;
+  vtkTypeBool AutomaticSphereGeneration;
+  vtkTypeBool PreventSeam;
 
 private:
-  vtkTextureMapToSphere(const vtkTextureMapToSphere&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTextureMapToSphere&) VTK_DELETE_FUNCTION;
+  vtkTextureMapToSphere(const vtkTextureMapToSphere&) = delete;
+  void operator=(const vtkTextureMapToSphere&) = delete;
 };
 
 #endif

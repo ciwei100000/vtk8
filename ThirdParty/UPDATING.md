@@ -18,19 +18,41 @@ Once converted, a project should be updated by applying patches to the
 repository specified in its `update.sh` script. Once the changes are merged,
 pulling the changes involves running the `update.sh` script. This will update
 the local copy of the project to the version specified in `update.sh` (usually
-a `for/foo` branch, but may be `master` or any other Git reference) and merge
-it into the main tree.
+a `for/foo` branch, like `for/vtk` for example, but may be `master` or any
+other Git reference) and merge it into the main tree.
 
 This requires a Git 2.5 or higher due the `worktree` tool being used to
 simplify the availability of the commits to the main checkout.
 
+Here's an example of updating the `twisted` project from tag 17.1.0 to 17.5.0,
+starting with updating the third-party repo
+
+```sh
+$ cd twisted/
+$ git checkout for/vtk
+$ git fetch origin
+$ git rebase --onto twisted-17.5.0 twisted-17.1.0
+$ git push
+```
+
+Now import into VTK
+
+```sh
+$ cd vtk/ThirdParty/twisted
+$ git checkout -b update_twisted
+$ ./update.sh
+```
+
+Now you can review the change and make a merge request from the branch as normal.
+
 # Porting a Project
 
 When converting a project, if there are any local patches, a project should be
-created [on GitLab](https://gitlab.kitware.com/third-party) to track it. If
-the upstream project does not use Git, it should be imported into Git (there
-may be existing conversions available on Github already). The project's
-description should indicate where the source repository lives.
+created [on GitLab](https://gitlab.kitware.com/third-party) to track it
+(requests may be filed on the [repo-requests][] repository). If the upstream
+project does not use Git, it should be imported into Git (there may be existing
+conversions available on Github already). The project's description should
+indicate where the source repository lives.
 
 Once a mirror of the project is created, a branch named `for/foo` should be
 created where patches for the `foo` project will be applied (i.e., `for/vtk`
@@ -38,6 +60,11 @@ for VTK's patches to the project). Usually, changes to the build system, the
 source code for mangling, the addition of `.gitattributes` files, and other
 changes belong here. Functional changes should be submitted upstream (but may
 still be tracked so that they may be used).
+
+For mangling documentation, [some guidelines][] are available.
+
+[repo-requests]: https://gitlab.kitware.com/third-party/repo-requests
+[some guidelines]: https://gitlab.kitware.com/third-party/repo-requests/wikis/mangling
 
 The basic steps to import a project `twisted` based on the tag
 `twisted-17.1.0` looks like this:

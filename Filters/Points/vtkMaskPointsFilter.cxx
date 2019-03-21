@@ -112,13 +112,11 @@ vtkMaskPointsFilter::vtkMaskPointsFilter()
   this->SetNumberOfInputPorts(2);
 
   this->EmptyValue = 0;
-  this->Mask = NULL;
+  this->Mask = nullptr;
 }
 
 //----------------------------------------------------------------------------
-vtkMaskPointsFilter::~vtkMaskPointsFilter()
-{
-}
+vtkMaskPointsFilter::~vtkMaskPointsFilter() = default;
 
 //----------------------------------------------------------------------------
 int vtkMaskPointsFilter::
@@ -154,7 +152,7 @@ vtkDataObject *vtkMaskPointsFilter::GetMask()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return NULL;
+    return nullptr;
   }
 
   return this->GetExecutive()->GetInputData(1, 0);

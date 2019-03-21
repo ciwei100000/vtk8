@@ -39,7 +39,7 @@ public:
   }
 
   void Execute(vtkObject *caller, unsigned long eventId,
-    void *callData) VTK_OVERRIDE
+    void *callData) override
   {
     if (vtkCommand::TimerEvent == eventId)
     {
@@ -194,9 +194,9 @@ int TestInteractorTimers(int argc, char* argv[])
   tid = iren->CreateRepeatingTimer(100);
   cb->SetRenderTimerId(tid);
 
-  // And create a one shot timer to quit after 10 seconds.
+  // And create a one shot timer to quit after 4 seconds.
   //
-  tid = iren->CreateOneShotTimer(10000);
+  tid = iren->CreateOneShotTimer(4000);
   cb->SetOneShotTimerId(tid);
   cb->SetQuitOnOneShotTimer(!testing->IsInteractiveModeSpecified());
 

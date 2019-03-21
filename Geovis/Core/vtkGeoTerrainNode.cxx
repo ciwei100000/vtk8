@@ -32,6 +32,7 @@ vtkStandardNewMacro(vtkGeoTerrainNode);
 //----------------------------------------------------------------------------
 vtkGeoTerrainNode::vtkGeoTerrainNode()
 {
+  VTK_LEGACY_BODY(vtkGeoTerrainNode::vtkGeoTerrainNode, "VTK 8.2");
   this->Model = vtkSmartPointer<vtkPolyData>::New();
   this->BoundingSphereRadius = 0.0;
 
@@ -53,9 +54,7 @@ vtkGeoTerrainNode::vtkGeoTerrainNode()
 }
 
 //-----------------------------------------------------------------------------
-vtkGeoTerrainNode::~vtkGeoTerrainNode()
-{
-}
+vtkGeoTerrainNode::~vtkGeoTerrainNode() = default;
 
 //-----------------------------------------------------------------------------
 void vtkGeoTerrainNode::PrintSelf(ostream& os, vtkIndent indent)
@@ -188,7 +187,7 @@ vtkGeoTerrainNode* vtkGeoTerrainNode::GetChild(int idx)
   if (idx < 0 || idx > 3)
   {
     vtkErrorMacro("Index out of range.");
-    return 0;
+    return nullptr;
   }
   return vtkGeoTerrainNode::SafeDownCast(this->Children[idx]);
 }
@@ -205,13 +204,13 @@ void vtkGeoTerrainNode::ShallowCopy(vtkGeoTreeNode *src)
 {
   vtkGeoTerrainNode *terrainNode = vtkGeoTerrainNode::SafeDownCast(src);
 
-  if(terrainNode != NULL)
+  if(terrainNode != nullptr)
   {
     vtkPolyData * polyData = vtkPolyData::New();
     polyData->ShallowCopy(terrainNode->Model);
     this->SetModel(polyData);
     polyData->Delete();
-    polyData = NULL;
+    polyData = nullptr;
     //this->Model = terrainNode->Model;
     this->BoundingSphereRadius = terrainNode->BoundingSphereRadius;
     this->BoundingSphereCenter[0] = terrainNode->BoundingSphereCenter[0];
@@ -250,13 +249,13 @@ void vtkGeoTerrainNode::DeepCopy(vtkGeoTreeNode *src)
 {
   vtkGeoTerrainNode *terrainNode = vtkGeoTerrainNode::SafeDownCast(src);
 
-  if(terrainNode != NULL)
+  if(terrainNode != nullptr)
   {
     vtkPolyData * polyData = vtkPolyData::New();
     polyData->DeepCopy(terrainNode->Model);
     this->SetModel(polyData);
     polyData->Delete();
-    polyData = NULL;
+    polyData = nullptr;
 
     //this->Model = terrainNode->Model;
     this->BoundingSphereRadius = terrainNode->BoundingSphereRadius;
@@ -295,11 +294,11 @@ void vtkGeoTerrainNode::DeepCopy(vtkGeoTreeNode *src)
 //-----------------------------------------------------------------------------
 bool vtkGeoTerrainNode::HasData()
 {
-  return (this->Model != 0);
+  return (this->Model != nullptr);
 }
 
 //-----------------------------------------------------------------------------
 void vtkGeoTerrainNode::DeleteData()
 {
-  this->Model = 0;
+  this->Model = nullptr;
 }

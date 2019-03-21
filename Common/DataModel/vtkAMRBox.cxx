@@ -44,7 +44,8 @@ vtkAMRBox::vtkAMRBox(const double* origin, const int* dimensions, const double* 
   int lo[3], hi[3];
   for( int d=0; d<3; ++d )
   {
-    lo[d] = spacing[d]>0? vtkMath::Round( (origin[d] - globalOrigin[d])/spacing[d] ): 0;
+    lo[d] = spacing[d]>0.0 ?
+        static_cast<int>(std::round( (origin[d] - globalOrigin[d])/spacing[d] )) : 0;
     hi[d] = lo[d] + ndim[d]-1;
   }
 
@@ -191,7 +192,7 @@ void vtkAMRBox::GetValidHiCorner(int *hi) const
 //-----------------------------------------------------------------------------
 void vtkAMRBox::GetBoxOrigin(const vtkAMRBox& extent, const double X0[3], const double spacing[3],double x0[3])
 {
-  assert( "pre: input array is NULL" && (x0 != NULL) );
+  assert( "pre: input array is nullptr" && (x0 != nullptr) );
   x0[0] = x0[1] = x0[2] = 0.0;
 
   for( int i=0; i < 3; ++i )
@@ -265,11 +266,11 @@ ostream &vtkAMRBox::Print(ostream &os) const
 //-----------------------------------------------------------------------------
 void vtkAMRBox::Serialize( unsigned char*& buffer, vtkIdType& bytesize)
 {
-  assert( "pre: input buffer is expected to be NULL" && (buffer==NULL) );
+  assert( "pre: input buffer is expected to be nullptr" && (buffer==nullptr) );
 
   bytesize       = vtkAMRBox::GetBytesize();
   buffer         = new unsigned char[ bytesize ];
-  assert( buffer != NULL );
+  assert( buffer != nullptr );
 
   // STEP 0: set pointer to traverse the buffer
   unsigned char* ptr = buffer;
@@ -293,7 +294,7 @@ void vtkAMRBox::Serialize( int* buffer) const
 void vtkAMRBox::Deserialize(
     unsigned char* buffer, const vtkIdType& vtkNotUsed(bytesize) )
 {
-  assert( "pre: input buffer is NULL" && (buffer != NULL) );
+  assert( "pre: input buffer is nullptr" && (buffer != nullptr) );
 
   // STEP 0: set pointer to traverse the buffer
   unsigned char *ptr = buffer;

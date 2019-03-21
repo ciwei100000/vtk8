@@ -44,7 +44,7 @@ static void ShowResult(vtkRenderer *renderer, vtkAlgorithmOutput *input,
 //-------------------------------------------------------------------------
 int TemporalStatistics(int argc, char *argv[])
 {
-  // We have to use a compsite pipeline to handle these composite data
+  // We have to use a composite pipeline to handle these composite data
   // structures.
   VTK_CREATE(vtkCompositeDataPipeline, prototype);
   vtkAlgorithm::SetDefaultExecutivePrototype(prototype);
@@ -100,7 +100,7 @@ int TemporalStatistics(int argc, char *argv[])
     iren->Start();
   }
 
-  vtkAlgorithm::SetDefaultExecutivePrototype(0);
+  vtkAlgorithm::SetDefaultExecutivePrototype(nullptr);
   return !retVal;
 }
 

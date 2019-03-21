@@ -44,10 +44,7 @@ vtkTreeOrbitLayoutStrategy::vtkTreeOrbitLayoutStrategy()
   this->ChildRadiusFactor = .5;
 }
 
-vtkTreeOrbitLayoutStrategy::~vtkTreeOrbitLayoutStrategy()
-{
-
-}
+vtkTreeOrbitLayoutStrategy::~vtkTreeOrbitLayoutStrategy() = default;
 
 // Helper method for recursively orbiting children
 // around their parents
@@ -119,7 +116,7 @@ void vtkTreeOrbitLayoutStrategy::OrbitChildren(vtkTree *t,
 void vtkTreeOrbitLayoutStrategy::Layout()
 {
   vtkTree* tree = vtkTree::SafeDownCast(this->Graph);
-  if (tree == NULL)
+  if (tree == nullptr)
   {
 #ifdef VTK_USE_BOOST
     // Use the BFS search tree to perform the layout

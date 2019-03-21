@@ -27,7 +27,7 @@ public:
   {
     return new vtkSliderCallback;
   }
-  void Execute(vtkObject *caller, unsigned long, void*) VTK_OVERRIDE
+  void Execute(vtkObject *caller, unsigned long, void*) override
   {
     vtkSliderWidget *sliderWidget =
       reinterpret_cast<vtkSliderWidget*>(caller);
@@ -35,7 +35,7 @@ public:
     this->SphereSource->SetPhiResolution(value/2);
     this->SphereSource->SetThetaResolution(value);
   }
-  vtkSliderCallback():SphereSource(0) {}
+  vtkSliderCallback():SphereSource(nullptr) {}
   vtkSphereSource *SphereSource;
 };
 

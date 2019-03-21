@@ -29,7 +29,7 @@
 namespace
 {
 
-void test_expression(bool valid, std::string msg)
+void test_expression(bool valid, const std::string& msg)
 {
   if(!valid)
   {
@@ -56,7 +56,7 @@ struct lengthCheckFunctor
 };
 
 
-//accumlates the length of all arrays used with this functor
+//accumulates the length of all arrays used with this functor
 struct storeLengthFunctor
 {
   vtkIdType length;

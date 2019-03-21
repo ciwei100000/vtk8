@@ -38,7 +38,7 @@ class VTKFILTERSSOURCES_EXPORT vtkOutlineSource : public vtkPolyDataAlgorithm
 public:
   static vtkOutlineSource *New();
   vtkTypeMacro(vtkOutlineSource,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -77,9 +77,9 @@ public:
   /**
    * Generate solid faces for the box. This is off by default.
    */
-  vtkSetMacro(GenerateFaces, int);
-  vtkBooleanMacro(GenerateFaces, int);
-  vtkGetMacro(GenerateFaces, int);
+  vtkSetMacro(GenerateFaces, vtkTypeBool);
+  vtkBooleanMacro(GenerateFaces, vtkTypeBool);
+  vtkGetMacro(GenerateFaces, vtkTypeBool);
   //@}
 
   //@{
@@ -94,18 +94,18 @@ public:
 
 protected:
   vtkOutlineSource();
-  ~vtkOutlineSource() VTK_OVERRIDE {}
+  ~vtkOutlineSource() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   int    BoxType;
-  int    GenerateFaces;
+  vtkTypeBool    GenerateFaces;
   int    OutputPointsPrecision;
   double Bounds[6];
   double Corners[24];
 
 private:
-  vtkOutlineSource(const vtkOutlineSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOutlineSource&) VTK_DELETE_FUNCTION;
+  vtkOutlineSource(const vtkOutlineSource&) = delete;
+  void operator=(const vtkOutlineSource&) = delete;
 };
 
 #endif

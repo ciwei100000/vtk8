@@ -33,10 +33,10 @@ vtkStandardNewMacro(vtkMCubesReader);
 // Construct object with FlipNormals turned off and Normals set to true.
 vtkMCubesReader::vtkMCubesReader()
 {
-  this->FileName = NULL;
-  this->LimitsFileName = NULL;
+  this->FileName = nullptr;
+  this->LimitsFileName = nullptr;
 
-  this->Locator = NULL;
+  this->Locator = nullptr;
 
 #ifndef VTK_WORDS_BIGENDIAN
   this->SwapBytes = 1;
@@ -58,7 +58,7 @@ vtkMCubesReader::~vtkMCubesReader()
   if ( this->Locator )
   {
     this->Locator->UnRegister(this);
-    this->Locator = NULL;
+    this->Locator = nullptr;
   }
 }
 
@@ -70,7 +70,7 @@ int vtkMCubesReader::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -78,7 +78,7 @@ int vtkMCubesReader::RequestData(
   FILE *limitp;
   vtkPoints *newPts;
   vtkCellArray *newPolys;
-  vtkFloatArray *newNormals = NULL;
+  vtkFloatArray *newNormals = nullptr;
   double bounds[6];
   int i, j, k, numPts, numTris;
   typedef struct {float x[3], n[3];} pointType;
@@ -95,20 +95,20 @@ int vtkMCubesReader::RequestData(
   // Initialize
   //
 
-  if ( this->FileName == NULL )
+  if ( this->FileName == nullptr )
   {
     vtkErrorMacro(<< "Please specify input FileName");
     return 0;
   }
-  if ( (fp = fopen(this->FileName, "rb")) == NULL)
+  if ( (fp = fopen(this->FileName, "rb")) == nullptr)
   {
     vtkErrorMacro(<< "File " << this->FileName << " not found");
     return 0;
   }
 
   // Try to read limits file to get bounds. Otherwise, read data.
-  if ( this->LimitsFileName != NULL &&
-  (limitp = fopen (this->LimitsFileName, "rb")) != NULL &&
+  if ( this->LimitsFileName != nullptr &&
+  (limitp = fopen (this->LimitsFileName, "rb")) != nullptr &&
   stat (this->FileName, &buf) == 0 )
   {
     bool errorOccurred = false;
@@ -146,7 +146,7 @@ int vtkMCubesReader::RequestData(
       return 0;
     }
 
-    // do swapping if necc
+    // do swapping if necessary
     if (byteOrder == VTK_FILE_BYTE_ORDER_BIG_ENDIAN)
     {
       vtkByteSwap::Swap4BERange(fbounds,6);
@@ -170,12 +170,12 @@ int vtkMCubesReader::RequestData(
   else // read data to get bounds
   {
     fseek (fp, this->HeaderSize, 0);
-    // cannot use vtkMath uninitialze bounds for this computation
+    // cannot use vtkMath uninitialize bounds for this computation
     bounds[0] = bounds[2] = bounds[4] = VTK_DOUBLE_MAX;
     bounds[1] = bounds[3] = bounds[5] = VTK_DOUBLE_MIN;
     for (i=0; fread(&point, sizeof(pointType), 1, fp); i++)
     {
-      // swap bytes if necc
+      // swap bytes if necessary
       if (byteOrder == VTK_FILE_BYTE_ORDER_BIG_ENDIAN)
       {
         vtkByteSwap::Swap4BERange((float *) (&point),6);
@@ -216,7 +216,7 @@ int vtkMCubesReader::RequestData(
     newNormals->Allocate(numPts,numPts);
   }
 
-  if ( this->Locator == NULL )
+  if ( this->Locator == nullptr )
   {
     this->CreateDefaultLocator();
   }
@@ -234,11 +234,11 @@ int vtkMCubesReader::RequestData(
         fread (&point, static_cast<int>(sizeof(pointType)), 1, fp));
       if (val != 1)
       {
-         vtkErrorMacro(<<"Error reading triange " << i
+         vtkErrorMacro(<<"Error reading triangle " << i
                        << " (" << numTris << "), point/normal " << j);
       }
 
-      // swap bytes if necc
+      // swap bytes if necessary
       if (byteOrder == VTK_FILE_BYTE_ORDER_BIG_ENDIAN)
       {
         vtkByteSwap::Swap4BERange((float *) (&point),6);
@@ -314,7 +314,7 @@ void vtkMCubesReader::SetLocator(vtkIncrementalPointLocator *locator)
   if ( this->Locator )
   {
     this->Locator->UnRegister(this);
-    this->Locator = NULL;
+    this->Locator = nullptr;
   }
   if ( locator )
   {
@@ -402,7 +402,7 @@ const char *vtkMCubesReader::GetDataByteOrderAsString()
 
 void vtkMCubesReader::CreateDefaultLocator()
 {
-  if ( this->Locator == NULL )
+  if ( this->Locator == nullptr )
   {
     this->Locator = vtkMergePoints::New();
   }
@@ -436,7 +436,7 @@ vtkMTimeType vtkMCubesReader::GetMTime()
   vtkMTimeType mTime=this->Superclass::GetMTime();
   vtkMTimeType time;
 
-  if ( this->Locator != NULL )
+  if ( this->Locator != nullptr )
   {
     time = this->Locator->GetMTime();
     mTime = ( time > mTime ? time : mTime );

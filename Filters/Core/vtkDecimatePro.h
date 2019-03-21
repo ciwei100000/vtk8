@@ -92,7 +92,7 @@ class VTKFILTERSCORE_EXPORT vtkDecimatePro : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkDecimatePro,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Create object with specified reduction of 90% and feature angle of
@@ -124,9 +124,9 @@ public:
    * on, mesh splitting and hole elimination will not occur. This may limit
    * the maximum reduction that may be achieved.
    */
-  vtkSetMacro(PreserveTopology,int);
-  vtkGetMacro(PreserveTopology,int);
-  vtkBooleanMacro(PreserveTopology,int);
+  vtkSetMacro(PreserveTopology,vtkTypeBool);
+  vtkGetMacro(PreserveTopology,vtkTypeBool);
+  vtkBooleanMacro(PreserveTopology,vtkTypeBool);
   //@}
 
   //@{
@@ -146,9 +146,9 @@ public:
    * splitting off will better preserve the original topology of the
    * mesh, but you may not obtain the requested reduction.
    */
-  vtkSetMacro(Splitting,int);
-  vtkGetMacro(Splitting,int);
-  vtkBooleanMacro(Splitting,int);
+  vtkSetMacro(Splitting,vtkTypeBool);
+  vtkGetMacro(Splitting,vtkTypeBool);
+  vtkBooleanMacro(Splitting,vtkTypeBool);
   //@}
 
   //@{
@@ -170,9 +170,9 @@ public:
    * the specified SplitAngle. Otherwise mesh splitting is deferred as long
    * as possible.
    */
-  vtkSetMacro(PreSplitMesh,int);
-  vtkGetMacro(PreSplitMesh,int);
-  vtkBooleanMacro(PreSplitMesh,int);
+  vtkSetMacro(PreSplitMesh,vtkTypeBool);
+  vtkGetMacro(PreSplitMesh,vtkTypeBool);
+  vtkBooleanMacro(PreSplitMesh,vtkTypeBool);
   //@}
 
   //@{
@@ -195,9 +195,9 @@ public:
    * error requires extra memory proportional to the number of vertices in
    * the mesh. If AccumulateError is off, then the error is not accumulated.
    */
-  vtkSetMacro(AccumulateError,int);
-  vtkGetMacro(AccumulateError,int);
-  vtkBooleanMacro(AccumulateError,int);
+  vtkSetMacro(AccumulateError,vtkTypeBool);
+  vtkGetMacro(AccumulateError,vtkTypeBool);
+  vtkBooleanMacro(AccumulateError,vtkTypeBool);
   //@}
 
   //@{
@@ -223,9 +223,9 @@ public:
    * Turn on/off the deletion of vertices on the boundary of a mesh. This
    * may limit the maximum reduction that may be achieved.
    */
-  vtkSetMacro(BoundaryVertexDeletion,int);
-  vtkGetMacro(BoundaryVertexDeletion,int);
-  vtkBooleanMacro(BoundaryVertexDeletion,int);
+  vtkSetMacro(BoundaryVertexDeletion,vtkTypeBool);
+  vtkGetMacro(BoundaryVertexDeletion,vtkTypeBool);
+  vtkBooleanMacro(BoundaryVertexDeletion,vtkTypeBool);
   //@}
 
   //@{
@@ -288,21 +288,21 @@ public:
 
 protected:
   vtkDecimatePro();
-  ~vtkDecimatePro() VTK_OVERRIDE;
+  ~vtkDecimatePro() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double TargetReduction;
   double FeatureAngle;
   double MaximumError;
   double AbsoluteError;
   int ErrorIsAbsolute;
-  int AccumulateError;
+  vtkTypeBool AccumulateError;
   double SplitAngle;
-  int Splitting;
-  int PreSplitMesh;
-  int BoundaryVertexDeletion;
-  int PreserveTopology;
+  vtkTypeBool Splitting;
+  vtkTypeBool PreSplitMesh;
+  vtkTypeBool BoundaryVertexDeletion;
+  vtkTypeBool PreserveTopology;
   int Degree;
   double InflectionPointRatio;
   vtkDoubleArray *InflectionPoints;
@@ -421,8 +421,8 @@ private:
   double Error;      //Maximum allowable surface error
 
 private:
-  vtkDecimatePro(const vtkDecimatePro&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDecimatePro&) VTK_DELETE_FUNCTION;
+  vtkDecimatePro(const vtkDecimatePro&) = delete;
+  void operator=(const vtkDecimatePro&) = delete;
 };
 
 #endif

@@ -15,9 +15,7 @@
 #include "vtkPolygonBuilder.h"
 #include "vtkIdListCollection.h"
 
-vtkPolygonBuilder::vtkPolygonBuilder()
-{
-}
+vtkPolygonBuilder::vtkPolygonBuilder() = default;
 
 void vtkPolygonBuilder::InsertTriangle(vtkIdType* abc)
 {
@@ -113,7 +111,6 @@ void vtkPolygonBuilder::InsertTriangle(vtkIdType* abc)
       }
     }
   }
-  return;
 }
 
 void vtkPolygonBuilder::GetPolygons(vtkIdListCollection* polys)
@@ -139,23 +136,31 @@ void vtkPolygonBuilder::GetPolygons(vtkIdListCollection* polys)
     do
     {
       poly->InsertNextId(edge.first);
-      edgeIt = this->Edges.find(edge.second);
+      EdgeMap::iterator at = this->Edges.find(edge.second);
       // ignore polygon if Edges map not correct - with the fixes for
       // ignoring collapsed triangles and ignoring duplicate triangles
       // this should not happen anymore, but it does not hurt to be safe.
-      if (edgeIt == this->Edges.end())
+      //
+      // UPDATE: from a real-world polyhedron case it IS possible to
+      // get dangling edges. See TestPolygonBuilder5 for details.
+      if (at == this->Edges.end())
       {
+        Edges.erase(edgeIt); //remove offending edge
         poly->Reset(); // empty the list so it does not get added below
         break;
       }
-      edge = *(edgeIt);
-      Edges.erase(edgeIt);
+      edge = *(at);
+      Edges.erase(at);
     }
     while (edge.first != firstVtx);
 
     if (poly->GetNumberOfIds() > 0)
     {
       polys->AddItem(poly);
+    }
+    else
+    {
+      poly->Delete(); // don't leak on failure
     }
   }
 

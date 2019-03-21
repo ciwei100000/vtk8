@@ -28,9 +28,7 @@
 
 
 // Construct object with number of subdivisions set to 1.
-vtkApproximatingSubdivisionFilter::vtkApproximatingSubdivisionFilter()
-{
-}
+vtkApproximatingSubdivisionFilter::vtkApproximatingSubdivisionFilter() = default;
 
 int vtkApproximatingSubdivisionFilter::RequestData(
   vtkInformation *request,
@@ -81,7 +79,7 @@ int vtkApproximatingSubdivisionFilter::RequestData(
                                                   this->NumberOfSubdivisions);
     abort = this->GetAbortExecute();
 
-    // Generate topology  for the input dataset
+    // Generate topology for the input dataset
     inputDS->BuildLinks();
 
     numCells = inputDS->GetNumberOfCells ();

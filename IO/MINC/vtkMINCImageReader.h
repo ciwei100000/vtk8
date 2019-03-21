@@ -88,29 +88,29 @@ public:
   vtkTypeMacro(vtkMINCImageReader,vtkImageReader2);
 
   static vtkMINCImageReader *New();
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Set the file name.
    */
-  void SetFileName(const char *name) VTK_OVERRIDE;
+  void SetFileName(const char *name) override;
 
   /**
    * Get the entension for this file format.
    */
-  const char* GetFileExtensions() VTK_OVERRIDE {
+  const char* GetFileExtensions() override {
     return ".mnc"; }
 
   /**
    * Get the name of this file format.
    */
-  const char* GetDescriptiveName() VTK_OVERRIDE {
+  const char* GetDescriptiveName() override {
     return "MINC"; }
 
   /**
    * Test whether the specified file can be read.
    */
-  int CanReadFile(const char* name) VTK_OVERRIDE;
+  int CanReadFile(const char* name) override;
 
   /**
    * Get a matrix that describes the orientation of the data.
@@ -135,9 +135,9 @@ public:
    * RescaleSlope and RescaleIntercept will be set to 1 and 0
    * respectively.  This is off by default.
    */
-  vtkSetMacro(RescaleRealValues, int);
-  vtkBooleanMacro(RescaleRealValues, int);
-  vtkGetMacro(RescaleRealValues, int);
+  vtkSetMacro(RescaleRealValues, vtkTypeBool);
+  vtkBooleanMacro(RescaleRealValues, vtkTypeBool);
+  vtkGetMacro(RescaleRealValues, vtkTypeBool);
   //@}
 
   //@{
@@ -147,7 +147,7 @@ public:
    * scalar range, but in some cases the MINC file stores an
    * incorrect valid_range and the DataRange will be incorrect.
    */
-  virtual double *GetDataRange();
+  virtual double *GetDataRange() VTK_SIZEHINT(2);
   virtual void GetDataRange(double range[2]) {
     double *r = this->GetDataRange();
     range[0] = r[0]; range[1] = r[1]; };
@@ -174,7 +174,7 @@ public:
 
 protected:
   vtkMINCImageReader();
-  ~vtkMINCImageReader() VTK_OVERRIDE;
+  ~vtkMINCImageReader() override;
 
   int MINCImageType;
   int MINCImageTypeSigned;
@@ -188,7 +188,7 @@ protected:
   vtkMatrix4x4 *DirectionCosines;
   double RescaleSlope;
   double RescaleIntercept;
-  int RescaleRealValues;
+  vtkTypeBool RescaleRealValues;
   vtkMINCImageAttributes *ImageAttributes;
 
   int FileNameHasChanged;
@@ -200,12 +200,12 @@ protected:
   virtual void FindRangeAndRescaleValues();
   static int ConvertMINCTypeToVTKType(int minctype, int mincsigned);
 
-  void ExecuteInformation() VTK_OVERRIDE;
-  void ExecuteDataWithInformation(vtkDataObject *out, vtkInformation *outInfo) VTK_OVERRIDE;
+  void ExecuteInformation() override;
+  void ExecuteDataWithInformation(vtkDataObject *out, vtkInformation *outInfo) override;
 
 private:
-  vtkMINCImageReader(const vtkMINCImageReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMINCImageReader&) VTK_DELETE_FUNCTION;
+  vtkMINCImageReader(const vtkMINCImageReader&) = delete;
+  void operator=(const vtkMINCImageReader&) = delete;
 
 };
 

@@ -21,13 +21,11 @@
 vtkInformationIntegerRequestKey::vtkInformationIntegerRequestKey(const char* name, const char* location) :
   vtkInformationIntegerKey(name, location)
 {
-  this->DataKey = 0;
+  this->DataKey = nullptr;
 }
 
 //----------------------------------------------------------------------------
-vtkInformationIntegerRequestKey::~vtkInformationIntegerRequestKey()
-{
-}
+vtkInformationIntegerRequestKey::~vtkInformationIntegerRequestKey() = default;
 
 //----------------------------------------------------------------------------
 void vtkInformationIntegerRequestKey::CopyDefaultInformation(

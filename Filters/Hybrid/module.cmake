@@ -3,12 +3,13 @@ vtk_module(vtkFiltersHybrid
     StandAlone
   TEST_DEPENDS
     vtkIOXML
-    vtkRendering${VTK_RENDERING_BACKEND}
+    vtkRenderingOpenGL2
     vtkImagingCore
     vtkImagingStencil
     vtkTestingRendering
     vtkInteractionStyle
     vtkIOLegacy
+    vtkFiltersHyperTree
   DEPENDS
     vtkCommonCore
     vtkCommonDataModel
@@ -19,6 +20,7 @@ vtk_module(vtkFiltersHybrid
     vtkCommonMisc
     vtkFiltersCore
     vtkFiltersGeneral
+    vtkFiltersGeometry
     vtkImagingCore
     vtkImagingSources
     vtkRenderingCore

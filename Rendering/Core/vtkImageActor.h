@@ -44,7 +44,7 @@ class VTKRENDERINGCORE_EXPORT vtkImageActor : public vtkImageSlice
 {
 public:
   vtkTypeMacro(vtkImageActor,vtkImageSlice);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate the image actor.
@@ -66,9 +66,9 @@ public:
    * Turn on/off linear interpolation of the image when rendering.
    * More options are available in the Property of the image actor.
    */
-  virtual void SetInterpolate(int);
-  virtual int GetInterpolate();
-  vtkBooleanMacro(Interpolate,int);
+  virtual void SetInterpolate(vtkTypeBool);
+  virtual vtkTypeBool GetInterpolate();
+  vtkBooleanMacro(Interpolate,vtkTypeBool);
   //@}
 
   //@{
@@ -87,11 +87,11 @@ public:
    * The image extent is generally set explicitly, but if not set
    * it will be determined from the input image data.
    */
-  void SetDisplayExtent(int extent[6]);
+  void SetDisplayExtent(const int extent[6]);
   void SetDisplayExtent(int minX, int maxX, int minY, int maxY,
                         int minZ, int maxZ);
   void GetDisplayExtent(int extent[6]);
-  int *GetDisplayExtent() {return this->DisplayExtent;}
+  int *GetDisplayExtent() VTK_SIZEHINT(6) {return this->DisplayExtent;}
   //@}
 
   //@{
@@ -101,7 +101,7 @@ public:
    * In either case the bounds is expressed as a 6-vector
    * (xmin,xmax, ymin,ymax, zmin,zmax).
    */
-  double *GetBounds() VTK_OVERRIDE;
+  double *GetBounds() VTK_SIZEHINT(6) override;
   void GetBounds(double bounds[6]) { this->Superclass::GetBounds(bounds); };
   //@}
 
@@ -152,7 +152,7 @@ public:
    * ForceOpaqueOn(), which forces this method to return false, or
    * ForceTranslucentOn(), which forces this method to return true.
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
   //@{
   /**
@@ -167,7 +167,7 @@ public:
 
 protected:
   vtkImageActor();
-  ~vtkImageActor() VTK_OVERRIDE;
+  ~vtkImageActor() override;
 
   /**
    * Guess the orientation from the extent.  The orientation will be Z
@@ -187,8 +187,8 @@ protected:
   bool ForceOpaque;
 
 private:
-  vtkImageActor(const vtkImageActor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageActor&) VTK_DELETE_FUNCTION;
+  vtkImageActor(const vtkImageActor&) = delete;
+  void operator=(const vtkImageActor&) = delete;
 };
 
 #endif

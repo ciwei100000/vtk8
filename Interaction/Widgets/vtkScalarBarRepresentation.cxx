@@ -42,7 +42,7 @@ vtkScalarBarRepresentation::vtkScalarBarRepresentation()
 
   this->AutoOrient = true;
 
-  this->ScalarBarActor = NULL;
+  this->ScalarBarActor = nullptr;
   vtkScalarBarActor *actor = vtkScalarBarActor::New();
   this->SetScalarBarActor(actor);
   actor->Delete();
@@ -53,7 +53,7 @@ vtkScalarBarRepresentation::vtkScalarBarRepresentation()
 //-----------------------------------------------------------------------------
 vtkScalarBarRepresentation::~vtkScalarBarRepresentation()
 {
-  this->SetScalarBarActor(NULL);
+  this->SetScalarBarActor(nullptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -197,13 +197,13 @@ void vtkScalarBarRepresentation::SwapOrientation()
 }
 
 //-----------------------------------------------------------------------------
-int vtkScalarBarRepresentation::GetVisibility()
+vtkTypeBool vtkScalarBarRepresentation::GetVisibility()
 {
   return this->ScalarBarActor->GetVisibility();
 }
 
 //-----------------------------------------------------------------------------
-void vtkScalarBarRepresentation::SetVisibility(int vis)
+void vtkScalarBarRepresentation::SetVisibility(vtkTypeBool vis)
 {
   this->ScalarBarActor->SetVisibility(vis);
   this->Superclass::SetVisibility(vis);
@@ -264,7 +264,7 @@ int vtkScalarBarRepresentation::RenderTranslucentPolygonalGeometry(
 }
 
 //-------------------------------------------------------------------------
-int vtkScalarBarRepresentation::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkScalarBarRepresentation::HasTranslucentPolygonalGeometry()
 {
   int result = this->Superclass::HasTranslucentPolygonalGeometry();
   if (this->ScalarBarActor)

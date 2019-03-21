@@ -43,6 +43,7 @@
 
 #include <cstddef>
 
+#cmakedefine VTK_HAVE_SYNC_BUILTINS
 
 // Assume 64-bit atomic operations are not available on 32 bit platforms
 #if defined(VTK_HAVE_SYNC_BUILTINS)
@@ -51,6 +52,7 @@
 #   define VTK_GCC_ATOMICS_64
 # endif
 #elif defined(__APPLE__)
+# warning 2018-04-25: Seemingly dead code on currently-supported VTK platforms. Contact vtk-developers list if you see this!
 # include <libkern/OSAtomic.h>
 # define VTK_APPLE_ATOMICS_32
 # if VTK_SIZEOF_VOID_P == 8

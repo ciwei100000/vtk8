@@ -42,7 +42,7 @@ vtkSelectPolyData::vtkSelectPolyData()
 {
   this->GenerateSelectionScalars = 0;
   this->InsideOut = 0;
-  this->Loop = NULL;
+  this->Loop = nullptr;
   this->SelectionMode = VTK_INSIDE_SMALLEST_REGION;
   this->ClosestPoint[0] = this->ClosestPoint[1] = this->ClosestPoint[2] = 0.0;
   this->GenerateUnselectedOutput = 0;
@@ -72,7 +72,7 @@ vtkPolyData *vtkSelectPolyData::GetUnselectedOutput()
 {
   if (this->GetNumberOfOutputPorts() < 2)
   {
-    return NULL;
+    return nullptr;
   }
 
   return vtkPolyData::SafeDownCast(
@@ -84,7 +84,7 @@ vtkPolyData *vtkSelectPolyData::GetSelectionEdges()
 {
   if (this->GetNumberOfOutputPorts() < 3)
   {
-    return NULL;
+    return nullptr;
   }
 
   return vtkPolyData::SafeDownCast(
@@ -136,7 +136,7 @@ int vtkSelectPolyData::RequestData(
     return 1;
   }
 
-  if ( this->Loop == NULL ||
+  if ( this->Loop == nullptr ||
   (numLoopPts=this->Loop->GetNumberOfPoints()) < 3 )
   {
     vtkErrorMacro("Please define a loop with at least three points");
@@ -435,7 +435,7 @@ int vtkSelectPolyData::RequestData(
     nextFront->Reset();
   } //while still advancing
 
-  // Now may have to invert fill value depending on what we wan to extract
+  // Now may have to invert fill value depending on what we want to extract
   if ( this->SelectionMode == VTK_INSIDE_SMALLEST_REGION )
   {
     for (i=0; i < numCells; i++)
@@ -618,7 +618,7 @@ vtkMTimeType vtkSelectPolyData::GetMTime()
   vtkMTimeType mTime=this->Superclass::GetMTime();
   vtkMTimeType time;
 
-  if ( this->Loop != NULL )
+  if ( this->Loop != nullptr )
   {
     time = this->Loop->GetMTime();
     mTime = ( time > mTime ? time : mTime );

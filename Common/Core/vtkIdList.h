@@ -30,8 +30,18 @@
 class VTKCOMMONCORE_EXPORT vtkIdList : public vtkObject
 {
 public:
+  //@{
+  /**
+   * Standard methods for instantiation, type information, and printing.
+   */
   static vtkIdList *New();
+  vtkTypeMacro(vtkIdList,vtkObject);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
+  //@}
 
+  /**
+   * Release memory and restore to unallocated state.
+   */
   void Initialize();
 
   /**
@@ -41,9 +51,6 @@ public:
    */
   int Allocate(const vtkIdType sz, const int strategy=0);
 
-  vtkTypeMacro(vtkIdList,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
-
   /**
    * Return the number of id's in the list.
    */
@@ -52,7 +59,9 @@ public:
   /**
    * Return the id at location i.
    */
-  vtkIdType GetId(const vtkIdType i) {return this->Ids[i];};
+  vtkIdType GetId(const vtkIdType i)
+    VTK_EXPECTS(0 <= i && i < GetNumberOfIds())
+    {return this->Ids[i];}
 
   /**
    * Specify the number of ids for this object to hold. Does an
@@ -65,13 +74,16 @@ public:
    * faster than InsertId. Make sure you use SetNumberOfIds() to allocate
    * memory prior to using SetId().
    */
-  void SetId(const vtkIdType i, const vtkIdType vtkid) {this->Ids[i] = vtkid;};
+  void SetId(const vtkIdType i, const vtkIdType vtkid)
+    VTK_EXPECTS(0 <= i && i < GetNumberOfIds())
+    {this->Ids[i] = vtkid;}
 
   /**
    * Set the id at location i. Does range checking and allocates memory
    * as necessary.
    */
-  void InsertId(const vtkIdType i, const vtkIdType vtkid);
+  void InsertId(const vtkIdType i, const vtkIdType vtkid)
+    VTK_EXPECTS(0 <= i);
 
   /**
    * Add the id specified to the end of the list. Range checking is performed.
@@ -83,6 +95,12 @@ public:
    * list. Otherwise return just location in list.
    */
   vtkIdType InsertUniqueId(const vtkIdType vtkid);
+
+  /**
+   * Sort the ids in the list in ascending id order. This method uses
+   * vtkSMPTools::Sort() so it can be sped up if built properly.
+   */
+  void Sort();
 
   /**
    * Get a pointer to a particular data index.
@@ -104,7 +122,7 @@ public:
   void SetArray(vtkIdType *array, vtkIdType size);
 
   /**
-   * Reset to an empty state.
+   * Reset to an empty state but retain previously allocated memory.
    */
   void Reset() {this->NumberOfIds = 0;};
 
@@ -141,21 +159,23 @@ public:
    */
   vtkIdType *Resize(const vtkIdType sz);
 
-  // This method should become legacy
-  void IntersectWith(vtkIdList& otherIds) {
+  /**
+   * Intersect one id list with another. This method should become legacy.
+   */
+    void IntersectWith(vtkIdList& otherIds) {
     this->IntersectWith(&otherIds); };
 
 protected:
   vtkIdList();
-  ~vtkIdList() VTK_OVERRIDE;
+  ~vtkIdList() override;
 
   vtkIdType NumberOfIds;
   vtkIdType Size;
   vtkIdType *Ids;
 
 private:
-  vtkIdList(const vtkIdList&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkIdList&) VTK_DELETE_FUNCTION;
+  vtkIdList(const vtkIdList&) = delete;
+  void operator=(const vtkIdList&) = delete;
 };
 
 // In-lined for performance

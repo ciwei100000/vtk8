@@ -18,20 +18,12 @@
  *
  * vtkImageDifference takes two rgb unsigned char images and compares them.
  * It allows the images to be slightly different.  If AllowShift is on,
- * then each pixel can be shifted by one pixel. Threshold is the allowable
+ * then each pixel can be shifted by two pixels. Threshold is the allowable
  * error for each pixel.
  *
- * This is not a symetric filter and the difference computed is not symetric
- * when AllowShift is on. Specifically in that case a pixel in SetImage input
- * will be compared to the matching pixel in the input as well as to the
- * input's eight connected neighbors. BUT... the opposite is not true. So for
- * example if a valid image (SetImage) has a single white pixel in it, it
- * will not find a match in the input image if the input image is black
- * (because none of the nine suspect pixels are white). In contrast, if there
- * is a single white pixel in the input image and the valid image (SetImage)
- * is all black it will match with no error because all it has to do is find
- * black pixels and even though the input image has a white pixel, its
- * neighbors are not white.
+ * This is a symmetric filter and the difference computed is symmetric.
+ * The resulting value is the maximum error of the two directions
+ * A->B and B->A
 */
 
 #ifndef vtkImageDifference_h
@@ -48,7 +40,7 @@ class VTKIMAGINGCORE_EXPORT vtkImageDifference : public vtkThreadedImageAlgorith
 public:
   static vtkImageDifference *New();
   vtkTypeMacro(vtkImageDifference,vtkThreadedImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -86,15 +78,15 @@ public:
 
   //@{
   /**
-   * Specify whether the comparison will allow a shift of one
-   * pixel between the images.  If set, then the minimum difference
+   * Specify whether the comparison will allow a shift of two
+   * pixels between the images.  If set, then the minimum difference
    * between input images will be used to determine the difference.
    * Otherwise, the difference is computed directly between pixels
    * of identical row/column values.
    */
-  vtkSetMacro(AllowShift,int);
-  vtkGetMacro(AllowShift,int);
-  vtkBooleanMacro(AllowShift,int);
+  vtkSetMacro(AllowShift,vtkTypeBool);
+  vtkGetMacro(AllowShift,vtkTypeBool);
+  vtkBooleanMacro(AllowShift,vtkTypeBool);
   //@}
 
   //@{
@@ -104,41 +96,51 @@ public:
    * you normally would leave this on. For imaging operations it
    * should be off.
    */
-  vtkSetMacro(Averaging,int);
-  vtkGetMacro(Averaging,int);
-  vtkBooleanMacro(Averaging,int);
+  vtkSetMacro(Averaging,vtkTypeBool);
+  vtkGetMacro(Averaging,vtkTypeBool);
+  vtkBooleanMacro(Averaging,vtkTypeBool);
+  //@}
+
+  //@{
+  /**
+   * When doing Averaging, adjust the threshold for the average
+   * by this factor. Defaults to 0.5 requiring a better match
+   */
+  vtkSetMacro(AverageThresholdFactor,double);
+  vtkGetMacro(AverageThresholdFactor,double);
   //@}
 
 protected:
   vtkImageDifference();
-  ~vtkImageDifference() VTK_OVERRIDE {}
+  ~vtkImageDifference() override {}
 
   // Parameters
-  int AllowShift;
+  vtkTypeBool AllowShift;
   int Threshold;
-  int Averaging;
+  vtkTypeBool Averaging;
 
   // Outputs
   const char *ErrorMessage;
   double Error;
   double ThresholdedError;
+  double AverageThresholdFactor;
 
   int RequestInformation (vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   int RequestUpdateExtent(vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   int RequestData(vtkInformation *,
                           vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
 
   void ThreadedRequestData(vtkInformation *request,
                                    vtkInformationVector **inputVector,
                                    vtkInformationVector *outputVector,
                                    vtkImageData ***inData,
                                    vtkImageData **outData,
-                                   int extent[6], int threadId) VTK_OVERRIDE;
+                                   int extent[6], int threadId) override;
 
   // Used for vtkMultiThreader operation.
   vtkImageDifferenceThreadData *ThreadData;
@@ -147,8 +149,8 @@ protected:
   vtkImageDifferenceSMPThreadLocal *SMPThreadData;
 
 private:
-  vtkImageDifference(const vtkImageDifference&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageDifference&) VTK_DELETE_FUNCTION;
+  vtkImageDifference(const vtkImageDifference&) = delete;
+  void operator=(const vtkImageDifference&) = delete;
 
   friend class vtkImageDifferenceSMPFunctor;
 };

@@ -60,9 +60,9 @@ vtkNIFTIImageReader::vtkNIFTIImageReader()
   this->RescaleSlope = 1.0;
   this->RescaleIntercept = 0.0;
   this->QFac = 1.0;
-  this->QFormMatrix = 0;
-  this->SFormMatrix = 0;
-  this->NIFTIHeader = 0;
+  this->QFormMatrix = nullptr;
+  this->SFormMatrix = nullptr;
+  this->NIFTIHeader = nullptr;
   this->PlanarRGB = false;
 }
 
@@ -254,7 +254,7 @@ bool vtkNIFTIImageReader::CheckExtension(
 char *vtkNIFTIImageReader::ReplaceExtension(
   const char *filename, const char *ext1, const char *ext2)
 {
-  char *newname = 0;
+  char *newname = nullptr;
 
   if (strlen(ext1) == 4 && ext1[0] == '.' &&
       strlen(ext2) == 4 && ext2[0] == '.')
@@ -316,7 +316,7 @@ char *vtkNIFTIImageReader::ReplaceExtension(
     }
 
     delete [] newname;
-    newname = 0;
+    newname = nullptr;
   }
 
   return newname;
@@ -376,7 +376,7 @@ int vtkNIFTIImageReader::CanReadFile(const char *filename)
   char *hdrname = vtkNIFTIImageReader::ReplaceExtension(
     filename, ".img", ".hdr");
 
-  if (hdrname == 0)
+  if (hdrname == nullptr)
   {
     return 0;
   }
@@ -438,8 +438,8 @@ int vtkNIFTIImageReader::RequestInformation(
   bool isLittleEndian = true;
 #endif
 
-  const char *filename = 0;
-  char *hdrname = 0;
+  const char *filename = nullptr;
+  char *hdrname = nullptr;
 
   if (this->FileNames)
   {
@@ -470,20 +470,20 @@ int vtkNIFTIImageReader::RequestInformation(
     filename = this->GetFileName();
   }
 
-  if (filename == 0)
+  if (filename == nullptr)
   {
     vtkErrorMacro("A FileName must be provided");
     this->SetErrorCode(vtkErrorCode::NoFileNameError);
     return 0;
   }
 
-  if (hdrname == 0)
+  if (hdrname == nullptr)
   {
     hdrname = vtkNIFTIImageReader::ReplaceExtension(
       filename, ".img", ".hdr");
   }
 
-  if (hdrname == 0)
+  if (hdrname == nullptr)
   {
     vtkErrorMacro("Unable to locate header for file " << filename);
     this->SetErrorCode(vtkErrorCode::CannotOpenFileError);
@@ -567,7 +567,7 @@ int vtkNIFTIImageReader::RequestInformation(
 
   // delete the NIFTIv1 header, use the NIFTIv2 header
   delete hdr1;
-  hdr1 = 0;
+  hdr1 = nullptr;
 
   if (!canRead)
   {
@@ -686,7 +686,7 @@ int vtkNIFTIImageReader::RequestInformation(
   int scalarType = 0;
   int numComponents = 0;
 
-  for (int i = 0; typeMap[2] != 0; i++)
+  for (int i = 0; typeMap[2] != nullptr; i++)
   {
     if (hdr2->datatype == typeMap[i][0])
     {
@@ -751,7 +751,7 @@ int vtkNIFTIImageReader::RequestInformation(
   // 1) via a quaternion (orientation and offset, i.e. rigid-body)
   // 2) via a matrix (used to store e.g. the results of registration)
   //
-  // A NIFTI file can have both a quaternion (qform) and matrix (xform)
+  // A NIFTI file can have both a quaternion (qform) and matrix (sform)
   // stored in the same file.  The NIFTI documentation recommends that
   // the qform be used to record the "scanner anatomical" coordinates
   // and that the sform, if present, be used to define a secondary
@@ -831,7 +831,7 @@ int vtkNIFTIImageReader::RequestInformation(
   //       NIFTI, which allows us to preserve positive spacing and retain
   //       a well-behaved rotation matrix, by using these equations:
   //
-  //         J = number_of_slices - j - 1
+  //         K = number_of_slices - k - 1
   //
   //         M14 = qoffset_x - (number_of_slices - 1)*pixdim[3]*R13
   //         M24 = qoffset_y - (number_of_slices - 1)*pixdim[3]*R23
@@ -839,7 +839,7 @@ int vtkNIFTIImageReader::RequestInformation(
   //
   //       This will give us data that will be well-behaved in VTK, at
   //       the expense of making VTK slice numbers not match with
-  //       the original NIFTI slice numbers.  NIFTY slice 0 will become
+  //       the original NIFTI slice numbers.  NIFTI slice 0 will become
   //       VTK slice N-1, and the order will be reversed.
   //
   // -- Matrix Representation --
@@ -850,7 +850,7 @@ int vtkNIFTIImageReader::RequestInformation(
   // flip-factor as there is in the quaternion representation.
   //
   // Let S be the matrix stored in the NIFTI header, and let M be our
-  // desired coordinate tranformation from VTK data coordinates X,Y,Z
+  // desired coordinate transformation from VTK data coordinates X,Y,Z
   // to NIFTI data coordinates x,y,z (see discussion above for more
   // information).  Let's consider the cases where the determinant
   // is positive, or negative.
@@ -895,12 +895,12 @@ int vtkNIFTIImageReader::RequestInformation(
   if (this->QFormMatrix)
   {
     this->QFormMatrix->Delete();
-    this->QFormMatrix = NULL;
+    this->QFormMatrix = nullptr;
   }
   if (this->SFormMatrix)
   {
     this->SFormMatrix->Delete();
-    this->SFormMatrix = NULL;
+    this->SFormMatrix = nullptr;
   }
 
   // Set the QFormMatrix from the quaternion data in the header.
@@ -1085,8 +1085,8 @@ int vtkNIFTIImageReader::RequestData(
 
   data->GetPointData()->GetScalars()->SetName("NIFTI");
 
-  const char *filename = 0;
-  char *imgname = 0;
+  const char *filename = nullptr;
+  char *imgname = nullptr;
 
   if (this->FileNames)
   {
@@ -1118,18 +1118,18 @@ int vtkNIFTIImageReader::RequestData(
     filename = this->GetFileName();
   }
 
-  if (filename == 0)
+  if (filename == nullptr)
   {
     vtkErrorMacro("A FileName must be provided");
     return 0;
   }
 
-  if (imgname == 0)
+  if (imgname == nullptr)
   {
     imgname = vtkNIFTIImageReader::ReplaceExtension(filename, ".hdr", ".img");
   }
 
-  if (imgname == 0)
+  if (imgname == nullptr)
   {
     vtkErrorMacro("Unable to locate image for file " << filename);
     return 0;
@@ -1192,7 +1192,7 @@ int vtkNIFTIImageReader::RequestData(
   }
 
   // add a buffer for planar-vector to packed-vector conversion
-  unsigned char *rowBuffer = 0;
+  unsigned char *rowBuffer = nullptr;
   if (vectorDim > 1 || planarRGB)
   {
     rowBuffer = new unsigned char[outSizeX*fileVoxelIncr];
@@ -1289,7 +1289,7 @@ int vtkNIFTIImageReader::RequestData(
     {
       // advance the pointer to the next row
       ptr += outSizeX*numComponents*scalarSize;
-      rowBuffer = 0;
+      rowBuffer = nullptr;
     }
     else
     {

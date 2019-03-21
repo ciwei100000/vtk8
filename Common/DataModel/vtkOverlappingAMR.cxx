@@ -28,14 +28,10 @@ vtkStandardNewMacro(vtkOverlappingAMR);
 vtkInformationKeyMacro(vtkOverlappingAMR,NUMBER_OF_BLANKED_POINTS,IdType);
 
 //----------------------------------------------------------------------------
-vtkOverlappingAMR::vtkOverlappingAMR()
-{
-}
+vtkOverlappingAMR::vtkOverlappingAMR() = default;
 
 //----------------------------------------------------------------------------
-vtkOverlappingAMR::~vtkOverlappingAMR()
-{
-}
+vtkOverlappingAMR::~vtkOverlappingAMR() = default;
 
 //----------------------------------------------------------------------------
 void vtkOverlappingAMR::PrintSelf(ostream& os, vtkIndent indent)
@@ -172,7 +168,7 @@ void vtkOverlappingAMR::SetOrigin(const double* origin)
 //----------------------------------------------------------------------------
 double* vtkOverlappingAMR::GetOrigin()
 {
-  return this->AMRInfo? this->AMRInfo->GetOrigin() : NULL;
+  return this->AMRInfo? this->AMRInfo->GetOrigin() : nullptr;
 }
 
 //----------------------------------------------------------------------------

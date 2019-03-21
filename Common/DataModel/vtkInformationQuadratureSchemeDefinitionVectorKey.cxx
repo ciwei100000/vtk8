@@ -54,9 +54,7 @@ vtkInformationQuadratureSchemeDefinitionVectorKey::vtkInformationQuadratureSchem
 }
 
 //----------------------------------------------------------------------------
-vtkInformationQuadratureSchemeDefinitionVectorKey::~vtkInformationQuadratureSchemeDefinitionVectorKey()
-{
-}
+vtkInformationQuadratureSchemeDefinitionVectorKey::~vtkInformationQuadratureSchemeDefinitionVectorKey() = default;
 
 //----------------------------------------------------------------------------
 vtkInformationQuadratureSchemeDefinitionVectorValue *
@@ -69,7 +67,7 @@ vtkInformationQuadratureSchemeDefinitionVectorValue *
 
   // If we don't already have a vector then associated,
   // we will create it here.
-  if(base == NULL)
+  if(base == nullptr)
   {
     base=new vtkInformationQuadratureSchemeDefinitionVectorValue;
     base->InitializeObjectBase();
@@ -141,7 +139,7 @@ void vtkInformationQuadratureSchemeDefinitionVectorKey::SetRange(
 //     static_cast<vtkInformationQuadratureSchemeDefinitionVectorValue *>(this->GetAsObjectBase(info));
 //
 //   return
-//     (base!=NULL && !base->GetVector().empty())?(&base->GetVector()[0]):0;
+//     (base!=nullptr && !base->GetVector().empty())?(&base->GetVector()[0]):0;
 // }
 
 
@@ -157,7 +155,7 @@ void vtkInformationQuadratureSchemeDefinitionVectorKey::GetRange(
     static_cast<vtkInformationQuadratureSchemeDefinitionVectorValue *>(this->GetAsObjectBase(info));
 
   // Source vector exists?
-  if (base==NULL)
+  if (base==nullptr)
   {
     vtkErrorWithObjectMacro(
       info,"Copy of empty vector has been requested.");
@@ -196,13 +194,13 @@ vtkQuadratureSchemeDefinition *vtkInformationQuadratureSchemeDefinitionVectorKey
   vtkInformationQuadratureSchemeDefinitionVectorValue* base =
     static_cast<vtkInformationQuadratureSchemeDefinitionVectorValue *>(this->GetAsObjectBase(info));
 
-  if (base==NULL
+  if (base==nullptr
       || idx>=static_cast<int>(base->GetVector().size()))
   {
     vtkErrorWithObjectMacro(info,
       "Information does not contain " << idx
       << " elements. Cannot return information value.");
-    return NULL;
+    return nullptr;
   }
 
   return base->GetVector()[idx];
@@ -214,7 +212,7 @@ int vtkInformationQuadratureSchemeDefinitionVectorKey::Size(vtkInformation* info
   vtkInformationQuadratureSchemeDefinitionVectorValue* base =
     static_cast<vtkInformationQuadratureSchemeDefinitionVectorValue *>(this->GetAsObjectBase(info));
 
-  return (base==NULL ? 0 : static_cast<int>(base->GetVector().size()));
+  return (base==nullptr ? 0 : static_cast<int>(base->GetVector().size()));
 }
 
 //----------------------------------------------------------------------------
@@ -240,9 +238,9 @@ void vtkInformationQuadratureSchemeDefinitionVectorKey::ShallowCopy(
   vtkInformationQuadratureSchemeDefinitionVectorValue* sourceBase =
     static_cast<vtkInformationQuadratureSchemeDefinitionVectorValue *>(this->GetAsObjectBase(source));
   // grab failed, just set dest to 0
-  if (sourceBase==0)
+  if (sourceBase==nullptr)
   {
-    this->SetAsObjectBase(dest,0);
+    this->SetAsObjectBase(dest,nullptr);
     return;
   }
   // Grab the dest vector
@@ -263,9 +261,9 @@ void vtkInformationQuadratureSchemeDefinitionVectorKey::DeepCopy(
   vtkInformationQuadratureSchemeDefinitionVectorValue* sourceBase =
     static_cast<vtkInformationQuadratureSchemeDefinitionVectorValue *>(this->GetAsObjectBase(source));
   // Grab failed, set dest to 0 and bail.
-  if (sourceBase==0)
+  if (sourceBase==nullptr)
   {
-    this->SetAsObjectBase(dest,0);
+    this->SetAsObjectBase(dest,nullptr);
     return;
   }
   // Grab the dest vector.
@@ -298,7 +296,7 @@ int vtkInformationQuadratureSchemeDefinitionVectorKey::SaveState(
 
   // If it doesn't exist or it's empty then we do nothing.
   int dictSize;
-  if( base==NULL ||
+  if( base==nullptr ||
       (dictSize=static_cast<int>(base->GetVector().size()))==0)
   {
     vtkGenericWarningMacro("Attempting to save an empty or non-existant key/value.");
@@ -307,7 +305,7 @@ int vtkInformationQuadratureSchemeDefinitionVectorKey::SaveState(
 
   // Quick sanity check, we're not nesting rather treating
   // this as a root, to be nested by the caller as needed.
-  if (root->GetName()!=NULL
+  if (root->GetName()!=nullptr
       || root->GetNumberOfNestedElements()>0)
   {
     vtkGenericWarningMacro("Can't save state to non-empty element.");
@@ -323,11 +321,11 @@ int vtkInformationQuadratureSchemeDefinitionVectorKey::SaveState(
   {
     // Grab a definition.
     vtkQuadratureSchemeDefinition *def=base->GetVector()[defnId];
-    if (def==NULL)
+    if (def==nullptr)
     {
       continue;
     }
-    // Nest XML representaion.
+    // Nest XML representation.
     vtkXMLDataElement *e=vtkXMLDataElement::New();
     def->SaveState(e);
     root->AddNestedElement(e);
@@ -395,20 +393,20 @@ void vtkInformationQuadratureSchemeDefinitionVectorKey::Print(
   vtkInformationQuadratureSchemeDefinitionVectorValue *base =
     static_cast<vtkInformationQuadratureSchemeDefinitionVectorValue *>(this->GetAsObjectBase(info));
   // Print each valid item.
-  if (base!=NULL)
+  if (base!=nullptr)
   {
     int n=static_cast<int>(base->GetVector().size());
     for (int i=0; i<n; ++i)
     {
       os << indent << "item " << i << "=";
       vtkQuadratureSchemeDefinition *itemBase=base->GetVector()[i];
-      if (itemBase!=NULL)
+      if (itemBase!=nullptr)
       {
         itemBase->PrintSelf(os,indent);
       }
       else
       {
-        os << "NULL;";
+        os << "nullptr;";
       }
       os << endl;
     }

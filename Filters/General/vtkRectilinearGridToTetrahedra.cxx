@@ -235,7 +235,7 @@ void vtkRectilinearGridToTetrahedra::GridToTetMesh(vtkRectilinearGrid *RectGrid,
   // If they want, we can add Scalar Data
   // to the Tets indicating the Voxel Id the tet
   // came from.
-  vtkIntArray *TetOriginalVoxel = NULL;
+  vtkIntArray *TetOriginalVoxel = nullptr;
   if (rememberVoxelId) {
     TetOriginalVoxel = vtkIntArray::New();
     TetOriginalVoxel->Allocate(12*numRec);
@@ -272,7 +272,7 @@ void vtkRectilinearGridToTetrahedra::GridToTetMesh(vtkRectilinearGrid *RectGrid,
   // Form the Mesh
   //
 
-  // Need to tell the tet mesh that every cell  is a Tetrahedron
+  // Need to tell the tet mesh that every cell is a Tetrahedron
   int numTet = TetList->GetNumberOfCells();
   int *CellTypes = new int[numTet];
   for(i=0;i<numTet;i++)
@@ -330,7 +330,7 @@ inline void vtkRectilinearGridToTetrahedra::TetrahedralizeAddCenterPoint(
 // According to the DivisionType
 // There had better be 0..8 voxel corners, though only 0..7 maybe needed.
 // Why? This function may add id 8 to VoxelCorners.
-// If a point needs to be inserted into the nodelist, itselt
+// If a point needs to be inserted into the nodelist, insert
 // it at NextPointId. Assume there is space in the nodelist.
 // Return the number of Tets Added.
 
@@ -357,19 +357,19 @@ Want right handed Tetrahedra...
 */
 
   // Split voxel in 2 along diagonal, 3 tets on either side
- static int tet6[6][4] =
+ static const int tet6[6][4] =
    {
      {1,6,2,3}, {1,6,7,5}, {1,6,3,7},
      {1,6,0,2}, {1,6,5,4}, {1,6,4,0},
    };
 
- static int tet5[5][4]      =
+ static const int tet5[5][4]      =
    { {0,1,4,2},{1,4,7,5},{1,4,2,7},{1,2,3,7},{2,7,4,6} };
- static int tet5flip[5][4]  =
+ static const int tet5flip[5][4]  =
    { {3,1,0,5}, {0,3,6,2}, {3,5,6,7}, {0,6,5,4}, {0,3,5,6}};
 
   // 12 tet to confirm to tet5
-  static int tet12_conform[12][4] = {
+  static const int tet12_conform[12][4] = {
   /* Left side */
     {8,2,4,0},
     {8,4,2,6},
@@ -540,7 +540,7 @@ int vtkRectilinearGridToTetrahedra::RequestData(
   if (this->TetraPerCell == VTK_VOXEL_TO_5_AND_12_TET)
   {
     vtkDataArray *TempVoxelSubdivisionType = RectGrid->GetCellData()->GetScalars();
-    if(TempVoxelSubdivisionType == NULL)
+    if(TempVoxelSubdivisionType == nullptr)
     {
       vtkErrorMacro(<< "Scalars to input Should be set!");
       return 1;

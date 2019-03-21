@@ -45,12 +45,13 @@ class vtkGeoSource;
 class vtkGeoTerrainNode;
 class vtkRenderer;
 
+#if !defined(VTK_LEGACY_REMOVE)
 class VTKGEOVISCORE_EXPORT vtkGeoTerrain : public vtkObject
 {
 public:
   static vtkGeoTerrain *New();
   vtkTypeMacro(vtkGeoTerrain,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * The source used to obtain geometry patches.
@@ -94,7 +95,7 @@ public:
 
 protected:
   vtkGeoTerrain();
-  ~vtkGeoTerrain() VTK_OVERRIDE;
+  ~vtkGeoTerrain() override;
 
   virtual void SetGeoSource(vtkGeoSource* source);
   vtkGeoSource* GeoSource;
@@ -135,8 +136,9 @@ protected:
   int MaxLevel;
 
 private:
-  vtkGeoTerrain(const vtkGeoTerrain&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGeoTerrain&) VTK_DELETE_FUNCTION;
+  vtkGeoTerrain(const vtkGeoTerrain&) = delete;
+  void operator=(const vtkGeoTerrain&) = delete;
 };
 
+#endif //VTK_LEGACY_REMOVE
 #endif

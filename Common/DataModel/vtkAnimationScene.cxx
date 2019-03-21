@@ -30,7 +30,6 @@ vtkAnimationScene::vtkAnimationScene()
   this->Loop = 0;
   this->InPlay = 0;
   this->StopPlay = 0;
-  this->AnimationTime = 0.0;
 
   this->AnimationCues = vtkCollection::New();
   this->AnimationCuesIterator = this->AnimationCues->NewIterator();
@@ -88,7 +87,7 @@ void vtkAnimationScene::SetTimeMode(int mode)
 {
   if (mode == vtkAnimationCue::TIMEMODE_NORMALIZED)
   {
-    // If noralized time mode is being set on the scene,
+    // If normalized time mode is being set on the scene,
     // ensure that none of the contained cues need relative times.
     vtkCollectionIterator *it = this->AnimationCuesIterator;
     for (it->InitTraversal(); !it->IsDoneWithTraversal(); it->GoToNextItem())
@@ -98,7 +97,7 @@ void vtkAnimationScene::SetTimeMode(int mode)
       if (cue && cue->GetTimeMode() != vtkAnimationCue::TIMEMODE_NORMALIZED)
       {
         vtkErrorMacro("Scene contains a cue in relative mode. It must be removed "
-          "or chaged to normalized mode before changing the scene time mode");
+          "or changed to normalized mode before changing the scene time mode");
         return;
       }
     }
@@ -109,7 +108,7 @@ void vtkAnimationScene::SetTimeMode(int mode)
 //----------------------------------------------------------------------------
 void vtkAnimationScene::InitializeChildren()
 {
-  // run thr all the cues and init them.
+  // run through all the cues and init them.
   vtkCollectionIterator *it = this->AnimationCuesIterator;
   for (it->InitTraversal(); !it->IsDoneWithTraversal(); it->GoToNextItem())
   {
@@ -298,5 +297,4 @@ void vtkAnimationScene::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "Loop: " << this->Loop << endl;
   os << indent << "InPlay: " << this->InPlay << endl;
   os << indent << "StopPlay: " << this->StopPlay << endl;
-  os << indent << "AnimationTime: " << this->AnimationTime << endl;
 }

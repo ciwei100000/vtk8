@@ -72,7 +72,7 @@ class vtkFieldData;
 class VTKFILTERSCORE_EXPORT vtkFieldDataToAttributeDataFilter : public vtkDataSetAlgorithm
 {
 public:
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   vtkTypeMacro(vtkFieldDataToAttributeDataFilter,vtkDataSetAlgorithm);
 
   /**
@@ -210,9 +210,9 @@ public:
    * Set the default Normalize() flag for those methods setting a default
    * Normalize value (e.g., SetScalarComponents).
    */
-  vtkSetMacro(DefaultNormalize,int);
-  vtkGetMacro(DefaultNormalize,int);
-  vtkBooleanMacro(DefaultNormalize,int);
+  vtkSetMacro(DefaultNormalize,vtkTypeBool);
+  vtkGetMacro(DefaultNormalize,vtkTypeBool);
+  vtkBooleanMacro(DefaultNormalize,vtkTypeBool);
   //@}
 
   // Helper functions, made public to support other classes
@@ -237,7 +237,7 @@ public:
   /**
    * Return an array of a particular name from field data and do error checking.
    */
-  static vtkDataArray *GetFieldArray(vtkFieldData *fd, char *name, int comp);
+  static vtkDataArray *GetFieldArray(vtkFieldData *fd, const char *name, int comp);
 
   /**
    * Specify an array name for one of the components.
@@ -253,13 +253,13 @@ public:
   /**
    * If output does not need exact extent, the I do not either.
    */
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
 protected:
   vtkFieldDataToAttributeDataFilter();
-  ~vtkFieldDataToAttributeDataFilter() VTK_OVERRIDE;
+  ~vtkFieldDataToAttributeDataFilter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE; //generate output data
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override; //generate output data
 
   int InputField;
   int OutputAttributeData;
@@ -296,7 +296,7 @@ protected:
   vtkIdType TCoordComponentRange[3][2]; //the range of the components to use
   int TCoordNormalize[3]; //flags control normalization
 
-  int DefaultNormalize;
+  vtkTypeBool DefaultNormalize;
 
   void ConstructScalars(int num, vtkFieldData *fd, vtkDataSetAttributes *attr,
                         vtkIdType componentRange[4][2], char *arrays[4],
@@ -320,8 +320,8 @@ protected:
   void ConstructFieldData(int num, vtkDataSetAttributes *attr);
 
 private:
-  vtkFieldDataToAttributeDataFilter(const vtkFieldDataToAttributeDataFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFieldDataToAttributeDataFilter&) VTK_DELETE_FUNCTION;
+  vtkFieldDataToAttributeDataFilter(const vtkFieldDataToAttributeDataFilter&) = delete;
+  void operator=(const vtkFieldDataToAttributeDataFilter&) = delete;
 };
 
 #endif

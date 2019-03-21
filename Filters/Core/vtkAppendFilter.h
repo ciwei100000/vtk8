@@ -42,7 +42,7 @@ public:
   static vtkAppendFilter *New();
 
   vtkTypeMacro(vtkAppendFilter,vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get any input of this filter.
@@ -57,7 +57,7 @@ public:
    * Note: The filter will only merge points if the ghost cell array doesn't exist
    * Defaults to Off
    */
-  vtkGetMacro(MergePoints,int);
+  vtkGetMacro(MergePoints,vtkTypeBool);
   //@}
 
   //@{
@@ -66,10 +66,10 @@ public:
    * Note: The filter will only merge points if the ghost cell array doesn't exist
    * Defaults to Off
    */
-  vtkSetMacro(MergePoints,int);
+  vtkSetMacro(MergePoints,vtkTypeBool);
   //@}
 
-  vtkBooleanMacro(MergePoints,int);
+  vtkBooleanMacro(MergePoints,vtkTypeBool);
 
   /**
    * Remove a dataset from the list of data to append.
@@ -94,13 +94,13 @@ public:
 
 protected:
   vtkAppendFilter();
-  ~vtkAppendFilter() VTK_OVERRIDE;
+  ~vtkAppendFilter() override;
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   int RequestUpdateExtent(vtkInformation *,
-                          vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+                          vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   // list of data sets to append together.
   // Here as a convenience.  It is a copy of the input array.
@@ -108,13 +108,13 @@ protected:
 
   //If true we will attempt to merge points. Must also not have
   //ghost cells defined.
-  int MergePoints;
+  vtkTypeBool MergePoints;
 
   int OutputPointsPrecision;
 
 private:
-  vtkAppendFilter(const vtkAppendFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAppendFilter&) VTK_DELETE_FUNCTION;
+  vtkAppendFilter(const vtkAppendFilter&) = delete;
+  void operator=(const vtkAppendFilter&) = delete;
 
   // Get all input data sets that have points, cells, or both.
   // Caller must delete the returned vtkDataSetCollection.

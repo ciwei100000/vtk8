@@ -55,7 +55,7 @@ public:
    * Standard methods for type information and printing.
    */
   vtkTypeMacro(vtkBarChartActor,vtkActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -79,9 +79,9 @@ public:
   /**
    * Enable/Disable the display of a plot title.
    */
-  vtkSetMacro(TitleVisibility, int);
-  vtkGetMacro(TitleVisibility, int);
-  vtkBooleanMacro(TitleVisibility, int);
+  vtkSetMacro(TitleVisibility, vtkTypeBool);
+  vtkGetMacro(TitleVisibility, vtkTypeBool);
+  vtkBooleanMacro(TitleVisibility, vtkTypeBool);
   //@}
 
   //@{
@@ -105,9 +105,9 @@ public:
   /**
    * Enable/Disable the display of bar labels.
    */
-  vtkSetMacro(LabelVisibility, int);
-  vtkGetMacro(LabelVisibility, int);
-  vtkBooleanMacro(LabelVisibility, int);
+  vtkSetMacro(LabelVisibility, vtkTypeBool);
+  vtkGetMacro(LabelVisibility, vtkTypeBool);
+  vtkBooleanMacro(LabelVisibility, vtkTypeBool);
   //@}
 
   //@{
@@ -153,9 +153,9 @@ public:
    * be created automatically unless the per plot legend symbol has been
    * set.
    */
-  vtkSetMacro(LegendVisibility, int);
-  vtkGetMacro(LegendVisibility, int);
-  vtkBooleanMacro(LegendVisibility, int);
+  vtkSetMacro(LegendVisibility, vtkTypeBool);
+  vtkGetMacro(LegendVisibility, vtkTypeBool);
+  vtkBooleanMacro(LegendVisibility, vtkTypeBool);
   //@}
 
   //@{
@@ -170,38 +170,38 @@ public:
   /**
    * Draw the bar plot.
    */
-  int RenderOverlay(vtkViewport*) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport* ) VTK_OVERRIDE {return 0;}
+  int RenderOverlay(vtkViewport*) override;
+  int RenderOpaqueGeometry(vtkViewport*) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport* ) override {return 0;}
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
   /**
    * Release any graphics resources that are being consumed by this actor.
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
 protected:
   vtkBarChartActor();
-  ~vtkBarChartActor() VTK_OVERRIDE;
+  ~vtkBarChartActor() override;
 
 private:
   vtkDataObject *Input;        // List of data sets to plot
   vtkIdType ArrayNumber;
   vtkIdType ComponentNumber;
-  int TitleVisibility;         // Should I see the title?
+  vtkTypeBool TitleVisibility;         // Should I see the title?
   char *Title;                 // The title string
   vtkTextProperty *TitleTextProperty;
-  int LabelVisibility;
+  vtkTypeBool LabelVisibility;
   vtkTextProperty *LabelTextProperty;
   vtkBarLabelArray *Labels;
-  int LegendVisibility;
+  vtkTypeBool LegendVisibility;
   vtkLegendBoxActor *LegendActor;
   vtkGlyphSource2D *GlyphSource;
 
@@ -238,8 +238,8 @@ private:
   int BuildPlot(vtkViewport*);
 
 private:
-  vtkBarChartActor(const vtkBarChartActor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBarChartActor&) VTK_DELETE_FUNCTION;
+  vtkBarChartActor(const vtkBarChartActor&) = delete;
+  void operator=(const vtkBarChartActor&) = delete;
 };
 
 

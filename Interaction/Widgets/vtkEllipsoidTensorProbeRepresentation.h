@@ -47,34 +47,36 @@ public:
    */
   vtkTypeMacro(vtkEllipsoidTensorProbeRepresentation,
                                 vtkTensorProbeRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
-  void BuildRepresentation() VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport *) VTK_OVERRIDE;
+  void BuildRepresentation() override;
+  int RenderOpaqueGeometry(vtkViewport *) override;
 
   /**
    * Can we pick the tensor glyph at the current cursor pos
    */
-  int SelectProbe( int pos[2] ) VTK_OVERRIDE;
+  int SelectProbe( int pos[2] ) override;
 
   //@{
   /**
    * See vtkProp for details.
    */
-  void GetActors(vtkPropCollection *) VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void GetActors(vtkPropCollection *) override;
+  void ReleaseGraphicsResources(vtkWindow *) override;
   //@}
+
+  /*
+  * Register internal Pickers within PickingManager
+  */
+  void RegisterPickers() override;
 
 protected:
   vtkEllipsoidTensorProbeRepresentation();
-  ~vtkEllipsoidTensorProbeRepresentation() VTK_OVERRIDE;
+  ~vtkEllipsoidTensorProbeRepresentation() override;
 
   // Get the interpolated tensor at the current position
   void EvaluateTensor( double t[9] );
-
-  // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
 
   vtkActor           * EllipsoidActor;
   vtkPolyDataMapper  * EllipsoidMapper;
@@ -85,9 +87,9 @@ protected:
 
 private:
   vtkEllipsoidTensorProbeRepresentation(const
-      vtkEllipsoidTensorProbeRepresentation&) VTK_DELETE_FUNCTION;
+      vtkEllipsoidTensorProbeRepresentation&) = delete;
   void operator=(const
-      vtkEllipsoidTensorProbeRepresentation&) VTK_DELETE_FUNCTION;
+      vtkEllipsoidTensorProbeRepresentation&) = delete;
 
 };
 

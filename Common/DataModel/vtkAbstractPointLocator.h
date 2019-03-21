@@ -43,7 +43,7 @@ public:
    * Standard type and print methods.
    */
   vtkTypeMacro(vtkAbstractPointLocator,vtkLocator);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -93,11 +93,13 @@ public:
                                       vtkIdList *result);
   //@}
 
+  //@{
   /**
-   * Provide an accessor to the bounds.
+   * Provide an accessor to the bounds. Valid after the locator is built.
    */
   virtual double *GetBounds() { return this->Bounds; }
   virtual void GetBounds(double*);
+  //@}
 
   //@{
   /**
@@ -109,14 +111,14 @@ public:
 
 protected:
   vtkAbstractPointLocator();
-  ~vtkAbstractPointLocator() VTK_OVERRIDE;
+  ~vtkAbstractPointLocator() override;
 
   double Bounds[6]; // bounds of points
   vtkIdType NumberOfBuckets; // total size of locator
 
 private:
-  vtkAbstractPointLocator(const vtkAbstractPointLocator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAbstractPointLocator&) VTK_DELETE_FUNCTION;
+  vtkAbstractPointLocator(const vtkAbstractPointLocator&) = delete;
+  void operator=(const vtkAbstractPointLocator&) = delete;
 };
 
 #endif

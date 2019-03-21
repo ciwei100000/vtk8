@@ -58,8 +58,8 @@ class VTKRENDERINGCORE_EXPORT vtkGraphMapper : public vtkMapper
 public:
   static vtkGraphMapper *New();
   vtkTypeMacro(vtkGraphMapper, vtkMapper);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
-  void Render(vtkRenderer *ren, vtkActor *act) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
+  void Render(vtkRenderer *ren, vtkActor *act) override;
 
   //@{
   /**
@@ -138,9 +138,9 @@ public:
   /**
    * Whether to enable/disable edges using array values.  Default is off.
    */
-  vtkSetMacro(EnableEdgesByArray, int);
-  vtkGetMacro(EnableEdgesByArray, int);
-  vtkBooleanMacro(EnableEdgesByArray, int);
+  vtkSetMacro(EnableEdgesByArray, vtkTypeBool);
+  vtkGetMacro(EnableEdgesByArray, vtkTypeBool);
+  vtkBooleanMacro(EnableEdgesByArray, vtkTypeBool);
   //@}
 
   //@{
@@ -155,9 +155,9 @@ public:
   /**
    * Whether to enable/disable vertices using array values.  Default is off.
    */
-  vtkSetMacro(EnableVerticesByArray, int);
-  vtkGetMacro(EnableVerticesByArray, int);
-  vtkBooleanMacro(EnableVerticesByArray, int);
+  vtkSetMacro(EnableVerticesByArray, vtkTypeBool);
+  vtkGetMacro(EnableVerticesByArray, vtkTypeBool);
+  vtkBooleanMacro(EnableVerticesByArray, vtkTypeBool);
   //@}
 
   //@{
@@ -173,7 +173,7 @@ public:
    * containing "type" as a value in the vertex attribute array specified by
    * IconArrayName.
    */
-  void AddIconType(char *type, int index);
+  void AddIconType(const char *type, int index);
 
   /**
    * Clear all icon mappings.
@@ -232,12 +232,12 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   /**
    * Get the mtime also considering the lookup table.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -251,8 +251,8 @@ public:
    * Return bounding box (array of six doubles) of data expressed as
    * (xmin,xmax, ymin,ymax, zmin,zmax).
    */
-  double *GetBounds() VTK_OVERRIDE;
-  void GetBounds(double* bounds) VTK_OVERRIDE
+  double *GetBounds() VTK_SIZEHINT(6) override;
+  void GetBounds(double* bounds) override
     { Superclass::GetBounds(bounds); }
 
   //@{
@@ -265,7 +265,7 @@ public:
 
 protected:
   vtkGraphMapper();
-  ~vtkGraphMapper() VTK_OVERRIDE;
+  ~vtkGraphMapper() override;
 
   //@{
   /**
@@ -281,8 +281,8 @@ protected:
 
   char* EnabledEdgesArrayName;
   char* EnabledVerticesArrayName;
-  int EnableEdgesByArray;
-  int EnableVerticesByArray;
+  vtkTypeBool EnableEdgesByArray;
+  vtkTypeBool EnableVerticesByArray;
 
   vtkGetStringMacro(IconArrayNameInternal);
   vtkSetStringMacro(IconArrayNameInternal);
@@ -311,14 +311,14 @@ protected:
   vtkLookupTable* EdgeLookupTable;
   vtkLookupTable* VertexLookupTable;
 
-  void ReportReferences(vtkGarbageCollector*) VTK_OVERRIDE;
+  void ReportReferences(vtkGarbageCollector*) override;
 
   // see algorithm for more info
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
 
 private:
-  vtkGraphMapper(const vtkGraphMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGraphMapper&) VTK_DELETE_FUNCTION;
+  vtkGraphMapper(const vtkGraphMapper&) = delete;
+  void operator=(const vtkGraphMapper&) = delete;
 
   // Helper function
   vtkPolyData* CreateCircle(bool filled);

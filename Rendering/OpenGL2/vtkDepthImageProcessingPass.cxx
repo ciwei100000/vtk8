@@ -44,6 +44,7 @@ Ph.D. thesis of Christian BOUCHENY.
 #include "vtkOpenGLFramebufferObject.h"
 #include "vtkTextureObject.h"
 #include "vtkOpenGLRenderWindow.h"
+#include "vtkOpenGLRenderUtilities.h"
 
 #include "vtkPixelBufferObject.h"
 #include "vtkCamera.h"
@@ -52,6 +53,8 @@ Ph.D. thesis of Christian BOUCHENY.
 // ----------------------------------------------------------------------------
 vtkDepthImageProcessingPass::vtkDepthImageProcessingPass()
 {
+  this->Origin[0] = 0;
+  this->Origin[1] = 0;
   this->Width = 0;
   this->Height = 0;
   this->W = 0;
@@ -60,9 +63,7 @@ vtkDepthImageProcessingPass::vtkDepthImageProcessingPass()
 }
 
 // ----------------------------------------------------------------------------
-vtkDepthImageProcessingPass::~vtkDepthImageProcessingPass()
-{
-}
+vtkDepthImageProcessingPass::~vtkDepthImageProcessingPass() = default;
 
 // ----------------------------------------------------------------------------
 void vtkDepthImageProcessingPass::PrintSelf(ostream& os, vtkIndent indent)
@@ -88,13 +89,13 @@ void vtkDepthImageProcessingPass::RenderDelegate(const vtkRenderState *s,
                                             vtkTextureObject *colortarget,
                                             vtkTextureObject *depthtarget)
 {
-  assert("pre: s_exists" && s!=0);
-  assert("pre: fbo_exists" && fbo!=0);
-  assert("pre: fbo_has_context" && fbo->GetContext()!=0);
-  assert("pre: colortarget_exists" && colortarget!=0);
-  assert("pre: colortarget_has_context" && colortarget->GetContext()!=0);
-  assert("pre: depthtarget_exists" && depthtarget!=0);
-  assert("pre: depthtarget_has_context" && depthtarget->GetContext()!=0);
+  assert("pre: s_exists" && s!=nullptr);
+  assert("pre: fbo_exists" && fbo!=nullptr);
+  assert("pre: fbo_has_context" && fbo->GetContext()!=nullptr);
+  assert("pre: colortarget_exists" && colortarget!=nullptr);
+  assert("pre: colortarget_has_context" && colortarget->GetContext()!=nullptr);
+  assert("pre: depthtarget_exists" && depthtarget!=nullptr);
+  assert("pre: depthtarget_has_context" && depthtarget->GetContext()!=nullptr);
 
   vtkRenderer *r=s->GetRenderer();
   vtkRenderState s2(r);
@@ -149,7 +150,12 @@ void vtkDepthImageProcessingPass::RenderDelegate(const vtkRenderState *s,
 
   // 2. Delegate render in FBO
   //glEnable(GL_DEPTH_TEST);
+  vtkOpenGLRenderUtilities::MarkDebugEvent(
+        "Start vtkDepthImageProcessingPass delegate render");
   this->DelegatePass->Render(&s2);
+  vtkOpenGLRenderUtilities::MarkDebugEvent(
+        "End vtkDepthImageProcessingPass delegate render");
+
   this->NumberOfRenderedProps+=
     this->DelegatePass->GetNumberOfRenderedProps();
 
@@ -165,19 +171,22 @@ void vtkDepthImageProcessingPass::RenderDelegate(const vtkRenderState *s,
 //
 void vtkDepthImageProcessingPass::ReadWindowSize(const vtkRenderState* s)
 {
-    assert("pre: s_exists" && s!=0);
+    assert("pre: s_exists" && s!=nullptr);
 
     vtkOpenGLFramebufferObject *fbo=vtkOpenGLFramebufferObject::SafeDownCast
       (s->GetFrameBuffer());
     vtkRenderer *r = s->GetRenderer();
-    if(fbo==0)
+    if(fbo==nullptr)
     {
-      r->GetTiledSize(&this->Width,&this->Height);
+      r->GetTiledSizeAndOrigin(&this->Width, &this->Height,
+                               &this->Origin[0], &this->Origin[1]);
     }
     else
     {
       int size[2];
       fbo->GetLastSize(size);
+      this->Origin[0] = 0;
+      this->Origin[1] = 0;
       this->Width=size[0];
       this->Height=size[1];
     }

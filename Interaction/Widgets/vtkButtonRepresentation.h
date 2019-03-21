@@ -22,7 +22,7 @@
  * defines an API, and a default implementation, that the vtkButtonWidget
  * interacts with to render itself in the scene.
  *
- * The vtkButtonWidget assumes an n-state button so that traveral methods
+ * The vtkButtonWidget assumes an n-state button so that traversal methods
  * are available for changing, querying and manipulating state. Derived
  * classed determine the actual appearance. The state is represented by an
  * integral value 0<=state<numStates.
@@ -50,7 +50,7 @@ public:
    * Standard methods for the class.
    */
   vtkTypeMacro(vtkButtonRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -70,7 +70,7 @@ public:
   //@{
   /**
    * Manipulate the state. Note that the NextState() and PreviousState() methods
-   * use modulo traveral. The "state" integral value will be clamped within
+   * use modulo traversal. The "state" integral value will be clamped within
    * the possible state values (0<=state<NumberOfStates). Note that subclasses
    * will override these methods in many cases.
    */
@@ -95,18 +95,18 @@ public:
    * a vtkCommand::HighlightEvent.
    */
   enum _HighlightState {HighlightNormal,HighlightHovering,HighlightSelecting};
-  void Highlight(int) VTK_OVERRIDE;
+  void Highlight(int) override;
   vtkGetMacro(HighlightState,int);
   //@}
 
   /**
    * Satisfy some of vtkProp's API.
    */
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE;
+  void ShallowCopy(vtkProp *prop) override;
 
 protected:
   vtkButtonRepresentation();
-  ~vtkButtonRepresentation() VTK_OVERRIDE;
+  ~vtkButtonRepresentation() override;
 
   // Values
   int NumberOfStates;
@@ -114,8 +114,8 @@ protected:
   int HighlightState;
 
 private:
-  vtkButtonRepresentation(const vtkButtonRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkButtonRepresentation&) VTK_DELETE_FUNCTION;
+  vtkButtonRepresentation(const vtkButtonRepresentation&) = delete;
+  void operator=(const vtkButtonRepresentation&) = delete;
 };
 
 #endif

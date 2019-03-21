@@ -21,7 +21,7 @@
  * This is the abstract device-independent superclass.
  *
  * @sa
- * vtkVolumeRayCastMapper vtkUnstructuredGridVolumeRayCastMapper
+ * vtkUnstructuredGridVolumeRayCastMapper
  * vtkOpenGLRayCastImageDisplayHelper
 */
 
@@ -41,7 +41,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkRayCastImageDisplayHelper : public vtkObject
 public:
   static vtkRayCastImageDisplayHelper *New();
   vtkTypeMacro(vtkRayCastImageDisplayHelper,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   virtual void RenderTexture( vtkVolume *vol, vtkRenderer *ren,
                               int imageMemorySize[2],
@@ -63,9 +63,9 @@ public:
                               vtkFixedPointRayCastImage *image,
                               float requestedDepth ) = 0;
 
-  vtkSetClampMacro( PreMultipliedColors, int, 0, 1 );
-  vtkGetMacro( PreMultipliedColors, int );
-  vtkBooleanMacro( PreMultipliedColors, int );
+  vtkSetClampMacro( PreMultipliedColors, vtkTypeBool, 0, 1 );
+  vtkGetMacro( PreMultipliedColors, vtkTypeBool );
+  vtkBooleanMacro( PreMultipliedColors, vtkTypeBool );
 
 
   //@{
@@ -86,18 +86,18 @@ public:
 
 protected:
   vtkRayCastImageDisplayHelper();
-  ~vtkRayCastImageDisplayHelper() VTK_OVERRIDE;
+  ~vtkRayCastImageDisplayHelper() override;
 
   /**
    * Have the colors already been multiplied by alpha?
    */
-  int PreMultipliedColors;
+  vtkTypeBool PreMultipliedColors;
 
   float PixelScale;
 
 private:
-  vtkRayCastImageDisplayHelper(const vtkRayCastImageDisplayHelper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRayCastImageDisplayHelper&) VTK_DELETE_FUNCTION;
+  vtkRayCastImageDisplayHelper(const vtkRayCastImageDisplayHelper&) = delete;
+  void operator=(const vtkRayCastImageDisplayHelper&) = delete;
 };
 
 #endif

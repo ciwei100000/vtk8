@@ -63,33 +63,33 @@ class VTKFILTERSGEOMETRY_EXPORT vtkGeometryFilter : public vtkPolyDataAlgorithm
 public:
   static vtkGeometryFilter *New();
   vtkTypeMacro(vtkGeometryFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Turn on/off selection of geometry by point id.
    */
-  vtkSetMacro(PointClipping,int);
-  vtkGetMacro(PointClipping,int);
-  vtkBooleanMacro(PointClipping,int);
+  vtkSetMacro(PointClipping,vtkTypeBool);
+  vtkGetMacro(PointClipping,vtkTypeBool);
+  vtkBooleanMacro(PointClipping,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off selection of geometry by cell id.
    */
-  vtkSetMacro(CellClipping,int);
-  vtkGetMacro(CellClipping,int);
-  vtkBooleanMacro(CellClipping,int);
+  vtkSetMacro(CellClipping,vtkTypeBool);
+  vtkGetMacro(CellClipping,vtkTypeBool);
+  vtkBooleanMacro(CellClipping,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off selection of geometry via bounding box.
    */
-  vtkSetMacro(ExtentClipping,int);
-  vtkGetMacro(ExtentClipping,int);
-  vtkBooleanMacro(ExtentClipping,int);
+  vtkSetMacro(ExtentClipping,vtkTypeBool);
+  vtkGetMacro(ExtentClipping,vtkTypeBool);
+  vtkBooleanMacro(ExtentClipping,vtkTypeBool);
   //@}
 
   //@{
@@ -135,7 +135,7 @@ public:
    * Set / get a (xmin,xmax, ymin,ymax, zmin,zmax) bounding box to clip data.
    */
   void SetExtent(double extent[6]);
-  double *GetExtent() { return this->Extent;};
+  double *GetExtent() VTK_SIZEHINT(6) { return this->Extent;};
   //@}
 
   //@{
@@ -144,9 +144,9 @@ public:
    * on, points with different point attributes (e.g., normals) are merged,
    * which may cause rendering artifacts.
    */
-  vtkSetMacro(Merging,int);
-  vtkGetMacro(Merging,int);
-  vtkBooleanMacro(Merging,int);
+  vtkSetMacro(Merging,vtkTypeBool);
+  vtkGetMacro(Merging,vtkTypeBool);
+  vtkBooleanMacro(Merging,vtkTypeBool);
   //@}
 
   //@{
@@ -166,35 +166,47 @@ public:
   /**
    * Return the MTime also considering the locator.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
+
+  //@{
+  /**
+   * Set/get the desired precision for the output types. See the documentation
+   * for the vtkAlgorithm::DesiredOutputPrecision enum for an explanation of
+   * the available precision settings. This only applies for data types where
+   * we create points as opposed to pass them, such as rectilinear grid.
+   */
+  void SetOutputPointsPrecision(int precision);
+  int GetOutputPointsPrecision() const;
+  //@}
 
 protected:
   vtkGeometryFilter();
-  ~vtkGeometryFilter() VTK_OVERRIDE;
+  ~vtkGeometryFilter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   //special cases for performance
   void PolyDataExecute(vtkDataSet *, vtkPolyData *);
   void UnstructuredGridExecute(vtkDataSet *, vtkPolyData *);
   void StructuredGridExecute(vtkDataSet *, vtkPolyData *, vtkInformation *);
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   vtkIdType PointMaximum;
   vtkIdType PointMinimum;
   vtkIdType CellMinimum;
   vtkIdType CellMaximum;
   double Extent[6];
-  int PointClipping;
-  int CellClipping;
-  int ExtentClipping;
+  vtkTypeBool PointClipping;
+  vtkTypeBool CellClipping;
+  vtkTypeBool ExtentClipping;
+  int OutputPointsPrecision;
 
-  int Merging;
+  vtkTypeBool Merging;
   vtkIncrementalPointLocator *Locator;
 private:
-  vtkGeometryFilter(const vtkGeometryFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGeometryFilter&) VTK_DELETE_FUNCTION;
+  vtkGeometryFilter(const vtkGeometryFilter&) = delete;
+  void operator=(const vtkGeometryFilter&) = delete;
 };
 
 #endif

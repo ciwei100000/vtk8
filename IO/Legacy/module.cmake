@@ -3,8 +3,9 @@ vtk_module(vtkIOLegacy
     StandAlone
   TEST_DEPENDS
     vtkFiltersAMR
+    vtkImagingCore
     vtkInteractionStyle
-    vtkRendering${VTK_RENDERING_BACKEND}
+    vtkRenderingOpenGL2
     vtkTestingRendering
   KIT
     vtkIO

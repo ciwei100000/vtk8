@@ -16,7 +16,7 @@
  * @class   vtkImageFFT
  * @brief    Fast Fourier Transform.
  *
- * vtkImageFFT implements a  fast Fourier transform.  The input
+ * vtkImageFFT implements a fast Fourier transform.  The input
  * can have real or complex data in any components and data types, but
  * the output is always complex doubles with real values in component0, and
  * imaginary values in component1.  The filter is fastest for images that
@@ -41,12 +41,12 @@ public:
 
 protected:
   vtkImageFFT() {}
-  ~vtkImageFFT()VTK_OVERRIDE {}
+  ~vtkImageFFT() override {}
 
   int IterativeRequestInformation(vtkInformation* in,
-                                          vtkInformation* out) VTK_OVERRIDE;
+                                          vtkInformation* out) override;
   int IterativeRequestUpdateExtent(vtkInformation* in,
-                                           vtkInformation* out) VTK_OVERRIDE;
+                                           vtkInformation* out) override;
 
   void ThreadedRequestData(
     vtkInformation* vtkNotUsed( request ),
@@ -55,10 +55,10 @@ protected:
     vtkImageData ***inDataVec,
     vtkImageData **outDataVec,
     int outExt[6],
-    int threadId) VTK_OVERRIDE;
+    int threadId) override;
 private:
-  vtkImageFFT(const vtkImageFFT&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageFFT&) VTK_DELETE_FUNCTION;
+  vtkImageFFT(const vtkImageFFT&) = delete;
+  void operator=(const vtkImageFFT&) = delete;
 };
 
 #endif

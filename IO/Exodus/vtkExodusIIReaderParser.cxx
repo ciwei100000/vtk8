@@ -35,7 +35,7 @@ vtkExodusIIReaderParser::vtkExodusIIReaderParser()
 vtkExodusIIReaderParser::~vtkExodusIIReaderParser()
 {
   this->SIL->Delete();
-  this->SIL = 0;
+  this->SIL = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ void vtkExodusIIReaderParser::StartElement( const char* tagName, const char** at
   }
   else if (tName == "mesh")
   {
-    assert(this->CurrentVertex.size() == 0);
+    assert(this->CurrentVertex.empty());
     this->CurrentVertex.push_back(this->BlocksVertex);
   }
   else if (tName == "blocks")
@@ -151,7 +151,7 @@ void vtkExodusIIReaderParser::StartElement( const char* tagName, const char** at
 
     if (id >= 0)
     {
-      if (this->InBlocks && this->BlockPartNumberString != "")
+      if (this->InBlocks && !this->BlockPartNumberString.empty())
       {
         // the name for the block is re-generated at the end.
         vtkIdType blockVertex = this->AddVertexToSIL(blockString);
@@ -189,26 +189,29 @@ void vtkExodusIIReaderParser::StartElement( const char* tagName, const char** at
   else if ( tName == "material" )
   {
     const char* material = this->GetValue("name",attrs);
-    const char* spec = this->GetValue("specification",attrs);
-    const char* desc = this->GetValue("description",attrs);
-    std::string node_name;
-    if (material && desc)
+    if (material)
     {
-      node_name = desc;
-    }
-    else
-    {
-      node_name = material;
-    }
-    if (material && spec)
-    {
-      node_name += " : ";
-      node_name += spec;
-    }
+      const char* spec = this->GetValue("specification",attrs);
+      const char* desc = this->GetValue("description",attrs);
+      std::string node_name;
+      if (desc)
+      {
+        node_name = desc;
+      }
+      else
+      {
+        node_name = material;
+      }
+      if (spec)
+      {
+        node_name += " : ";
+        node_name += spec;
+      }
 
-    vtkIdType vertex = this->AddVertexToSIL(node_name.c_str());
-    this->AddChildEdgeToSIL(this->MaterialsVertex, vertex);
-    this->MaterialName_To_VertexID[material] = vertex;
+      vtkIdType vertex = this->AddVertexToSIL(node_name.c_str());
+      this->AddChildEdgeToSIL(this->MaterialsVertex, vertex);
+      this->MaterialName_To_VertexID[material] = vertex;
+    }
   }
 }
 
@@ -254,7 +257,7 @@ void vtkExodusIIReaderParser::FinishedParsing()
 
   // * Is assembly was parsed, add cross links between assembly parts and blocks
   //   belonging to that part.
-  if (this->Part_To_VertexID.size() > 0)
+  if (!this->Part_To_VertexID.empty())
   {
     std::map<int, std::string>::iterator iterIS;
     for (iterIS = this->BlockID_To_Part.begin();
@@ -295,8 +298,8 @@ void vtkExodusIIReaderParser::FinishedParsing()
   }
 
   //// * If <material-assignments /> are not present use
-  //// <material-specification /> to construct material assignemnts.
-  if (this->BlockID_To_MaterialName.size() == 0)
+  //// <material-specification /> to construct material assignments.
+  if (this->BlockID_To_MaterialName.empty())
   {
     std::map<int, vtkIdType>::iterator iterII;
     for (iterII = blockID_to_partVertexID.begin();

@@ -26,7 +26,7 @@
 vtkStandardNewMacro(vtkImageContinuousDilate3D);
 
 //----------------------------------------------------------------------------
-// Construct an instance of vtkImageContinuousDilate3D fitler.
+// Construct an instance of vtkImageContinuousDilate3D filter.
 // By default zero values are dilated.
 vtkImageContinuousDilate3D::vtkImageContinuousDilate3D()
 {
@@ -46,7 +46,7 @@ vtkImageContinuousDilate3D::~vtkImageContinuousDilate3D()
   if (this->Ellipse)
   {
     this->Ellipse->Delete();
-    this->Ellipse = NULL;
+    this->Ellipse = nullptr;
   }
 }
 

@@ -30,8 +30,10 @@
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLRenderer.h"
 #include "vtkRenderPassCollection.h"
+#include "vtkOpenGLState.h"
 #include "vtkRenderState.h"
 #include "vtkSequencePass.h"
+#include "vtkShaderProgram.h"
 #include "vtkShadowMapBakerPass.h"
 #include "vtkTextureObject.h"
 
@@ -124,22 +126,22 @@ vtkShadowMapBakerPass::vtkShadowMapBakerPass()
   vtkNew<vtkSequencePass> seqP;
   vtkNew<vtkLightsPass> lightP;
   vtkNew<vtkOpaquePass> opaqueP;
-  camP->SetDelegatePass(seqP.Get());
+  camP->SetDelegatePass(seqP);
   vtkNew<vtkRenderPassCollection> rpc;
-  rpc->AddItem(lightP.Get());
-  rpc->AddItem(opaqueP.Get());
-  seqP->SetPasses(rpc.Get());
+  rpc->AddItem(lightP);
+  rpc->AddItem(opaqueP);
+  seqP->SetPasses(rpc);
 
-  this->OpaqueSequence=0;
-  this->SetOpaqueSequence(camP.Get());
+  this->OpaqueSequence=nullptr;
+  this->SetOpaqueSequence(camP);
 
-  this->CompositeZPass=0;
+  this->CompositeZPass=nullptr;
 
   this->Resolution=1024;
 
-  this->FrameBufferObject=0;
-  this->ShadowMaps=0;
-  this->LightCameras=0;
+  this->FrameBufferObject=nullptr;
+  this->ShadowMaps=nullptr;
+  this->LightCameras=nullptr;
 
   this->HasShadows=false;
   this->NeedUpdate=true;
@@ -148,26 +150,26 @@ vtkShadowMapBakerPass::vtkShadowMapBakerPass()
 // ----------------------------------------------------------------------------
 vtkShadowMapBakerPass::~vtkShadowMapBakerPass()
 {
-  if(this->OpaqueSequence!=0)
+  if(this->OpaqueSequence!=nullptr)
   {
     this->OpaqueSequence->Delete();
   }
 
-  if(this->CompositeZPass!=0)
+  if(this->CompositeZPass!=nullptr)
   {
    this->CompositeZPass->Delete();
   }
 
-  if(this->FrameBufferObject!=0)
+  if(this->FrameBufferObject!=nullptr)
   {
     vtkErrorMacro(<<"FrameBufferObject should have been deleted in ReleaseGraphicsResources().");
   }
 
-  if(this->ShadowMaps!=0)
+  if(this->ShadowMaps!=nullptr)
   {
     vtkErrorMacro(<<"ShadowMaps should have been deleted in ReleaseGraphicsResources().");
   }
-  if(this->LightCameras!=0)
+  if(this->LightCameras!=nullptr)
   {
     vtkErrorMacro(<<"LightCameras should have been deleted in ReleaseGraphicsResources().");
   }
@@ -179,7 +181,7 @@ void vtkShadowMapBakerPass::PrintSelf(ostream& os, vtkIndent indent)
   this->Superclass::PrintSelf(os,indent);
 
   os << indent << "OpaqueSequence: ";
-  if(this->OpaqueSequence!=0)
+  if(this->OpaqueSequence!=nullptr)
   {
     this->OpaqueSequence->PrintSelf(os,indent);
   }
@@ -189,7 +191,7 @@ void vtkShadowMapBakerPass::PrintSelf(ostream& os, vtkIndent indent)
   }
 
   os << indent << "CompositeZPass: ";
-  if(this->CompositeZPass!=0)
+  if(this->CompositeZPass!=nullptr)
   {
     this->CompositeZPass->PrintSelf(os,indent);
   }
@@ -210,7 +212,7 @@ bool vtkShadowMapBakerPass::GetHasShadows()
 // ----------------------------------------------------------------------------
 bool vtkShadowMapBakerPass::LightCreatesShadow(vtkLight *l)
 {
-  assert("pre: l_exists" && l!=0);
+  assert("pre: l_exists" && l!=nullptr);
 
   return !l->LightTypeIsHeadlight() &&
     (!l->GetPositional() || l->GetConeAngle()<180.0);
@@ -246,7 +248,7 @@ void vtkShadowMapBakerPass::SetUpToDate()
 // \pre s_exists: s!=0
 void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
 {
-  assert("pre: s_exists" && s!=0);
+  assert("pre: s_exists" && s!=nullptr);
 
   vtkOpenGLClearErrorMacro();
 
@@ -256,23 +258,13 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
   vtkOpenGLRenderer *r=static_cast<vtkOpenGLRenderer *>(s->GetRenderer());
   vtkOpenGLRenderWindow *context=static_cast<vtkOpenGLRenderWindow *>(
     r->GetRenderWindow());
+  vtkOpenGLState *ostate = context->GetState();
 
-  if(this->OpaqueSequence!=0)
+  if(this->OpaqueSequence!=nullptr)
   {
     // Disable the scissor test during the shadow map pass.
-    GLboolean saved_scissor_test;
-    glGetBooleanv(GL_SCISSOR_TEST, &saved_scissor_test);
-    glDisable(GL_SCISSOR_TEST);
-
-    // Test for Hardware support. If not supported, just render the delegate.
-    bool supported=vtkOpenGLFramebufferObject::IsSupported(context);
-
-    if(!supported)
-    {
-      vtkErrorMacro("FBOs are not supported by the context. Cannot use shadow mapping.");
-      // Nothing to bake.
-      return;
-    }
+    vtkOpenGLState::ScopedglEnableDisable ssaver(ostate, GL_SCISSOR_TEST);
+    ostate->vtkglDisable(GL_SCISSOR_TEST);
 
     // Shadow mapping requires:
     // 1. at least one spotlight, not front light
@@ -284,14 +276,14 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
     vtkLight *l=lights->GetNextItem();
     bool hasLight=false;
     bool hasOccluder=false;
-    while(!hasLight && l!=0)
+    while(!hasLight && l!=nullptr)
     {
       hasLight=l->GetSwitch() && this->LightCreatesShadow(l);
       l=lights->GetNextItem();
     }
 
     int propArrayCount=0;
-    vtkProp **propArray=0;
+    vtkProp **propArray=nullptr;
     vtkMTimeType latestPropTime=0;
 
     if(hasLight)
@@ -302,7 +294,7 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
       props->InitTraversal(pit);
       vtkProp *p=props->GetNextProp(pit);
       propArray=new vtkProp*[props->GetNumberOfItems()];
-      while(p!=0)
+      while(p!=nullptr)
       {
         vtkMTimeType mTime=p->GetMTime();
         if(latestPropTime<mTime)
@@ -335,7 +327,7 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
     {
       lights->InitTraversal();
       l = lights->GetNextItem();
-      while(!this->NeedUpdate && l != 0)
+      while(!this->NeedUpdate && l != nullptr)
       {
         this->NeedUpdate = this->LastRenderTime < l->GetMTime();
         l=lights->GetNextItem();
@@ -356,11 +348,11 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
         ++i;
       }
     }
-    size_t lightIndex=0;
+
     bool autoLight = r->GetAutomaticLightCreation()==1;
     vtkCamera *realCamera=r->GetActiveCamera();
     vtkRenderState s2(r);
-    if(this->NeedUpdate) // create or re-create the shadow maps.
+    if (this->NeedUpdate) // create or re-create the shadow maps.
     {
 #ifdef VTK_SHADOW_MAP_BAKER_PASS_DEBUG
       cout << "update the shadow maps" << endl;
@@ -375,19 +367,25 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
       // light cameras)
       s2.SetPropArrayAndCount(propArray,propArrayCount);
 
-      if(this->FrameBufferObject==0)
+      if (this->FrameBufferObject==nullptr)
       {
         this->FrameBufferObject=vtkOpenGLFramebufferObject::New();
         this->FrameBufferObject->SetContext(context);
+        this->FrameBufferObject->SaveCurrentBindingsAndBuffers();
+        this->FrameBufferObject->Resize(this->Resolution, this->Resolution);
+        this->FrameBufferObject->AddDepthAttachment();
       }
-      this->FrameBufferObject->SaveCurrentBindingsAndBuffers();
+      else
+      {
+        this->FrameBufferObject->SaveCurrentBindingsAndBuffers();
+      }
       this->FrameBufferObject->Bind();
       s2.SetFrameBuffer(this->FrameBufferObject);
 
       lights->InitTraversal();
       l=lights->GetNextItem();
       size_t numberOfShadowLights=0;
-      while(l!=0)
+      while (l!=nullptr)
       {
         if(l->GetSwitch() && this->LightCreatesShadow(l))
         {
@@ -396,27 +394,27 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
         l=lights->GetNextItem();
       }
 
-      if(this->ShadowMaps!=0 &&
+      if (this->ShadowMaps!=nullptr &&
          this->ShadowMaps->size()!=numberOfShadowLights)
       {
         delete this->ShadowMaps;
-        this->ShadowMaps=0;
+        this->ShadowMaps=nullptr;
       }
 
-      if(this->ShadowMaps==0)
+      if (this->ShadowMaps==nullptr)
       {
         this->ShadowMaps = new std::vector<vtkSmartPointer<vtkTextureObject> >();
         this->ShadowMaps->resize(numberOfShadowLights);
       }
 
-      if(this->LightCameras!=0 &&
+      if (this->LightCameras!=nullptr &&
          this->LightCameras->size()!=numberOfShadowLights)
       {
         delete this->LightCameras;
-        this->LightCameras=0;
+        this->LightCameras=nullptr;
       }
 
-      if(this->LightCameras==0)
+      if (this->LightCameras==nullptr)
       {
         this->LightCameras = new std::vector<vtkSmartPointer<vtkCamera> >();
         this->LightCameras->resize(numberOfShadowLights);
@@ -432,10 +430,10 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
       props->InitTraversal(cookie);
       vtkProp* prop;
       bool first = true;
-      while((prop = props->GetNextProp(cookie)) != NULL)
+      while ((prop = props->GetNextProp(cookie)) != nullptr)
       {
         const double* bounds = prop->GetBounds();
-        if(first)
+        if (first)
         {
           bb[0] = bounds[0];
           bb[1] = bounds[1];
@@ -455,54 +453,38 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
         }
         first = false;
       }
+
       lights->InitTraversal();
-      l=lights->GetNextItem();
-      lightIndex=0;
-      while(l!=0)
+      l = lights->GetNextItem();
+      this->CurrentLightIndex = 0;
+
+      // Setup property keys for actors:
+      this->PreRender(s);
+
+      while(l!=nullptr)
       {
         if(l->GetSwitch() && this->LightCreatesShadow(l))
         {
-          vtkTextureObject *map = (*this->ShadowMaps)[lightIndex];
-          if(map==0)
+          vtkTextureObject *map = (*this->ShadowMaps)[this->CurrentLightIndex];
+          if(map==nullptr)
           {
             map=vtkTextureObject::New();
-            (*this->ShadowMaps)[lightIndex]=map;
+            (*this->ShadowMaps)[this->CurrentLightIndex]=map;
+            map->SetMagnificationFilter(vtkTextureObject::Linear);
+            map->SetMinificationFilter(vtkTextureObject::Linear);
+            map->SetWrapS(vtkTextureObject::ClampToEdge);
+            map->SetWrapT(vtkTextureObject::ClampToEdge);
+            map->SetWrapR(vtkTextureObject::ClampToEdge);
+            map->SetContext(context);
+            map->Allocate2D(this->Resolution, this->Resolution,
+              1, VTK_FLOAT);
             map->Delete();
           }
-
-          map->SetContext(context);
-//          map->SetDepthTextureCompare(true);
-//          map->SetLinearMagnification(true);
-//          map->SetMinificationFilter(vtkTextureObject::Linear);
-          map->SetLinearMagnification(false);
-          map->SetMinificationFilter(vtkTextureObject::Nearest);
-          map->SetWrapS(vtkTextureObject::ClampToEdge);
-          map->SetWrapT(vtkTextureObject::ClampToEdge);
-          map->SetWrapR(vtkTextureObject::ClampToEdge);
-//          map->SetDepthTextureCompareFunction(
-//            vtkTextureObject::Lequal);
-          if(map->GetWidth()!=this->Resolution ||
-             map->GetHeight()!=this->Resolution)
-          {
-            // map->Create2D(this->Resolution,this->Resolution,
-            //               1,VTK_VOID,false);
-            map->AllocateDepth(this->Resolution, this->Resolution,
-//              vtkTextureObject::Float32);
-              vtkTextureObject::Fixed16);
-//              vtkTextureObject::Native);
-          }
-          map->Activate();
-          this->FrameBufferObject->AddDepthAttachment(
-            this->FrameBufferObject->GetBothMode(), map);
-          this->FrameBufferObject->StartNonOrtho(
-            static_cast<int>(this->Resolution),
-            static_cast<int>(this->Resolution));
-
-          vtkCamera *lightCamera = (*this->LightCameras)[lightIndex];
-          if(lightCamera==0)
+          vtkCamera *lightCamera = (*this->LightCameras)[this->CurrentLightIndex];
+          if(lightCamera==nullptr)
           {
             lightCamera=vtkOpenGLCamera::New();
-            (*this->LightCameras)[lightIndex] = lightCamera;
+            (*this->LightCameras)[this->CurrentLightIndex] = lightCamera;
             lightCamera->Delete();
           }
 
@@ -510,16 +492,28 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
           this->BuildCameraLight(l,bb, lightCamera);
           r->SetActiveCamera(lightCamera);
 
-          glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
-          glDepthMask(GL_TRUE);
+          //map->Activate();
+          this->FrameBufferObject->AddColorAttachment(
+            this->FrameBufferObject->GetBothMode(), 0, map);
+          this->FrameBufferObject->ActivateBuffer(0);
+          this->FrameBufferObject->Resize(
+            static_cast<int>(this->Resolution),
+            static_cast<int>(this->Resolution));
+          this->FrameBufferObject->StartNonOrtho(
+            static_cast<int>(this->Resolution),
+            static_cast<int>(this->Resolution));
 
-          glEnable(GL_DEPTH_TEST);
+//          glColorMask(GL_TRUE,GL_FALSE,GL_FALSE,GL_FALSE);
+          ostate->vtkglDepthMask(GL_TRUE);
+          //glClear(GL_DEPTH_BUFFER_BIT);
+
+          ostate->vtkglEnable(GL_DEPTH_TEST);
           this->OpaqueSequence->Render(&s2);
 
           this->NumberOfRenderedProps+=
             this->OpaqueSequence->GetNumberOfRenderedProps();
 
-          if(this->CompositeZPass!=0)
+          if(this->CompositeZPass!=nullptr)
           {
             this->CompositeZPass->Render(&s2);
           }
@@ -532,33 +526,28 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
 #endif
 
           map->Deactivate();
-          ++lightIndex;
+          ++this->CurrentLightIndex;
         }
         l=lights->GetNextItem();
       }
+      this->PostRender(s);
       this->LastRenderTime.Modified(); // was a BUG
 
       // back to the original frame buffer.
-      this->FrameBufferObject->UnBind();
       this->FrameBufferObject->RestorePreviousBindingsAndBuffers();
 
       // Restore real camera.
       r->SetActiveCamera(realCamera);
       realCamera->UnRegister(this);
 
-      glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-      glEnable(GL_DEPTH_TEST);
-      glDepthFunc(GL_LEQUAL);
+      ostate->vtkglColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+      ostate->vtkglEnable(GL_DEPTH_TEST);
+      ostate->vtkglDepthFunc(GL_LEQUAL);
 
       r->SetAutomaticLightCreation(autoLight);
 
     } // end of the shadow map creations.
     delete[] propArray;
-
-    if (saved_scissor_test)
-    {
-      glEnable(GL_SCISSOR_TEST);
-    }
   }
   else
   {
@@ -566,6 +555,59 @@ void vtkShadowMapBakerPass::Render(const vtkRenderState *s)
   }
 
   vtkOpenGLCheckErrorMacro("failed after Render");
+}
+
+//------------------------------------------------------------------------------
+bool vtkShadowMapBakerPass::SetShaderParameters(
+  vtkShaderProgram *program,
+  vtkAbstractMapper*, vtkProp*,
+  vtkOpenGLVertexArrayObject* vtkNotUsed(VAO))
+{
+  vtkCamera *lightCamera = (*this->LightCameras)[this->CurrentLightIndex];
+  double *crange = lightCamera->GetClippingRange();
+
+  program->SetUniformf("depthC", 11.0);
+  program->SetUniformf("nearZ", crange[0]);
+  program->SetUniformf("farZ", crange[1]);
+
+  // clipz = (2.0*frag.z - 1)/frag.w
+  // Eyez = 2fn/(- f - n) + (f - n)*clipz/( - f - n);
+  // Store 0 to 1.0 as near to far
+
+  // for perspective..
+  // use (1.0/fragCoord.w - near)/(far - near)
+  // which is distance from the lights near plane
+  // scaled from 0.0 to 1.0 where 1.0 is the far plane
+
+  // for parallel it is linear in Z
+
+  return true;
+}
+
+//------------------------------------------------------------------------------
+bool vtkShadowMapBakerPass::PreReplaceShaderValues(
+  std::string &,
+  std::string &,
+  std::string &fragmentShader,
+  vtkAbstractMapper *,
+  vtkProp *)
+{
+  vtkShaderProgram::Substitute(fragmentShader,"//VTK::Light::Dec",
+    "//VTK::Light::Dec\n"
+    "uniform float nearZ;\n"
+    "uniform float farZ;\n"
+    "uniform float depthC;\n",
+    false);
+  vtkShaderProgram::Substitute(fragmentShader,"//VTK::Light::Impl",
+    "//VTK::Light::Impl\n"
+    "float ldepth =  gl_FragCoord.z;\n" // parallel proj
+    "if (cameraParallel == 0) { ldepth =  (1.0/gl_FragCoord.w - nearZ)/(farZ - nearZ); }\n"
+    //"gl_FragData[0].r = ldepth;\n",
+    "gl_FragData[0].r = exp(depthC * ldepth);\n",
+    //"gl_FragDepth = gl_FragDepth;\n",
+    false);
+
+  return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -578,8 +620,8 @@ void vtkShadowMapBakerPass::BuildCameraLight(vtkLight *light,
                                         double *bb,
                                         vtkCamera* lcamera)
 {
-  assert("pre: light_exists" && light!=0);
-  assert("pre: camera_exists" && lcamera!=0);
+  assert("pre: light_exists" && light!=nullptr);
+  assert("pre: camera_exists" && lcamera!=nullptr);
 
   lcamera->SetPosition(light->GetTransformedPosition());
   lcamera->SetFocalPoint(light->GetTransformedFocalPoint());
@@ -601,14 +643,18 @@ void vtkShadowMapBakerPass::BuildCameraLight(vtkLight *light,
 
     lcamera->SetParallelProjection(0);
     // view angle is an aperture, but cone (or light) angle is between
-    // the axis of the cone and a ray along the edge  of the cone.
+    // the axis of the cone and a ray along the edge of the cone.
     lcamera->SetViewAngle(light->GetConeAngle()*2.0);
     // initial clip=(0.1,1000). mNear>0, mFar>mNear);
     double mNearmin = (mFar - mNear) / 100.0;
     if(mNear < mNearmin)
+    {
       mNear = mNearmin;
+    }
     if(mFar < mNearmin)
+    {
       mFar = 2.0*mNearmin;
+    }
     lcamera->SetClippingRange(mNear,mFar);
   }
   else
@@ -633,7 +679,7 @@ void vtkShadowMapBakerPass::BuildCameraLight(vtkLight *light,
     lcamera->SetPosition(realPos);
     lcamera->SetFocalPoint(realPos[0] + dir[0], realPos[1] + dir[1], realPos[2] + dir[2]);
     double scale = (sizex > sizey ? sizex: sizey);
-    lcamera->SetParallelScale(scale);
+    lcamera->SetParallelScale(scale/2.0);
     lcamera->SetClippingRange(1.0, 1.0 + maxz - minz);
 
   }
@@ -646,26 +692,26 @@ void vtkShadowMapBakerPass::BuildCameraLight(vtkLight *light,
 // \pre w_exists: w!=0
 void vtkShadowMapBakerPass::ReleaseGraphicsResources(vtkWindow *w)
 {
-  assert("pre: w_exists" && w!=0);
-  if(this->OpaqueSequence!=0)
+  assert("pre: w_exists" && w!=nullptr);
+  if(this->OpaqueSequence!=nullptr)
   {
     this->OpaqueSequence->ReleaseGraphicsResources(w);
   }
 
-  if(this->CompositeZPass!=0)
+  if(this->CompositeZPass!=nullptr)
   {
     this->CompositeZPass->ReleaseGraphicsResources(w);
   }
 
-  if(this->FrameBufferObject!=0)
+  if(this->FrameBufferObject!=nullptr)
   {
     this->FrameBufferObject->Delete();
-    this->FrameBufferObject=0;
+    this->FrameBufferObject=nullptr;
   }
 
   delete this->ShadowMaps;
-  this->ShadowMaps=0;
+  this->ShadowMaps=nullptr;
 
   delete this->LightCameras;
-  this->LightCameras=0;
+  this->LightCameras=nullptr;
 }

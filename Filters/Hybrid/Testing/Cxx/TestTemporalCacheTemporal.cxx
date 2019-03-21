@@ -37,7 +37,7 @@ public:
   static vtkTestTemporalCacheTemporalExecuteCallback *New()
   { return new vtkTestTemporalCacheTemporalExecuteCallback; }
 
-  void Execute(vtkObject *caller, unsigned long, void*) VTK_OVERRIDE
+  void Execute(vtkObject *caller, unsigned long, void*) override
   {
     // count the number of timesteps requested
     vtkTemporalFractal *f = vtkTemporalFractal::SafeDownCast(caller);
@@ -52,7 +52,7 @@ public:
 //-------------------------------------------------------------------------
 int TestTemporalCacheTemporal(int , char *[])
 {
-  // we have to use a compsite pipeline
+  // we have to use a composite pipeline
   vtkCompositeDataPipeline* prototype = vtkCompositeDataPipeline::New();
   vtkAlgorithm::SetDefaultExecutivePrototype(prototype);
   prototype->Delete();
@@ -141,7 +141,7 @@ int TestTemporalCacheTemporal(int , char *[])
     }
   }
 
-  vtkAlgorithm::SetDefaultExecutivePrototype(0);
+  vtkAlgorithm::SetDefaultExecutivePrototype(nullptr);
 
   if (executecb->Count == 8)
   {

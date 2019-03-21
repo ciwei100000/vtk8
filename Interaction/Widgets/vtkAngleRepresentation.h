@@ -44,7 +44,7 @@ public:
    * Standard VTK methods.
    */
   vtkTypeMacro(vtkAngleRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -106,7 +106,7 @@ public:
 
   //@{
   /**
-   * Specify the format to use for labelling the angle. Note that an empty
+   * Specify the format to use for labeling the angle. Note that an empty
    * string results in no label, or a format string without a "%" character
    * will not print the angle value.
    */
@@ -119,15 +119,15 @@ public:
    * Special methods for turning off the rays and arc that define the cone
    * and arc of the angle.
    */
-  vtkSetMacro(Ray1Visibility,int);
-  vtkGetMacro(Ray1Visibility,int);
-  vtkBooleanMacro(Ray1Visibility,int);
-  vtkSetMacro(Ray2Visibility,int);
-  vtkGetMacro(Ray2Visibility,int);
-  vtkBooleanMacro(Ray2Visibility,int);
-  vtkSetMacro(ArcVisibility,int);
-  vtkGetMacro(ArcVisibility,int);
-  vtkBooleanMacro(ArcVisibility,int);
+  vtkSetMacro(Ray1Visibility,vtkTypeBool);
+  vtkGetMacro(Ray1Visibility,vtkTypeBool);
+  vtkBooleanMacro(Ray1Visibility,vtkTypeBool);
+  vtkSetMacro(Ray2Visibility,vtkTypeBool);
+  vtkGetMacro(Ray2Visibility,vtkTypeBool);
+  vtkBooleanMacro(Ray2Visibility,vtkTypeBool);
+  vtkSetMacro(ArcVisibility,vtkTypeBool);
+  vtkGetMacro(ArcVisibility,vtkTypeBool);
+  vtkBooleanMacro(ArcVisibility,vtkTypeBool);
   //@}
 
   // Used to communicate about the state of the representation
@@ -137,16 +137,16 @@ public:
   /**
    * These are methods that satisfy vtkWidgetRepresentation's API.
    */
-  void BuildRepresentation() VTK_OVERRIDE;
-  int ComputeInteractionState(int X, int Y, int modify=0) VTK_OVERRIDE;
-  void StartWidgetInteraction(double e[2]) VTK_OVERRIDE;
+  void BuildRepresentation() override;
+  int ComputeInteractionState(int X, int Y, int modify=0) override;
+  void StartWidgetInteraction(double e[2]) override;
   virtual void CenterWidgetInteraction(double e[2]);
-  void WidgetInteraction(double e[2]) VTK_OVERRIDE;
+  void WidgetInteraction(double e[2]) override;
   //@}
 
 protected:
   vtkAngleRepresentation();
-  ~vtkAngleRepresentation() VTK_OVERRIDE;
+  ~vtkAngleRepresentation() override;
 
   // The handle and the rep used to close the handles
   vtkHandleRepresentation *HandleRepresentation;
@@ -158,16 +158,16 @@ protected:
   int Tolerance;
 
   // Visibility of the various pieces of the representation
-  int Ray1Visibility;
-  int Ray2Visibility;
-  int ArcVisibility;
+  vtkTypeBool Ray1Visibility;
+  vtkTypeBool Ray2Visibility;
+  vtkTypeBool ArcVisibility;
 
   // Format for the label
   char *LabelFormat;
 
 private:
-  vtkAngleRepresentation(const vtkAngleRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAngleRepresentation&) VTK_DELETE_FUNCTION;
+  vtkAngleRepresentation(const vtkAngleRepresentation&) = delete;
+  void operator=(const vtkAngleRepresentation&) = delete;
 };
 
 #endif

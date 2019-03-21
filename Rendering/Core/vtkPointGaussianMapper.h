@@ -16,9 +16,9 @@
  * @brief   draw PointGaussians using imposters
  *
  *
- * An  mapper that uses imposters to draw gaussian splats or other shapes if
+ * A mapper that uses imposters to draw gaussian splats or other shapes if
  * custom shader code is set. Supports transparency and picking as well. It
- * draws all the points and does not require cell arrays.  If cell arrays are
+ * draws all the points and does not require cell arrays. If cell arrays are
  * provided it will only draw the points used by the Verts cell array. The shape
  * of the imposter is a triangle.
 */
@@ -36,7 +36,7 @@ class VTKRENDERINGCORE_EXPORT vtkPointGaussianMapper : public vtkPolyDataMapper
 public:
   static vtkPointGaussianMapper* New();
   vtkTypeMacro(vtkPointGaussianMapper, vtkPolyDataMapper)
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -66,6 +66,14 @@ public:
 
   //@{
   /**
+   * Convenience method to set the component of the array to scale with.
+   */
+  vtkSetMacro(ScaleArrayComponent, int);
+  vtkGetMacro(ScaleArrayComponent, int);
+  //@}
+
+  //@{
+  /**
    * Set the default scale factor of the point gaussians.  This
    * defaults to 1.0. All radius computations will be scaled by the factor
    * including the ScaleArray. If a vtkPiecewideFunction is used the
@@ -81,9 +89,9 @@ public:
   /**
    * Treat the points/splats as emissive light sources. The default is true.
    */
-  vtkSetMacro(Emissive, int);
-  vtkGetMacro(Emissive, int);
-  vtkBooleanMacro(Emissive, int);
+  vtkSetMacro(Emissive, vtkTypeBool);
+  vtkGetMacro(Emissive, vtkTypeBool);
+  vtkBooleanMacro(Emissive, vtkTypeBool);
   //@}
 
   //@{
@@ -111,6 +119,14 @@ public:
    */
   vtkSetStringMacro(OpacityArray);
   vtkGetStringMacro(OpacityArray);
+  //@}
+
+  //@{
+  /**
+   * Convenience method to set the component of the array to opacify with.
+   */
+  vtkSetMacro(OpacityArrayComponent, int);
+  vtkGetMacro(OpacityArrayComponent, int);
   //@}
 
   //@{
@@ -145,12 +161,23 @@ public:
   vtkGetMacro(TriangleScale,float);
   //@}
 
+  /**
+   * WARNING: INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
+   * DO NOT USE THIS METHOD OUTSIDE OF THE RENDERING PROCESS
+   * Used by vtkHardwareSelector to determine if the prop supports hardware
+   * selection.
+   */
+  bool GetSupportsSelection() override
+    { return true; }
+
 protected:
   vtkPointGaussianMapper();
-  ~vtkPointGaussianMapper() VTK_OVERRIDE;
+  ~vtkPointGaussianMapper() override;
 
   char *ScaleArray;
+  int ScaleArrayComponent;
   char *OpacityArray;
+  int OpacityArrayComponent;
   char *SplatShaderCode;
 
   vtkPiecewiseFunction *ScaleFunction;
@@ -160,13 +187,13 @@ protected:
   int OpacityTableSize;
 
   double ScaleFactor;
-  int Emissive;
+  vtkTypeBool Emissive;
 
   float TriangleScale;
 
 private:
-  vtkPointGaussianMapper(const vtkPointGaussianMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPointGaussianMapper&) VTK_DELETE_FUNCTION;
+  vtkPointGaussianMapper(const vtkPointGaussianMapper&) = delete;
+  void operator=(const vtkPointGaussianMapper&) = delete;
 };
 
 #endif

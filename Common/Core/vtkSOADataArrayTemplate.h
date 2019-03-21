@@ -49,7 +49,8 @@ public:
   {
     VTK_DATA_ARRAY_FREE=vtkAbstractArray::VTK_DATA_ARRAY_FREE,
     VTK_DATA_ARRAY_DELETE=vtkAbstractArray::VTK_DATA_ARRAY_DELETE,
-    VTK_DATA_ARRAY_ALIGNED_FREE=vtkAbstractArray::VTK_DATA_ARRAY_ALIGNED_FREE
+    VTK_DATA_ARRAY_ALIGNED_FREE=vtkAbstractArray::VTK_DATA_ARRAY_ALIGNED_FREE,
+    VTK_DATA_ARRAY_USER_DEFINED=vtkAbstractArray::VTK_DATA_ARRAY_USER_DEFINED
   };
 
   static vtkSOADataArrayTemplate* New();
@@ -121,7 +122,7 @@ public:
   /**
    * Set component @a comp of all tuples to @a value.
    */
-  void FillTypedComponent(int compIdx, ValueType value) VTK_OVERRIDE;
+  void FillTypedComponent(int compIdx, ValueType value) override;
 
   /**
    * Use this API to pass externally allocated memory to this instance. Since
@@ -136,9 +137,26 @@ public:
    * that size is the number of tuples in the array.
    * \c size is specified in number of elements of ScalarType.
    */
-  void SetArray(int comp, ValueType* array, vtkIdType size,
+  void SetArray(int comp, VTK_ZEROCOPY ValueType* array, vtkIdType size,
                 bool updateMaxId = false, bool save=false,
                 int deleteMethod=VTK_DATA_ARRAY_FREE);
+
+  /**
+    * This method allows the user to specify a custom free function to be
+    * called when the array is deallocated. Calling this method will implicitly
+    * mean that the given free function will be called when the class
+    * cleans up or reallocates memory. This custom free function will be
+    * used for all components.
+  **/
+  void SetArrayFreeFunction(void (*callback)(void *)) override;
+
+  /**
+    * This method allows the user to specify a custom free function to be
+    * called when the array is deallocated. Calling this method will implicitly
+    * mean that the given free function will be called when the class
+    * cleans up or reallocates memory.
+  **/
+  void SetArrayFreeFunction(int comp, void (*callback)(void *));
 
   /**
    * Return a pointer to a contiguous block of memory containing all values for
@@ -150,20 +168,21 @@ public:
    * Use of this method is discouraged, it creates a deep copy of the data into
    * a contiguous AoS-ordered buffer and prints a warning.
    */
-  void *GetVoidPointer(vtkIdType valueIdx) VTK_OVERRIDE;
+  void *GetVoidPointer(vtkIdType valueIdx) override;
 
   /**
    * Export a copy of the data in AoS ordering to the preallocated memory
    * buffer.
    */
-  void ExportToVoidPointer(void *ptr) VTK_OVERRIDE;
+  void ExportToVoidPointer(void *ptr) override;
 
+#ifndef __VTK_WRAP__
   //@{
   /**
    * Perform a fast, safe cast from a vtkAbstractArray to a vtkDataArray.
    * This method checks if source->GetArrayType() returns DataArray
    * or a more derived type, and performs a static_cast to return
-   * source as a vtkDataArray pointer. Otherwise, NULL is returned.
+   * source as a vtkDataArray pointer. Otherwise, nullptr is returned.
    */
   static vtkSOADataArrayTemplate<ValueType>*
   FastDownCast(vtkAbstractArray *source)
@@ -181,27 +200,28 @@ public:
           break;
       }
     }
-    return NULL;
+    return nullptr;
   }
   //@}
+#endif
 
-  int GetArrayType() VTK_OVERRIDE { return vtkAbstractArray::SoADataArrayTemplate; }
-  VTK_NEWINSTANCE vtkArrayIterator *NewIterator() VTK_OVERRIDE;
-  void SetNumberOfComponents(int numComps) VTK_OVERRIDE;
-  void ShallowCopy(vtkDataArray *other) VTK_OVERRIDE;
+  int GetArrayType() override { return vtkAbstractArray::SoADataArrayTemplate; }
+  VTK_NEWINSTANCE vtkArrayIterator *NewIterator() override;
+  void SetNumberOfComponents(int numComps) override;
+  void ShallowCopy(vtkDataArray *other) override;
 
   // Reimplemented for efficiency:
   void InsertTuples(vtkIdType dstStart, vtkIdType n, vtkIdType srcStart,
-                    vtkAbstractArray* source) VTK_OVERRIDE;
+                    vtkAbstractArray* source) override;
   // MSVC doesn't like 'using' here (error C2487). Just forward instead:
   // using Superclass::InsertTuples;
   void InsertTuples(vtkIdList *dstIds, vtkIdList *srcIds,
-                    vtkAbstractArray *source) VTK_OVERRIDE
+                    vtkAbstractArray *source) override
   { this->Superclass::InsertTuples(dstIds, srcIds, source); }
 
 protected:
   vtkSOADataArrayTemplate();
-  ~vtkSOADataArrayTemplate() VTK_OVERRIDE;
+  ~vtkSOADataArrayTemplate() override;
 
   /**
    * Allocate space for numTuples. Old data is not preserved. If numTuples == 0,
@@ -221,8 +241,8 @@ protected:
   double NumberOfComponentsReciprocal;
 
 private:
-  vtkSOADataArrayTemplate(const vtkSOADataArrayTemplate&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSOADataArrayTemplate&) VTK_DELETE_FUNCTION;
+  vtkSOADataArrayTemplate(const vtkSOADataArrayTemplate&) = delete;
+  void operator=(const vtkSOADataArrayTemplate&) = delete;
 
   inline void GetTupleIndexFromValueIndex(vtkIdType valueIdx,
                                           vtkIdType& tupleIdx, int& comp) const

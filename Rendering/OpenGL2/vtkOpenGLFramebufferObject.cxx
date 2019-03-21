@@ -24,6 +24,7 @@
 #include "vtkOpenGLBufferObject.h"
 #include "vtkOpenGLError.h"
 #include "vtkOpenGLResourceFreeCallback.h"
+#include "vtkOpenGLState.h"
 #include "vtkRenderbuffer.h"
 
 #include <cassert>
@@ -34,6 +35,8 @@ class vtkFOInfo
 {
 public:
   unsigned int Attachment;
+  unsigned int Target;
+  unsigned int MipmapLevel;
   bool Attached;
   unsigned int Mode;
   vtkTextureObject *Texture;
@@ -43,8 +46,10 @@ public:
 
   vtkFOInfo() {
     this->Attachment = 0;
-    this->Texture = NULL;
-    this->Renderbuffer = NULL;
+    this->Target = 0;
+    this->MipmapLevel = 0;
+    this->Texture = nullptr;
+    this->Renderbuffer = nullptr;
     this->CreatedByFO = false;
     this->ZSlice = 0;
     this->Attached = false;
@@ -60,14 +65,16 @@ public:
     if (this->Texture)
     {
       this->Texture->Delete();
-      this->Texture = NULL;
+      this->Texture = nullptr;
     }
     if (this->Renderbuffer)
     {
       this->Renderbuffer->Delete();
-      this->Renderbuffer = NULL;
+      this->Renderbuffer = nullptr;
     }
     this->Attachment = 0;
+    this->Target = 0;
+    this->MipmapLevel = 0;
     this->CreatedByFO = false;
     this->ZSlice = 0;
     this->Attached = false;
@@ -100,9 +107,9 @@ public:
         glFramebufferTexture3D(
               (GLenum)this->Mode,
               this->Attachment,
-              this->Texture->GetTarget(),
+              this->Target,
               this->Texture->GetHandle(),
-              0,
+              this->MipmapLevel,
               this->ZSlice);
         this->Attached = true;
   #else
@@ -114,9 +121,9 @@ public:
         glFramebufferTexture2D(
             (GLenum)this->Mode,
             this->Attachment,
-            this->Texture->GetTarget(),
+            this->Target,
             this->Texture->GetHandle(),
-            0);
+            this->MipmapLevel);
         this->Attached = true;
       }
     }
@@ -132,7 +139,7 @@ public:
   }
 
   void SetTexture(vtkTextureObject *val,
-    unsigned int mode, unsigned int attachment) {
+    unsigned int mode, unsigned int attachment, unsigned int target = 0, unsigned int mipmapLevel = 0) {
 
     // always reset to false
     this->CreatedByFO = false;
@@ -144,20 +151,24 @@ public:
       return;
     }
     this->Attached = false;
-    val->Register(0);
+    val->Register(nullptr);
     if (this->Texture)
     {
       this->Texture->Delete();
-      this->Texture = NULL;
+      this->Texture = nullptr;
     }
     if (this->Renderbuffer)
     {
       this->Renderbuffer->Delete();
-      this->Renderbuffer = NULL;
+      this->Renderbuffer = nullptr;
     }
     this->Texture = val;
     this->Mode = mode;
     this->Attachment = attachment;
+    // if target not specified, used texture target
+    // a custom target is useful for cubemap
+    this->Target = target ? target : val->GetTarget();
+    this->MipmapLevel = mipmapLevel;
   }
 
   void SetRenderbuffer(vtkRenderbuffer *val,
@@ -173,16 +184,16 @@ public:
       return;
     }
     this->Attached = false;
-    val->Register(0);
+    val->Register(nullptr);
     if (this->Texture)
     {
       this->Texture->Delete();
-      this->Texture = NULL;
+      this->Texture = nullptr;
     }
     if (this->Renderbuffer)
     {
       this->Renderbuffer->Delete();
-      this->Renderbuffer = NULL;
+      this->Renderbuffer = nullptr;
     }
     this->Renderbuffer = val;
     this->Mode = mode;
@@ -193,8 +204,8 @@ public:
   {
     if (this->Texture)
     {
-      size[0] = this->Texture->GetWidth();
-      size[1] = this->Texture->GetHeight();
+      size[0] = this->Texture->GetWidth() >> this->MipmapLevel;
+      size[1] = this->Texture->GetHeight() >> this->MipmapLevel;
       return;
     }
     if (this->Renderbuffer)
@@ -256,7 +267,7 @@ vtkOpenGLFramebufferObject::~vtkOpenGLFramebufferObject()
   {
     this->ResourceCallback->Release();
     delete this->ResourceCallback;
-    this->ResourceCallback = NULL;
+    this->ResourceCallback = nullptr;
   }
   delete this->DrawDepthBuffer;
   delete this->ReadDepthBuffer;
@@ -355,7 +366,7 @@ void vtkOpenGLFramebufferObject::ReleaseGraphicsResources(vtkWindow *win)
   this->DestroyDepthBuffer(win);
   this->DestroyColorBuffers(win);
   this->DestroyFBO();
-  this->Context = NULL;
+  this->Context = nullptr;
   this->Modified();
 }
 
@@ -398,15 +409,16 @@ vtkOpenGLRenderWindow *vtkOpenGLFramebufferObject::GetContext()
 //----------------------------------------------------------------------------
 void vtkOpenGLFramebufferObject::InitializeViewport(int width, int height)
 {
-  glDisable(GL_BLEND);
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_SCISSOR_TEST);
+  vtkOpenGLState *ostate = this->Context->GetState();
+  ostate->vtkglDisable(GL_BLEND);
+  ostate->vtkglDisable(GL_DEPTH_TEST);
+  ostate->vtkglDisable(GL_SCISSOR_TEST);
 
   // Viewport transformation for 1:1 'pixel=texel=data' mapping.
   // Note this is not enough for 1:1 mapping, because depending on the
   // primitive displayed (point,line,polygon), the rasterization rules
   // are different.
-  glViewport(0, 0, width, height);
+  ostate->vtkglViewport(0, 0, width, height);
 
   vtkOpenGLStaticCheckErrorMacro("failed after InitializeViewport");
 }
@@ -998,9 +1010,11 @@ void vtkOpenGLFramebufferObject::AddColorAttachment(
   unsigned int mode,
   unsigned int index,
   vtkTextureObject* tex,
-  unsigned int zslice)
+  unsigned int zslice,
+  unsigned int format,
+  unsigned int mipmapLevel)
 {
-  this->SetColorBuffer(mode, index, tex, zslice);
+  this->SetColorBuffer(mode, index, tex, zslice, format, mipmapLevel);
   this->Bind(mode);
   this->AttachColorBuffer(mode, index);
 }
@@ -1036,7 +1050,7 @@ void vtkOpenGLFramebufferObject::RemoveColorAttachment(
     if (i != this->DrawColorBuffers.end())
     {
       delete i->second;
-      i->second = NULL;
+      i->second = nullptr;
       this->DrawColorBuffers.erase(i);
     }
   }
@@ -1047,7 +1061,7 @@ void vtkOpenGLFramebufferObject::RemoveColorAttachment(
     if (i != this->ReadColorBuffers.end())
     {
       delete i->second;
-      i->second = NULL;
+      i->second = nullptr;
       this->ReadColorBuffers.erase(i);
     }
   }
@@ -1076,13 +1090,13 @@ void vtkOpenGLFramebufferObject::DisplayFrameBufferAttachments()
     int i=0;
     while(i<maxColorAttachments)
     {
-      cout<<"color attachement "<<i<<":"<<endl;
+      cout<<"color attachment "<<i<<":"<<endl;
       this->DisplayFrameBufferAttachment(GL_COLOR_ATTACHMENT0+i);
       ++i;
     }
-    cout<<"depth attachement :"<<endl;
+    cout<<"depth attachment :"<<endl;
     this->DisplayFrameBufferAttachment(GL_DEPTH_ATTACHMENT);
-    cout<<"stencil attachement :"<<endl;
+    cout<<"stencil attachment :"<<endl;
     this->DisplayFrameBufferAttachment(GL_STENCIL_ATTACHMENT);
   }
 }
@@ -1618,8 +1632,8 @@ vtkPixelBufferObject *vtkOpenGLFramebufferObject::DownloadColor1(
       oglChannel = GL_BLUE;
       break;
     default:
-      vtkErrorMacro("Inavlid channel");
-      return NULL;
+      vtkErrorMacro("Invalid channel");
+      return nullptr;
   }
 
   return this->Download(
@@ -1683,7 +1697,7 @@ void vtkOpenGLFramebufferObject::Download(
         extentSize[1],
         oglFormat,
         oglType,
-        NULL);
+        nullptr);
 
   vtkOpenGLStaticCheckErrorMacro("failed at glReadPixels");
 
@@ -1746,7 +1760,9 @@ void vtkOpenGLFramebufferObject::SetColorBuffer(
   unsigned int mode,
   unsigned int index,
   vtkTextureObject* tex,
-  unsigned int zslice)
+  unsigned int zslice,
+  unsigned int format,
+  unsigned int mipmapLevel)
 {
   // is the fbo size is not set do it here
   if (this->LastSize[0] == -1)
@@ -1763,7 +1779,7 @@ void vtkOpenGLFramebufferObject::SetColorBuffer(
       vtkFOInfo *foinfo = new vtkFOInfo;
       i = this->DrawColorBuffers.insert(std::make_pair(index, foinfo)).first;
     }
-    i->second->SetTexture(tex, mode, GL_COLOR_ATTACHMENT0 + index);
+    i->second->SetTexture(tex, mode, GL_COLOR_ATTACHMENT0 + index, format, mipmapLevel);
     i->second->ZSlice = zslice;
 
     i = this->ReadColorBuffers.find(index);
@@ -1772,7 +1788,7 @@ void vtkOpenGLFramebufferObject::SetColorBuffer(
       vtkFOInfo *foinfo = new vtkFOInfo;
       i = this->ReadColorBuffers.insert(std::make_pair(index, foinfo)).first;
     }
-    i->second->SetTexture(tex, mode, GL_COLOR_ATTACHMENT0 + index);
+    i->second->SetTexture(tex, mode, GL_COLOR_ATTACHMENT0 + index, format, mipmapLevel);
     i->second->ZSlice = zslice;
   }
   else if (mode == GL_DRAW_FRAMEBUFFER)
@@ -1783,7 +1799,7 @@ void vtkOpenGLFramebufferObject::SetColorBuffer(
       vtkFOInfo *foinfo = new vtkFOInfo;
       i = this->DrawColorBuffers.insert(std::make_pair(index, foinfo)).first;
     }
-    i->second->SetTexture(tex, mode, GL_COLOR_ATTACHMENT0 + index);
+    i->second->SetTexture(tex, mode, GL_COLOR_ATTACHMENT0 + index, format, mipmapLevel);
     i->second->ZSlice = zslice;
   }
   else if (mode == GL_READ_FRAMEBUFFER)
@@ -1794,7 +1810,7 @@ void vtkOpenGLFramebufferObject::SetColorBuffer(
       vtkFOInfo *foinfo = new vtkFOInfo;
       i = this->ReadColorBuffers.insert(std::make_pair(index, foinfo)).first;
     }
-    i->second->SetTexture(tex, mode, GL_COLOR_ATTACHMENT0 + index);
+    i->second->SetTexture(tex, mode, GL_COLOR_ATTACHMENT0 + index, format, mipmapLevel);
     i->second->ZSlice = zslice;
   }
 }

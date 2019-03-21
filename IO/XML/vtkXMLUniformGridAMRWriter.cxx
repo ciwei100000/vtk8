@@ -27,14 +27,10 @@
 
 vtkStandardNewMacro(vtkXMLUniformGridAMRWriter);
 //----------------------------------------------------------------------------
-vtkXMLUniformGridAMRWriter::vtkXMLUniformGridAMRWriter()
-{
-}
+vtkXMLUniformGridAMRWriter::vtkXMLUniformGridAMRWriter() = default;
 
 //----------------------------------------------------------------------------
-vtkXMLUniformGridAMRWriter::~vtkXMLUniformGridAMRWriter()
-{
-}
+vtkXMLUniformGridAMRWriter::~vtkXMLUniformGridAMRWriter() = default;
 
 //----------------------------------------------------------------------------
 int vtkXMLUniformGridAMRWriter::FillInputPortInformation(
@@ -49,7 +45,7 @@ int vtkXMLUniformGridAMRWriter::WriteComposite(vtkCompositeDataSet* compositeDat
     vtkXMLDataElement* parent, int &writerIdx)
 {
   vtkUniformGridAMR* amr = vtkUniformGridAMR::SafeDownCast(compositeData);
-  assert(amr != NULL);
+  assert(amr != nullptr);
 
   vtkOverlappingAMR* oamr = vtkOverlappingAMR::SafeDownCast(amr);
 
@@ -134,7 +130,7 @@ int vtkXMLUniformGridAMRWriter::WriteComposite(vtkCompositeDataSet* compositeDat
       }
 
       vtkStdString fileName = this->CreatePieceFileName(writerIdx);
-      if (fileName != "")
+      if (!fileName.empty())
       {
         // if fileName is empty, it implies that no file is written out for this
         // node, so don't add a filename attribute for it.

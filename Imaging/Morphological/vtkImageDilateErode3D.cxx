@@ -23,7 +23,7 @@
 vtkStandardNewMacro(vtkImageDilateErode3D);
 
 //----------------------------------------------------------------------------
-// Construct an instance of vtkImageDilateErode3D fitler.
+// Construct an instance of vtkImageDilateErode3D filter.
 // By default zero values are dilated.
 vtkImageDilateErode3D::vtkImageDilateErode3D()
 {
@@ -46,7 +46,7 @@ vtkImageDilateErode3D::~vtkImageDilateErode3D()
   if (this->Ellipse)
   {
     this->Ellipse->Delete();
-    this->Ellipse = NULL;
+    this->Ellipse = nullptr;
   }
 }
 

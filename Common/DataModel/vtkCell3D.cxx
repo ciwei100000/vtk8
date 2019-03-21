@@ -25,10 +25,10 @@
 
 vtkCell3D::vtkCell3D()
 {
-  this->Triangulator = NULL;
+  this->Triangulator = nullptr;
   this->MergeTolerance = 0.01;
-  this->ClipTetra = NULL;
-  this->ClipScalars = NULL;
+  this->ClipTetra = nullptr;
+  this->ClipScalars = nullptr;
 }
 
 vtkCell3D::~vtkCell3D()
@@ -36,14 +36,14 @@ vtkCell3D::~vtkCell3D()
   if ( this->Triangulator )
   {
     this->Triangulator->Delete();
-    this->Triangulator = NULL;
+    this->Triangulator = nullptr;
   }
   if ( this->ClipTetra )
   {
     this->ClipTetra->Delete();
-    this->ClipTetra = NULL;
+    this->ClipTetra = nullptr;
     this->ClipScalars->Delete();
-    this->ClipScalars = NULL;
+    this->ClipScalars = nullptr;
   }
 }
 
@@ -119,14 +119,20 @@ void vtkCell3D::Contour(double value, vtkDataArray *cellScalars,
     // Currently all points are injected because of the possibility
     // of intersection point merging.
     s1 = cellScalars->GetComponent(i,0);
-    if ( (s1 >= value) || (s1 < value) )
-    {
-      type = 0; //inside
-    }
-    else
-    {
-      type = 4; //outside, its type might change later (nearby intersection)
-    }
+    type = 0; //inside
+
+    // Below is the old code since 2001. Will may take a look
+    // at this at some point and see if there is a place to
+    // improve it.
+    //
+    // if ( (s1 >= value) || (s1 < value) )
+    // {
+    //   type = 0; //inside
+    // }
+    // else
+    // {
+    //   type = 4; //outside, its type might change later (nearby intersection)
+    // }
 
     this->Points->GetPoint(i, x);
     if ( locator->InsertUniquePoint(x, id) )
@@ -138,7 +144,7 @@ void vtkCell3D::Contour(double value, vtkDataArray *cellScalars,
 
   // For each edge intersection point, insert into triangulation. Edge
   // intersections come from contouring value. Have to be careful of
-  // intersections near exisiting points (causes bad Delaunay behavior).
+  // intersections near existing points (causes bad Delaunay behavior).
   // Intersections near existing points are collapsed to existing point.
   double pc[3], *pc1, *pc2;
   for (int edgeNum=0; edgeNum < numEdges; edgeNum++)
@@ -344,7 +350,7 @@ void vtkCell3D::Clip(double value, vtkDataArray *cellScalars,
 
   // For each edge intersection point, insert into triangulation. Edge
   // intersections come from clipping value. Have to be careful of
-  // intersections near exisiting points (causes bad Delaunay behavior).
+  // intersections near existing points (causes bad Delaunay behavior).
   // Intersections near existing points are collapsed to existing point.
   double pc[3], *pc1, *pc2;
   for (int edgeNum=0; edgeNum < numEdges; edgeNum++)

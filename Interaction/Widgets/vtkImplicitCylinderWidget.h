@@ -14,7 +14,7 @@
 =========================================================================*/
 /**
  * @class   vtkImplicitCylinderWidget
- * @brief   3D widget for manipulating an infinite cylnder
+ * @brief   3D widget for manipulating an infinite cylinder
  *
  * This 3D widget defines an infinite cylinder that can be
  * interactively placed in a scene. The widget is assumed to consist
@@ -24,7 +24,7 @@
  * actual geometry of the widget.)
  *
  * To use this widget, you generally pair it with a vtkImplicitCylinderRepresentation
- * (or a subclass). Variuos options are available for controlling how the
+ * (or a subclass). Various options are available for controlling how the
  * representation appears, and how the widget functions.
  *
  * @par Event Bindings:
@@ -106,7 +106,7 @@ public:
    * Standard vtkObject methods
    */
   vtkTypeMacro(vtkImplicitCylinderWidget,vtkAbstractWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -116,10 +116,10 @@ public:
    */
   void SetRepresentation( vtkImplicitCylinderRepresentation *rep );
 
-  // Descritpion:
+  // Description:
   // Disable/Enable the widget if needed.
   // Unobserved the camera if the widget is disabled.
-  void SetEnabled(int enabling) VTK_OVERRIDE;
+  void SetEnabled(int enabling) override;
 
   /**
    * Return the representation as a vtkImplicitCylinderRepresentation.
@@ -130,11 +130,11 @@ public:
   /**
    * Create the default widget representation if one is not set.
    */
-  void CreateDefaultRepresentation() VTK_OVERRIDE;
+  void CreateDefaultRepresentation() override;
 
 protected:
   vtkImplicitCylinderWidget();
-  ~vtkImplicitCylinderWidget() VTK_OVERRIDE;
+  ~vtkImplicitCylinderWidget() override;
 
   // Manage the state of the widget
   int WidgetState;
@@ -155,8 +155,8 @@ protected:
   int UpdateCursorShape( int interactionState );
 
 private:
-  vtkImplicitCylinderWidget(const vtkImplicitCylinderWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImplicitCylinderWidget&) VTK_DELETE_FUNCTION;
+  vtkImplicitCylinderWidget(const vtkImplicitCylinderWidget&) = delete;
+  void operator=(const vtkImplicitCylinderWidget&) = delete;
 };
 
 #endif

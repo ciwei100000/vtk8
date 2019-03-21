@@ -90,7 +90,7 @@ class VTKIOEXODUS_EXPORT vtkModelMetadata : public vtkObject
 {
 public:
   vtkTypeMacro(vtkModelMetadata, vtkObject);
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
   static vtkModelMetadata *New();
 
   /**
@@ -212,7 +212,7 @@ public:
 
   /**
    * Set or get a pointer to a list of the number of nodes in the
-   * elements of  each block.
+   * elements of each block.
    * We use your pointers, and free the memory when the object is freed.
    */
   void SetBlockNodesPerElement(int *);
@@ -369,7 +369,7 @@ public:
   int *GetSideSetIds() const {return this->SideSetIds;}
 
   /**
-   * Set or get a pointer to a list of the number of sides  in each side set.
+   * Set or get a pointer to a list of the number of sides in each side set.
    * We use your pointer, and free the memory when the object is freed.
    */
   int SetSideSetSize(int *sizes);
@@ -581,9 +581,9 @@ public:
    * instance variable to indicate that all variables are
    * defined in all blocks.
    */
-  vtkSetMacro(AllVariablesDefinedInAllBlocks, int);
-  vtkBooleanMacro(AllVariablesDefinedInAllBlocks, int);
-  int GetAllVariablesDefinedInAllBlocks() const {
+  vtkSetMacro(AllVariablesDefinedInAllBlocks, vtkTypeBool);
+  vtkBooleanMacro(AllVariablesDefinedInAllBlocks, vtkTypeBool);
+  vtkTypeBool GetAllVariablesDefinedInAllBlocks() const {
     return this->AllVariablesDefinedInAllBlocks;}
   //@}
 
@@ -602,7 +602,7 @@ public:
    * each grid variable, and a list of the index into the list of
    * original variable names where the original name of the first
    * component of a grid variable may be found.  The names of subsequent
-   * components would immediately follow the name of the the first
+   * components would immediately follow the name of the first
    * component.
    */
   int GetOriginalNumberOfElementVariables() const {
@@ -664,7 +664,7 @@ public:
 
 protected:
   vtkModelMetadata();
-  ~vtkModelMetadata() VTK_OVERRIDE;
+  ~vtkModelMetadata() override;
 
 private:
   void InitializeAllMetadata();
@@ -834,10 +834,10 @@ private:
   int *MapToOriginalNodeVariableNames;     // (G) NumberOfNodeVariables
 
   int *ElementVariableTruthTable;  // (G) NumBlocks*OrigNumberOfElementVariables
-  int AllVariablesDefinedInAllBlocks;
+  vtkTypeBool AllVariablesDefinedInAllBlocks;
 
 private:
-  vtkModelMetadata(const vtkModelMetadata&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkModelMetadata&) VTK_DELETE_FUNCTION;
+  vtkModelMetadata(const vtkModelMetadata&) = delete;
+  void operator=(const vtkModelMetadata&) = delete;
 };
 #endif

@@ -32,9 +32,7 @@ vtkInteractorStyleJoystickCamera::vtkInteractorStyleJoystickCamera()
 }
 
 //----------------------------------------------------------------------------
-vtkInteractorStyleJoystickCamera::~vtkInteractorStyleJoystickCamera()
-{
-}
+vtkInteractorStyleJoystickCamera::~vtkInteractorStyleJoystickCamera() = default;
 
 //----------------------------------------------------------------------------
 // Mouse events
@@ -51,7 +49,7 @@ void vtkInteractorStyleJoystickCamera::OnMouseMove()
     case VTKIS_DOLLY:
     case VTKIS_SPIN:
       this->FindPokedRenderer(x, y);
-      this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
+      this->InvokeEvent(vtkCommand::InteractionEvent, nullptr);
       break;
   }
 }
@@ -61,7 +59,7 @@ void vtkInteractorStyleJoystickCamera::OnLeftButtonDown()
 {
   this->FindPokedRenderer(this->Interactor->GetEventPosition()[0],
                           this->Interactor->GetEventPosition()[1]);
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -123,7 +121,7 @@ void vtkInteractorStyleJoystickCamera::OnMiddleButtonDown()
 {
   this->FindPokedRenderer(this->Interactor->GetEventPosition()[0],
                           this->Interactor->GetEventPosition()[1]);
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -152,7 +150,7 @@ void vtkInteractorStyleJoystickCamera::OnRightButtonDown()
 {
   this->FindPokedRenderer(this->Interactor->GetEventPosition()[0],
                           this->Interactor->GetEventPosition()[1]);
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -181,7 +179,7 @@ void vtkInteractorStyleJoystickCamera::OnMouseWheelForward()
 {
   this->FindPokedRenderer(this->Interactor->GetEventPosition()[0],
                           this->Interactor->GetEventPosition()[1]);
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -199,7 +197,7 @@ void vtkInteractorStyleJoystickCamera::OnMouseWheelBackward()
 {
   this->FindPokedRenderer(this->Interactor->GetEventPosition()[0],
                           this->Interactor->GetEventPosition()[1]);
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -215,7 +213,7 @@ void vtkInteractorStyleJoystickCamera::OnMouseWheelBackward()
 //----------------------------------------------------------------------------
 void vtkInteractorStyleJoystickCamera::Rotate()
 {
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -257,7 +255,7 @@ void vtkInteractorStyleJoystickCamera::Rotate()
 //----------------------------------------------------------------------------
 void vtkInteractorStyleJoystickCamera::Spin()
 {
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -291,7 +289,7 @@ void vtkInteractorStyleJoystickCamera::Spin()
 //----------------------------------------------------------------------------
 void vtkInteractorStyleJoystickCamera::Pan()
 {
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -346,7 +344,7 @@ void vtkInteractorStyleJoystickCamera::Pan()
 //----------------------------------------------------------------------------
 void vtkInteractorStyleJoystickCamera::Dolly()
 {
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -361,7 +359,7 @@ void vtkInteractorStyleJoystickCamera::Dolly()
 //----------------------------------------------------------------------------
 void vtkInteractorStyleJoystickCamera::Dolly(double factor)
 {
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }

@@ -24,6 +24,7 @@
 
 #ifndef vtkAMRFlashReaderInternal_h
 #define vtkAMRFlashReaderInternal_h
+#ifndef __VTK_WRAP__
 
 #include <cassert>
 #include <vector>
@@ -199,7 +200,7 @@ public:
            ( hid_t dataIndx, const char * compName, double * dataBuff );
   void     ReadParticleAttributes();
   void     ReadParticleAttributesFLASH3();
-  void     GetBlockAttribute( const char *atribute, int blockIdx,
+  void     GetBlockAttribute( const char *attribute, int blockIdx,
                               vtkDataSet *pDataSet );
 };
 
@@ -209,5 +210,6 @@ public:
 // ----------------------------------------------------------------------------
 //                     Class  vtkFlashReaderInternal ( end )
 // ----------------------------------------------------------------------------
+#endif
 #endif /* vtkAMRFlashReaderInternal_h */
 // VTK-HeaderTest-Exclude: vtkAMRFlashReaderInternal.h

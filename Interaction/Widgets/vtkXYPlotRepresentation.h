@@ -57,9 +57,9 @@ public:
   /**
    * Satisfy the superclass' API.
    */
-  virtual void BuildRepresentation();
-  virtual void WidgetInteraction(double eventPos[2]);
-  virtual void GetSize(double size[2])
+  void BuildRepresentation() override;
+  void WidgetInteraction(double eventPos[2]) override;
+  void GetSize(double size[2]) override
     {size[0]=2.0; size[1]=2.0;}
   //@}
 
@@ -75,7 +75,7 @@ public:
   virtual int RenderOverlay(vtkViewport*);
   virtual int RenderOpaqueGeometry(vtkViewport*);
   virtual int RenderTranslucentPolygonalGeometry(vtkViewport*);
-  virtual int HasTranslucentPolygonalGeometry();
+  virtual vtkTypeBool HasTranslucentPolygonalGeometry();
   //@}
 
   //@{
@@ -176,8 +176,8 @@ protected:
 
   vtkXYPlotActor *XYPlotActor;
 private:
-  vtkXYPlotRepresentation(const vtkXYPlotRepresentation &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkXYPlotRepresentation &) VTK_DELETE_FUNCTION;
+  vtkXYPlotRepresentation(const vtkXYPlotRepresentation &) = delete;
+  void operator=(const vtkXYPlotRepresentation &) = delete;
 };
 
 #endif //vtkXYPlotRepresentation_h

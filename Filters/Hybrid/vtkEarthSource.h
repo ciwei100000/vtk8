@@ -34,7 +34,7 @@ class VTKFILTERSHYBRID_EXPORT vtkEarthSource : public vtkPolyDataAlgorithm
 public:
   static vtkEarthSource *New();
   vtkTypeMacro(vtkEarthSource,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -61,23 +61,23 @@ public:
    * filled polygons. Recommend you use OutlienOn (i.e., disable filled polygons)
    * for now.
    */
-  vtkSetMacro(Outline,int);
-  vtkGetMacro(Outline,int);
-  vtkBooleanMacro(Outline,int);
+  vtkSetMacro(Outline,vtkTypeBool);
+  vtkGetMacro(Outline,vtkTypeBool);
+  vtkBooleanMacro(Outline,vtkTypeBool);
   //@}
 
 protected:
   vtkEarthSource();
-  ~vtkEarthSource() VTK_OVERRIDE {}
+  ~vtkEarthSource() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double Radius;
   int OnRatio;
-  int Outline;
+  vtkTypeBool Outline;
 private:
-  vtkEarthSource(const vtkEarthSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkEarthSource&) VTK_DELETE_FUNCTION;
+  vtkEarthSource(const vtkEarthSource&) = delete;
+  void operator=(const vtkEarthSource&) = delete;
 };
 
 #endif

@@ -20,8 +20,8 @@
 #include "vtkObjectFactory.h"
 #include "vtkOpenGLError.h"
 #include "vtkOpenGLFramebufferObject.h"
-//#include "vtkOpenGLIndexBufferObject.h"
 #include "vtkOpenGLRenderWindow.h"
+#include "vtkOpenGLState.h"
 #include "vtkOpenGLVertexBufferObject.h"
 #include "vtkOpenGLVertexBufferObjectGroup.h"
 #include "vtkPainterCommunicator.h"
@@ -58,7 +58,7 @@ vtkSurfaceLICMapper::~vtkSurfaceLICMapper()
   #endif
 
   this->LICInterface->Delete();
-  this->LICInterface = 0;
+  this->LICInterface = nullptr;
 }
 
 void vtkSurfaceLICMapper::ShallowCopy(vtkAbstractMapper *mapper)
@@ -91,8 +91,8 @@ void vtkSurfaceLICMapper::ReplaceShaderValues(
   // add some code to handle the LIC vectors and mask
   vtkShaderProgram::Substitute(VSSource,
     "//VTK::TCoord::Dec",
-    "attribute vec3 vecsMC;\n"
-    "varying vec3 tcoordVCVSOutput;\n"
+    "in vec3 vecsMC;\n"
+    "out vec3 tcoordVCVSOutput;\n"
     );
 
   vtkShaderProgram::Substitute(VSSource, "//VTK::TCoord::Impl",
@@ -104,7 +104,7 @@ void vtkSurfaceLICMapper::ReplaceShaderValues(
     // 0/1, when 1 V is projected to surface for |V| computation.
     "uniform int uMaskOnSurface;\n"
     "uniform mat3 normalMatrix;\n"
-    "varying vec3 tcoordVCVSOutput;"
+    "in vec3 tcoordVCVSOutput;"
     );
 
   vtkShaderProgram::Substitute(FSSource,
@@ -172,7 +172,7 @@ void vtkSurfaceLICMapper::RenderPiece(
 
   this->CurrentInput = this->GetInput();
   vtkDataArray *vectors = this->GetInputArrayToProcess(0, this->CurrentInput);
-  this->LICInterface->SetHasVectors(vectors != NULL ? true : false);
+  this->LICInterface->SetHasVectors(vectors != nullptr ? true : false);
 
   if (!this->LICInterface->CanRenderSurfaceLIC(actor))
   {
@@ -188,10 +188,13 @@ void vtkSurfaceLICMapper::RenderPiece(
 
   // Before start rendering LIC, capture some essential state so we can restore
   // it.
-  bool blendEnabled = (glIsEnabled(GL_BLEND) == GL_TRUE);
+  vtkOpenGLRenderWindow *rw =
+    vtkOpenGLRenderWindow::SafeDownCast(renderer->GetRenderWindow());
+  vtkOpenGLState *ostate = rw->GetState();
+  vtkOpenGLState::ScopedglEnableDisable bsaver(ostate, GL_BLEND);
 
   vtkNew<vtkOpenGLFramebufferObject> fbo;
-  fbo->SetContext(vtkOpenGLRenderWindow::SafeDownCast(renderer->GetRenderWindow()));
+  fbo->SetContext(rw);
   fbo->SaveCurrentBindingsAndBuffers();
 
   // allocate rendering resources, initialize or update
@@ -218,15 +221,6 @@ void vtkSurfaceLICMapper::RenderPiece(
   this->LICInterface->CopyToScreen();
 
   fbo->RestorePreviousBindingsAndBuffers();
-
-  if (blendEnabled)
-  {
-    glEnable(GL_BLEND);
-  }
-  else
-  {
-    glDisable(GL_BLEND);
-  }
 
   // clear opengl error flags and be absolutely certain that nothing failed.
   vtkOpenGLCheckErrorMacro("failed during surface lic painter");

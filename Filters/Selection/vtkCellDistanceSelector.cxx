@@ -34,9 +34,7 @@ vtkCellDistanceSelector::vtkCellDistanceSelector()
 }
 
 // ----------------------------------------------------------------------
-vtkCellDistanceSelector::~vtkCellDistanceSelector()
-{
-}
+vtkCellDistanceSelector::~vtkCellDistanceSelector() = default;
 
 // ----------------------------------------------------------------------
 void vtkCellDistanceSelector::PrintSelf( ostream& os, vtkIndent indent )
@@ -146,7 +144,7 @@ int vtkCellDistanceSelector::RequestData( vtkInformation* vtkNotUsed( request ),
         vtkStructuredGrid* sg_input = vtkStructuredGrid::SafeDownCast( input );
         vtkPolyData* pd_input = vtkPolyData::SafeDownCast( input);
 
-        vtkCellLinks * links = 0;
+        vtkCellLinks * links = nullptr;
         if ( ug_input )
         {
           if ( ! ug_input->GetCellLinks() )

@@ -50,7 +50,7 @@ namespace boost
    // concepts.
    //
    // @param done The function object that indicates termination of the
-   // algorithm. It must be a ternary function object thats accepts the
+   // algorithm. It must be a ternary function object that accepts the
    // maximum centrality, the descriptor of the edge that will be
    // removed, and the graph @p g.
    //
@@ -58,7 +58,7 @@ namespace boost
    // the betweenness centrality for each edge. When the algorithm
    // terminates, it will contain the edge centralities for the
    // graph. The type of this property map must model the
-   // ReadWritePropertyMap concept. Defaults to an @c
+   // ReadWritePropertyMap concept. Defaults to a @c
    // iterator_property_map whose value type is
    // @c Done::centrality_type and using @c get(edge_index, g) for the
    // index map.
@@ -134,12 +134,12 @@ void vtkBoostBetweennessClustering::PrintSelf(ostream &os, vtkIndent indent)
   (EdgeWeightArrayName) ?
     os << indent << "EdgeWeightArrayName: " << this->EdgeWeightArrayName
       << endl :
-    os << indent << "EdgeWeightArrayName: NULL" << endl;
+    os << indent << "EdgeWeightArrayName: nullptr" << endl;
 
   (EdgeCentralityArrayName) ?
     os << indent << "EdgeCentralityArrayName: " << this->EdgeCentralityArrayName
       << endl :
-    os << indent << "EdgeCentralityArrayName: NULL" << endl;
+    os << indent << "EdgeCentralityArrayName: nullptr" << endl;
 }
 
 //-----------------------------------------------------------------------------

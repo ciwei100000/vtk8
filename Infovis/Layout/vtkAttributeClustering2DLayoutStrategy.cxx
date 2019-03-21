@@ -89,19 +89,19 @@ vtkAttributeClustering2DLayoutStrategy::vtkAttributeClustering2DLayoutStrategy()
   this->InitialTemperature = 5;
   this->CoolDownRate = 50.0;
   this->LayoutComplete = 0;
-  this->EdgeWeightField = 0;
+  this->EdgeWeightField = nullptr;
   this->SetEdgeWeightField("weight");
   this->RestDistance = 0;
   this->CuttingThreshold=0;
-  this->VertexAttribute = NULL;
+  this->VertexAttribute = nullptr;
 }
 
 // ----------------------------------------------------------------------
 
 vtkAttributeClustering2DLayoutStrategy::~vtkAttributeClustering2DLayoutStrategy()
 {
-  this->SetEdgeWeightField(0);
-  this->SetVertexAttribute(0);
+  this->SetEdgeWeightField(nullptr);
+  this->SetVertexAttribute(nullptr);
   delete this->Implementation;
 }
 
@@ -109,7 +109,7 @@ void vtkAttributeClustering2DLayoutStrategy::SetVertexAttribute(const char* att)
 {
   // This method is a cut and paste of vtkSetStringMacro
   // except for the call to Initialize at the end :)
-  if ( this->VertexAttribute == NULL && att == NULL) { return;}
+  if ( this->VertexAttribute == nullptr && att == nullptr) { return;}
   if ( this->VertexAttribute && att && (!strcmp(this->VertexAttribute,att))) { return;}
   delete [] this->VertexAttribute;
   if (att)
@@ -120,10 +120,10 @@ void vtkAttributeClustering2DLayoutStrategy::SetVertexAttribute(const char* att)
     this->VertexAttribute = cp1;
     do { *cp1++ = *cp2++; } while ( --n );
   }
-   else
-   {
-    this->VertexAttribute = NULL;
-   }
+  else
+  {
+    this->VertexAttribute = nullptr;
+  }
 
   this->Modified();
 
@@ -311,9 +311,9 @@ void vtkAttributeClustering2DLayoutStrategy::Initialize()
 void vtkAttributeClustering2DLayoutStrategy::Layout()
 {
   // Do I have a graph to layout?
-  if (this->Graph == NULL)
+  if (this->Graph == nullptr)
   {
-    vtkErrorMacro("Graph Layout called with Graph==NULL, call SetGraph(g) first");
+    vtkErrorMacro("Graph Layout called with Graph==nullptr, call SetGraph(g) first");
     this->LayoutComplete = 1;
     return;
   }
@@ -606,7 +606,7 @@ void vtkAttributeClustering2DLayoutStrategy::ResolveCoincidentVertices()
       float jumpDistanceY = 5.0*(paddedBounds[3]-paddedBounds[2])/yDim; // 2.5 grid spaces max
       int collisionOps = 0;
 
-      // You get 10 trys and then we have to punt
+      // You get 10 tries and then we have to punt
       while (collision && (collisionOps < 10))
       {
         collisionOps++;

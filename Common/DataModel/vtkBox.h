@@ -22,7 +22,7 @@
  * meeting along shared edges and all faces are orthogonal to the x-y-z
  * coordinate axes.  (If you wish to orient this box differently, recall that
  * the superclass vtkImplicitFunction supports a transformation matrix.)
- * vtkCube is a concrete implementation of vtkImplicitFunction.
+ * vtkBox is a concrete implementation of vtkImplicitFunction.
  *
  * @sa
  * vtkCubeSource vtkImplicitFunction
@@ -39,7 +39,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkBox : public vtkImplicitFunction
 {
 public:
   vtkTypeMacro(vtkBox,vtkImplicitFunction);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct box with center at (0,0,0) and each side of length 1.0.
@@ -50,12 +50,12 @@ public:
    * Evaluate box defined by the two points (pMin,pMax).
    */
   using vtkImplicitFunction::EvaluateFunction;
-  double EvaluateFunction(double x[3]) VTK_OVERRIDE;
+  double EvaluateFunction(double x[3]) override;
 
   /**
    * Evaluate the gradient of the box.
    */
-  void EvaluateGradient(double x[3], double n[3]) VTK_OVERRIDE;
+  void EvaluateGradient(double x[3], double n[3]) override;
 
   //@{
   /**
@@ -80,7 +80,7 @@ public:
                  double &yMin, double &yMax,
                  double &zMin, double &zMax);
   void GetBounds(double bounds[6]);
-  double *GetBounds();
+  double *GetBounds() VTK_SIZEHINT(6);
 
   /**
    * A special method that allows union set operation on bounding boxes.
@@ -99,7 +99,7 @@ public:
    * dir[3] is NOT normalized.  Valid intersections will only occur between
    * 0<=t<=1.)
    */
-  static char IntersectBox(double bounds[6], double origin[3], double dir[3],
+  static char IntersectBox(double bounds[6], const double origin[3], double dir[3],
                            double coord[3], double& t);
 
   /**
@@ -110,7 +110,7 @@ public:
    * plane2 where integers (0, 1, 2, 3, 4, 5) stand for the
    * (xmin, xmax, ymin, ymax, zmin, zmax) planes respectively, and a value
    * of -1 means that no intersection occurred.  The actual intersection
-   * coordinates are stored in x1 and x2, which can be set to NULL of you
+   * coordinates are stored in x1 and x2, which can be set to nullptr of you
    * do not need them to be returned.  The function return value will be
    * zero if the line is wholly outside of the box.
    */
@@ -127,19 +127,33 @@ public:
    * The function returns non-zero if the plane and box intersect; zero
    * otherwise.
    */
-  static int IntersectWithPlane(double bounds[6], double origin[3],
+  static vtkTypeBool IntersectWithPlane(double bounds[6], double origin[3],
                                 double normal[3]);
+
+  /**
+   * Plane intersection with the box. The plane is infinite in extent and
+   * defined by an origin and normal. The function returns the number of
+   * intersection points, and if does, up to six ordered intersection points
+   * are provided (i.e., the points are ordered and form a valid polygon).
+   * Thus the function returns non-zero if the plane and box intersect; zero
+   * otherwise. Note that if there is an intersection, the number of
+   * intersections ranges from [3,6]. xints memory layout is consistent with
+   * vtkPoints array layout and is organized as (xyz, xyz, xyz, xyz, xyz,
+   * xyz).
+   */
+  static vtkTypeBool IntersectWithPlane(double bounds[6], double origin[3],
+                                double normal[3], double xints[18]);
 
 protected:
   vtkBox();
-  ~vtkBox() VTK_OVERRIDE;
+  ~vtkBox() override;
 
   vtkBoundingBox *BBox;
   double Bounds[6]; //supports the GetBounds() method
 
 private:
-  vtkBox(const vtkBox&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBox&) VTK_DELETE_FUNCTION;
+  vtkBox(const vtkBox&) = delete;
+  void operator=(const vtkBox&) = delete;
 };
 
 

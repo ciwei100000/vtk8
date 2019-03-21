@@ -15,6 +15,7 @@
 
 #ifndef vtkOpenGLVolumeRGBTable_h
 #define vtkOpenGLVolumeRGBTable_h
+#ifndef __VTK_WRAP__
 
 #include <vtkObjectFactory.h>
 #include <vtkColorTransferFunction.h>
@@ -83,7 +84,7 @@ public:
         this->LastRange[1]);
       int const newWidth = this->GetMaximumSupportedTextureWidth(renWin, idealW);
 
-      if(this->Table == NULL || this->TextureWidth != newWidth)
+      if(this->Table == nullptr || this->TextureWidth != newWidth)
       {
         this->TextureWidth = newWidth;
         delete [] this->Table;
@@ -163,7 +164,7 @@ public:
     {
       this->TextureObject->ReleaseGraphicsResources(window);
       this->TextureObject->Delete();
-      this->TextureObject = 0;
+      this->TextureObject = nullptr;
     }
   }
 
@@ -174,19 +175,19 @@ protected:
   {
     this->TextureWidth = 1024;
     this->NumberOfColorComponents = 3;
-    this->TextureObject = NULL;
+    this->TextureObject = nullptr;
     this->LastInterpolation = -1;
     this->LastRange[0] = this->LastRange[1] = 0;
-    this->Table = NULL;
+    this->Table = nullptr;
   }
 
   //--------------------------------------------------------------------------
-  ~vtkOpenGLVolumeRGBTable() VTK_OVERRIDE
+  ~vtkOpenGLVolumeRGBTable() override
   {
     if (this->TextureObject)
     {
       this->TextureObject->Delete();
-      this->TextureObject = NULL;
+      this->TextureObject = nullptr;
     }
 
     delete[] this->Table;
@@ -205,20 +206,19 @@ protected:
 
 private:
   vtkOpenGLVolumeRGBTable(const vtkOpenGLVolumeRGBTable&)
-    VTK_DELETE_FUNCTION;
+    = delete;
   vtkOpenGLVolumeRGBTable& operator=(const vtkOpenGLVolumeRGBTable&)
-    VTK_DELETE_FUNCTION;
+    = delete;
 };
 
-vtkStandardNewMacro(vtkOpenGLVolumeRGBTable);
-
-
 ////////////////////////////////////////////////////////////////////////////////
-class vtkOpenGLVolumeRGBTables
+class vtkOpenGLVolumeRGBTables : public vtkObject
 {
 public:
+  static vtkOpenGLVolumeRGBTables* New();
+
   //--------------------------------------------------------------------------
-  vtkOpenGLVolumeRGBTables(unsigned int numberOfTables)
+  void Create(unsigned int numberOfTables)
   {
     this->Tables.reserve(static_cast<size_t>(numberOfTables));
 
@@ -245,7 +245,7 @@ public:
   {
     if (i >= this->Tables.size())
     {
-      return NULL;
+      return nullptr;
     }
     return this->Tables[i];
   }
@@ -267,15 +267,19 @@ public:
     }
   }
 
+protected:
+  vtkOpenGLVolumeRGBTables() = default;
+
 private:
   std::vector<vtkOpenGLVolumeRGBTable*> Tables;
 
-  vtkOpenGLVolumeRGBTables() VTK_DELETE_FUNCTION;
+  vtkOpenGLVolumeRGBTables(
+    const vtkOpenGLVolumeRGBTables &other) = delete;
 
-  vtkOpenGLVolumeRGBTables(const vtkOpenGLVolumeRGBTables &other) VTK_DELETE_FUNCTION;
-
-  vtkOpenGLVolumeRGBTables &operator=(const vtkOpenGLVolumeRGBTables &other) VTK_DELETE_FUNCTION;
+  vtkOpenGLVolumeRGBTables &operator=(
+    const vtkOpenGLVolumeRGBTables &other) = delete;
 };
 
+#endif
 #endif // vtkOpenGLVolumeRGBTable_h
 // VTK-HeaderTest-Exclude: vtkOpenGLVolumeRGBTable.h

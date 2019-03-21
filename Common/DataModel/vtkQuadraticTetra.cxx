@@ -115,42 +115,56 @@ vtkCell *vtkQuadraticTetra::GetFace(int faceId)
 }
 
 //----------------------------------------------------------------------------
-static const double VTK_DIVERGED = 1.e6;
-static const int VTK_TETRA_MAX_ITERATION=20;
-static const double VTK_TETRA_CONVERGED=1.e-04;
-
-int vtkQuadraticTetra::EvaluatePosition(double* x,
-                                        double* closestPoint,
-                                        int& subId, double pcoords[3],
-                                        double& dist2, double *weights)
+namespace
 {
-  int iteration, converged;
-  double params[3];
-  double fcol[3], rcol[3], scol[3], tcol[3];
-  int i, j;
-  double d, pt[3];
+  static const double VTK_DIVERGED = 1.e6;
+  static const int VTK_TETRA_MAX_ITERATION=20;
+  static const double VTK_TETRA_CONVERGED=1.e-05;
+}
+
+int vtkQuadraticTetra::EvaluatePosition(const double* x,
+                                        double closestPoint[3],
+                                        int& subId, double pcoords[3],
+                                        double& dist2, double weights[])
+{
+  double params[3] = {.25, .25, .25};
   double derivs[30];
+
+  // compute a bound on the volume to get a scale for an acceptable determinant
+  double longestEdge = 0;
+  for (int i=0; i<6; i++)
+  {
+    double pt0[3], pt1[3];
+    this->Points->GetPoint(TetraEdges[i][0], pt0);
+    this->Points->GetPoint(TetraEdges[i][1], pt1);
+    double d2 = vtkMath::Distance2BetweenPoints(pt0, pt1);
+    if (longestEdge < d2)
+    {
+      longestEdge = d2;
+    }
+  }
+  // longestEdge value is already squared
+  double volumeBound = pow(longestEdge, 1.5);
+  double determinantTolerance = 1e-20 < .00001*volumeBound ? 1e-20 : .00001*volumeBound;
 
   //  set initial position for Newton's method
   subId = 0;
-  pcoords[0] = pcoords[1] = pcoords[2] = params[0] = params[1] = params[2]=0.25;
+  pcoords[0] = pcoords[1] = pcoords[2] = 0.25;
   //  enter iteration loop
-  for (iteration=converged=0;
-       !converged && (iteration < VTK_TETRA_MAX_ITERATION);  iteration++)
+  int converged = 0;
+  for (int iteration=0;!converged && (iteration < VTK_TETRA_MAX_ITERATION); iteration++)
   {
     //  calculate element interpolation functions and derivatives
     this->InterpolationFunctions(pcoords, weights);
     this->InterpolationDerivs(pcoords, derivs);
 
     //  calculate newton functions
-    for (i=0; i<3; i++)
+    double fcol[3] = {0, 0, 0}, rcol[3] = {0, 0, 0}, scol[3] = {0, 0, 0}, tcol[3] = {0, 0, 0};
+    for (int i=0; i<10; i++)
     {
-      fcol[i] = rcol[i] = scol[i] = tcol[i] = 0.0;
-    }
-    for (i=0; i<10; i++)
-    {
+      double pt[3];
       this->Points->GetPoint(i, pt);
-      for (j=0; j<3; j++)
+      for (int j=0; j<3; j++)
       {
         fcol[j] += pt[j] * weights[i];
         rcol[j] += pt[j] * derivs[i];
@@ -159,14 +173,14 @@ int vtkQuadraticTetra::EvaluatePosition(double* x,
       }
     }
 
-    for (i=0; i<3; i++)
+    for (int i=0; i<3; i++)
     {
       fcol[i] -= x[i];
     }
 
     //  compute determinants and generate improvements
-    d = vtkMath::Determinant3x3(rcol,scol,tcol);
-    if ( fabs(d) < 1.e-20)
+    double d = vtkMath::Determinant3x3(rcol,scol,tcol);
+    if ( fabs(d) < determinantTolerance)
     {
       return -1;
     }
@@ -211,7 +225,8 @@ int vtkQuadraticTetra::EvaluatePosition(double* x,
 
   if ( pcoords[0] >= -0.001 && pcoords[0] <= 1.001 &&
        pcoords[1] >= -0.001 && pcoords[1] <= 1.001 &&
-       pcoords[2] >= -0.001 && pcoords[2] <= 1.001 )
+       pcoords[2] >= -0.001 && pcoords[2] <= 1.001 &&
+       pcoords[0]+pcoords[1]+pcoords[2] <= 1.001 )
   {
     if (closestPoint)
     {
@@ -225,7 +240,7 @@ int vtkQuadraticTetra::EvaluatePosition(double* x,
     double pc[3], w[10];
     if (closestPoint)
     {
-      for (i=0; i<3; i++) //only approximate, not really true for warped tetra
+      for (int i=0; i<3; i++) //only approximate, not really true for warped tetra
       {
         if (pcoords[i] < 0.0)
         {
@@ -250,7 +265,7 @@ int vtkQuadraticTetra::EvaluatePosition(double* x,
 
 //----------------------------------------------------------------------------
 void vtkQuadraticTetra::EvaluateLocation(int& vtkNotUsed(subId),
-                                         double pcoords[3],
+                                         const double pcoords[3],
                                          double x[3], double *weights)
 {
   int i, j;
@@ -270,7 +285,7 @@ void vtkQuadraticTetra::EvaluateLocation(int& vtkNotUsed(subId),
 }
 
 //----------------------------------------------------------------------------
-int vtkQuadraticTetra::CellBoundary(int subId, double pcoords[3],
+int vtkQuadraticTetra::CellBoundary(int subId, const double pcoords[3],
                                     vtkIdList *pts)
 {
   for ( int i = 0; i < 4; ++ i ) // For each of the four vertices of the tet
@@ -313,7 +328,7 @@ void vtkQuadraticTetra::Contour(double value, vtkDataArray* cellScalars,
 //----------------------------------------------------------------------------
 // Line-line intersection. Intersection has to occur within [0,1] parametric
 // coordinates and with specified tolerance.
-int vtkQuadraticTetra::IntersectWithLine(double* p1, double* p2,
+int vtkQuadraticTetra::IntersectWithLine(const double* p1, const double* p2,
                                          double tol, double& t,
                                          double* x, double* pcoords, int& subId)
 {
@@ -385,7 +400,7 @@ int vtkQuadraticTetra::Triangulate(int vtkNotUsed(index), vtkIdList *ptIds,
 // Given parametric coordinates compute inverse Jacobian transformation
 // matrix. Returns 9 elements of 3x3 inverse Jacobian plus interpolation
 // function derivatives.
-void vtkQuadraticTetra::JacobianInverse(double pcoords[3], double **inverse,
+void vtkQuadraticTetra::JacobianInverse(const double pcoords[3], double **inverse,
                                         double derivs[60])
 {
   int i, j;
@@ -423,7 +438,7 @@ void vtkQuadraticTetra::JacobianInverse(double pcoords[3], double **inverse,
 
 //----------------------------------------------------------------------------
 void vtkQuadraticTetra::Derivatives(int vtkNotUsed(subId),
-                                    double pcoords[3], double *values,
+                                    const double pcoords[3], const double *values,
                                     int dim, double *derivs)
 {
   double *jI[3], j0[3], j1[3], j2[3];
@@ -490,7 +505,7 @@ int vtkQuadraticTetra::GetParametricCenter(double pcoords[3])
 //----------------------------------------------------------------------------
 // Compute interpolation functions. First four nodes are the
 // tetrahedron corner vertices; the others are mid-edge nodes.
-void vtkQuadraticTetra::InterpolationFunctions(double pcoords[3],
+void vtkQuadraticTetra::InterpolationFunctions(const double pcoords[3],
                                                double weights[10])
 {
   double r = pcoords[0];
@@ -515,7 +530,7 @@ void vtkQuadraticTetra::InterpolationFunctions(double pcoords[3],
 
 //----------------------------------------------------------------------------
 // Derivatives in parametric space.
-void vtkQuadraticTetra::InterpolationDerivs(double pcoords[3], double derivs[30])
+void vtkQuadraticTetra::InterpolationDerivs(const double pcoords[3], double derivs[30])
 {
   double r = pcoords[0];
   double s = pcoords[1];
@@ -559,7 +574,7 @@ void vtkQuadraticTetra::InterpolationDerivs(double pcoords[3], double derivs[30]
 }
 
 //----------------------------------------------------------------------------
-double vtkQuadraticTetra::GetParametricDistance(double pcoords[3])
+double vtkQuadraticTetra::GetParametricDistance(const double pcoords[3])
 {
   int i;
   double pDist, pDistMax=0.0;

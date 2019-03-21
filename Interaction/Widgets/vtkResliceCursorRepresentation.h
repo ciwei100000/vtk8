@@ -48,6 +48,9 @@ class vtkTexture;
 class vtkTextActor;
 class vtkImageAlgorithm;
 
+// Private.
+#define VTK_RESLICE_CURSOR_REPRESENTATION_MAX_TEXTBUFF 128
+
 class VTKINTERACTIONWIDGETS_EXPORT vtkResliceCursorRepresentation : public vtkWidgetRepresentation
 {
 public:
@@ -56,7 +59,7 @@ public:
    * Standard VTK methods.
    */
   vtkTypeMacro(vtkResliceCursorRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -73,9 +76,9 @@ public:
   /**
    * Show the resliced image ?
    */
-  vtkSetMacro( ShowReslicedImage, int );
-  vtkGetMacro( ShowReslicedImage, int );
-  vtkBooleanMacro( ShowReslicedImage, int );
+  vtkSetMacro( ShowReslicedImage, vtkTypeBool );
+  vtkGetMacro( ShowReslicedImage, vtkTypeBool );
+  vtkBooleanMacro( ShowReslicedImage, vtkTypeBool );
   //@}
 
   //@{
@@ -83,9 +86,9 @@ public:
    * Make sure that the resliced image remains within the volume.
    * Default is On.
    */
-  vtkSetMacro(RestrictPlaneToVolume,int);
-  vtkGetMacro(RestrictPlaneToVolume,int);
-  vtkBooleanMacro(RestrictPlaneToVolume,int);
+  vtkSetMacro(RestrictPlaneToVolume,vtkTypeBool);
+  vtkGetMacro(RestrictPlaneToVolume,vtkTypeBool);
+  vtkBooleanMacro(RestrictPlaneToVolume,vtkTypeBool);
   //@}
 
   //@{
@@ -121,7 +124,7 @@ public:
   /**
    * These are methods that satisfy vtkWidgetRepresentation's API.
    */
-  void BuildRepresentation() VTK_OVERRIDE;
+  void BuildRepresentation() override;
 
   //@{
   /**
@@ -144,7 +147,7 @@ public:
    * alternatively, to the lut of another Reslice cusror widget.  In this way,
    * a set of three orthogonal planes can share the same lut so that
    * window-levelling is performed uniformly among planes.  The default
-   * internal lut can be re- set/allocated by setting to 0 (NULL).
+   * internal lut can be re- set/allocated by setting to 0 (nullptr).
    */
   virtual void SetLookupTable(vtkScalarsToColors*);
   vtkGetObjectMacro(LookupTable,vtkScalarsToColors);
@@ -181,9 +184,9 @@ public:
    * Enable/disable text display of window-level, image coordinates and
    * scalar values in a render window.
    */
-  vtkSetMacro(DisplayText,int);
-  vtkGetMacro(DisplayText,int);
-  vtkBooleanMacro(DisplayText,int);
+  vtkSetMacro(DisplayText,vtkTypeBool);
+  vtkGetMacro(DisplayText,vtkTypeBool);
+  vtkBooleanMacro(DisplayText,vtkTypeBool);
   //@}
 
   //@{
@@ -199,9 +202,9 @@ public:
    * Render as a 2D image, or render as a plane with a texture in physical
    * space.
    */
-  vtkSetMacro( UseImageActor, int );
-  vtkGetMacro( UseImageActor, int );
-  vtkBooleanMacro( UseImageActor, int );
+  vtkSetMacro( UseImageActor, vtkTypeBool );
+  vtkGetMacro( UseImageActor, vtkTypeBool );
+  vtkBooleanMacro( UseImageActor, vtkTypeBool );
   //@}
 
   //@{
@@ -247,7 +250,7 @@ public:
 
 protected:
   vtkResliceCursorRepresentation();
-  ~vtkResliceCursorRepresentation() VTK_OVERRIDE;
+  ~vtkResliceCursorRepresentation() override;
 
   //@{
   /**
@@ -304,8 +307,8 @@ protected:
 
   vtkImageAlgorithm       * Reslice;
   vtkPlaneSource          * PlaneSource;
-  int                       RestrictPlaneToVolume;
-  int                       ShowReslicedImage;
+  vtkTypeBool                       RestrictPlaneToVolume;
+  vtkTypeBool                       ShowReslicedImage;
   vtkTextProperty         * ThicknessTextProperty;
   vtkTextMapper           * ThicknessTextMapper;
   vtkActor2D              * ThicknessTextActor;
@@ -324,16 +327,16 @@ protected:
   double                    InitialWindow;
   double                    InitialLevel;
   double                    LastEventPosition[2];
-  int                       UseImageActor;
-  char                      TextBuff[128];
-  int                       DisplayText;
+  vtkTypeBool                       UseImageActor;
+  char                      TextBuff[VTK_RESLICE_CURSOR_REPRESENTATION_MAX_TEXTBUFF];
+  vtkTypeBool                       DisplayText;
 
   vtkScalarsToColors      * CreateDefaultLookupTable();
   void                      GenerateText();
 
 private:
-  vtkResliceCursorRepresentation(const vtkResliceCursorRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkResliceCursorRepresentation&) VTK_DELETE_FUNCTION;
+  vtkResliceCursorRepresentation(const vtkResliceCursorRepresentation&) = delete;
+  void operator=(const vtkResliceCursorRepresentation&) = delete;
 };
 
 #endif

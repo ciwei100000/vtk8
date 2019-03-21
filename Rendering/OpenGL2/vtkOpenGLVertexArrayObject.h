@@ -38,7 +38,7 @@ class VTKRENDERINGOPENGL2_EXPORT vtkOpenGLVertexArrayObject : public vtkObject
 public:
   static vtkOpenGLVertexArrayObject* New();
   vtkTypeMacro(vtkOpenGLVertexArrayObject, vtkObject)
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   void Bind();
 
@@ -71,23 +71,23 @@ public:
                          vtkOpenGLBufferObject *buffer,
                          const std::string &name, int offset, size_t stride,
                          int elementType, int elementTupleSize, bool normalize,
-                         int divisor);
+                         int divisor, int tupleOffset);
 
   bool RemoveAttributeArray(const std::string &name);
 
-  // Force this VAO to emulate a vertex aray object even if
+  // Force this VAO to emulate a vertex array object even if
   // the system supports VAOs. This can be useful in cases where
   // the vertex array object does not handle all extensions.
   void SetForceEmulation(bool val);
 
 protected:
   vtkOpenGLVertexArrayObject();
-  ~vtkOpenGLVertexArrayObject() VTK_OVERRIDE;
+  ~vtkOpenGLVertexArrayObject() override;
 
 private:
   vtkOpenGLVertexArrayObject(
-    const vtkOpenGLVertexArrayObject&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLVertexArrayObject&) VTK_DELETE_FUNCTION;
+    const vtkOpenGLVertexArrayObject&) = delete;
+  void operator=(const vtkOpenGLVertexArrayObject&) = delete;
   class Private;
   Private *Internal;
 };

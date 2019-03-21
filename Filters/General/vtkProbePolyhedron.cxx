@@ -39,9 +39,7 @@ vtkProbePolyhedron::vtkProbePolyhedron()
 }
 
 //----------------------------------------------------------------------------
-vtkProbePolyhedron::~vtkProbePolyhedron()
-{
-}
+vtkProbePolyhedron::~vtkProbePolyhedron() = default;
 
 //----------------------------------------------------------------------------
 void vtkProbePolyhedron::SetSourceConnection(vtkAlgorithmOutput* algOutput)
@@ -60,7 +58,7 @@ vtkPolyData *vtkProbePolyhedron::GetSource()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return NULL;
+    return nullptr;
   }
 
   return vtkPolyData::SafeDownCast(

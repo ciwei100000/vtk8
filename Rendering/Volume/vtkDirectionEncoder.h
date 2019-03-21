@@ -44,7 +44,7 @@ public:
    * Get the name of this class
    */
   vtkTypeMacro(vtkDirectionEncoder,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -55,7 +55,7 @@ public:
   /**
    * / Given an encoded value, return a pointer to the normal vector
    */
-  virtual float *GetDecodedGradient( int value )=0;
+  virtual float *GetDecodedGradient( int value ) VTK_SIZEHINT(3) = 0;
 
   /**
    * Return the number of encoded directions
@@ -72,10 +72,10 @@ public:
 
 protected:
   vtkDirectionEncoder() {}
-  ~vtkDirectionEncoder()VTK_OVERRIDE {}
+  ~vtkDirectionEncoder() override {}
 private:
-  vtkDirectionEncoder(const vtkDirectionEncoder&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDirectionEncoder&) VTK_DELETE_FUNCTION;
+  vtkDirectionEncoder(const vtkDirectionEncoder&) = delete;
+  void operator=(const vtkDirectionEncoder&) = delete;
 };
 
 

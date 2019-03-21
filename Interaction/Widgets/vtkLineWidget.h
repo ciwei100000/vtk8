@@ -93,18 +93,18 @@ public:
   static vtkLineWidget *New();
 
   vtkTypeMacro(vtkLineWidget,vtk3DWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Methods that satisfy the superclass' API.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void PlaceWidget() VTK_OVERRIDE
+  void SetEnabled(int) override;
+  void PlaceWidget(double bounds[6]) override;
+  void PlaceWidget() override
     {this->Superclass::PlaceWidget();}
   void PlaceWidget(double xmin, double xmax, double ymin, double ymax,
-                   double zmin, double zmax) VTK_OVERRIDE
+                   double zmin, double zmax) override
     {this->Superclass::PlaceWidget(xmin,xmax,ymin,ymax,zmin,zmax);}
   //@}
 
@@ -122,7 +122,7 @@ public:
   void SetPoint1(double x, double y, double z);
   void SetPoint1(double x[3])
     {this->SetPoint1(x[0], x[1], x[2]); }
-  double* GetPoint1()
+  double* GetPoint1() VTK_SIZEHINT(3)
     {return this->LineSource->GetPoint1();}
   void GetPoint1(double xyz[3])
     {this->LineSource->GetPoint1(xyz);}
@@ -133,7 +133,7 @@ public:
   void SetPoint2(double x, double y, double z);
   void SetPoint2(double x[3])
     {this->SetPoint2(x[0], x[1], x[2]);}
-  double* GetPoint2()
+  double* GetPoint2() VTK_SIZEHINT(3)
     {return this->LineSource->GetPoint2();}
   void GetPoint2(double xyz[3])
     {this->LineSource->GetPoint2(xyz);}
@@ -160,9 +160,9 @@ public:
    * invocation, and includes the effect of the PlaceFactor which is used
    * to gram/shrink the bounding box.
    */
-  vtkSetMacro(ClampToBounds,int);
-  vtkGetMacro(ClampToBounds,int);
-  vtkBooleanMacro(ClampToBounds,int);
+  vtkSetMacro(ClampToBounds,vtkTypeBool);
+  vtkGetMacro(ClampToBounds,vtkTypeBool);
+  vtkBooleanMacro(ClampToBounds,vtkTypeBool);
   //@}
 
   /**
@@ -195,7 +195,7 @@ public:
 
 protected:
   vtkLineWidget();
-  ~vtkLineWidget() VTK_OVERRIDE;
+  ~vtkLineWidget() override;
 
   // Manage the state of the widget
   friend class vtkPWCallback;
@@ -247,7 +247,7 @@ protected:
   vtkSphereSource   **HandleGeometry;
 
   void BuildRepresentation();
-  void SizeHandles() VTK_OVERRIDE;
+  void SizeHandles() override;
   void HandlesOn(double length);
   void HandlesOff();
   int HighlightHandle(vtkProp *prop); //returns cell id
@@ -261,13 +261,13 @@ protected:
   void  SetLinePosition(double x[3]);
 
   // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  void RegisterPickers() override;
 
   // Methods to manipulate the hexahedron.
   void Scale(double *p1, double *p2, int X, int Y);
 
   // Initial bounds
-  int   ClampToBounds;
+  vtkTypeBool   ClampToBounds;
   void  ClampPosition(double x[3]);
   int   InBounds(double x[3]);
 
@@ -294,8 +294,8 @@ protected:
   int ForwardEvent(unsigned long event);
 
 private:
-  vtkLineWidget(const vtkLineWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkLineWidget&) VTK_DELETE_FUNCTION;
+  vtkLineWidget(const vtkLineWidget&) = delete;
+  void operator=(const vtkLineWidget&) = delete;
 };
 
 #endif

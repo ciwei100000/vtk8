@@ -21,6 +21,9 @@
 #include "vtkMapper.h"
 #include "vtkObjectFactory.h"
 #include "vtkOpenGLError.h"
+#include "vtkOpenGLRenderUtilities.h"
+#include "vtkOpenGLRenderer.h"
+#include "vtkOpenGLState.h"
 #include "vtkProp.h"
 #include "vtkProperty.h"
 #include "vtkRenderer.h"
@@ -28,23 +31,11 @@
 
 #include <string>
 
-// Define to print debug statements to the OpenGL CS stream (useful for e.g.
-// apitrace debugging):
-//#define ANNOTATE_STREAM
-
 namespace
 {
 void annotate(const std::string &str)
 {
-#ifdef ANNOTATE_STREAM
-  vtkOpenGLStaticCheckErrorMacro("Error before glDebug.")
-  glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER,
-                       GL_DEBUG_SEVERITY_NOTIFICATION,
-                       0, str.size(), str.c_str());
-  vtkOpenGLClearErrorMacro();
-#else // ANNOTATE_STREAM
-  (void)str;
-#endif // ANNOTATE_STREAM
+  vtkOpenGLRenderUtilities::MarkDebugEvent(str);
 }
 }
 
@@ -88,6 +79,7 @@ void vtkHiddenLineRemovalPass::Render(const vtkRenderState *s)
   }
 
   vtkViewport *vp = s->GetRenderer();
+  vtkOpenGLState *ostate = static_cast<vtkOpenGLRenderer *>(vp)->GetState();
 
   // Render the non-wireframe geometry as normal:
   annotate("Rendering non-wireframe props.");
@@ -106,14 +98,14 @@ void vtkHiddenLineRemovalPass::Render(const vtkRenderState *s)
   // Draw the wireframe props as surfaces into the depth buffer only:
   annotate("Rendering wireframe prop surfaces.");
   this->SetRepresentation(wireframeProps, VTK_SURFACE);
-  glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+  ostate->vtkglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
   this->RenderProps(wireframeProps, vp);
   vtkOpenGLStaticCheckErrorMacro("Error after wireframe surface rendering.");
 
   // Now draw the wireframes as normal:
   annotate("Rendering wireframes.");
   this->SetRepresentation(wireframeProps, VTK_WIREFRAME);
-  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  ostate->vtkglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   this->NumberOfRenderedProps = this->RenderProps(wireframeProps, vp);
   vtkOpenGLStaticCheckErrorMacro("Error after wireframe rendering.");
 
@@ -144,14 +136,10 @@ bool vtkHiddenLineRemovalPass::WireframePropsExist(vtkProp **propArray,
 }
 
 //------------------------------------------------------------------------------
-vtkHiddenLineRemovalPass::vtkHiddenLineRemovalPass()
-{
-}
+vtkHiddenLineRemovalPass::vtkHiddenLineRemovalPass() = default;
 
 //------------------------------------------------------------------------------
-vtkHiddenLineRemovalPass::~vtkHiddenLineRemovalPass()
-{
-}
+vtkHiddenLineRemovalPass::~vtkHiddenLineRemovalPass() = default;
 
 //------------------------------------------------------------------------------
 void vtkHiddenLineRemovalPass::SetRepresentation(std::vector<vtkProp *> &props,

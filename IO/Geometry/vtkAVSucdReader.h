@@ -49,7 +49,7 @@ class VTKIOGEOMETRY_EXPORT vtkAVSucdReader : public vtkUnstructuredGridAlgorithm
 public:
   static vtkAVSucdReader *New();
   vtkTypeMacro(vtkAVSucdReader,vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -63,9 +63,9 @@ public:
   /**
    * Is the file to be read written in binary format (as opposed to ascii).
    */
-  vtkSetMacro(BinaryFile, int);
-  vtkGetMacro(BinaryFile, int);
-  vtkBooleanMacro(BinaryFile, int);
+  vtkSetMacro(BinaryFile, vtkTypeBool);
+  vtkGetMacro(BinaryFile, vtkTypeBool);
+  vtkBooleanMacro(BinaryFile, vtkTypeBool);
   //@}
 
   //@{
@@ -155,12 +155,12 @@ public:
 
 protected:
   vtkAVSucdReader();
-  ~vtkAVSucdReader() VTK_OVERRIDE;
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  ~vtkAVSucdReader() override;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   char *FileName;
-  int BinaryFile;
+  vtkTypeBool BinaryFile;
 
   int NumberOfNodes;
   int NumberOfCells;
@@ -226,8 +226,8 @@ private:
                              const idMapping& nodeMap,
                              idMapping& cellMap);
 
-  vtkAVSucdReader(const vtkAVSucdReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAVSucdReader&) VTK_DELETE_FUNCTION;
+  vtkAVSucdReader(const vtkAVSucdReader&) = delete;
+  void operator=(const vtkAVSucdReader&) = delete;
 };
 
 #endif

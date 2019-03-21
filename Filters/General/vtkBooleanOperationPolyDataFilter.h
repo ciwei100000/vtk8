@@ -52,7 +52,7 @@ public:
   vtkTypeMacro(vtkBooleanOperationPolyDataFilter,
                vtkPolyDataAlgorithm);
 
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   enum OperationType
   {
@@ -80,9 +80,9 @@ public:
    * Turn on/off cell reorientation of the intersection portion of the
    * surface when the operation is set to DIFFERENCE. Defaults to on.
    */
-  vtkSetMacro( ReorientDifferenceCells, int );
-  vtkGetMacro( ReorientDifferenceCells, int );
-  vtkBooleanMacro( ReorientDifferenceCells, int );
+  vtkSetMacro( ReorientDifferenceCells, vtkTypeBool );
+  vtkGetMacro( ReorientDifferenceCells, vtkTypeBool );
+  vtkBooleanMacro( ReorientDifferenceCells, vtkTypeBool );
   //@}
 
   //@{
@@ -96,7 +96,7 @@ public:
 
 protected:
   vtkBooleanOperationPolyDataFilter();
-  ~vtkBooleanOperationPolyDataFilter() VTK_OVERRIDE;
+  ~vtkBooleanOperationPolyDataFilter() override;
 
   /**
    * Labels triangles in mesh as part of the intersection or union surface.
@@ -104,15 +104,15 @@ protected:
   void SortPolyData(vtkPolyData* input, vtkIdList* intersectionList,
                     vtkIdList* unionList);
 
-  int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) VTK_OVERRIDE;
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
 private:
-  vtkBooleanOperationPolyDataFilter(const vtkBooleanOperationPolyDataFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBooleanOperationPolyDataFilter&) VTK_DELETE_FUNCTION;
+  vtkBooleanOperationPolyDataFilter(const vtkBooleanOperationPolyDataFilter&) = delete;
+  void operator=(const vtkBooleanOperationPolyDataFilter&) = delete;
 
   /**
-   * Copies cells with indices given by  from one vtkPolyData to
+   * Copies cells with indices given by from one vtkPolyData to
    * another. The point and cell field lists are used to determine
    * which fields should be copied.
    */
@@ -138,7 +138,7 @@ private:
    * Determines if cells from the intersection surface should be
    * reversed in the difference surface.
    */
-  int ReorientDifferenceCells;
+  vtkTypeBool ReorientDifferenceCells;
 };
   //@}
 

@@ -3,9 +3,4 @@ set(Module_SRCS
   vtkNamedColors.cxx
 )
 
-#set_source_files_properties(
-#  ABSTRACT
-#  WRAP_EXCLUDE
-#)
-
 vtk_module_library(vtkCommonColor ${Module_SRCS})

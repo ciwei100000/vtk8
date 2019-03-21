@@ -25,8 +25,8 @@ vtkStandardNewMacro(vtkLandmarkTransform);
 vtkLandmarkTransform::vtkLandmarkTransform()
 {
   this->Mode = VTK_LANDMARK_SIMILARITY;
-  this->SourceLandmarks=NULL;
-  this->TargetLandmarks=NULL;
+  this->SourceLandmarks=nullptr;
+  this->TargetLandmarks=nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -67,7 +67,7 @@ void vtkLandmarkTransform::InternalUpdate()
   vtkIdType i;
   int j;
 
-  if (this->SourceLandmarks == NULL || this->TargetLandmarks == NULL)
+  if (this->SourceLandmarks == nullptr || this->TargetLandmarks == nullptr)
   {
     this->Matrix->Identity();
     return;
@@ -177,6 +177,17 @@ void vtkLandmarkTransform::InternalUpdate()
     // accumulate scale factors (if desired)
     sa += a[0]*a[0]+a[1]*a[1]+a[2]*a[2];
     sb += b[0]*b[0]+b[1]*b[1]+b[2]*b[2];
+  }
+
+  // if source or destination is degenerate then only report
+  // translation
+  if (sa == 0.0 || sb == 0.0)
+  {
+    this->Matrix->Identity();
+    this->Matrix->Element[0][3] = target_centroid[0] - source_centroid[0];
+    this->Matrix->Element[1][3] = target_centroid[1] - source_centroid[1];
+    this->Matrix->Element[2][3] = target_centroid[2] - source_centroid[2];
+    return;
   }
 
   if(this->Mode == VTK_LANDMARK_AFFINE)
@@ -290,7 +301,7 @@ void vtkLandmarkTransform::InternalUpdate()
       else // rotation by 180 degrees: special case
       {
         // rotate around a vector perpendicular to ds
-        vtkMath::Perpendiculars(ds,dt,0,0);
+        vtkMath::Perpendiculars(ds,dt,nullptr,0);
         r = sin(theta/2);
         x = dt[0]*r;
         y = dt[1]*r;

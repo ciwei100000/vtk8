@@ -44,9 +44,7 @@ vtkSpherePuzzleArrows::vtkSpherePuzzleArrows()
 
 //----------------------------------------------------------------------------
 // Destruct the puzzle.
-vtkSpherePuzzleArrows::~vtkSpherePuzzleArrows()
-{
-}
+vtkSpherePuzzleArrows::~vtkSpherePuzzleArrows() = default;
 
 //----------------------------------------------------------------------------
 void vtkSpherePuzzleArrows::SetPermutationComponent(int comp, int val)
@@ -69,7 +67,7 @@ int vtkSpherePuzzleArrows::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 

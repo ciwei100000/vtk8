@@ -20,14 +20,10 @@
 vtkStandardNewMacro(vtkTextWidget);
 
 //-------------------------------------------------------------------------
-vtkTextWidget::vtkTextWidget()
-{
-}
+vtkTextWidget::vtkTextWidget() = default;
 
 //-------------------------------------------------------------------------
-vtkTextWidget::~vtkTextWidget()
-{
-}
+vtkTextWidget::~vtkTextWidget() = default;
 
 //-------------------------------------------------------------------------
 void vtkTextWidget::SetTextActor(vtkTextActor *textActor)
@@ -53,7 +49,7 @@ vtkTextActor *vtkTextWidget::GetTextActor()
   vtkTextRepresentation *textRep = reinterpret_cast<vtkTextRepresentation*>(this->WidgetRep);
   if ( ! textRep )
   {
-    return NULL;
+    return nullptr;
   }
   else
   {

@@ -60,14 +60,14 @@ public:
   static vtkParallelopipedWidget *New();
 
   vtkTypeMacro(vtkParallelopipedWidget,vtkAbstractWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Override the superclass method. This is a composite widget, (it internally
    * consists of handle widgets). We will override the superclass method, so
    * that we can pass the enabled state to the internal widgets as well.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
+  void SetEnabled(int) override;
 
   /**
    * Specify an instance of vtkWidgetRepresentation used to represent this
@@ -91,25 +91,25 @@ public:
    * Enable/disable the creation of a chair on this widget. If off,
    * chairs cannot be created.
    */
-  vtkSetMacro(EnableChairCreation,int);
-  vtkGetMacro(EnableChairCreation,int);
-  vtkBooleanMacro(EnableChairCreation,int);
+  vtkSetMacro(EnableChairCreation,vtkTypeBool);
+  vtkGetMacro(EnableChairCreation,vtkTypeBool);
+  vtkBooleanMacro(EnableChairCreation,vtkTypeBool);
   //@}
 
   /**
    * Create the default widget representation if one is not set.
    */
-  void CreateDefaultRepresentation() VTK_OVERRIDE;
+  void CreateDefaultRepresentation() override;
 
   /**
    * Methods to change the whether the widget responds to interaction.
    * Overridden to pass the state to component widgets.
    */
-  void SetProcessEvents(int) VTK_OVERRIDE;
+  void SetProcessEvents(vtkTypeBool) override;
 
 protected:
   vtkParallelopipedWidget();
-  ~vtkParallelopipedWidget() VTK_OVERRIDE;
+  ~vtkParallelopipedWidget() override;
 
   static void RequestResizeCallback             (vtkAbstractWidget* );
   static void RequestResizeAlongAnAxisCallback  (vtkAbstractWidget* );
@@ -119,7 +119,7 @@ protected:
   static void OnLeftButtonUpCallback            (vtkAbstractWidget* );
 
   // Control whether chairs can be created
-  int EnableChairCreation;
+  vtkTypeBool EnableChairCreation;
 
   //@{
   void BeginTranslateAction ( vtkParallelopipedWidget *dispatcher);
@@ -127,10 +127,10 @@ protected:
   //@}
 
   // helper methods for cursor management
-  void SetCursor(int state) VTK_OVERRIDE;
+  void SetCursor(int state) override;
 
   // To break reference count loops
-  void ReportReferences(vtkGarbageCollector* collector) VTK_OVERRIDE;
+  void ReportReferences(vtkGarbageCollector* collector) override;
 
   // The positioning handle widgets
   vtkHandleWidget **HandleWidgets;
@@ -148,8 +148,8 @@ protected:
   vtkWidgetSet* WidgetSet;
 
 private:
-  vtkParallelopipedWidget(const vtkParallelopipedWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkParallelopipedWidget&) VTK_DELETE_FUNCTION;
+  vtkParallelopipedWidget(const vtkParallelopipedWidget&) = delete;
+  void operator=(const vtkParallelopipedWidget&) = delete;
 };
 
 #endif

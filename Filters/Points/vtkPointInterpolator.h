@@ -21,7 +21,7 @@
  * set of points P (the filter Input), interpolating the data values from Pc
  * onto P. Note however that the descriptive phrase "point cloud" is a
  * misnomer: Pc can be represented by any vtkDataSet type, with the points of
- * the dataset forming Pc. Similary, the output P can also be represented by
+ * the dataset forming Pc. Similarly, the output P can also be represented by
  * any vtkDataSet type; and the topology/geometry structure of P is passed
  * through to the output along with the newly interpolated arrays.
  *
@@ -87,7 +87,7 @@ public:
    */
   static vtkPointInterpolator *New();
   vtkTypeMacro(vtkPointInterpolator,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -217,7 +217,7 @@ public:
   {
       if ( i < 0 || i >= static_cast<int>(this->ExcludedArrays.size()) )
       {
-        return NULL;
+        return nullptr;
       }
       return this->ExcludedArrays[i].c_str();
   }
@@ -268,11 +268,11 @@ public:
   /**
    * Get the MTime of this object also considering the locator and kernel.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkPointInterpolator();
-  ~vtkPointInterpolator() VTK_OVERRIDE;
+  ~vtkPointInterpolator() override;
 
   vtkAbstractPointLocator *Locator;
   vtkInterpolationKernel *Kernel;
@@ -291,11 +291,11 @@ protected:
   bool PassFieldArrays;
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
   int RequestInformation(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
   int RequestUpdateExtent(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
 
   /**
    * Virtual for specialized subclass(es)
@@ -316,8 +316,8 @@ protected:
                                double origin[3], double spacing[3]);
 
 private:
-  vtkPointInterpolator(const vtkPointInterpolator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPointInterpolator&) VTK_DELETE_FUNCTION;
+  vtkPointInterpolator(const vtkPointInterpolator&) = delete;
+  void operator=(const vtkPointInterpolator&) = delete;
 
 };
 

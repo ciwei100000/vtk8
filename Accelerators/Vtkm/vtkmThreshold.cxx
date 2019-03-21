@@ -37,35 +37,6 @@
 
 vtkStandardNewMacro(vtkmThreshold)
 
-namespace
-{
-
-  template <typename FilterType, typename PolicyType>
-  bool convert_fields(FilterType & filter, vtkm::filter::ResultDataSet & result,
-                      const PolicyType& policy, vtkFieldData* fields,
-                      int association)
-  {
-    for (vtkIdType i = 0; i < fields->GetNumberOfArrays(); i++)
-    {
-      vtkDataArray* array = fields->GetArray(i);
-      if (array == NULL)
-      {
-        continue;
-      }
-
-      vtkm::cont::Field f = tovtkm::Convert(array, association);
-      try
-      {
-        filter.MapFieldOntoOutput(result, f, policy);
-      }
-      catch (vtkm::cont::Error&)
-      { // todo: should signal we had an issue converting
-      }
-    }
-    return true;
-  }
-}
-
 //------------------------------------------------------------------------------
 vtkmThreshold::vtkmThreshold()
 {
@@ -89,55 +60,38 @@ int vtkmThreshold::RequestData(vtkInformation* request,
   vtkUnstructuredGrid* output = vtkUnstructuredGrid::SafeDownCast(
       outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
-  vtkm::filter::Threshold filter;
-
-  // set local variables
-  filter.SetLowerThreshold(this->GetLowerThreshold());
-  filter.SetUpperThreshold(this->GetUpperThreshold());
-
-  // convert the input dataset to a vtkm::cont::DataSet
-  vtkm::cont::DataSet in = tovtkm::Convert(input);
-
-  // we need to map the given property to the data set
-  int association = this->GetInputArrayAssociation(0, inputVector);
   vtkDataArray* inputArray = this->GetInputArrayToProcess(0, inputVector);
-  vtkm::cont::Field field = tovtkm::Convert(inputArray, association);
-
-  const bool dataSetValid =
-      in.GetNumberOfCoordinateSystems() > 0 && in.GetNumberOfCellSets() > 0;
-  const bool fieldValid =
-      (field.GetAssociation() != vtkm::cont::Field::ASSOC_ANY);
-
-  vtkm::filter::ResultDataSet result;
-  bool convertedDataSet = false;
-  if (dataSetValid && fieldValid)
+  if (inputArray == nullptr || inputArray->GetName() == nullptr ||
+      inputArray->GetName()[0] == '\0')
   {
-    vtkmInputFilterPolicy policy;
-    result = filter.Execute(in, field, policy);
-
-    // convert other scalar arrays
-    if (result.IsValid())
-    {
-      // now convert point & cell data
-      vtkPointData* pd = input->GetPointData();
-      vtkCellData* cd = input->GetCellData();
-
-      convert_fields(filter, result, policy, pd,
-                     vtkDataObject::FIELD_ASSOCIATION_POINTS);
-      convert_fields(filter, result, policy, cd,
-                     vtkDataObject::FIELD_ASSOCIATION_CELLS);
-
-      // now we are done the algorithm and conversion of arrays so
-      // convert back the dataset to VTK
-      convertedDataSet = fromvtkm::Convert(result.GetDataSet(), output, input);
-    }
+    vtkErrorMacro("Invalid input array.");
+    return 0;
   }
 
-  if (!result.IsValid() || !convertedDataSet)
+  try
   {
-    vtkWarningMacro(<< "Could not use VTKm to generate threshold. "
-                    << "Falling back to serial implementation.");
+    // convert the input dataset to a vtkm::cont::DataSet
+    auto in = tovtkm::Convert(input, tovtkm::FieldsFlag::PointsAndCells);
 
+    vtkmInputFilterPolicy policy;
+    vtkm::filter::Threshold filter;
+    filter.SetActiveField(inputArray->GetName());
+    filter.SetLowerThreshold(this->GetLowerThreshold());
+    filter.SetUpperThreshold(this->GetUpperThreshold());
+    auto result = filter.Execute(in, policy);
+
+    // now we are done the algorithm and conversion of arrays so
+    // convert back the dataset to VTK
+    if (!fromvtkm::Convert(result, output, input))
+    {
+      vtkErrorMacro(<< "Unable to convert VTKm DataSet back to VTK");
+      return 0;
+    }
+  }
+  catch (const vtkm::cont::Error& e)
+  {
+    vtkWarningMacro(<< "VTK-m error: " << e.GetMessage()
+                    << "Falling back to serial implementation");
     return this->Superclass::RequestData(request, inputVector, outputVector);
   }
 

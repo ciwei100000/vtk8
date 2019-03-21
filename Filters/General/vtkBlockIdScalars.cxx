@@ -25,14 +25,10 @@
 
 vtkStandardNewMacro(vtkBlockIdScalars);
 //----------------------------------------------------------------------------
-vtkBlockIdScalars::vtkBlockIdScalars()
-{
-}
+vtkBlockIdScalars::vtkBlockIdScalars() = default;
 
 //----------------------------------------------------------------------------
-vtkBlockIdScalars::~vtkBlockIdScalars()
-{
-}
+vtkBlockIdScalars::~vtkBlockIdScalars() = default;
 
 //----------------------------------------------------------------------------
 // Map ids into attribute data
@@ -88,7 +84,7 @@ int vtkBlockIdScalars::RequestData(
 vtkDataObject* vtkBlockIdScalars::ColorBlock(
   vtkDataObject* input, int group)
 {
-  vtkDataObject* output = 0;
+  vtkDataObject* output = nullptr;
   if (input->IsA("vtkCompositeDataSet"))
   {
     vtkCompositeDataSet* mbInput = vtkCompositeDataSet::SafeDownCast(input);
@@ -103,7 +99,7 @@ vtkDataObject* vtkBlockIdScalars::ColorBlock(
       inIter->GoToNextItem())
     {
       vtkDataObject* src = inIter->GetCurrentDataObject();
-      vtkDataObject* dest = 0;
+      vtkDataObject* dest = nullptr;
       if (src)
       {
         dest = this->ColorBlock(src, group);

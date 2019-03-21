@@ -51,7 +51,7 @@ class VTKFILTERSEXTRACTION_EXPORT vtkExtractGrid : public vtkStructuredGridAlgor
 public:
   static vtkExtractGrid *New();
   vtkTypeMacro(vtkExtractGrid,vtkStructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -84,18 +84,18 @@ public:
    * though the sample rate is not an even multiple of the grid
    * dimensions. (By default IncludeBoundary is off.)
    */
-  vtkSetMacro(IncludeBoundary,int);
-  vtkGetMacro(IncludeBoundary,int);
-  vtkBooleanMacro(IncludeBoundary,int);
+  vtkSetMacro(IncludeBoundary,vtkTypeBool);
+  vtkGetMacro(IncludeBoundary,vtkTypeBool);
+  vtkBooleanMacro(IncludeBoundary,vtkTypeBool);
   //@}
 
 protected:
   vtkExtractGrid();
-  ~vtkExtractGrid() VTK_OVERRIDE;
+  ~vtkExtractGrid() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   /**
    * Implementation for RequestData using a specified VOI. This is because the
@@ -109,13 +109,13 @@ protected:
 
   int VOI[6];
   int SampleRate[3];
-  int IncludeBoundary;
+  vtkTypeBool IncludeBoundary;
 
   vtkExtractStructuredGridHelper* Internal;
 
 private:
-  vtkExtractGrid(const vtkExtractGrid&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtractGrid&) VTK_DELETE_FUNCTION;
+  vtkExtractGrid(const vtkExtractGrid&) = delete;
+  void operator=(const vtkExtractGrid&) = delete;
 };
 
 #endif

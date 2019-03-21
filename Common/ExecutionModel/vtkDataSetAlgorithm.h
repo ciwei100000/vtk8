@@ -22,7 +22,7 @@
  * class you should be aware of. This class defaults such that your filter
  * will have one input port and one output port. If that is not the case
  * simply change it with SetNumberOfInputPorts etc. See this classes
- * contstructor for the default. This class also provides a FillInputPortInfo
+ * constructor for the default. This class also provides a FillInputPortInfo
  * method that by default says that all inputs will be DataSet. If that isn't
  * the case then please override this method in your subclass. This class
  * breaks out the downstream requests into separate functions such as
@@ -50,7 +50,7 @@ class VTKCOMMONEXECUTIONMODEL_EXPORT vtkDataSetAlgorithm : public vtkAlgorithm
 public:
   static vtkDataSetAlgorithm *New();
   vtkTypeMacro(vtkDataSetAlgorithm,vtkAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -125,11 +125,11 @@ public:
    */
   int ProcessRequest(vtkInformation* request,
                              vtkInformationVector** inputVector,
-                             vtkInformationVector* outputVector) VTK_OVERRIDE;
+                             vtkInformationVector* outputVector) override;
 
 protected:
   vtkDataSetAlgorithm();
-  ~vtkDataSetAlgorithm() VTK_OVERRIDE {}
+  ~vtkDataSetAlgorithm() override {}
 
   /**
    * This is called within ProcessRequest when a request asks for
@@ -183,14 +183,14 @@ protected:
 
 
   // see algorithm for more info
-  int FillOutputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillOutputPortInformation(int port, vtkInformation* info) override;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
 
   vtkDataObject *GetInput(int port);
 
 private:
-  vtkDataSetAlgorithm(const vtkDataSetAlgorithm&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataSetAlgorithm&) VTK_DELETE_FUNCTION;
+  vtkDataSetAlgorithm(const vtkDataSetAlgorithm&) = delete;
+  void operator=(const vtkDataSetAlgorithm&) = delete;
 };
 
 #endif

@@ -35,7 +35,7 @@ class VTKFILTERSREEBGRAPH_EXPORT vtkReebGraphSimplificationFilter :
 public:
   static vtkReebGraphSimplificationFilter* New();
   vtkTypeMacro(vtkReebGraphSimplificationFilter, vtkDirectedGraphAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -48,7 +48,7 @@ public:
 
   /**
    * Set the persistence metric evaluation code
-   * Default value: NULL (standard topological persistence).
+   * Default value: nullptr (standard topological persistence).
    */
   void SetSimplificationMetric(vtkReebGraphSimplificationMetric *metric);
 
@@ -62,15 +62,15 @@ protected:
 
   vtkReebGraphSimplificationMetric *SimplificationMetric;
 
-  int FillInputPortInformation(int portNumber, vtkInformation *);
-  int FillOutputPortInformation(int, vtkInformation *);
+  int FillInputPortInformation(int portNumber, vtkInformation *) override;
+  int FillOutputPortInformation(int, vtkInformation *) override;
 
   int RequestData(vtkInformation *request,
-    vtkInformationVector **inputVector, vtkInformationVector *outputVector);
+    vtkInformationVector **inputVector, vtkInformationVector *outputVector) override;
 
 private:
-  vtkReebGraphSimplificationFilter(const vtkReebGraphSimplificationFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkReebGraphSimplificationFilter&) VTK_DELETE_FUNCTION;
+  vtkReebGraphSimplificationFilter(const vtkReebGraphSimplificationFilter&) = delete;
+  void operator=(const vtkReebGraphSimplificationFilter&) = delete;
 };
 
 #endif

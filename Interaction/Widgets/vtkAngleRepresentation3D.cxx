@@ -264,10 +264,10 @@ void vtkAngleRepresentation3D::GetPoint2DisplayPosition(double pos[3])
 //----------------------------------------------------------------------
 void vtkAngleRepresentation3D::BuildRepresentation()
 {
-  if (this->Point1Representation == NULL ||
-      this->CenterRepresentation == NULL ||
-      this->Point2Representation == NULL ||
-      this->ArcSource == NULL)
+  if (this->Point1Representation == nullptr ||
+      this->CenterRepresentation == nullptr ||
+      this->Point2Representation == nullptr ||
+      this->ArcSource == nullptr)
   {
     // for now, return. Could create defaults here.
     return;
@@ -437,7 +437,7 @@ int vtkAngleRepresentation3D::RenderTranslucentPolygonalGeometry(vtkViewport *v)
 }
 
 //----------------------------------------------------------------------------
-int vtkAngleRepresentation3D::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkAngleRepresentation3D::HasTranslucentPolygonalGeometry()
 {
   int result=0;
   this->BuildRepresentation();

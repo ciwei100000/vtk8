@@ -20,14 +20,10 @@
 vtkStandardNewMacro(vtkDataArrayCollectionIterator);
 
 //----------------------------------------------------------------------------
-vtkDataArrayCollectionIterator::vtkDataArrayCollectionIterator()
-{
-}
+vtkDataArrayCollectionIterator::vtkDataArrayCollectionIterator() = default;
 
 //----------------------------------------------------------------------------
-vtkDataArrayCollectionIterator::~vtkDataArrayCollectionIterator()
-{
-}
+vtkDataArrayCollectionIterator::~vtkDataArrayCollectionIterator() = default;
 
 //----------------------------------------------------------------------------
 void vtkDataArrayCollectionIterator::PrintSelf(ostream& os, vtkIndent indent)
@@ -49,7 +45,7 @@ void vtkDataArrayCollectionIterator::SetCollection(vtkCollection* c)
   }
   else
   {
-    this->Superclass::SetCollection(0);
+    this->Superclass::SetCollection(nullptr);
   }
 }
 

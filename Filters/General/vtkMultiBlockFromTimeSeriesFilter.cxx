@@ -28,9 +28,7 @@ vtkMultiBlockFromTimeSeriesFilter::vtkMultiBlockFromTimeSeriesFilter()
   this->UpdateTimeIndex = 0;
 }
 
-vtkMultiBlockFromTimeSeriesFilter::~vtkMultiBlockFromTimeSeriesFilter()
-{
-}
+vtkMultiBlockFromTimeSeriesFilter::~vtkMultiBlockFromTimeSeriesFilter() = default;
 
 int vtkMultiBlockFromTimeSeriesFilter::FillInputPortInformation(
   int, vtkInformation *info)
@@ -90,7 +88,7 @@ int vtkMultiBlockFromTimeSeriesFilter::RequestData(vtkInformation *request,
     output->ShallowCopy(this->TempDataset);
     for (unsigned i = 0; i < this->TempDataset->GetNumberOfBlocks(); ++i)
     {
-      this->TempDataset->SetBlock(i, NULL);
+      this->TempDataset->SetBlock(i, nullptr);
     }
     request->Remove(vtkStreamingDemandDrivenPipeline::CONTINUE_EXECUTING());
   }

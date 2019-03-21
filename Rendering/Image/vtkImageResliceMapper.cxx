@@ -195,7 +195,7 @@ void vtkImageResliceMapper::Update(int port)
   // I don't like to override Update, or call Modified() in Update,
   // but this allows updates to be forced where MTimes can't be used
   bool resampleToScreenPixels = (this->ResampleToScreenPixels != 0);
-  vtkRenderer *ren = 0;
+  vtkRenderer *ren = nullptr;
 
   if (this->AutoAdjustImageQuality && resampleToScreenPixels)
   {
@@ -482,7 +482,7 @@ void vtkImageResliceMapper::UpdateSliceToWorldMatrix(vtkCamera *camera)
 {
   // Get slice plane in world coords by passing null as the prop matrix
   double plane[4];
-  this->GetSlicePlaneInDataCoords(0, plane);
+  this->GetSlicePlaneInDataCoords(nullptr, plane);
 
   // Make sure normal is facing towards camera
   vtkMatrix4x4 *viewMatrix = camera->GetViewTransformMatrix();
@@ -569,7 +569,7 @@ void vtkImageResliceMapper::UpdateResliceMatrix(
 
   // Check if prop matrix is orthonormal
   bool propMatrixIsOrthonormal = false;
-  vtkMatrix4x4 *propMatrix = 0;
+  vtkMatrix4x4 *propMatrix = nullptr;
   if (!this->InternalResampleToScreenPixels)
   {
     static double tol = 1e-12;
@@ -604,7 +604,7 @@ void vtkImageResliceMapper::UpdateResliceMatrix(
 
     // Get slice plane in world coords by passing null as the matrix
     double wplane[4];
-    this->GetSlicePlaneInDataCoords(0, wplane);
+    this->GetSlicePlaneInDataCoords(nullptr, wplane);
 
     // Check whether normal is facing towards camera, the "ndop" is
     // the negative of the direction of projection for the camera
@@ -767,7 +767,7 @@ void vtkImageResliceMapper::UpdateResliceInformation(vtkRenderer *ren)
 
   // Get slice plane in world coords by passing null as the matrix
   double plane[4];
-  this->GetSlicePlaneInDataCoords(0, plane);
+  this->GetSlicePlaneInDataCoords(nullptr, plane);
 
   // Check whether normal is facing towards camera, the "ndop" is
   // the negative of the direction of projection for the camera
@@ -984,7 +984,9 @@ void vtkImageResliceMapper::UpdateResliceInformation(vtkRenderer *ren)
   reslice->SetOutputSpacing(spacing);
   reslice->SetOutputOrigin(origin);
 
-  if ((this->SliceFacesCamera && this->InternalResampleToScreenPixels) ||
+  if ((this->SliceFacesCamera &&
+       this->InternalResampleToScreenPixels &&
+       !this->SeparateWindowLevelOperation) ||
       this->SlabThickness > 0)
   {
     // if slice follows camera, use reslice to set the border
@@ -994,7 +996,8 @@ void vtkImageResliceMapper::UpdateResliceInformation(vtkRenderer *ren)
   {
     // tell reslice to use a double-thickness border,
     // since the polygon geometry will dictate the actual size
-    reslice->SetBorder(2);
+    reslice->SetBorder(true);
+    reslice->SetBorderThickness(1.0);
   }
 }
 
@@ -1180,7 +1183,7 @@ void vtkImageResliceMapper::UpdatePolygonCoords(vtkRenderer *ren)
 
   // Get slice plane in world coords by passing null as the matrix
   double plane[4];
-  this->GetSlicePlaneInDataCoords(0, plane);
+  this->GetSlicePlaneInDataCoords(nullptr, plane);
 
   // Check whether normal is facing towards camera, the "ndop" is
   // the negative of the direction of projection for the camera
@@ -1431,6 +1434,7 @@ void vtkImageResliceMapper::UpdatePolygonCoords(vtkRenderer *ren)
   {
     points->SetPoint(k, &coords[3*k]);
   }
+  points->Modified();
 }
 
 //----------------------------------------------------------------------------
@@ -1508,13 +1512,13 @@ vtkMTimeType vtkImageResliceMapper::GetMTime()
   }
 
   vtkImageSlice *prop = this->GetCurrentProp();
-  if (prop != NULL)
+  if (prop != nullptr)
   {
     vtkMTimeType mTime2 = prop->GetUserTransformMatrixMTime();
     mTime = (mTime2 > mTime ? mTime2 : mTime);
 
     vtkImageProperty *property = prop->GetProperty();
-    if (property != NULL)
+    if (property != nullptr)
     {
       bool useMTime = true;
       if (this->SeparateWindowLevelOperation)
@@ -1532,7 +1536,7 @@ vtkMTimeType vtkImageResliceMapper::GetMTime()
         mTime = (mTime2 > mTime ? mTime2 : mTime);
 
         vtkScalarsToColors *lookupTable = property->GetLookupTable();
-        if (lookupTable != NULL)
+        if (lookupTable != nullptr)
         {
           // check the lookup table mtime
           mTime2 = lookupTable->GetMTime();

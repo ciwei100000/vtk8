@@ -50,9 +50,9 @@ vtkImageSincInterpolator::vtkImageSincInterpolator()
 {
   this->WindowFunction = VTK_LANCZOS_WINDOW;
   this->WindowHalfWidth = 3;
-  this->KernelLookupTable[0] = NULL;
-  this->KernelLookupTable[1] = NULL;
-  this->KernelLookupTable[2] = NULL;
+  this->KernelLookupTable[0] = nullptr;
+  this->KernelLookupTable[1] = nullptr;
+  this->KernelLookupTable[2] = nullptr;
   this->KernelSize[0] = 6;
   this->KernelSize[1] = 6;
   this->KernelSize[2] = 6;
@@ -122,7 +122,7 @@ void vtkImageSincInterpolator::ComputeSupportSize(
     }
   }
 
-  if (matrix == NULL)
+  if (matrix == nullptr)
   {
     return;
   }
@@ -184,7 +184,7 @@ void vtkImageSincInterpolator::ComputeSupportSize(
     // if scale is greater than one, expand kernel size
     if (rowscale > (1.0 + VTK_INTERPOLATE_FLOOR_TOL))
     {
-      // need extra suport for antialiasing
+      // need extra support for antialiasing
       this->BlurFactors[i] = rowscale;
       int s = 2*static_cast<int>(
        rowscale*this->WindowHalfWidth + 1.0 - VTK_INTERPOLATE_FLOOR_TOL);
@@ -211,10 +211,7 @@ bool vtkImageSincInterpolator::IsSeparable()
 //----------------------------------------------------------------------------
 void vtkImageSincInterpolator::SetWindowHalfWidth(int size)
 {
-  static int minsize = 1;
-  static int maxsize = VTK_SINC_KERNEL_SIZE_MAX/2;
-  size = ((size > minsize) ? size : minsize);
-  size = ((size < maxsize) ? size : maxsize);
+  size = vtkMath::ClampValue(size, 1, VTK_SINC_KERNEL_SIZE_MAX/2);
   if (this->WindowHalfWidth != size)
   {
     this->WindowHalfWidth = size;
@@ -228,10 +225,7 @@ void vtkImageSincInterpolator::SetWindowHalfWidth(int size)
 //----------------------------------------------------------------------------
 void vtkImageSincInterpolator::SetWindowFunction(int mode)
 {
-  static int minmode = VTK_LANCZOS_WINDOW;
-  static int maxmode = VTK_BLACKMAN_NUTTALL4;
-  mode = ((mode > minmode) ? mode : minmode);
-  mode = ((mode < maxmode) ? mode : maxmode);
+  mode = vtkMath::ClampValue(mode, VTK_LANCZOS_WINDOW, VTK_BLACKMAN_NUTTALL4);
   if (this->WindowFunction != mode)
   {
     this->WindowFunction = mode;
@@ -382,11 +376,8 @@ void vtkImageSincInterpolator::InternalUpdate()
   int hsize[3];
   for (int i = 0; i < 3; i++)
   {
-    static int minsize = 1;
-    static int maxsize = VTK_SINC_KERNEL_SIZE_MAX/2;
     int size = this->KernelSize[i]/2;
-    size = ((size > minsize) ? size : minsize);
-    size = ((size < maxsize) ? size : maxsize);
+    size = vtkMath::ClampValue(size, 1, VTK_SINC_KERNEL_SIZE_MAX/2);
     hsize[i] = size;
     blurchange |= (fabs(this->BlurFactors[i] - this->LastBlurFactors[i]) >=
                    VTK_INTERPOLATE_FLOOR_TOL);
@@ -411,7 +402,7 @@ void vtkImageSincInterpolator::InternalUpdate()
 
   if (this->InterpolationInfo->InterpolationMode != mode ||
       blurchange ||
-      this->KernelLookupTable[0] == NULL)
+      this->KernelLookupTable[0] == nullptr)
   {
     this->BuildKernelLookupTable();
   }
@@ -952,7 +943,7 @@ void vtkImageSincInterpolatorGetInterpolationFunc(
         &(vtkImageSincInterpolate<F, VTK_TT>::General)
       );
     default:
-      *interpolate = 0;
+      *interpolate = nullptr;
   }
 }
 
@@ -1052,7 +1043,7 @@ void vtkImageSincInterpolatorGetRowInterpolationFunc(
       *summation = &(vtkImageSincRowInterpolate<F,VTK_TT>::General)
       );
     default:
-      *summation = 0;
+      *summation = nullptr;
   }
 }
 
@@ -1327,9 +1318,9 @@ void vtkImageSincInterpolator::BuildKernelLookupTable()
   }
 
   float *kernel[3];
-  kernel[0] = 0;
-  kernel[1] = 0;
-  kernel[2] = 0;
+  kernel[0] = nullptr;
+  kernel[1] = nullptr;
+  kernel[2] = nullptr;
 
   for (int i = 0; i < 3; i++)
   {

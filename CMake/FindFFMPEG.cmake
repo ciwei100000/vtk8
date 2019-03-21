@@ -46,6 +46,13 @@ MACRO(FFMPEG_FIND varname shortname headername)
         DOC "Location of FFMPEG Headers"
     )
 
+    # on windows static ffmpeg is put in lib/lib<name>.a
+    # and shared it is put in bin/<name>.lib
+    if (WIN32)
+        list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".lib")
+        list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
+    endif()
+
     FIND_LIBRARY(FFMPEG_${varname}_LIBRARIES
         NAMES ${shortname}
         PATHS
@@ -62,6 +69,7 @@ MACRO(FFMPEG_FIND varname shortname headername)
         /opt/csw/lib
         /opt/lib
         /usr/freeware/lib64
+        ${FFMPEG_ROOT}/bin # on windows shared they install the .lib in bin
         DOC "Location of FFMPEG Libraries"
     )
 
@@ -107,6 +115,7 @@ FFMPEG_FIND(LIBAVFORMAT avformat avformat.h)
 FFMPEG_FIND(LIBAVDEVICE avdevice avdevice.h)
 FFMPEG_FIND(LIBAVCODEC  avcodec  avcodec.h)
 FFMPEG_FIND(LIBAVUTIL   avutil   avutil.h)
+FFMPEG_FIND(LIBSWRESAMPLE swresample swresample.h)
 FFMPEG_FIND(LIBSWSCALE  swscale  swscale.h)  # not sure about the header to look for here.
 
 SET(FFMPEG_FOUND "NO")

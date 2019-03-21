@@ -42,7 +42,7 @@ class VTKINFOVISCORE_EXPORT vtkEdgeCenters : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkEdgeCenters,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with vertex cell generation turned off.
@@ -53,22 +53,22 @@ public:
   /**
    * Enable/disable the generation of vertex cells.
    */
-  vtkSetMacro(VertexCells,int);
-  vtkGetMacro(VertexCells,int);
-  vtkBooleanMacro(VertexCells,int);
+  vtkSetMacro(VertexCells,vtkTypeBool);
+  vtkGetMacro(VertexCells,vtkTypeBool);
+  vtkBooleanMacro(VertexCells,vtkTypeBool);
   //@}
 
 protected:
   vtkEdgeCenters();
-  ~vtkEdgeCenters()VTK_OVERRIDE {}
+  ~vtkEdgeCenters() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
-  int VertexCells;
+  vtkTypeBool VertexCells;
 private:
-  vtkEdgeCenters(const vtkEdgeCenters&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkEdgeCenters&) VTK_DELETE_FUNCTION;
+  vtkEdgeCenters(const vtkEdgeCenters&) = delete;
+  void operator=(const vtkEdgeCenters&) = delete;
 };
 
 #endif

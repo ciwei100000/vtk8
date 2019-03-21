@@ -314,9 +314,7 @@ vtkFiniteDifferenceGradientEstimator::vtkFiniteDifferenceGradientEstimator()
 }
 
 // Destruct a vtkFiniteDifferenceGradientEstimator - free up any memory used
-vtkFiniteDifferenceGradientEstimator::~vtkFiniteDifferenceGradientEstimator()
-{
-}
+vtkFiniteDifferenceGradientEstimator::~vtkFiniteDifferenceGradientEstimator() = default;
 
 static VTK_THREAD_RETURN_TYPE vtkSwitchOnDataType( void *arg )
 {
@@ -331,7 +329,7 @@ static VTK_THREAD_RETURN_TYPE vtkSwitchOnDataType( void *arg )
     (((vtkMultiThreader::ThreadInfo *)(arg))->UserData);
   scalars = estimator->InputData->GetPointData()->GetScalars();
 
-  if (scalars == NULL)
+  if (scalars == nullptr)
   {
     return VTK_THREAD_RETURN_VALUE;
   }

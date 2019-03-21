@@ -35,9 +35,7 @@ vtkImageToImageStencil::vtkImageToImageStencil()
 }
 
 //----------------------------------------------------------------------------
-vtkImageToImageStencil::~vtkImageToImageStencil()
-{
-}
+vtkImageToImageStencil::~vtkImageToImageStencil() = default;
 
 //----------------------------------------------------------------------------
 void vtkImageToImageStencil::PrintSelf(ostream& os, vtkIndent indent)
@@ -60,7 +58,7 @@ vtkImageData *vtkImageToImageStencil::GetInput()
 {
   if (this->GetNumberOfInputConnections(0) < 1)
   {
-    return NULL;
+    return nullptr;
   }
 
   return vtkImageData::SafeDownCast(

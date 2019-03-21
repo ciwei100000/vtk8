@@ -45,7 +45,7 @@ vtkClipVolume::vtkClipVolume(vtkImplicitFunction *cf)
 {
   this->ClipFunction = cf;
   this->InsideOut = 0;
-  this->Locator = NULL;
+  this->Locator = nullptr;
   this->Value = 0.0;
   this->GenerateClipScalars = 0;
   this->Mixed3DCellGeneration = 1;
@@ -72,11 +72,11 @@ vtkClipVolume::~vtkClipVolume()
   if ( this->Locator )
   {
     this->Locator->UnRegister(this);
-    this->Locator = NULL;
+    this->Locator = nullptr;
   }
 
   this->Triangulator->Delete();
-  this->SetClipFunction(NULL);
+  this->SetClipFunction(nullptr);
 }
 
 vtkUnstructuredGrid *vtkClipVolume::GetClippedOutput()
@@ -93,13 +93,13 @@ vtkMTimeType vtkClipVolume::GetMTime()
 
   mTime=this->Superclass::GetMTime();
 
-  if ( this->Locator != NULL )
+  if ( this->Locator != nullptr )
   {
     time = this->Locator->GetMTime();
     mTime = ( time > mTime ? time : mTime );
   }
 
-  if ( this->ClipFunction != NULL )
+  if ( this->ClipFunction != nullptr )
   {
     time = this->ClipFunction->GetMTime();
     mTime = ( time > mTime ? time : mTime );
@@ -202,7 +202,7 @@ int vtkClipVolume::RequestData(
   this->Types->Allocate(estimatedSize);
 
   // locator used to merge potentially duplicate points
-  if ( this->Locator == NULL )
+  if ( this->Locator == nullptr )
   {
     this->CreateDefaultLocator();
   }
@@ -261,7 +261,7 @@ int vtkClipVolume::RequestData(
     this->ClippedTypes->Allocate(estimatedSize);
   }
 
-  // perform clipping on voxels - compute approriate numbers
+  // perform clipping on voxels - compute appropriate numbers
   value = this->Value;
   numICells = dims[0] - 1;
   numJCells = dims[1] - 1;
@@ -520,8 +520,8 @@ void vtkClipVolume::ClipVoxel(double value, vtkDataArray *cellScalars,
   static int edges[12][2] = { {0,1}, {2,3}, {4,5}, {6,7},
                               {0,2}, {1,3}, {4,6}, {5,7},
                               {0,4}, {1,5}, {2,6}, {3,7}};
-  static int order[2][8] = { {0,3,5,6,1,2,4,7},
-                             {1,2,4,7,0,3,5,6}};//injection order based on flip
+  static const int order[2][8] = { {0,3,5,6,1,2,4,7},
+                                   {1,2,4,7,0,3,5,6}};//injection order based on flip
 
   // compute bounds for voxel and initialize
   cellPts->GetPoint(0,voxelOrigin);
@@ -566,7 +566,7 @@ void vtkClipVolume::ClipVoxel(double value, vtkDataArray *cellScalars,
 
   // For each edge intersection point, insert into triangulation. Edge
   // intersections come from clipping value. Have to be careful of
-  // intersections near exisiting points (causes bad Delaunay behavior).
+  // intersections near existing points (causes bad Delaunay behavior).
   for (edgeNum=0; edgeNum < 12; edgeNum++)
   {
     s1 = cellScalars->GetComponent(edges[edgeNum][0],0);
@@ -657,7 +657,7 @@ void vtkClipVolume::SetLocator(vtkIncrementalPointLocator *locator)
   if ( this->Locator )
   {
     this->Locator->UnRegister(this);
-    this->Locator = NULL;
+    this->Locator = nullptr;
   }
 
   if (locator)
@@ -671,7 +671,7 @@ void vtkClipVolume::SetLocator(vtkIncrementalPointLocator *locator)
 
 void vtkClipVolume::CreateDefaultLocator()
 {
-  if ( this->Locator == NULL )
+  if ( this->Locator == nullptr )
   {
     this->Locator = vtkMergePoints::New();
   }

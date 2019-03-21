@@ -59,10 +59,12 @@
  *   vtkCommand::InteractionEvent (moving after selecting something)
  *   vtkCommand::PlacePointEvent (after point is positioned;
  *                                call data includes handle id (0,1))
+ *   vtkCommand::DeletePointEvent (before point is deleted;
+ *                                call data includes handle id (0,1))
  * </pre>
  *
  * @sa
- * vtkHandleWidget vtkSeedReoresentation
+ * vtkHandleWidget vtkSeedRepresentation
 */
 
 #ifndef vtkSeedWidget_h
@@ -90,7 +92,7 @@ public:
    * Standard methods for a VTK class.
    */
   vtkTypeMacro(vtkSeedWidget,vtkAbstractWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -98,19 +100,19 @@ public:
    * must be overridden because it is a composite widget and does more than
    * its superclasses' vtkAbstractWidget::SetEnabled() method.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
+  void SetEnabled(int) override;
 
   /**
    * Set the current renderer. This method also propagates to all the child
    * handle widgets, if any exist
    */
-  void SetCurrentRenderer( vtkRenderer * ) VTK_OVERRIDE;
+  void SetCurrentRenderer( vtkRenderer * ) override;
 
   /**
    * Set the interactor. This method also propagates to all the child
    * handle widgets, if any exist
    */
-  void SetInteractor( vtkRenderWindowInteractor * ) VTK_OVERRIDE;
+  void SetInteractor( vtkRenderWindowInteractor * ) override;
 
   /**
    * Specify an instance of vtkWidgetRepresentation used to represent this
@@ -132,13 +134,13 @@ public:
   /**
    * Create the default widget representation if one is not set.
    */
-  void CreateDefaultRepresentation() VTK_OVERRIDE;
+  void CreateDefaultRepresentation() override;
 
   /**
    * Methods to change the whether the widget responds to interaction.
    * Overridden to pass the state to component widgets.
    */
-  void SetProcessEvents(int) VTK_OVERRIDE;
+  void SetProcessEvents(vtkTypeBool) override;
 
   /**
    * Method to be called when the seed widget should stop responding to
@@ -195,7 +197,7 @@ public:
 
 protected:
   vtkSeedWidget();
-  ~vtkSeedWidget() VTK_OVERRIDE;
+  ~vtkSeedWidget() override;
 
 
   int WidgetState;
@@ -215,8 +217,8 @@ protected:
   int Defining;
 
 private:
-  vtkSeedWidget(const vtkSeedWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSeedWidget&) VTK_DELETE_FUNCTION;
+  vtkSeedWidget(const vtkSeedWidget&) = delete;
+  void operator=(const vtkSeedWidget&) = delete;
 };
 
 #endif

@@ -56,7 +56,7 @@ class VTKCHARTSCORE_EXPORT vtkContextArea: public vtkAbstractContextItem
 public:
   typedef vtkTuple<int, 4> Margins;
   vtkTypeMacro(vtkContextArea, vtkAbstractContextItem)
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   static vtkContextArea *New();
 
@@ -74,7 +74,7 @@ public:
   /**
    * Paint event for the item, called whenever the item needs to be drawn.
    */
-  bool Paint(vtkContext2D *painter) VTK_OVERRIDE;
+  bool Paint(vtkContext2D *painter) override;
 
   //@{
   /**
@@ -108,7 +108,7 @@ public:
    * - @a Expand: The default behavior. The draw area will automatically resize
    * to take up as much of @a Geometry as possible. Margin sizes are
    * minimized based on the space required for axis labels/tick marks.
-   * - FixedAspect: Same as Expand, but a fixed aspected ratio is enforced.
+   * - FixedAspect: Same as Expand, but a fixed aspect ratio is enforced.
    * See SetFixedAspect.
    * - FixedRect: Draw area is always constrained to a fixed rectangle.
    * See SetFixedRect.
@@ -182,7 +182,7 @@ public:
 
 protected:
   vtkContextArea();
-  ~vtkContextArea() VTK_OVERRIDE;
+  ~vtkContextArea() override;
 
   /**
    * Sync the Axes locations with Geometry, and update the DrawAreaGeometry
@@ -295,8 +295,8 @@ protected:
   vtkNew<vtkAxis> RightAxis;
 
 private:
-  vtkContextArea(const vtkContextArea &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkContextArea &) VTK_DELETE_FUNCTION;
+  vtkContextArea(const vtkContextArea &) = delete;
+  void operator=(const vtkContextArea &) = delete;
 };
 
 #endif //vtkContextArea_h

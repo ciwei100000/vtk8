@@ -26,19 +26,15 @@ vtkInformationKeyMacro(vtkCompositeDataSet, NAME, String);
 vtkInformationKeyMacro(vtkCompositeDataSet, CURRENT_PROCESS_CAN_LOAD_BLOCK, Integer);
 
 //----------------------------------------------------------------------------
-vtkCompositeDataSet::vtkCompositeDataSet()
-{
-}
+vtkCompositeDataSet::vtkCompositeDataSet() = default;
 
 //----------------------------------------------------------------------------
-vtkCompositeDataSet::~vtkCompositeDataSet()
-{
-}
+vtkCompositeDataSet::~vtkCompositeDataSet() = default;
 
 //----------------------------------------------------------------------------
 vtkCompositeDataSet* vtkCompositeDataSet::GetData(vtkInformation* info)
 {
-  return info? vtkCompositeDataSet::SafeDownCast(info->Get(DATA_OBJECT())) : 0;
+  return info? vtkCompositeDataSet::SafeDownCast(info->Get(DATA_OBJECT())) : nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -107,6 +103,23 @@ vtkIdType vtkCompositeDataSet::GetNumberOfPoints()
   }
   iter->Delete();
   return numPts;
+}
+
+//----------------------------------------------------------------------------
+vtkIdType vtkCompositeDataSet::GetNumberOfCells()
+{
+  vtkIdType numCells = 0;
+  vtkCompositeDataIterator* iter = this->NewIterator();
+  for (iter->InitTraversal(); !iter->IsDoneWithTraversal(); iter->GoToNextItem())
+  {
+    vtkDataSet* ds = vtkDataSet::SafeDownCast(iter->GetCurrentDataObject());
+    if (ds)
+    {
+      numCells += ds->GetNumberOfCells();
+    }
+  }
+  iter->Delete();
+  return numCells;
 }
 
 //----------------------------------------------------------------------------

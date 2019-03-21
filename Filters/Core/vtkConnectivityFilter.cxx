@@ -17,6 +17,7 @@
 #include "vtkCell.h"
 #include "vtkCellData.h"
 #include "vtkDataSet.h"
+#include "vtkDemandDrivenPipeline.h"
 #include "vtkFloatArray.h"
 #include "vtkIdList.h"
 #include "vtkInformation.h"
@@ -26,10 +27,13 @@
 #include "vtkPointData.h"
 #include "vtkPointData.h"
 #include "vtkPoints.h"
+#include "vtkPolyData.h"
 #include "vtkUnstructuredGrid.h"
 #include "vtkIdTypeArray.h"
 
-vtkStandardNewMacro(vtkConnectivityFilter);
+#include <map>
+
+vtkObjectFactoryNewMacro(vtkConnectivityFilter);
 
 // Construct with default extraction mode to extract largest regions.
 vtkConnectivityFilter::vtkConnectivityFilter()
@@ -37,6 +41,7 @@ vtkConnectivityFilter::vtkConnectivityFilter()
   this->RegionSizes = vtkIdTypeArray::New();
   this->ExtractionMode = VTK_EXTRACT_LARGEST_REGION;
   this->ColorRegions = 0;
+  this->RegionIdAssignmentMode = UNSPECIFIED;
 
   this->ScalarConnectivity = 0;
   this->ScalarRange[0] = 0.0;
@@ -53,8 +58,8 @@ vtkConnectivityFilter::vtkConnectivityFilter()
   this->Seeds = vtkIdList::New();
   this->SpecifiedRegionIds = vtkIdList::New();
 
-  this->NewScalars = 0;
-  this->NewCellScalars = 0;
+  this->NewScalars = nullptr;
+  this->NewCellScalars = nullptr;
 
   this->OutputPointsPrecision = vtkAlgorithm::DEFAULT_PRECISION;
 }
@@ -66,6 +71,48 @@ vtkConnectivityFilter::~vtkConnectivityFilter()
   this->NeighborCellPointIds->Delete();
   this->Seeds->Delete();
   this->SpecifiedRegionIds->Delete();
+}
+
+int vtkConnectivityFilter::RequestDataObject(vtkInformation* vtkNotUsed(request),
+  vtkInformationVector** inputVector, vtkInformationVector* outputVector)
+{
+  vtkInformation* inInfo = inputVector[0]->GetInformationObject(0);
+  if (!inInfo)
+  {
+      return 0;
+  }
+
+  vtkDataObject* input = inInfo->Get(vtkDataObject::DATA_OBJECT());
+  if (input)
+  {
+    // for each output
+    for (int i = 0; i < this->GetNumberOfOutputPorts(); ++i)
+    {
+      vtkInformation* info = outputVector->GetInformationObject(i);
+      vtkDataObject* output = info->Get(vtkDataObject::DATA_OBJECT());
+
+      if (!output || !output->IsA(input->GetClassName()))
+      {
+        vtkDataObject* newOutput = nullptr;
+        if (input->IsA("vtkPolyData"))
+        {
+          newOutput = input->NewInstance();
+        }
+        else
+        {
+          newOutput = vtkUnstructuredGrid::New();
+        }
+
+        info->Set(vtkDataObject::DATA_OBJECT(), newOutput);
+        newOutput->Delete();
+        this->GetOutputPortInformation(0)->Set(
+          vtkDataObject::DATA_EXTENT_TYPE(), newOutput->GetExtentType());
+      }
+    }
+    return 1;
+  }
+
+  return 0;
 }
 
 int vtkConnectivityFilter::RequestData(
@@ -80,14 +127,17 @@ int vtkConnectivityFilter::RequestData(
   // get the input and output
   vtkDataSet *input = vtkDataSet::SafeDownCast(
     inInfo->Get(vtkDataObject::DATA_OBJECT()));
-  vtkUnstructuredGrid *output = vtkUnstructuredGrid::SafeDownCast(
+  vtkPointSet *output = vtkPointSet::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
-  vtkIdType numPts, numCells, cellId, newCellId, i, j, pt;
+  vtkPolyData* pdOutput = vtkPolyData::SafeDownCast(output);
+  vtkUnstructuredGrid* ugOutput = vtkUnstructuredGrid::SafeDownCast(output);
+
+  vtkIdType numPts, numCells, cellId, i, j, pt;
   vtkPoints *newPts;
-  int id;
-  int maxCellsInRegion;
-  int largestRegionId = 0;
+  vtkIdType id;
+  vtkIdType maxCellsInRegion;
+  vtkIdType largestRegionId = 0;
   vtkPointData *pd=input->GetPointData(), *outputPD=output->GetPointData();
   vtkCellData *cd=input->GetCellData(), *outputCD=output->GetCellData();
 
@@ -101,14 +151,22 @@ int vtkConnectivityFilter::RequestData(
     vtkDebugMacro(<<"No data to connect!");
     return 1;
   }
-  output->Allocate(numCells,numCells);
+
+  if (pdOutput)
+  {
+    pdOutput->Allocate(numCells, numCells);
+  }
+  if (ugOutput)
+  {
+    ugOutput->Allocate(numCells, numCells);
+  }
 
   // See whether to consider scalar connectivity
   //
   this->InScalars = input->GetPointData()->GetScalars();
   if ( !this->ScalarConnectivity )
   {
-    this->InScalars = NULL;
+    this->InScalars = nullptr;
   }
   else
   {
@@ -295,6 +353,8 @@ int vtkConnectivityFilter::RequestData(
   // if coloring regions; send down new scalar data
   if ( this->ColorRegions )
   {
+    this->OrderRegionIds(this->NewScalars, this->NewCellScalars);
+
     int idx = outputPD->AddArray(this->NewScalars);
     outputPD->SetActiveAttribute(idx, vtkDataSetAttributes::SCALARS);
     idx = outputCD->AddArray(this->NewCellScalars);
@@ -335,9 +395,21 @@ int vtkConnectivityFilter::RequestData(
             this->PointIds->InsertId(i,id);
           }
         }
-        newCellId = output->InsertNextCell(input->GetCellType(cellId),
-                                           this->PointIds);
-        outputCD->CopyData(cd,cellId,newCellId);
+        vtkIdType newCellId = -1;
+        if (pdOutput)
+        {
+          newCellId = pdOutput->InsertNextCell(input->GetCellType(cellId),
+                                               this->PointIds);
+        }
+        else if (ugOutput)
+        {
+          newCellId = ugOutput->InsertNextCell(input->GetCellType(cellId),
+                                               this->PointIds);
+        }
+        if (newCellId >= 0)
+        {
+          outputCD->CopyData(cd, cellId, newCellId);
+        }
       }
     }
   }
@@ -376,9 +448,21 @@ int vtkConnectivityFilter::RequestData(
               this->PointIds->InsertId(i,id);
             }
           }
-          newCellId = output->InsertNextCell(input->GetCellType(cellId),
-                                             this->PointIds);
-          outputCD->CopyData(cd,cellId,newCellId);
+          vtkIdType newCellId = -1;
+          if (pdOutput)
+          {
+            newCellId = pdOutput->InsertNextCell(input->GetCellType(cellId),
+                                                 this->PointIds);
+          }
+          else if (ugOutput)
+          {
+            newCellId = ugOutput->InsertNextCell(input->GetCellType(cellId),
+                                                 this->PointIds);
+          }
+          if (newCellId >= 0)
+          {
+            outputCD->CopyData(cd, cellId, newCellId);
+          }
         }
       }
     }
@@ -407,9 +491,21 @@ int vtkConnectivityFilter::RequestData(
             this->PointIds->InsertId(i,id);
           }
         }
-        newCellId = output->InsertNextCell(input->GetCellType(cellId),
-                                           this->PointIds);
-        outputCD->CopyData(cd,cellId,newCellId);
+        vtkIdType newCellId = -1;
+        if (pdOutput)
+        {
+          newCellId = pdOutput->InsertNextCell(input->GetCellType(cellId),
+                                               this->PointIds);
+        }
+        else if (ugOutput)
+        {
+          newCellId = ugOutput->InsertNextCell(input->GetCellType(cellId),
+                                               this->PointIds);
+        }
+        if (newCellId >= 0)
+        {
+          outputCD->CopyData(cd, cellId, newCellId);
+        }
       }
     }
   }
@@ -419,7 +515,7 @@ int vtkConnectivityFilter::RequestData(
   this->PointIds->Delete();
   this->CellIds->Delete();
   output->Squeeze();
-  vtkDataArray* outScalars = 0;
+  vtkDataArray* outScalars = nullptr;
   if (this->ColorRegions && (outScalars=output->GetPointData()->GetScalars()))
   {
     outScalars->Resize(output->GetNumberOfPoints());
@@ -520,8 +616,75 @@ void vtkConnectivityFilter::TraverseAndMark (vtkDataSet *input)
     this->Wave2 = tmpWave;
     tmpWave->Reset();
   } //while wave is not empty
+}
 
-  return;
+void vtkConnectivityFilter::OrderRegionIds(vtkIdTypeArray* pointRegionIds, vtkIdTypeArray* cellRegionIds)
+{
+  if (this->ColorRegions)
+  {
+    if (this->RegionIdAssignmentMode == CELL_COUNT_DESCENDING ||
+        this->RegionIdAssignmentMode == CELL_COUNT_ASCENDING)
+    {
+      // Use a multimap to handle cases where more than one region has the same number of cells.
+      std::multimap<vtkIdType, vtkIdType> cellCountToRegionId;
+      typedef std::multimap<vtkIdType, vtkIdType>::value_type ValueType;
+      vtkIdType numRegions = this->RegionSizes->GetNumberOfTuples();
+      for (vtkIdType regionId = 0; regionId < numRegions; ++regionId)
+      {
+        ValueType value(this->RegionSizes->GetValue(regionId), regionId);
+        cellCountToRegionId.insert(value);
+      }
+
+      // Now reverse iterate through the sorted multimap to process the RegionIds
+      // from largest to smallest and create a map from the old RegionId to the new
+      // RegionId
+      std::map<vtkIdType, vtkIdType> oldToNew;
+      vtkIdType counter = 0;
+      if (this->RegionIdAssignmentMode == CELL_COUNT_ASCENDING)
+      {
+        for (auto iter = cellCountToRegionId.begin(); iter != cellCountToRegionId.end(); ++iter)
+        {
+          auto regionCount = iter->first;
+          auto regionId = iter->second;
+
+          // Re-order the region sizes based on the sorting
+          this->RegionSizes->SetValue(counter, regionCount);
+
+          // Create map from old to new RegionId
+          oldToNew[regionId] = counter++;
+        }
+      }
+      else // CELL_COUNT_DESCENDING
+      {
+        for (auto iter = cellCountToRegionId.rbegin(); iter != cellCountToRegionId.rend(); ++iter)
+        {
+          auto regionCount = iter->first;
+          auto regionId = iter->second;
+
+          // Re-order the region sizes based on the sorting
+          this->RegionSizes->SetValue(counter, regionCount);
+
+          // Create map from old to new RegionId
+          oldToNew[regionId] = counter++;
+        }
+      }
+
+      vtkIdType numPts = pointRegionIds->GetNumberOfTuples();
+      for (vtkIdType i = 0; i < numPts; ++i)
+      {
+        vtkIdType oldValue = pointRegionIds->GetValue(i);
+        pointRegionIds->SetValue(i, oldToNew[oldValue]);
+      }
+
+      vtkIdType numCells = cellRegionIds->GetNumberOfTuples();
+      for (vtkIdType i = 0; i < numCells; ++i)
+      {
+        vtkIdType oldValue = cellRegionIds->GetValue(i);
+        cellRegionIds->SetValue(i, oldToNew[oldValue]);
+      }
+    }
+    // else UNSPECIFIED mode
+  }
 }
 
 // Obtain the number of connected regions.
@@ -529,6 +692,18 @@ int vtkConnectivityFilter::GetNumberOfExtractedRegions()
 {
   return this->RegionSizes->GetMaxId() + 1;
 }
+
+int vtkConnectivityFilter::ProcessRequest(vtkInformation* request,
+  vtkInformationVector** inputVector, vtkInformationVector* outputVector)
+{
+  if (request->Has(vtkDemandDrivenPipeline::REQUEST_DATA_OBJECT()))
+  {
+    return this->RequestDataObject(request, inputVector, outputVector);
+  }
+
+  return this->Superclass::ProcessRequest(request, inputVector, outputVector);
+}
+
 
 // Initialize list of point ids/cell ids used to seed regions.
 void vtkConnectivityFilter::InitializeSeedList()
@@ -578,6 +753,12 @@ int vtkConnectivityFilter::FillInputPortInformation(int, vtkInformation *info)
   return 1;
 }
 
+int vtkConnectivityFilter::FillOutputPortInformation(int vtkNotUsed(port), vtkInformation* info)
+{
+  info->Set(vtkDataObject::DATA_TYPE_NAME(), "vtkDataSet");
+  return 1;
+}
+
 void vtkConnectivityFilter::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
@@ -598,4 +779,3 @@ void vtkConnectivityFilter::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "Output Points Precision: " << this->OutputPointsPrecision
      << "\n";
 }
-

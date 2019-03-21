@@ -39,26 +39,33 @@
 // since we last build the vtkStringArrayLookup.
 typedef std::multimap<vtkStdString, vtkIdType> vtkStringCachedUpdates;
 
+namespace
+{
+auto DefaultDeleteFunction = [](void *ptr) {
+  delete[] reinterpret_cast<vtkStdString *>(ptr);
+};
+}
+
 //-----------------------------------------------------------------------------
 class vtkStringArrayLookup
 {
 public:
   vtkStringArrayLookup() : Rebuild(true)
   {
-    this->SortedArray = NULL;
-    this->IndexArray = NULL;
+    this->SortedArray = nullptr;
+    this->IndexArray = nullptr;
   }
   ~vtkStringArrayLookup()
   {
     if (this->SortedArray)
     {
       this->SortedArray->Delete();
-      this->SortedArray = NULL;
+      this->SortedArray = nullptr;
     }
     if (this->IndexArray)
     {
       this->IndexArray->Delete();
-      this->IndexArray = NULL;
+      this->IndexArray = nullptr;
     }
   }
   vtkStringArray* SortedArray;
@@ -73,18 +80,18 @@ vtkStandardNewMacro(vtkStringArray);
 
 vtkStringArray::vtkStringArray()
 {
-  this->Array = NULL;
-  this->SaveUserArray = 0;
-  this->Lookup = NULL;
+  this->Array = nullptr;
+  this->DeleteFunction = DefaultDeleteFunction;
+  this->Lookup = nullptr;
 }
 
 //-----------------------------------------------------------------------------
 
 vtkStringArray::~vtkStringArray()
 {
-  if (!this->SaveUserArray)
+  if (this->DeleteFunction)
   {
-    delete [] this->Array;
+    this->DeleteFunction(this->Array);
   }
   delete this->Lookup;
 }
@@ -105,13 +112,13 @@ vtkArrayIterator* vtkStringArray::NewIterator()
 // from deleting the array when it cleans up or reallocates memory.
 // The class uses the actual array provided; it does not copy the data
 // from the suppled array.
-
-void vtkStringArray::SetArray(vtkStdString *array, vtkIdType size, int save)
+void vtkStringArray::SetArray(vtkStdString *array, vtkIdType size, int save,
+                              int deleteMethod)
 {
-  if ((this->Array) && (!this->SaveUserArray))
+  if (this->Array && this->DeleteFunction)
   {
     vtkDebugMacro (<< "Deleting the array...");
-    delete [] this->Array;
+    this->DeleteFunction(this->Array);
   }
   else
   {
@@ -123,20 +130,48 @@ void vtkStringArray::SetArray(vtkStdString *array, vtkIdType size, int save)
   this->Array = array;
   this->Size = size;
   this->MaxId = size-1;
-  this->SaveUserArray = save;
+
+  if(save!=0)
+  {
+    this->DeleteFunction = nullptr;
+  }
+  else if(deleteMethod == VTK_DATA_ARRAY_DELETE ||
+          deleteMethod == VTK_DATA_ARRAY_USER_DEFINED)
+  {
+    this->DeleteFunction = DefaultDeleteFunction;
+  }
+  else if(deleteMethod == VTK_DATA_ARRAY_ALIGNED_FREE)
+  {
+#ifdef _WIN32
+    this->DeleteFunction = _aligned_free;
+#else
+    this->DeleteFunction = free;
+#endif
+  }
+  else if(deleteMethod == VTK_DATA_ARRAY_FREE)
+  {
+    this->DeleteFunction = free;
+  }
+
   this->DataChanged();
+}
+
+//-----------------------------------------------------------------------------
+void vtkStringArray::SetArrayFreeFunction(void (*callback)(void *))
+{
+  this->DeleteFunction = callback;
 }
 
 //-----------------------------------------------------------------------------
 // Allocate memory for this array. Delete old storage only if necessary.
 
-int vtkStringArray::Allocate(vtkIdType sz, vtkIdType)
+vtkTypeBool vtkStringArray::Allocate(vtkIdType sz, vtkIdType)
 {
   if(sz > this->Size)
   {
-    if(!this->SaveUserArray)
+    if(this->DeleteFunction)
     {
-      delete [] this->Array;
+      this->DeleteFunction(this->Array);
     }
 
     this->Size = ( sz > 0 ? sz : 1);
@@ -145,7 +180,7 @@ int vtkStringArray::Allocate(vtkIdType sz, vtkIdType)
     {
       return 0;
     }
-    this->SaveUserArray = 0;
+    this->DeleteFunction = DefaultDeleteFunction;
   }
 
   this->MaxId = -1;
@@ -159,14 +194,14 @@ int vtkStringArray::Allocate(vtkIdType sz, vtkIdType)
 
 void vtkStringArray::Initialize()
 {
-  if(!this->SaveUserArray)
+  if(this->DeleteFunction)
   {
-    delete [] this->Array;
+    this->DeleteFunction(this->Array);
   }
-  this->Array = 0;
+  this->Array = nullptr;
   this->Size = 0;
   this->MaxId = -1;
-  this->SaveUserArray = 0;
+  this->DeleteFunction = DefaultDeleteFunction;
   this->DataChanged();
 }
 
@@ -175,7 +210,7 @@ void vtkStringArray::Initialize()
 
 void vtkStringArray::DeepCopy(vtkAbstractArray* aa)
 {
-  // Do nothing on a NULL input.
+  // Do nothing on a nullptr input.
   if(!aa)
   {
     return;
@@ -197,22 +232,22 @@ void vtkStringArray::DeepCopy(vtkAbstractArray* aa)
   }
 
   vtkStringArray *fa = vtkArrayDownCast<vtkStringArray>( aa );
-  if ( fa == NULL )
+  if ( fa == nullptr )
   {
     vtkErrorMacro(<< "Shouldn't Happen: Couldn't downcast array into a vtkStringArray." );
     return;
   }
 
   // Free our previous memory.
-  if(!this->SaveUserArray)
+  if(this->DeleteFunction)
   {
-    delete [] this->Array;
+    this->DeleteFunction(this->Array);
   }
 
   // Copy the given array into new memory.
   this->MaxId = fa->GetMaxId();
   this->Size = fa->GetSize();
-  this->SaveUserArray = 0;
+  this->DeleteFunction = DefaultDeleteFunction;
   this->Array = new vtkStdString[this->Size];
 
   for (int i = 0; i < this->Size; ++i)
@@ -315,7 +350,7 @@ vtkStdString * vtkStringArray::ResizeAndExtend(vtkIdType sz)
     // Requested size is bigger than current size.  Allocate enough
     // memory to fit the requested size and be more than double the
     // currently allocated memory.
-    newSize = this->Size + sz;
+    newSize = (this->Size+1) + sz;
   }
   else if (sz == this->Size)
   {
@@ -332,14 +367,14 @@ vtkStdString * vtkStringArray::ResizeAndExtend(vtkIdType sz)
   if(newSize <= 0)
   {
     this->Initialize();
-    return 0;
+    return nullptr;
   }
 
   newArray = new vtkStdString[newSize];
   if(!newArray)
   {
     vtkErrorMacro("Cannot allocate memory\n");
-    return 0;
+    return nullptr;
   }
 
   if(this->Array)
@@ -350,9 +385,9 @@ vtkStdString * vtkStringArray::ResizeAndExtend(vtkIdType sz)
     {
       newArray[i] = this->Array[i];
     }
-    if(!this->SaveUserArray)
+    if(this->DeleteFunction)
     {
-      delete [] this->Array;
+      this->DeleteFunction(this->Array);
     }
   }
 
@@ -362,14 +397,14 @@ vtkStdString * vtkStringArray::ResizeAndExtend(vtkIdType sz)
   }
   this->Size = newSize;
   this->Array = newArray;
-  this->SaveUserArray = 0;
+  this->DeleteFunction = DefaultDeleteFunction;
 
   this->DataChanged();
   return this->Array;
 }
 
 //-----------------------------------------------------------------------------
-int vtkStringArray::Resize(vtkIdType sz)
+vtkTypeBool vtkStringArray::Resize(vtkIdType sz)
 {
   vtkStdString * newArray;
   vtkIdType newSize = sz;
@@ -401,9 +436,11 @@ int vtkStringArray::Resize(vtkIdType sz)
       newArray[i] = this->Array[i];
     }
 
-    if(!this->SaveUserArray)
+    if (this->DeleteFunction)
     {
-      delete[] this->Array;
+      this->DeleteFunction = DefaultDeleteFunction;
+      this->DeleteFunction(this->Array);
+
     }
   }
 
@@ -413,7 +450,7 @@ int vtkStringArray::Resize(vtkIdType sz)
   }
   this->Size = newSize;
   this->Array = newArray;
-  this->SaveUserArray = 0;
+  this->DeleteFunction = DefaultDeleteFunction;
   this->DataChanged();
   return 1;
 }
@@ -661,7 +698,7 @@ vtkStdString& vtkStringArray::GetValue( vtkIdType id )
 // ----------------------------------------------------------------------------
 void vtkStringArray::GetTuples(vtkIdList *indices, vtkAbstractArray *aa)
 {
-  if (aa == NULL)
+  if (aa == nullptr)
   {
     vtkErrorMacro(<<"GetTuples: Output array is null!");
     return;
@@ -669,7 +706,7 @@ void vtkStringArray::GetTuples(vtkIdList *indices, vtkAbstractArray *aa)
 
   vtkStringArray *output = vtkArrayDownCast<vtkStringArray>(aa);
 
-  if (output == NULL)
+  if (output == nullptr)
   {
     vtkErrorMacro(<< "Can't copy values from a string array into an array "
                   << "of type " << aa->GetDataTypeAsString());
@@ -688,7 +725,7 @@ void vtkStringArray::GetTuples(vtkIdType startIndex,
                           vtkIdType endIndex,
                           vtkAbstractArray *aa)
 {
-  if (aa == NULL)
+  if (aa == nullptr)
   {
     vtkErrorMacro(<<"GetTuples: Output array is null!");
     return;
@@ -696,7 +733,7 @@ void vtkStringArray::GetTuples(vtkIdType startIndex,
 
   vtkStringArray *output = vtkArrayDownCast<vtkStringArray>(aa);
 
-  if (output == NULL)
+  if (output == nullptr)
   {
     vtkErrorMacro(<< "Can't copy values from a string array into an array "
                   << "of type " << aa->GetDataTypeAsString());
@@ -756,7 +793,7 @@ void vtkStringArray::LookupValue(vtkVariant var, vtkIdList* ids)
 }
 
 //-----------------------------------------------------------------------------
-vtkIdType vtkStringArray::LookupValue(vtkStdString value)
+vtkIdType vtkStringArray::LookupValue(const vtkStdString& value)
 {
   this->UpdateLookup();
 
@@ -803,8 +840,8 @@ vtkIdType vtkStringArray::LookupValue(vtkStdString value)
   {
     // Check whether we still have a value equivalent to what we're
     // looking for.
-      if (value == *found)
-      {
+    if (value == *found)
+    {
       // Check that the value in the original array hasn't changed.
       vtkIdType index = this->Lookup->IndexArray->GetId(offset);
       vtkStdString currentValue = this->GetValue(index);
@@ -812,7 +849,7 @@ vtkIdType vtkStringArray::LookupValue(vtkStdString value)
       {
         return index;
       }
-      }
+    }
     else
     {
       break;
@@ -826,7 +863,7 @@ vtkIdType vtkStringArray::LookupValue(vtkStdString value)
 }
 
 //-----------------------------------------------------------------------------
-void vtkStringArray::LookupValue(vtkStdString value, vtkIdList* ids)
+void vtkStringArray::LookupValue(const vtkStdString& value, vtkIdList* ids)
 {
   this->UpdateLookup();
   ids->Reset();
@@ -915,7 +952,7 @@ void vtkStringArray::DataElementChanged(vtkIdType id)
 void vtkStringArray::ClearLookup()
 {
   delete this->Lookup;
-  this->Lookup = NULL;
+  this->Lookup = nullptr;
 }
 
 

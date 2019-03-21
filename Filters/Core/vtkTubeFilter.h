@@ -78,7 +78,7 @@ class VTKFILTERSCORE_EXPORT vtkTubeFilter : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkTubeFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with radius 0.5, radius variation turned off, the
@@ -142,9 +142,9 @@ public:
    * Set a boolean to control whether to use default normals.
    * DefaultNormalOn is set.
    */
-  vtkSetMacro(UseDefaultNormal,int);
-  vtkGetMacro(UseDefaultNormal,int);
-  vtkBooleanMacro(UseDefaultNormal,int);
+  vtkSetMacro(UseDefaultNormal,vtkTypeBool);
+  vtkGetMacro(UseDefaultNormal,vtkTypeBool);
+  vtkBooleanMacro(UseDefaultNormal,vtkTypeBool);
   //@}
 
   //@{
@@ -153,18 +153,18 @@ public:
    * This creates independent strips, with constant normals so the
    * tube is always faceted in appearance.
    */
-  vtkSetMacro(SidesShareVertices, int);
-  vtkGetMacro(SidesShareVertices, int);
-  vtkBooleanMacro(SidesShareVertices, int);
+  vtkSetMacro(SidesShareVertices, vtkTypeBool);
+  vtkGetMacro(SidesShareVertices, vtkTypeBool);
+  vtkBooleanMacro(SidesShareVertices, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off whether to cap the ends with polygons. Initial value is off.
    */
-  vtkSetMacro(Capping,int);
-  vtkGetMacro(Capping,int);
-  vtkBooleanMacro(Capping,int);
+  vtkSetMacro(Capping,vtkTypeBool);
+  vtkGetMacro(Capping,vtkTypeBool);
+  vtkBooleanMacro(Capping,vtkTypeBool);
   //@}
 
   //@{
@@ -231,19 +231,19 @@ public:
 
 protected:
   vtkTubeFilter();
-  ~vtkTubeFilter() VTK_OVERRIDE {}
+  ~vtkTubeFilter() override {}
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double Radius; //minimum radius of tube
   int VaryRadius; //controls radius variation
   int NumberOfSides; //number of sides to create tube
-  double RadiusFactor; //maxium allowablew radius
+  double RadiusFactor; //maximum allowable radius
   double DefaultNormal[3];
-  int UseDefaultNormal;
-  int SidesShareVertices;
-  int Capping; //control whether tubes are capped
+  vtkTypeBool UseDefaultNormal;
+  vtkTypeBool SidesShareVertices;
+  vtkTypeBool Capping; //control whether tubes are capped
   int OnRatio; //control the generation of the sides of the tube
   int Offset;  //control the generation of the sides
   int GenerateTCoords; //control texture coordinate generation
@@ -269,8 +269,8 @@ protected:
   double Theta;
 
 private:
-  vtkTubeFilter(const vtkTubeFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTubeFilter&) VTK_DELETE_FUNCTION;
+  vtkTubeFilter(const vtkTubeFilter&) = delete;
+  void operator=(const vtkTubeFilter&) = delete;
 };
 
 #endif

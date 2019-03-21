@@ -46,13 +46,13 @@ vtkExtractHierarchicalBins::vtkExtractHierarchicalBins()
 {
   this->Level = 0;
   this->Bin = -1;
-  this->BinningFilter = NULL;
+  this->BinningFilter = nullptr;
 }
 
 //----------------------------------------------------------------------------
 vtkExtractHierarchicalBins::~vtkExtractHierarchicalBins()
 {
-  this->SetBinningFilter(NULL);
+  this->SetBinningFilter(nullptr);
 }
 
  void vtkExtractHierarchicalBins::ReportReferences(vtkGarbageCollector* collector)
@@ -80,11 +80,17 @@ int vtkExtractHierarchicalBins::FilterPoints(vtkPointSet *input)
 
   if ( this->Level >= 0 )
   {
-    offset = this->BinningFilter->GetLevelOffset(this->Level, numFill);
+    int level =
+      (this->Level < this->BinningFilter->GetNumberOfLevels() ? this->Level :
+       (this->BinningFilter->GetNumberOfLevels() - 1) );
+    offset = this->BinningFilter->GetLevelOffset(level, numFill);
   }
   else if ( this->Bin >= 0 )
   {
-    offset = this->BinningFilter->GetBinOffset(this->Bin, numFill);
+    int bin =
+      (this->Level < this->BinningFilter->GetNumberOfGlobalBins() ? this->Bin :
+       (this->BinningFilter->GetNumberOfGlobalBins() - 1) );
+    offset = this->BinningFilter->GetBinOffset(bin, numFill);
   }
   else //pass everything through
   {

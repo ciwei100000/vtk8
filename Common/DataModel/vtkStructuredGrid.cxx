@@ -88,13 +88,13 @@ void vtkStructuredGrid::CopyStructure(vtkDataSet *ds)
   {
     // there is blanking
     this->GetPointData()->AddArray(ds->GetPointGhostArray());
-    this->PointGhostArray = NULL;
+    this->PointGhostArray = nullptr;
   }
   if(ds->HasAnyBlankCells())
   {
     // there is blanking
     this->GetCellData()->AddArray(ds->GetCellGhostArray());
-    this->CellGhostArray = NULL;
+    this->CellGhostArray = nullptr;
   }
 }
 
@@ -144,7 +144,7 @@ int vtkStructuredGrid::GetCellType(vtkIdType cellId)
 //----------------------------------------------------------------------------
 vtkCell *vtkStructuredGrid::GetCell(vtkIdType cellId)
 {
-  vtkCell *cell = NULL;
+  vtkCell *cell = nullptr;
   vtkIdType idx;
   int i, j, k;
   int d01, offset1, offset2;
@@ -153,7 +153,7 @@ vtkCell *vtkStructuredGrid::GetCell(vtkIdType cellId)
   if ( ! this->Points )
   {
     vtkErrorMacro (<<"No data");
-    return NULL;
+    return nullptr;
   }
 
   // see whether the cell is blanked
@@ -258,7 +258,7 @@ vtkCell *vtkStructuredGrid::GetCell(vtkIdType cellId)
 
     default:
       vtkErrorMacro(<<"Invalid DataDescription.");
-      return NULL;
+      return nullptr;
   }
 
   // Extract point coordinates and point ids. NOTE: the ordering of the vtkQuad
@@ -276,7 +276,7 @@ vtkCell *vtkStructuredGrid::GetCell(vtkIdType cellId)
 vtkCell *vtkStructuredGrid::GetCell(int i, int j, int k) {
   vtkIdType cellId =
       i + (j + (k * (this->Dimensions[1] - 1))) * (this->Dimensions[0] - 1);
-  vtkCell *cell = NULL;
+  vtkCell *cell = nullptr;
   vtkIdType idx;
   int d01, offset1, offset2;
 
@@ -284,7 +284,7 @@ vtkCell *vtkStructuredGrid::GetCell(int i, int j, int k) {
   if (!this->Points)
   {
     vtkErrorMacro(<< "No data");
-    return NULL;
+    return nullptr;
   }
 
   // see whether the cell is blanked
@@ -380,7 +380,7 @@ vtkCell *vtkStructuredGrid::GetCell(int i, int j, int k) {
 
   default:
     vtkErrorMacro(<< "Invalid DataDescription.");
-    return NULL;
+    return nullptr;
   }
 
   // Extract point coordinates and point ids. NOTE: the ordering of the vtkQuad
@@ -858,7 +858,7 @@ void vtkStructuredGrid::SetDimensions(int i, int j, int k)
 
 //----------------------------------------------------------------------------
 // Set dimensions of structured grid dataset.
-void vtkStructuredGrid::SetDimensions(int dim[3])
+void vtkStructuredGrid::SetDimensions(const int dim[3])
 {
   this->SetExtent(0, dim[0]-1, 0, dim[1]-1, 0, dim[2]-1);
 }
@@ -1105,7 +1105,7 @@ unsigned long vtkStructuredGrid::GetActualMemorySize()
 void vtkStructuredGrid::ShallowCopy(vtkDataObject *dataObject)
 {
   vtkStructuredGrid *grid = vtkStructuredGrid::SafeDownCast(dataObject);
-  if(grid != NULL)
+  if(grid != nullptr)
   {
     this->InternalStructuredGridCopy(grid);
   }
@@ -1116,7 +1116,7 @@ void vtkStructuredGrid::ShallowCopy(vtkDataObject *dataObject)
 void vtkStructuredGrid::DeepCopy(vtkDataObject *dataObject)
 {
   vtkStructuredGrid *grid = vtkStructuredGrid::SafeDownCast(dataObject);
-  if(grid != NULL)
+  if(grid != nullptr)
   {
     this->InternalStructuredGridCopy(grid);
   }
@@ -1152,14 +1152,13 @@ void vtkStructuredGrid::ComputeScalarRange()
     double ptRange[2];
     double cellRange[2];
     double s;
-    int id, num;
 
-    ptRange[0] =  VTK_DOUBLE_MAX;
-    ptRange[1] =  VTK_DOUBLE_MIN;
+    ptRange[0] = VTK_DOUBLE_MAX;
+    ptRange[1] = VTK_DOUBLE_MIN;
     if ( ptScalars )
     {
-      num = this->GetNumberOfPoints();
-      for (id=0; id < num; id++)
+      vtkIdType num = this->GetNumberOfPoints();
+      for (vtkIdType id=0; id < num; ++id)
       {
         if ( this->IsPointVisible(id) )
         {
@@ -1176,12 +1175,12 @@ void vtkStructuredGrid::ComputeScalarRange()
       }
     }
 
-    cellRange[0] =  ptRange[0];
-    cellRange[1] =  ptRange[1];
+    cellRange[0] = ptRange[0];
+    cellRange[1] = ptRange[1];
     if ( cellScalars )
     {
-      num = this->GetNumberOfCells();
-      for (id=0; id < num; id++)
+      vtkIdType num = this->GetNumberOfCells();
+      for (vtkIdType id=0; id < num; ++id)
       {
         if ( this->IsCellVisible(id) )
         {
@@ -1257,7 +1256,7 @@ void vtkStructuredGrid::Crop(const int* updateExtent)
 
     // Get the points.  Protect against empty data objects.
     inPts = this->GetPoints();
-    if (inPts == NULL)
+    if (inPts == nullptr)
     {
       return;
     }
@@ -1349,7 +1348,7 @@ void vtkStructuredGrid::PrintSelf(ostream& os, vtkIndent indent)
 //----------------------------------------------------------------------------
 vtkStructuredGrid* vtkStructuredGrid::GetData(vtkInformation* info)
 {
-  return info? vtkStructuredGrid::SafeDownCast(info->Get(DATA_OBJECT())) : 0;
+  return info? vtkStructuredGrid::SafeDownCast(info->Get(DATA_OBJECT())) : nullptr;
 }
 
 //----------------------------------------------------------------------------

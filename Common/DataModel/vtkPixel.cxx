@@ -55,9 +55,9 @@ vtkPixel::~vtkPixel()
 }
 
 //----------------------------------------------------------------------------
-int vtkPixel::EvaluatePosition(double x[3], double* closestPoint,
+int vtkPixel::EvaluatePosition(const double x[3], double closestPoint[3],
                                   int& subId, double pcoords[3],
-                                  double& dist2, double *weights)
+                                  double& dist2, double weights[])
 {
   double pt1[3], pt2[3], pt3[3];
   int i;
@@ -142,7 +142,7 @@ int vtkPixel::EvaluatePosition(double x[3], double* closestPoint,
 }
 
 //----------------------------------------------------------------------------
-void vtkPixel::EvaluateLocation(int& subId, double pcoords[3], double x[3],
+void vtkPixel::EvaluateLocation(int& subId, const double pcoords[3], double x[3],
                                    double *weights)
 {
   double pt1[3], pt2[3], pt3[3];
@@ -164,7 +164,7 @@ void vtkPixel::EvaluateLocation(int& subId, double pcoords[3], double x[3],
 }
 
 //----------------------------------------------------------------------------
-int vtkPixel::CellBoundary(int vtkNotUsed(subId), double pcoords[3], vtkIdList *pts)
+int vtkPixel::CellBoundary(int vtkNotUsed(subId), const double pcoords[3], vtkIdList *pts)
 {
   double t1=pcoords[0]-pcoords[1];
   double t2=1.0-pcoords[0]-pcoords[1];
@@ -224,7 +224,7 @@ void vtkPixel::Contour(double value, vtkDataArray *cellScalars,
                        vtkPointData *inPd, vtkPointData *outPd,
                        vtkCellData *inCd, vtkIdType cellId, vtkCellData *outCd)
 {
-  static int CASE_MASK[4] = {1,2,8,4}; //note differenceom quad!
+  static const int CASE_MASK[4] = {1,2,8,4}; //note differenceom quad!
   vtkMarchingSquaresLineCases *lineCase;
   EDGE_LIST  *edge;
   int i, j, index, *vert;
@@ -272,7 +272,10 @@ void vtkPixel::Contour(double value, vtkDataArray *cellScalars,
     if ( pts[0] != pts[1] )
     {
       newCellId = lines->InsertNextCell(2,pts);
-      outCd->CopyData(inCd,cellId,newCellId);
+      if (outCd)
+      {
+        outCd->CopyData(inCd, cellId, newCellId);
+      }
     }
   }
 }
@@ -300,7 +303,7 @@ vtkCell *vtkPixel::GetEdge(int edgeId)
 // Compute interpolation functions (similar but different than Quad interpolation
 // functions)
 //
-void vtkPixel::InterpolationFunctions(double pcoords[3], double sf[4])
+void vtkPixel::InterpolationFunctions(const double pcoords[3], double sf[4])
 {
   double rm, sm;
 
@@ -316,7 +319,7 @@ void vtkPixel::InterpolationFunctions(double pcoords[3], double sf[4])
 //
 // Compute derivatives of interpolation functions.
 //
-void vtkPixel::InterpolationDerivs(double pcoords[3], double derivs[8])
+void vtkPixel::InterpolationDerivs(const double pcoords[3], double derivs[8])
 {
   double rm, sm;
 
@@ -340,7 +343,7 @@ void vtkPixel::InterpolationDerivs(double pcoords[3], double derivs[8])
 //
 // Intersect plane; see whether point is inside.
 //
-int vtkPixel::IntersectWithLine(double p1[3], double p2[3], double tol, double& t,
+int vtkPixel::IntersectWithLine(const double p1[3], const double p2[3], double tol, double& t,
                                 double x[3], double pcoords[3], int& subId)
 {
   double pt1[3], pt4[3], n[3];
@@ -431,8 +434,8 @@ int vtkPixel::Triangulate(int index, vtkIdList *ptIds, vtkPoints *pts)
 
 //----------------------------------------------------------------------------
 void vtkPixel::Derivatives(int vtkNotUsed(subId),
-                           double pcoords[3],
-                           double *values,
+                           const double pcoords[3],
+                           const double *values,
                            int dim, double *derivs)
 {
   double functionDerivs[8], sum;
@@ -550,7 +553,7 @@ void vtkPixel::Clip(double value, vtkDataArray *cellScalars,
                    vtkCellData *inCd, vtkIdType cellId, vtkCellData *outCd,
                    int insideOut)
 {
-  static int CASE_MASK[4] = {1,2,8,4}; //note difference from quad!
+  static const int CASE_MASK[4] = {1,2,8,4}; //note difference from quad!
   PIXEL_CASES *pixelCase;
   PIXEL_EDGE_LIST  *edge;
   int i, j, index, *vert;

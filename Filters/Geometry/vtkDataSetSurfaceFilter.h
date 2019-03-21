@@ -51,7 +51,7 @@ class VTKFILTERSGEOMETRY_EXPORT vtkDataSetSurfaceFilter : public vtkPolyDataAlgo
 public:
   static vtkDataSetSurfaceFilter *New();
   vtkTypeMacro(vtkDataSetSurfaceFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -59,9 +59,9 @@ public:
    * triangle strips.  This should render faster and use less memory, but no
    * cell data is copied.  By default, UseStrips is Off.
    */
-  vtkSetMacro(UseStrips, int);
-  vtkGetMacro(UseStrips, int);
-  vtkBooleanMacro(UseStrips, int);
+  vtkSetMacro(UseStrips, vtkTypeBool);
+  vtkGetMacro(UseStrips, vtkTypeBool);
+  vtkBooleanMacro(UseStrips, vtkTypeBool);
   //@}
 
   //@{
@@ -83,19 +83,19 @@ public:
    * since in that case each tringle strip can represent more than on of the
    * input cells.
    */
-  vtkSetMacro(PassThroughCellIds,int);
-  vtkGetMacro(PassThroughCellIds,int);
-  vtkBooleanMacro(PassThroughCellIds,int);
-  vtkSetMacro(PassThroughPointIds,int);
-  vtkGetMacro(PassThroughPointIds,int);
-  vtkBooleanMacro(PassThroughPointIds,int);
+  vtkSetMacro(PassThroughCellIds,vtkTypeBool);
+  vtkGetMacro(PassThroughCellIds,vtkTypeBool);
+  vtkBooleanMacro(PassThroughCellIds,vtkTypeBool);
+  vtkSetMacro(PassThroughPointIds,vtkTypeBool);
+  vtkGetMacro(PassThroughPointIds,vtkTypeBool);
+  vtkBooleanMacro(PassThroughPointIds,vtkTypeBool);
   //@}
 
   //@{
   /**
    * If PassThroughCellIds or PassThroughPointIds is on, then these ivars
    * control the name given to the field in which the ids are written into.  If
-   * set to NULL, then vtkOriginalCellIds or vtkOriginalPointIds (the default)
+   * set to nullptr, then vtkOriginalCellIds or vtkOriginalPointIds (the default)
    * is used, respectively.
    */
   vtkSetStringMacro(OriginalCellIdsName);
@@ -116,7 +116,7 @@ public:
   /**
    * If the input is an unstructured grid with nonlinear faces, this parameter
    * determines how many times the face is subdivided into linear faces.  If 0,
-   * the output is the equivalent of its linear couterpart (and the midpoints
+   * the output is the equivalent of its linear counterpart (and the midpoints
    * determining the nonlinear interpolation are discarded).  If 1 (the
    * default), the nonlinear face is triangulated based on the midpoints.  If
    * greater than 1, the triangulated pieces are recursively subdivided to reach
@@ -172,14 +172,14 @@ public:
 
 protected:
   vtkDataSetSurfaceFilter();
-  ~vtkDataSetSurfaceFilter() VTK_OVERRIDE;
+  ~vtkDataSetSurfaceFilter() override;
 
-  int UseStrips;
+  vtkTypeBool UseStrips;
 
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
 
   // Helper methods.
@@ -253,13 +253,13 @@ protected:
 
   int PieceInvariant;
 
-  int PassThroughCellIds;
+  vtkTypeBool PassThroughCellIds;
   void RecordOrigCellId(vtkIdType newIndex, vtkIdType origId);
   virtual void RecordOrigCellId(vtkIdType newIndex, vtkFastGeomQuad *quad);
   vtkIdTypeArray *OriginalCellIds;
   char *OriginalCellIdsName;
 
-  int PassThroughPointIds;
+  vtkTypeBool PassThroughPointIds;
   void RecordOrigPointId(vtkIdType newIndex, vtkIdType origId);
   vtkIdTypeArray *OriginalPointIds;
   char *OriginalPointIdsName;
@@ -267,8 +267,8 @@ protected:
   int NonlinearSubdivisionLevel;
 
 private:
-  vtkDataSetSurfaceFilter(const vtkDataSetSurfaceFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataSetSurfaceFilter&) VTK_DELETE_FUNCTION;
+  vtkDataSetSurfaceFilter(const vtkDataSetSurfaceFilter&) = delete;
+  void operator=(const vtkDataSetSurfaceFilter&) = delete;
 };
 
 #endif

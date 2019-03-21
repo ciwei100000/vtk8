@@ -28,14 +28,10 @@
 vtkStandardNewMacro(vtkMoleculeToBondStickFilter);
 
 //----------------------------------------------------------------------------
-vtkMoleculeToBondStickFilter::vtkMoleculeToBondStickFilter()
-{
-}
+vtkMoleculeToBondStickFilter::vtkMoleculeToBondStickFilter() = default;
 
 //----------------------------------------------------------------------------
-vtkMoleculeToBondStickFilter::~vtkMoleculeToBondStickFilter()
-{
-}
+vtkMoleculeToBondStickFilter::~vtkMoleculeToBondStickFilter() = default;
 
 //----------------------------------------------------------------------------
 int vtkMoleculeToBondStickFilter::RequestData(
@@ -56,6 +52,7 @@ int vtkMoleculeToBondStickFilter::RequestData(
   vtkCellArray *polys = vtkCellArray::New();
   vtkPoints *points = vtkPoints::New();
   vtkUnsignedShortArray *bondOrders = vtkUnsignedShortArray::New();
+  bondOrders->SetName(input->GetBondOrdersArrayName());
 
   // Initialize a CylinderSource
   vtkCylinderSource *cylSource = vtkCylinderSource::New();
@@ -68,7 +65,8 @@ int vtkMoleculeToBondStickFilter::RequestData(
                    GetNumberOfPoints());
   polys->Allocate(3 * numBonds * cylSource->GetOutput()->GetPolys()->
                   GetNumberOfCells());
-  bondOrders->Allocate(points->GetNumberOfPoints());
+  bondOrders->Allocate(3 * numBonds * cylSource->GetOutput()->GetPoints()->
+                   GetNumberOfPoints());
 
   // Create a transform object to map the cylinder source to the bond
   vtkTransform *xform = vtkTransform::New();

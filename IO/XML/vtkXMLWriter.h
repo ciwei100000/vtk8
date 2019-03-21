@@ -20,6 +20,11 @@
  * functionality needed to write VTK XML file formats.  Concrete
  * subclasses provide actual writer implementations calling upon this
  * functionality.
+ *
+ * @par Thanks
+ * CompressionLevel getters/setters exposed by Quincy Wofford
+ * (qwofford@lanl.gov) and John Patchett (patchett@lanl.gov),
+ * Los Alamos National Laboratory (2017)
 */
 
 #ifndef vtkXMLWriter_h
@@ -39,6 +44,7 @@ class vtkDataArray;
 class vtkDataCompressor;
 class vtkDataSet;
 class vtkDataSetAttributes;
+class vtkFieldData;
 class vtkOutputStream;
 class vtkPointData;
 class vtkPoints;
@@ -54,7 +60,7 @@ class VTKIOXML_EXPORT vtkXMLWriter : public vtkAlgorithm
 {
 public:
   vtkTypeMacro(vtkXMLWriter, vtkAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Enumerate big and little endian byte order settings.
@@ -128,9 +134,9 @@ public:
   /**
    * Enable writing to an OutputString instead of the default, a file.
    */
-  vtkSetMacro(WriteToOutputString, int);
-  vtkGetMacro(WriteToOutputString, int);
-  vtkBooleanMacro(WriteToOutputString, int);
+  vtkSetMacro(WriteToOutputString, vtkTypeBool);
+  vtkGetMacro(WriteToOutputString, vtkTypeBool);
+  vtkBooleanMacro(WriteToOutputString, vtkTypeBool);
   std::string GetOutputString() { return this->OutputString; }
   //@}
 
@@ -147,7 +153,8 @@ public:
   {
     NONE,
     ZLIB,
-    LZ4
+    LZ4,
+    LZMA
   };
 
   //@{
@@ -167,6 +174,13 @@ public:
   {
     this->SetCompressorType(ZLIB);
   }
+  void SetCompressorTypeToLZMA()
+  {
+    this->SetCompressorType(LZMA);
+  }
+
+  void SetCompressionLevel(int compressorLevel);
+  vtkGetMacro(CompressionLevel, int);
   //@}
 
   //@{
@@ -201,9 +215,9 @@ public:
    * specification will be violated, but reading and writing will be
    * fast.  The default is to do the encoding.
    */
-  vtkSetMacro(EncodeAppendedData, int);
-  vtkGetMacro(EncodeAppendedData, int);
-  vtkBooleanMacro(EncodeAppendedData, int);
+  vtkSetMacro(EncodeAppendedData, vtkTypeBool);
+  vtkGetMacro(EncodeAppendedData, vtkTypeBool);
+  vtkBooleanMacro(EncodeAppendedData, vtkTypeBool);
   //@}
 
   //@{
@@ -231,7 +245,7 @@ public:
   // See the vtkAlgorithm for a description of what these do
   int ProcessRequest(vtkInformation* request,
                              vtkInformationVector** inputVector,
-                             vtkInformationVector* outputVector) VTK_OVERRIDE;
+                             vtkInformationVector* outputVector) override;
 
 
   //@{
@@ -253,7 +267,7 @@ public:
 
 protected:
   vtkXMLWriter();
-  ~vtkXMLWriter() VTK_OVERRIDE;
+  ~vtkXMLWriter() override;
 
   virtual int RequestInformation(
                           vtkInformation* request,
@@ -271,7 +285,7 @@ protected:
 
   // Whether this object is writing to a string or a file.
   // Default is 0: write to file.
-  int WriteToOutputString;
+  vtkTypeBool WriteToOutputString;
 
   // The output string.
   std::string OutputString;
@@ -290,7 +304,7 @@ protected:
   int DataMode;
 
   // Whether to base64-encode the appended data section.
-  int EncodeAppendedData;
+  vtkTypeBool EncodeAppendedData;
 
   // The stream position at which appended data starts.
   vtkTypeInt64 AppendedDataPosition;
@@ -323,6 +337,9 @@ protected:
   size_t CompressionBlockNumber;
   vtkXMLDataHeader* CompressionHeader;
   vtkTypeInt64 CompressionHeaderPosition;
+  // Compression Level for vtkDataCompressor objects
+  // 1 (worst compression, fastest) ... 9 (best compression, slowest)
+  int CompressionLevel = 5;
 
   // The output stream used to write binary and appended data.  May
   // transparently encode the data.
@@ -371,10 +388,10 @@ protected:
   vtkTypeInt64 GetAppendedDataOffset();
   void WriteAppendedDataOffset(vtkTypeInt64 streamPos,
                                vtkTypeInt64 &lastoffset,
-                               const char* attr=0);
+                               const char* attr=nullptr);
   void ForwardAppendedDataOffset(vtkTypeInt64 streamPos,
                                  vtkTypeInt64 offset,
-                                 const char* attr=0);
+                                 const char* attr=nullptr);
   void ForwardAppendedDataDouble(vtkTypeInt64 streamPos,
                                  double value,
                                  const char* attr);
@@ -404,11 +421,11 @@ protected:
     const char* alternateName, int writeNumTuples, int timestep);
   virtual void WriteArrayFooter(ostream &os, vtkIndent indent, vtkAbstractArray *a, int shortFormat);
   virtual void WriteArrayInline(vtkAbstractArray* a, vtkIndent indent,
-    const char* alternateName=0, int writeNumTuples=0);
+    const char* alternateName=nullptr, int writeNumTuples=0);
   virtual void WriteInlineData(vtkAbstractArray* a, vtkIndent indent);
 
   void WriteArrayAppended(vtkAbstractArray* a, vtkIndent indent,
-    OffsetsManager &offs, const char* alternateName=0,  int writeNumTuples=0,
+    OffsetsManager &offs, const char* alternateName=nullptr,  int writeNumTuples=0,
     int timestep=0);
   int WriteAsciiData(vtkAbstractArray* a, vtkIndent indent);
   int WriteBinaryData(vtkAbstractArray* a);
@@ -449,7 +466,7 @@ protected:
   void WritePCellData(vtkCellData* cd, vtkIndent indent);
   void WritePPoints(vtkPoints* points, vtkIndent indent);
   void WritePArray(vtkAbstractArray* a, vtkIndent indent,
-    const char* alternateName=0);
+    const char* alternateName=nullptr);
   void WritePCoordinates(vtkDataArray* xc, vtkDataArray* yc,
                          vtkDataArray* zc, vtkIndent indent);
 
@@ -474,6 +491,10 @@ protected:
   virtual void SetProgressPartial(float fraction);
   virtual void UpdateProgressDiscrete(float progress);
   float ProgressRange[2];
+
+  // This shallows copy input field data to the passed field data and
+  // then adds any additional field arrays. For example, TimeValue.
+  void UpdateFieldData(vtkFieldData*);
 
   ofstream* OutFile;
   std::ostringstream* OutStringStream;
@@ -506,8 +527,8 @@ protected:
   friend class vtkXMLWriterHelper;
 
 private:
-  vtkXMLWriter(const vtkXMLWriter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkXMLWriter&) VTK_DELETE_FUNCTION;
+  vtkXMLWriter(const vtkXMLWriter&) = delete;
+  void operator=(const vtkXMLWriter&) = delete;
 };
 
 #endif

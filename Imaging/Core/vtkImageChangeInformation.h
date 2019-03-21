@@ -34,7 +34,7 @@ class VTKIMAGINGCORE_EXPORT vtkImageChangeInformation : public vtkImageAlgorithm
 public:
   static vtkImageChangeInformation *New();
   vtkTypeMacro(vtkImageChangeInformation, vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -84,9 +84,9 @@ public:
    * SetOutputOrigin.  This is often a useful operation to apply
    * before using vtkImageReslice to apply a transformation to an image.
    */
-  vtkSetMacro(CenterImage, int);
-  vtkBooleanMacro(CenterImage, int);
-  vtkGetMacro(CenterImage, int);
+  vtkSetMacro(CenterImage, vtkTypeBool);
+  vtkBooleanMacro(CenterImage, vtkTypeBool);
+  vtkGetMacro(CenterImage, vtkTypeBool);
   //@}
 
   //@{
@@ -124,9 +124,9 @@ public:
 
 protected:
   vtkImageChangeInformation();
-  ~vtkImageChangeInformation() VTK_OVERRIDE;
+  ~vtkImageChangeInformation() override;
 
-  int CenterImage;
+  vtkTypeBool CenterImage;
 
   int OutputExtentStart[3];
   int ExtentTranslation[3];
@@ -141,20 +141,20 @@ protected:
 
   int RequestUpdateExtent (vtkInformation *,
                                    vtkInformationVector **,
-                                   vtkInformationVector *) VTK_OVERRIDE;
+                                   vtkInformationVector *) override;
   int RequestInformation (vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
 
   int RequestData(vtkInformation *,
                           vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
 
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
 private:
-  vtkImageChangeInformation(const vtkImageChangeInformation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageChangeInformation&) VTK_DELETE_FUNCTION;
+  vtkImageChangeInformation(const vtkImageChangeInformation&) = delete;
+  void operator=(const vtkImageChangeInformation&) = delete;
 };
 
 

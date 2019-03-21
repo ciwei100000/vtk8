@@ -48,7 +48,7 @@ struct vtkAVSucdReader::idMapping : public std::map<vtkIdType, vtkIdType>
 //----------------------------------------------------------------------------
 vtkAVSucdReader::vtkAVSucdReader()
 {
-  this->FileName  = NULL;
+  this->FileName  = nullptr;
   this->ByteOrder = FILE_BIG_ENDIAN;
   this->BinaryFile = 0;
   this->NumberOfNodeFields = 0;
@@ -56,12 +56,12 @@ vtkAVSucdReader::vtkAVSucdReader()
   this->NumberOfFields = 0;
   this->NumberOfNodeComponents = 0;
   this->NumberOfCellComponents = 0;
-  this->FileStream = NULL;
+  this->FileStream = nullptr;
   this->NumberOfNodes = 0;
   this->NumberOfCells = 0;
 
-  this->NodeDataInfo = NULL;
-  this->CellDataInfo = NULL;
+  this->NodeDataInfo = nullptr;
+  this->CellDataInfo = nullptr;
   this->PointDataArraySelection = vtkDataArraySelection::New();
   this->CellDataArraySelection = vtkDataArraySelection::New();
 
@@ -115,13 +115,13 @@ int vtkAVSucdReader::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkUnstructuredGrid *output = vtkUnstructuredGrid::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
   vtkDebugMacro( << "Reading AVS UCD file");
 
-  // If ExecuteInformation() failed FileStream will be NULL and
+  // If ExecuteInformation() failed FileStream will be nullptr and
   // ExecuteInformation() will have spit out an error.
   if ( this->FileStream )
   {
@@ -175,7 +175,7 @@ void vtkAVSucdReader::ReadFile(vtkUnstructuredGrid *output)
   }
 
   delete this->FileStream;
-  this->FileStream = NULL;
+  this->FileStream = nullptr;
 }
 
 
@@ -203,7 +203,7 @@ int vtkAVSucdReader::RequestInformation(
   {
     this->SetErrorCode(vtkErrorCode::FileNotFoundError);
     delete this->FileStream;
-    this->FileStream = NULL;
+    this->FileStream = nullptr;
     vtkErrorMacro("Specified filename not found");
     return 0;
   }
@@ -215,7 +215,7 @@ int vtkAVSucdReader::RequestInformation(
   { // most likely an ASCII file
     this->BinaryFile = 0;
     delete this->FileStream; // close file to reopen it later
-    this->FileStream = NULL;
+    this->FileStream = nullptr;
 
     this->FileStream = new ifstream(this->FileName, ios::in);
     char c='\0';
@@ -315,7 +315,7 @@ int vtkAVSucdReader::RequestInformation(
       vtkDebugMacro( << "TFL = " << trueFileLength
                      << "\tCFL = " << calculatedFileLength << endl);
 
-      // We tried. Count our trys.
+      // We tried. Count our tries.
       attempts++;
 
       if(trueFileLength == calculatedFileLength)
@@ -539,7 +539,7 @@ void vtkAVSucdReader::ReadGeometry(vtkUnstructuredGrid *output,
   if (this->BinaryFile)
   {
     int *types = new int[this->NumberOfCells];
-    if(types == NULL)
+    if(types == nullptr)
     {
       vtkErrorMacro(<< "Error allocating types memory\n");
     }
@@ -593,7 +593,7 @@ void vtkAVSucdReader::ReadBinaryCellTopology(vtkIntArray *materials,
   int *mat = materials->GetPointer(0);
   vtkIdType *list = listcells->GetPointer(0);
   int *ctype = new int[4 * this->NumberOfCells];
-  if(ctype == NULL)
+  if(ctype == nullptr)
   {
     vtkErrorMacro(<< "Error allocating ctype memory");
     return;
@@ -603,7 +603,7 @@ void vtkAVSucdReader::ReadBinaryCellTopology(vtkIntArray *materials,
   this->ReadIntBlock(4 * this->NumberOfCells, ctype);
 
   int *topology_list = new int[this->NlistNodes];
-  if(topology_list == NULL)
+  if(topology_list == nullptr)
   {
     vtkErrorMacro(<< "Error allocating topology_list memory");
     return;
@@ -624,13 +624,13 @@ void vtkAVSucdReader::ReadBinaryCellTopology(vtkIntArray *materials,
       *list++ = topology_list[k2-4] - 1;
       k2++;
     }
-     else
-     {
-       for(j=0; j < ctype[4*i+2]; j++)
-       {
-         *list++ = topology_list[k2++] - 1;
-       }
-     }
+    else
+    {
+      for(j=0; j < ctype[4*i+2]; j++)
+      {
+        *list++ = topology_list[k2++] - 1;
+      }
+    }
   }
 
   delete [] topology_list;
@@ -1090,8 +1090,8 @@ int vtkAVSucdReader::GetLabel(char *string, int number, char *label)
   char  current;
 
 
-  // check to make sure that structure is not NULL
-  if (string == NULL)
+  // check to make sure that structure is not nullptr
+  if (string == nullptr)
   {
     vtkErrorMacro( << "String is null");
     return 0;

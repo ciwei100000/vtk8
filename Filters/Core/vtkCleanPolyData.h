@@ -35,6 +35,10 @@
  * Strp with 1 points -> Vert (if ConvertStripsToPolys && ConvertPolysToLines
  *   && ConvertLinesToPoints)
  *
+ * Cells of type VTK_POLY_LINE will be converted to a vertex only if
+ * ConvertLinesToPoints is on and all points are merged into one. Degenerate line
+ * segments (with two identical end points) will be removed.
+ *
  * If tolerance is specified precisely=0.0, then vtkCleanPolyData will use
  * the vtkMergePoints object to merge points (which is faster). Otherwise the
  * slower vtkIncrementalPointLocator is used.  Before inserting points into the point
@@ -74,7 +78,7 @@ class VTKFILTERSCORE_EXPORT vtkCleanPolyData : public vtkPolyDataAlgorithm
 {
 public:
   static vtkCleanPolyData *New();
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   vtkTypeMacro(vtkCleanPolyData,vtkPolyDataAlgorithm);
 
   //@{
@@ -83,9 +87,9 @@ public:
    * a fraction of Bounding box diagonal, if true, AbsoluteTolerance is
    * used when adding points to locator (merging)
    */
-  vtkSetMacro(ToleranceIsAbsolute,int);
-  vtkBooleanMacro(ToleranceIsAbsolute,int);
-  vtkGetMacro(ToleranceIsAbsolute,int);
+  vtkSetMacro(ToleranceIsAbsolute,vtkTypeBool);
+  vtkBooleanMacro(ToleranceIsAbsolute,vtkTypeBool);
+  vtkGetMacro(ToleranceIsAbsolute,vtkTypeBool);
   //@}
 
   //@{
@@ -109,27 +113,27 @@ public:
   /**
    * Turn on/off conversion of degenerate lines to points. Default is On.
    */
-  vtkSetMacro(ConvertLinesToPoints,int);
-  vtkBooleanMacro(ConvertLinesToPoints,int);
-  vtkGetMacro(ConvertLinesToPoints,int);
+  vtkSetMacro(ConvertLinesToPoints,vtkTypeBool);
+  vtkBooleanMacro(ConvertLinesToPoints,vtkTypeBool);
+  vtkGetMacro(ConvertLinesToPoints,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off conversion of degenerate polys to lines. Default is On.
    */
-  vtkSetMacro(ConvertPolysToLines,int);
-  vtkBooleanMacro(ConvertPolysToLines,int);
-  vtkGetMacro(ConvertPolysToLines,int);
+  vtkSetMacro(ConvertPolysToLines,vtkTypeBool);
+  vtkBooleanMacro(ConvertPolysToLines,vtkTypeBool);
+  vtkGetMacro(ConvertPolysToLines,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off conversion of degenerate strips to polys. Default is On.
    */
-  vtkSetMacro(ConvertStripsToPolys,int);
-  vtkBooleanMacro(ConvertStripsToPolys,int);
-  vtkGetMacro(ConvertStripsToPolys,int);
+  vtkSetMacro(ConvertStripsToPolys,vtkTypeBool);
+  vtkBooleanMacro(ConvertStripsToPolys,vtkTypeBool);
+  vtkGetMacro(ConvertStripsToPolys,vtkTypeBool);
   //@}
 
   //@{
@@ -139,9 +143,9 @@ public:
    * the appropriate tolerance may be merged. If off, points are never
    * merged. By default, merging is on.
    */
-  vtkSetMacro(PointMerging,int);
-  vtkGetMacro(PointMerging,int);
-  vtkBooleanMacro(PointMerging,int);
+  vtkSetMacro(PointMerging,vtkTypeBool);
+  vtkGetMacro(PointMerging,vtkTypeBool);
+  vtkBooleanMacro(PointMerging,vtkTypeBool);
   //@}
 
   //@{
@@ -156,17 +160,17 @@ public:
   /**
    * Create default locator. Used to create one when none is specified.
    */
-  void CreateDefaultLocator(vtkPolyData *input = 0);
+  void CreateDefaultLocator(vtkPolyData *input = nullptr);
 
   /**
    * Release locator
    */
-  void ReleaseLocator() { this->SetLocator(NULL); }
+  void ReleaseLocator() { this->SetLocator(nullptr); }
 
   /**
    * Get the MTime of this object also considering the locator.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   /**
    * Perform operation on a point
@@ -183,9 +187,9 @@ public:
   // This flag allows the user to select whether strict piece invariance
   // is required.  By default it is on.  When off, the filter can stream,
   // but results may change.
-  vtkSetMacro(PieceInvariant, int);
-  vtkGetMacro(PieceInvariant, int);
-  vtkBooleanMacro(PieceInvariant, int);
+  vtkSetMacro(PieceInvariant, vtkTypeBool);
+  vtkGetMacro(PieceInvariant, vtkTypeBool);
+  vtkBooleanMacro(PieceInvariant, vtkTypeBool);
 
   //@{
   /**
@@ -199,26 +203,26 @@ public:
 
 protected:
   vtkCleanPolyData();
- ~vtkCleanPolyData() VTK_OVERRIDE;
+ ~vtkCleanPolyData() override;
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-  int   PointMerging;
+  vtkTypeBool   PointMerging;
   double Tolerance;
   double AbsoluteTolerance;
-  int ConvertLinesToPoints;
-  int ConvertPolysToLines;
-  int ConvertStripsToPolys;
-  int ToleranceIsAbsolute;
+  vtkTypeBool ConvertLinesToPoints;
+  vtkTypeBool ConvertPolysToLines;
+  vtkTypeBool ConvertStripsToPolys;
+  vtkTypeBool ToleranceIsAbsolute;
   vtkIncrementalPointLocator *Locator;
 
-  int PieceInvariant;
+  vtkTypeBool PieceInvariant;
   int OutputPointsPrecision;
 private:
-  vtkCleanPolyData(const vtkCleanPolyData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCleanPolyData&) VTK_DELETE_FUNCTION;
+  vtkCleanPolyData(const vtkCleanPolyData&) = delete;
+  void operator=(const vtkCleanPolyData&) = delete;
 };
 
 #endif

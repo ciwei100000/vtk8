@@ -31,8 +31,8 @@
 #include "vtkVariant.h"
 #include "vtkSmartPointer.h"
 
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 // Make a dummy image filter that does nothing but call CopyAttributeData.
 class vtkDummyImageFilter : public vtkImageAlgorithm
@@ -42,17 +42,17 @@ public:
   vtkTypeMacro(vtkDummyImageFilter,vtkImageAlgorithm);
 
 protected:
-  vtkDummyImageFilter() {};
-  ~vtkDummyImageFilter() VTK_OVERRIDE {};
+  vtkDummyImageFilter() = default;
+  ~vtkDummyImageFilter() override = default;
 
   int RequestData(
     vtkInformation* request,
     vtkInformationVector** inputVector,
-    vtkInformationVector* outputVector) VTK_OVERRIDE;
+    vtkInformationVector* outputVector) override;
 
 private:
-  vtkDummyImageFilter(const vtkDummyImageFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDummyImageFilter&) VTK_DELETE_FUNCTION;
+  vtkDummyImageFilter(const vtkDummyImageFilter&) = delete;
+  void operator=(const vtkDummyImageFilter&) = delete;
 };
 
 vtkStandardNewMacro(vtkDummyImageFilter);

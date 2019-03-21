@@ -39,7 +39,7 @@ class VTKFILTERSCORE_EXPORT vtkMaskPoints : public vtkPolyDataAlgorithm
 public:
   static vtkMaskPoints *New();
   vtkTypeMacro(vtkMaskPoints,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -70,9 +70,9 @@ public:
   /**
    * Special flag causes randomization of point selection.
    */
-  vtkSetMacro(RandomMode,int);
-  vtkGetMacro(RandomMode,int);
-  vtkBooleanMacro(RandomMode,int);
+  vtkSetMacro(RandomMode,vtkTypeBool);
+  vtkGetMacro(RandomMode,vtkTypeBool);
+  vtkBooleanMacro(RandomMode,vtkTypeBool);
   //@}
 
   //@{
@@ -115,9 +115,9 @@ public:
    * number of processors.  In the second case, the total number of
    * points = maximum number of points.
    */
-  vtkSetMacro(ProportionalMaximumNumberOfPoints, int);
-  vtkGetMacro(ProportionalMaximumNumberOfPoints, int);
-  vtkBooleanMacro(ProportionalMaximumNumberOfPoints, int);
+  vtkSetMacro(ProportionalMaximumNumberOfPoints, vtkTypeBool);
+  vtkGetMacro(ProportionalMaximumNumberOfPoints, vtkTypeBool);
+  vtkBooleanMacro(ProportionalMaximumNumberOfPoints, vtkTypeBool);
   //@}
 
   //@{
@@ -126,9 +126,9 @@ public:
    * convenience method because vertices are drawn (they are topology) while
    * points are not (they are geometry). By default this method is off.
    */
-  vtkSetMacro(GenerateVertices,int);
-  vtkGetMacro(GenerateVertices,int);
-  vtkBooleanMacro(GenerateVertices,int);
+  vtkSetMacro(GenerateVertices,vtkTypeBool);
+  vtkGetMacro(GenerateVertices,vtkTypeBool);
+  vtkBooleanMacro(GenerateVertices,vtkTypeBool);
   //@}
 
   //@{
@@ -137,9 +137,9 @@ public:
    * as multi-vertex cells (more than one per cell), if you wish to have
    * a single vertex per cell, enable this flag.
    */
-  vtkSetMacro(SingleVertexPerCell,int);
-  vtkGetMacro(SingleVertexPerCell,int);
-  vtkBooleanMacro(SingleVertexPerCell,int);
+  vtkSetMacro(SingleVertexPerCell,vtkTypeBool);
+  vtkGetMacro(SingleVertexPerCell,vtkTypeBool);
+  vtkBooleanMacro(SingleVertexPerCell,vtkTypeBool);
   //@}
 
   //@{
@@ -154,20 +154,20 @@ public:
 
 protected:
   vtkMaskPoints();
-  ~vtkMaskPoints() VTK_OVERRIDE {}
+  ~vtkMaskPoints() override {}
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-                  vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+                  vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   int OnRatio;     // every OnRatio point is on; all others are off.
   vtkIdType Offset;      // offset (or starting point id)
   int RandomMode;  // turn on/off randomization
   vtkIdType MaximumNumberOfPoints;
-  int GenerateVertices; //generate polydata verts
-  int SingleVertexPerCell;
+  vtkTypeBool GenerateVertices; //generate polydata verts
+  vtkTypeBool SingleVertexPerCell;
   int RandomModeType; // choose the random sampling mode
-  int ProportionalMaximumNumberOfPoints;
+  vtkTypeBool ProportionalMaximumNumberOfPoints;
   int OutputPointsPrecision;
 
   virtual void InternalScatter(unsigned long*, unsigned long *, int, int) {}
@@ -178,8 +178,8 @@ protected:
   unsigned long GetLocalSampleSize(vtkIdType, int);
 
 private:
-  vtkMaskPoints(const vtkMaskPoints&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMaskPoints&) VTK_DELETE_FUNCTION;
+  vtkMaskPoints(const vtkMaskPoints&) = delete;
+  void operator=(const vtkMaskPoints&) = delete;
 };
 
 #endif

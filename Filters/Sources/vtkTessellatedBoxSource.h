@@ -43,7 +43,7 @@ class VTKFILTERSSOURCES_EXPORT vtkTessellatedBoxSource : public vtkPolyDataAlgor
 public:
   static vtkTessellatedBoxSource *New();
   vtkTypeMacro(vtkTessellatedBoxSource,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -87,9 +87,9 @@ public:
    * Implementation note: duplicating points is an easier method to implement
    * than a minimal number of points.
    */
-  vtkSetMacro(DuplicateSharedPoints, int);
-  vtkGetMacro(DuplicateSharedPoints, int);
-  vtkBooleanMacro(DuplicateSharedPoints, int);
+  vtkSetMacro(DuplicateSharedPoints, vtkTypeBool);
+  vtkGetMacro(DuplicateSharedPoints, vtkTypeBool);
+  vtkBooleanMacro(DuplicateSharedPoints, vtkTypeBool);
   //@}
 
   //@{
@@ -97,9 +97,9 @@ public:
    * Flag to tell the source to generate either a quad or two triangle for a
    * set of four points. Initial value is false (generate triangles).
    */
-  vtkSetMacro(Quads, int);
-  vtkGetMacro(Quads, int);
-  vtkBooleanMacro(Quads, int);
+  vtkSetMacro(Quads, vtkTypeBool);
+  vtkGetMacro(Quads, vtkTypeBool);
+  vtkBooleanMacro(Quads, vtkTypeBool);
   //@}
 
   //@{
@@ -114,7 +114,7 @@ public:
 
 protected:
    vtkTessellatedBoxSource();
-  ~vtkTessellatedBoxSource() VTK_OVERRIDE;
+  ~vtkTessellatedBoxSource() override;
 
   /**
    * Called by the superclass. Actual creation of the points and cells
@@ -122,7 +122,7 @@ protected:
    */
   int RequestData(vtkInformation *request,
                           vtkInformationVector **inputVector,
-                          vtkInformationVector *outpuVector) VTK_OVERRIDE;
+                          vtkInformationVector *outpuVector) override;
 
 
   void DuplicateSharedPointsMethod(double *bounds,
@@ -161,13 +161,13 @@ protected:
 
   double Bounds[6];
   int Level;
-  int DuplicateSharedPoints;
-  int Quads;
+  vtkTypeBool DuplicateSharedPoints;
+  vtkTypeBool Quads;
   int OutputPointsPrecision;
 
 private:
-  vtkTessellatedBoxSource(const vtkTessellatedBoxSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTessellatedBoxSource&) VTK_DELETE_FUNCTION;
+  vtkTessellatedBoxSource(const vtkTessellatedBoxSource&) = delete;
+  void operator=(const vtkTessellatedBoxSource&) = delete;
 };
 
 #endif

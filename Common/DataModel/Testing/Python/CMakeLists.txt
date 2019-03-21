@@ -3,10 +3,14 @@ vtk_add_test_python(
 #  LineIntersectQuadraticCells.py
   PerlinNoise.py
   SelectionLoop.py
+  TestBoxPlaneIntersection.py
   TestCopyStructuredData.py,NO_DATA,NO_VALID
   TestNumericArrayImageData.py,NO_DATA,NO_VALID
+  TestPartitionedData.py,NO_DATA,NO_VALID
   TestQuadricClustering.py
   TestStaticPointLocator.py,NO_DATA,NO_VALID
+  TestStaticPointLocator2.py,NO_DATA,NO_VALID
+  TestStaticPointLocator2D.py,NO_DATA,NO_VALID
   TestStructuredGrid.py
   TestTemplates.py,NO_DATA,NO_VALID
   headBone.py
@@ -16,6 +20,8 @@ vtk_add_test_python(
   otherDataSetAttributes.py,NO_DATA,NO_VALID,NO_RT
   quadricCut.py,NO_RT
   quadraticQuadDeriv.py,NO_VALID,NO_RT
+  Test3DCellsEvaluatePosition.py,NO_DATA,NO_VALID,NO_OUTPUT
   TestICPTransform.py,NO_RT
   TestMolecule.py,NO_VALID,NO_RT
+  TestClipPolyhedra.py
   )

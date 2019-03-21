@@ -30,6 +30,7 @@
 
 #include "vtkmlib/ArrayConverters.h"
 #include "vtkmlib/DataSetConverters.h"
+#include "vtkmlib/ImplicitFunctionConverter.h"
 #include "vtkmlib/PolyDataConverter.h"
 #include "vtkmlib/Storage.h"
 #include "vtkmlib/UnstructuredGridConverter.h"
@@ -61,7 +62,8 @@ void vtkmClip::PrintSelf(std::ostream &os, vtkIndent indent)
 vtkmClip::vtkmClip()
   : ClipValue(0.),
     ComputeScalars(true),
-    ClipFunction(nullptr)
+    ClipFunction(nullptr),
+    ClipFunctionConverter(new tovtkm::ImplicitFunctionConverter)
 {
   // Clip active point scalars by default
   this->SetInputArrayToProcess(0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS,
@@ -90,7 +92,7 @@ void vtkmClip::SetClipFunction(vtkImplicitFunction *clipFunction)
   if (this->ClipFunction != clipFunction)
   {
     this->ClipFunction = clipFunction;
-    this->ClipFunctionConverter.Set(clipFunction);
+    this->ClipFunctionConverter->Set(clipFunction);
     this->Modified();
   }
 }
@@ -112,60 +114,76 @@ int vtkmClip::RequestData(vtkInformation *,
   // Find the scalar array:
   int assoc = this->GetInputArrayAssociation(0, inInfoVec);
   vtkDataArray *scalars = this->GetInputArrayToProcess(0, inInfoVec);
-
-  // Validate input objects:
-  if (!scalars)
-  {
-    vtkErrorMacro("Specified scalar array not found.");
-    return 1;
-  }
-  if (input->GetNumberOfPoints() == 0)
-  {
-    vtkErrorMacro("No points in input dataset!");
-    return 1;
-  }
-  if (input->GetNumberOfCells() == 0)
-  {
-    vtkErrorMacro("No cells in input dataset!");
-    return 1;
-  }
-
-  // Convert inputs to vtkm objects:
-  vtkm::cont::DataSet in = tovtkm::Convert(input);
-  vtkm::cont::Field field = tovtkm::Convert(scalars, assoc);
-
-  if (field.GetAssociation() != vtkm::cont::Field::ASSOC_POINTS ||
-      field.GetName() == std::string())
+  if (assoc != vtkDataObject::FIELD_ASSOCIATION_POINTS ||
+      scalars == nullptr || scalars->GetName() == nullptr ||
+      scalars->GetName()[0] == '\0')
   {
     vtkErrorMacro("Invalid scalar array; array missing or not a point array.");
+    return 0;
+  }
+
+  // Validate input objects:
+  if (input->GetNumberOfPoints() == 0 || input->GetNumberOfCells() == 0)
+  {
+    return 1; // nothing to do
+  }
+
+  try
+  {
+    // Convert inputs to vtkm objects:
+    auto fieldsFlag = this->ComputeScalars ?
+                      tovtkm::FieldsFlag::PointsAndCells :
+                      tovtkm::FieldsFlag::None;
+    auto in = tovtkm::Convert(input, fieldsFlag);
+
+    // Run filter:
+    vtkm::cont::DataSet result;
+    vtkmInputFilterPolicy policy;
+    if (this->ClipFunction)
+    {
+      vtkm::filter::ClipWithImplicitFunction functionFilter;
+      auto function = this->ClipFunctionConverter->Get();
+      if (function.GetValid())
+      {
+        functionFilter.SetImplicitFunction(function);
+        result = functionFilter.Execute(in, policy);
+      }
+    }
+    else
+    {
+      vtkm::filter::ClipWithField fieldFilter;
+      if (!this->ComputeScalars)
+      {
+        // explicitly convert just the field we need
+        auto inField = tovtkm::Convert(scalars, assoc);
+        in.AddField(inField);
+        // don't pass this field
+        fieldFilter.SetFieldsToPass(
+          vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_NONE));
+      }
+
+      fieldFilter.SetActiveField(scalars->GetName(), vtkm::cont::Field::Association::POINTS);
+      fieldFilter.SetClipValue(this->ClipValue);
+      result = fieldFilter.Execute(in, policy);
+    }
+
+    // Convert result to output:
+    if (!fromvtkm::Convert(result, output, input))
+    {
+      vtkErrorMacro("Error generating vtkUnstructuredGrid from vtkm's result.");
+      return 0;
+    }
+
+    if (this->ComputeScalars)
+    {
+      output->GetPointData()->SetActiveScalars(scalars->GetName());
+    }
+
     return 1;
   }
-
-  // Configure vtkm filter:
-  vtkm::filter::ClipWithField fieldFilter;
-  vtkm::filter::ClipWithImplicitFunction functionFilter;
-
-  // Run filter:
-  vtkm::filter::ResultDataSet result;
-  vtkmInputFilterPolicy policy;
-  if (this->ClipFunction)
+  catch (const vtkm::cont::Error& e)
   {
-    auto function = this->ClipFunctionConverter.Get();
-    if (function.get())
-    {
-      functionFilter.SetImplicitFunction(function);
-      result = functionFilter.Execute(in, policy);
-    }
-  }
-  else
-  {
-    fieldFilter.SetClipValue(this->ClipValue);
-    result = fieldFilter.Execute(in, field, policy);
-  }
-
-  if (!result.IsValid())
-  {
-    vtkWarningMacro(<< "vtkm Clip filter failed to run.\n"
+    vtkWarningMacro(<< "VTK-m error: " << e.GetMessage()
                     << "Falling back to serial implementation.");
 
     vtkNew<vtkTableBasedClipDataSet> filter;
@@ -174,57 +192,8 @@ int vtkmClip::RequestData(vtkInformation *,
     filter->SetInputData(input);
     filter->Update();
     output->ShallowCopy(filter->GetOutput());
-
     return 1;
   }
-
-  // ComputeScalars:
-  vtkPointData *pd = input->GetPointData();
-  if (this->ComputeScalars && pd)
-  {
-    for (vtkIdType i = 0; i < pd->GetNumberOfArrays(); ++i)
-    {
-      vtkDataArray *array = pd->GetArray(i);
-      if (!array)
-      {
-        continue;
-      }
-
-      vtkm::cont::Field pField =
-          tovtkm::Convert(array, vtkDataObject::FIELD_ASSOCIATION_POINTS);
-
-      try
-      {
-        bool success = this->ClipFunction ?
-                       functionFilter.MapFieldOntoOutput(result, pField, policy) :
-                       fieldFilter.MapFieldOntoOutput(result, pField, policy);
-        if (!success)
-        {
-          throw vtkm::cont::ErrorBadValue("MapFieldOntoOutput returned false.");
-        }
-      }
-      catch (vtkm::cont::Error &e)
-      {
-        vtkWarningMacro("Failed to map input point array '"
-                        << array->GetName() << "' (ValueType: "
-                        << array->GetDataTypeAsString() << ", "
-                        << array->GetNumberOfComponents() << " components) "
-                        << "onto output dataset: "
-                        << e.what());
-      }
-    }
-  }
-
-  // Convert result to output:
-  bool outputValid = fromvtkm::Convert(result.GetDataSet(), output, input);
-  if (!outputValid)
-  {
-    vtkErrorMacro("Error generating vtkUnstructuredGrid from vtkm's result.");
-    output->Initialize();
-    return 1;
-  }
-
-  return 1;
 }
 
 //------------------------------------------------------------------------------

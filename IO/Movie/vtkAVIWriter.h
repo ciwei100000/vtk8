@@ -20,7 +20,7 @@
  * on the Microsoft Windows platform. The data type of the file is
  * unsigned char regardless of the input type.
  * @sa
- * vtkGenericMovieWriter vtkMPEG2Writer
+ * vtkGenericMovieWriter
 */
 
 #ifndef vtkAVIWriter_h
@@ -36,16 +36,16 @@ class VTKIOMOVIE_EXPORT vtkAVIWriter : public vtkGenericMovieWriter
 public:
   static vtkAVIWriter *New();
   vtkTypeMacro(vtkAVIWriter,vtkGenericMovieWriter);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * These methods start writing an AVI file, write a frame to the file
    * and then end the writing process.
    */
-  void Start();
-  void Write();
-  void End();
+  void Start() override;
+  void Write() override;
+  void End() override;
   //@}
 
   //@{
@@ -113,8 +113,8 @@ protected:
   char *CompressorFourCC;
 
 private:
-  vtkAVIWriter(const vtkAVIWriter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAVIWriter&) VTK_DELETE_FUNCTION;
+  vtkAVIWriter(const vtkAVIWriter&) = delete;
+  void operator=(const vtkAVIWriter&) = delete;
 };
 
 #endif

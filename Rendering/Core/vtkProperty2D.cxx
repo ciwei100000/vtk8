@@ -32,14 +32,12 @@ vtkProperty2D::vtkProperty2D()
   this->DisplayLocation = VTK_FOREGROUND_LOCATION;
 }
 
-vtkProperty2D::~vtkProperty2D()
-{
-}
+vtkProperty2D::~vtkProperty2D() = default;
 
 // Assign one property to another.
 void vtkProperty2D::DeepCopy(vtkProperty2D *p)
 {
-  if ( p != NULL )
+  if ( p != nullptr )
   {
     this->SetColor(p->GetColor());
     this->SetOpacity(p->GetOpacity());

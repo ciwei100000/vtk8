@@ -108,7 +108,7 @@ class VTKFILTERSCORE_EXPORT vtkDelaunay3D : public vtkUnstructuredGridAlgorithm
 {
 public:
   vtkTypeMacro(vtkDelaunay3D,vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with Alpha = 0.0; Tolerance = 0.001; Offset = 2.5;
@@ -134,36 +134,36 @@ public:
   /**
    * Boolean controls whether tetrahedra are output for non-zero alpha values.
    */
-  vtkSetMacro(AlphaTets,int);
-  vtkGetMacro(AlphaTets,int);
-  vtkBooleanMacro(AlphaTets,int);
+  vtkSetMacro(AlphaTets,vtkTypeBool);
+  vtkGetMacro(AlphaTets,vtkTypeBool);
+  vtkBooleanMacro(AlphaTets,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Boolean controls whether triangles are output for non-zero alpha values.
    */
-  vtkSetMacro(AlphaTris,int);
-  vtkGetMacro(AlphaTris,int);
-  vtkBooleanMacro(AlphaTris,int);
+  vtkSetMacro(AlphaTris,vtkTypeBool);
+  vtkGetMacro(AlphaTris,vtkTypeBool);
+  vtkBooleanMacro(AlphaTris,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Boolean controls whether lines are output for non-zero alpha values.
    */
-  vtkSetMacro(AlphaLines,int);
-  vtkGetMacro(AlphaLines,int);
-  vtkBooleanMacro(AlphaLines,int);
+  vtkSetMacro(AlphaLines,vtkTypeBool);
+  vtkGetMacro(AlphaLines,vtkTypeBool);
+  vtkBooleanMacro(AlphaLines,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Boolean controls whether vertices are output for non-zero alpha values.
    */
-  vtkSetMacro(AlphaVerts,int);
-  vtkGetMacro(AlphaVerts,int);
-  vtkBooleanMacro(AlphaVerts,int);
+  vtkSetMacro(AlphaVerts,vtkTypeBool);
+  vtkGetMacro(AlphaVerts,vtkTypeBool);
+  vtkBooleanMacro(AlphaVerts,vtkTypeBool);
   //@}
 
   //@{
@@ -192,9 +192,9 @@ public:
    * initial triangulation to begin the triangulation process. This feature
    * is nice for debugging output.)
    */
-  vtkSetMacro(BoundingTriangulation,int);
-  vtkGetMacro(BoundingTriangulation,int);
-  vtkBooleanMacro(BoundingTriangulation,int);
+  vtkSetMacro(BoundingTriangulation,vtkTypeBool);
+  vtkGetMacro(BoundingTriangulation,vtkTypeBool);
+  vtkBooleanMacro(BoundingTriangulation,vtkTypeBool);
   //@}
 
   //@{
@@ -251,7 +251,7 @@ public:
   /**
    * Return the MTime also considering the locator.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -265,17 +265,17 @@ public:
 
 protected:
   vtkDelaunay3D();
-  ~vtkDelaunay3D() VTK_OVERRIDE;
+  ~vtkDelaunay3D() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double Alpha;
-  int AlphaTets;
-  int AlphaTris;
-  int AlphaLines;
-  int AlphaVerts;
+  vtkTypeBool AlphaTets;
+  vtkTypeBool AlphaTris;
+  vtkTypeBool AlphaLines;
+  vtkTypeBool AlphaVerts;
   double Tolerance;
-  int BoundingTriangulation;
+  vtkTypeBool BoundingTriangulation;
   double Offset;
   int OutputPointsPrecision;
 
@@ -298,15 +298,15 @@ protected:
                                vtkIdList *tetras, vtkIdList *faces,
                                vtkIncrementalPointLocator *Locator);
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 private: //members added for performance
   vtkIdList *Tetras; //used in InsertPoint
   vtkIdList *Faces;  //used in InsertPoint
   vtkIdList *CheckedTetras; //used by InsertPoint
 
 private:
-  vtkDelaunay3D(const vtkDelaunay3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDelaunay3D&) VTK_DELETE_FUNCTION;
+  vtkDelaunay3D(const vtkDelaunay3D&) = delete;
+  void operator=(const vtkDelaunay3D&) = delete;
 };
 
 #endif

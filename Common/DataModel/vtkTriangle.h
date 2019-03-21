@@ -37,38 +37,38 @@ class VTKCOMMONDATAMODEL_EXPORT vtkTriangle : public vtkCell
 public:
   static vtkTriangle *New();
   vtkTypeMacro(vtkTriangle,vtkCell);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get the edge specified by edgeId (range 0 to 2) and return that edge's
    * coordinates.
    */
-  vtkCell *GetEdge(int edgeId) VTK_OVERRIDE;
+  vtkCell *GetEdge(int edgeId) override;
 
   //@{
   /**
    * See the vtkCell API for descriptions of these methods.
    */
-  int GetCellType() VTK_OVERRIDE {return VTK_TRIANGLE;};
-  int GetCellDimension() VTK_OVERRIDE {return 2;};
-  int GetNumberOfEdges() VTK_OVERRIDE {return 3;};
-  int GetNumberOfFaces() VTK_OVERRIDE {return 0;};
-  vtkCell *GetFace(int) VTK_OVERRIDE {return 0;};
-  int CellBoundary(int subId, double pcoords[3], vtkIdList *pts) VTK_OVERRIDE;
+  int GetCellType() override {return VTK_TRIANGLE;};
+  int GetCellDimension() override {return 2;};
+  int GetNumberOfEdges() override {return 3;};
+  int GetNumberOfFaces() override {return 0;};
+  vtkCell *GetFace(int) override {return nullptr;};
+  int CellBoundary(int subId, const double pcoords[3], vtkIdList *pts) override;
   void Contour(double value, vtkDataArray *cellScalars,
                vtkIncrementalPointLocator *locator, vtkCellArray *verts,
                vtkCellArray *lines, vtkCellArray *polys,
                vtkPointData *inPd, vtkPointData *outPd,
-               vtkCellData *inCd, vtkIdType cellId, vtkCellData *outCd) VTK_OVERRIDE;
-  int EvaluatePosition(double x[3], double* closestPoint,
+               vtkCellData *inCd, vtkIdType cellId, vtkCellData *outCd) override;
+  int EvaluatePosition(const double x[3], double closestPoint[3],
                        int& subId, double pcoords[3],
-                       double& dist2, double *weights) VTK_OVERRIDE;
-  void EvaluateLocation(int& subId, double pcoords[3], double x[3],
-                        double *weights) VTK_OVERRIDE;
-  int Triangulate(int index, vtkIdList *ptIds, vtkPoints *pts) VTK_OVERRIDE;
-  void Derivatives(int subId, double pcoords[3], double *values,
-                   int dim, double *derivs) VTK_OVERRIDE;
-  double *GetParametricCoords() VTK_OVERRIDE;
+                       double& dist2, double weights[]) override;
+  void EvaluateLocation(int& subId, const double pcoords[3], double x[3],
+                        double *weights) override;
+  int Triangulate(int index, vtkIdList *ptIds, vtkPoints *pts) override;
+  void Derivatives(int subId, const double pcoords[3], const double *values,
+                   int dim, double *derivs) override;
+  double *GetParametricCoords() override;
   //@}
 
   /**
@@ -84,26 +84,26 @@ public:
             vtkIncrementalPointLocator *locator, vtkCellArray *polys,
             vtkPointData *inPd, vtkPointData *outPd,
             vtkCellData *inCd, vtkIdType cellId, vtkCellData *outCd,
-            int insideOut) VTK_OVERRIDE;
+            int insideOut) override;
 
   /**
    * @deprecated Replaced by vtkTriangle::InterpolateFunctions as of VTK 5.2
    */
-  static void InterpolationFunctions(double pcoords[3], double sf[3]);
+  static void InterpolationFunctions(const double pcoords[3], double sf[3]);
   /**
    * @deprecated Replaced by vtkTriangle::InterpolateDerivs as of VTK 5.2
    */
-  static void InterpolationDerivs(double pcoords[3], double derivs[6]);
+  static void InterpolationDerivs(const double pcoords[3], double derivs[6]);
   //@{
   /**
    * Compute the interpolation functions/derivatives
    * (aka shape functions/derivatives)
    */
-  void InterpolateFunctions(double pcoords[3], double sf[3]) VTK_OVERRIDE
+  void InterpolateFunctions(const double pcoords[3], double sf[3]) override
   {
     vtkTriangle::InterpolationFunctions(pcoords,sf);
   }
-  void InterpolateDerivs(double pcoords[3], double derivs[6]) VTK_OVERRIDE
+  void InterpolateDerivs(const double pcoords[3], double derivs[6]) override
   {
     vtkTriangle::InterpolationDerivs(pcoords,derivs);
   }
@@ -118,19 +118,19 @@ public:
    * Plane intersection plus in/out test on triangle. The in/out test is
    * performed using tol as the tolerance.
    */
-  int IntersectWithLine(double p1[3], double p2[3], double tol, double& t,
-                        double x[3], double pcoords[3], int& subId) VTK_OVERRIDE;
+  int IntersectWithLine(const double p1[3], const double p2[3], double tol, double& t,
+                        double x[3], double pcoords[3], int& subId) override;
 
   /**
    * Return the center of the triangle in parametric coordinates.
    */
-  int GetParametricCenter(double pcoords[3]) VTK_OVERRIDE;
+  int GetParametricCenter(double pcoords[3]) override;
 
   /**
    * Return the distance of the parametric coordinate provided to the
    * cell. If inside the cell, a distance of zero is returned.
    */
-  double GetParametricDistance(double pcoords[3]) VTK_OVERRIDE;
+  double GetParametricDistance(const double pcoords[3]) override;
 
   /**
    * Compute the center of the triangle.
@@ -229,13 +229,13 @@ public:
 
 protected:
   vtkTriangle();
-  ~vtkTriangle() VTK_OVERRIDE;
+  ~vtkTriangle() override;
 
   vtkLine *Line;
 
 private:
-  vtkTriangle(const vtkTriangle&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTriangle&) VTK_DELETE_FUNCTION;
+  vtkTriangle(const vtkTriangle&) = delete;
+  void operator=(const vtkTriangle&) = delete;
 };
 
 //----------------------------------------------------------------------------

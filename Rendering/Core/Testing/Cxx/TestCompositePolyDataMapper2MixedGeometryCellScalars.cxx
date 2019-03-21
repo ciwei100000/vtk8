@@ -16,6 +16,7 @@
 #include "vtkActor.h"
 #include "vtkCamera.h"
 #include "vtkCompositeDataSet.h"
+#include "vtkRenderingOpenGLConfigure.h"
 #include "vtkCompositeDataDisplayAttributes.h"
 #include "vtkCompositePolyDataMapper2.h"
 #include "vtkCullerCollection.h"
@@ -110,6 +111,7 @@ int TestCompositePolyDataMapper2MixedGeometryCellScalars(int argc, char* argv[])
   int numLeaves = 0;
   int numNodes = 0;
   vtkStdString blockName("Rolf");
+  mapper->SetInputDataObject(data.GetPointer());
   for (int level = 1; level < numLevels; ++level)
   {
     int nblocks=blocksPerLevel[level];
@@ -128,10 +130,10 @@ int TestCompositePolyDataMapper2MixedGeometryCellScalars(int argc, char* argv[])
           p2c->Update();
           child->DeepCopy(p2c->GetOutput(0));
           blocks[parent]->SetBlock(
-            block, (block % 2) ? NULL : child.GetPointer());
+            block, (block % 2) ? nullptr : child.GetPointer());
           blocks[parent]->GetMetaData(block)->Set(
             vtkCompositeDataSet::NAME(), blockName.c_str());
-          // test not seting it on some
+          // test not setting it on some
           if (block % 11)
           {
             mapper->SetBlockVisibility(parent+numLeaves, (block % 7) != 0);
@@ -150,7 +152,6 @@ int TestCompositePolyDataMapper2MixedGeometryCellScalars(int argc, char* argv[])
     levelEnd = static_cast<unsigned>(blocks.size());
   }
 
-  mapper->SetInputData((vtkPolyData *)(data.GetPointer()));
   mapper->SetScalarModeToUseCellData();
 
   vtkSmartPointer<vtkActor> actor =

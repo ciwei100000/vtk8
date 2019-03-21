@@ -45,18 +45,4 @@ set(Module_SRCS
   vtkScatterPlotMatrix.cxx
   )
 
-set_source_files_properties(
-  vtkChart
-  vtkControlPointsItem
-  vtkPlot
-  vtkPlot3D
-  vtkScalarsToColorsItem
-  ABSTRACT
-  )
-
-set_source_files_properties(
-  vtkContextPolygon
-  WRAP_EXCLUDE
-)
-
 vtk_module_library(vtkChartsCore ${Module_SRCS})

@@ -19,9 +19,11 @@ PURPOSE.  See the above copyright notice for more information.
 #include "vtkObjectFactory.h"
 #include "vtkOpenGLActor.h"
 #include "vtkOpenGLError.h"
+#include "vtkOpenGLQuadHelper.h"
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLRenderer.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtkProp.h"
 #include "vtkRenderState.h"
 #include "vtkRenderer.h"
@@ -37,7 +39,6 @@ PURPOSE.  See the above copyright notice for more information.
 // the 2D blending shaders we use
 #include "vtkDepthPeelingPassIntermediateFS.h"
 #include "vtkDepthPeelingPassFinalFS.h"
-#include "vtkTextureObjectVS.h"
 
 vtkStandardNewMacro(vtkDepthPeelingPass);
 vtkCxxSetObjectMacro(vtkDepthPeelingPass,TranslucentPass,vtkRenderPass);
@@ -51,8 +52,8 @@ vtkDepthPeelingPass::vtkDepthPeelingPass() :
   this->OcclusionRatio=0.0;
   this->MaximumNumberOfPeels=4;
 
-  this->IntermediateBlendProgram = nullptr;
-  this->FinalBlendProgram = nullptr;
+  this->IntermediateBlend = nullptr;
+  this->FinalBlend = nullptr;
 
   this->OpaqueRGBATexture = nullptr;
   this->OpaqueZTexture = nullptr;
@@ -123,17 +124,15 @@ void vtkDepthPeelingPass::ReleaseGraphicsResources(vtkWindow *w)
 {
   assert("pre: w_exists" && w!=nullptr);
 
-  if (this->FinalBlendProgram !=nullptr)
+  if (this->FinalBlend !=nullptr)
   {
-    this->FinalBlendProgram->ReleaseGraphicsResources(w);
-    delete this->FinalBlendProgram;
-    this->FinalBlendProgram = nullptr;
+    delete this->FinalBlend;
+    this->FinalBlend = nullptr;
   }
-  if (this->IntermediateBlendProgram !=nullptr)
+  if (this->IntermediateBlend !=nullptr)
   {
-    this->IntermediateBlendProgram->ReleaseGraphicsResources(w);
-    delete this->IntermediateBlendProgram;
-    this->IntermediateBlendProgram = nullptr;
+    delete this->IntermediateBlend;
+    this->IntermediateBlend = nullptr;
   }
   if(this->TranslucentPass)
   {
@@ -214,7 +213,7 @@ void vtkDepthPeelingPass::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
 
-  os << indent << "OcclusionRation: " << this->OcclusionRatio << endl;
+  os << indent << "OcclusionRatio: " << this->OcclusionRatio << endl;
 
   os << indent << "MaximumNumberOfPeels: " << this->MaximumNumberOfPeels
      << endl;
@@ -256,79 +255,64 @@ void vtkDepthPeelingPass::BlendIntermediatePeels(
   bool done)
 {
   // take the TranslucentRGBA texture and blend it with the current frame buffer
-  if (!this->IntermediateBlendProgram)
+  if (!this->IntermediateBlend)
   {
-    this->IntermediateBlendProgram = new vtkOpenGLHelper;
-    std::string VSSource = vtkTextureObjectVS;
-    std::string FSSource = vtkDepthPeelingPassIntermediateFS;
-    std::string GSSource;
-    this->IntermediateBlendProgram->Program =
-      renWin->GetShaderCache()->ReadyShaderProgram(
-        VSSource.c_str(),
-        FSSource.c_str(),
-        GSSource.c_str());
+    this->IntermediateBlend = new vtkOpenGLQuadHelper(renWin,
+      nullptr,
+      vtkDepthPeelingPassIntermediateFS,
+      "");
   }
   else
   {
     renWin->GetShaderCache()->ReadyShaderProgram(
-      this->IntermediateBlendProgram->Program);
+      this->IntermediateBlend->Program);
   }
-  this->IntermediateBlendProgram->Program->SetUniformi(
+  this->IntermediateBlend->Program->SetUniformi(
     "translucentRGBATexture",
     this->TranslucentRGBATexture[(this->ColorDrawCount - 2) % 3]->GetTextureUnit());
-  this->IntermediateBlendProgram->Program->SetUniformi(
+  this->IntermediateBlend->Program->SetUniformi(
     "currentRGBATexture",
     this->TranslucentRGBATexture[(this->ColorDrawCount - 1) % 3]->GetTextureUnit());
-  this->IntermediateBlendProgram->Program->SetUniformi(
+  this->IntermediateBlend->Program->SetUniformi(
     "lastpass", done ? 1 : 0);
 
-  glDisable(GL_DEPTH_TEST);
+  this->State->vtkglDisable(GL_DEPTH_TEST);
 
   this->Framebuffer->AddColorAttachment(
     this->Framebuffer->GetBothMode(), 0,
     this->TranslucentRGBATexture[this->ColorDrawCount % 3]);
   this->ColorDrawCount++;
 
-  this->TranslucentRGBATexture[0]->CopyToFrameBuffer(0, 0,
-         this->ViewportWidth-1, this->ViewportHeight-1,
-         0, 0,
-         this->ViewportWidth, this->ViewportHeight,
-         this->IntermediateBlendProgram->Program,
-         this->IntermediateBlendProgram->VAO);
+  this->IntermediateBlend->Render();
 }
 
 void vtkDepthPeelingPass::BlendFinalPeel(vtkOpenGLRenderWindow *renWin)
 {
-  if (!this->FinalBlendProgram)
+  if (!this->FinalBlend)
   {
-    this->FinalBlendProgram = new vtkOpenGLHelper;
-    std::string VSSource = vtkTextureObjectVS;
-    std::string FSSource = vtkDepthPeelingPassFinalFS;
-    std::string GSSource;
-    this->FinalBlendProgram->Program =
-      renWin->GetShaderCache()->ReadyShaderProgram(
-        VSSource.c_str(),
-        FSSource.c_str(),
-        GSSource.c_str());
+    this->FinalBlend = new vtkOpenGLQuadHelper(renWin,
+      nullptr,
+      vtkDepthPeelingPassFinalFS,
+      "");
   }
   else
   {
     renWin->GetShaderCache()->ReadyShaderProgram(
-      this->FinalBlendProgram->Program);
+      this->FinalBlend->Program);
   }
 
-  if (this->FinalBlendProgram->Program)
+  if (this->FinalBlend->Program)
   {
-    this->FinalBlendProgram->Program->SetUniformi(
+    this->FinalBlend->Program->SetUniformi(
       "translucentRGBATexture",
       this->TranslucentRGBATexture[(this->ColorDrawCount - 1) % 3]->GetTextureUnit());
 
     this->OpaqueRGBATexture->Activate();
-    this->FinalBlendProgram->Program->SetUniformi(
+    this->FinalBlend->Program->SetUniformi(
       "opaqueRGBATexture", this->OpaqueRGBATexture->GetTextureUnit());
 
     this->OpaqueZTexture->Activate();
-    this->FinalBlendProgram->Program->SetUniformi(
+    this->FinalBlend->Program->SetUniformi(
       "opaqueZTexture", this->OpaqueZTexture->GetTextureUnit());
 
     this->Framebuffer->AddColorAttachment(
@@ -337,16 +321,13 @@ void vtkDepthPeelingPass::BlendFinalPeel(vtkOpenGLRenderWindow *renWin)
     this->ColorDrawCount++;
 
     // blend in OpaqueRGBA
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc( GL_ALWAYS );
-    this->OpaqueRGBATexture->CopyToFrameBuffer(0, 0,
-           this->ViewportWidth-1, this->ViewportHeight-1,
-           0, 0,
-           this->ViewportWidth, this->ViewportHeight,
-           this->FinalBlendProgram->Program,
-           this->FinalBlendProgram->VAO);
+    this->State->vtkglEnable(GL_DEPTH_TEST);
+    this->State->vtkglDepthFunc( GL_ALWAYS );
+
+    // do we need to set the viewport
+    this->FinalBlend->Render();
   }
-  glDepthFunc( GL_LEQUAL );
+  this->State->vtkglDepthFunc( GL_LEQUAL );
 }
 
 
@@ -383,6 +364,7 @@ void vtkDepthPeelingPass::Render(const vtkRenderState *s)
   // check driver support
   vtkOpenGLRenderWindow *renWin
     = vtkOpenGLRenderWindow::SafeDownCast(s->GetRenderer()->GetRenderWindow());
+  this->State = renWin->GetState();
 
   // we need alpha planes
   int rgba[4];
@@ -490,37 +472,29 @@ void vtkDepthPeelingPass::Render(const vtkRenderState *s)
     this->Framebuffer->GetBothMode(), 0,
     this->TranslucentRGBATexture[0]);
 
-  glViewport(0, 0,
+  this->State->vtkglViewport(0, 0,
              this->ViewportWidth, this->ViewportHeight);
-  bool saveScissorTestState = (glIsEnabled(GL_SCISSOR_TEST) == GL_TRUE);
-  glDisable(GL_SCISSOR_TEST);
+  bool saveScissorTestState = this->State->GetEnumState(GL_SCISSOR_TEST);
+  this->State->vtkglDisable(GL_SCISSOR_TEST);
 
-#if GL_ES_VERSION_3_0 == 1
-  glClearDepthf(static_cast<GLclampf>(0.0));
-#else
-  glClearDepth(static_cast<GLclampf>(0.0));
-#endif
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  this->State->vtkglClearDepth(static_cast<GLclampf>(0.0));
+  this->State->vtkglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-  glClearColor(0.0,0.0,0.0,0.0); // always clear to black
-#if GL_ES_VERSION_3_0 == 1
-  glClearDepthf(static_cast<GLclampf>(1.0));
-#else
-  glClearDepth(static_cast<GLclampf>(1.0));
-#endif
+  this->State->vtkglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  this->State->vtkglClearColor(0.0,0.0,0.0,0.0); // always clear to black
+  this->State->vtkglClearDepth(static_cast<GLclampf>(1.0));
   // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   this->Framebuffer->AddDepthAttachment(
     this->Framebuffer->GetBothMode(),
     this->TranslucentZTexture[1]);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  this->State->vtkglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #ifdef GL_MULTISAMPLE
-  GLboolean multiSampleStatus = glIsEnabled(GL_MULTISAMPLE);
-  glDisable(GL_MULTISAMPLE);
+  bool multiSampleStatus = this->State->GetEnumState(GL_MULTISAMPLE);
+  this->State->vtkglDisable(GL_MULTISAMPLE);
 #endif
-  glDisable(GL_BLEND);
+  this->State->vtkglDisable(GL_BLEND);
 
   this->TranslucentZTexture[0]->Activate();
   this->OpaqueZTexture->Activate();
@@ -562,11 +536,11 @@ void vtkDepthPeelingPass::Render(const vtkRenderState *s)
   GLuint nbPixels = threshold + 1;
   this->PeelCount = 0;
   this->ColorDrawCount = 0;
-  glDepthFunc( GL_LEQUAL );
+  this->State->vtkglDepthFunc( GL_LEQUAL );
   while(!done)
   {
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
+    this->State->vtkglDepthMask(GL_TRUE);
+    this->State->vtkglEnable(GL_DEPTH_TEST);
 
     this->Framebuffer->AddColorAttachment(
       this->Framebuffer->GetBothMode(), 0,
@@ -574,7 +548,7 @@ void vtkDepthPeelingPass::Render(const vtkRenderState *s)
     this->ColorDrawCount++;
 
     // clear the zbuffer and color buffers
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    this->State->vtkglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // render the translucent geometry
 #if GL_ES_VERSION_3_0 != 1
@@ -590,12 +564,12 @@ void vtkDepthPeelingPass::Render(const vtkRenderState *s)
       done = true;
       // if so we do this last render using alpha blending for all
       // the stuff that is left
-      glEnable(GL_BLEND);
-      glDepthFunc( GL_ALWAYS );
+      this->State->vtkglEnable(GL_BLEND);
+      this->State->vtkglDepthFunc( GL_ALWAYS );
     }
     this->TranslucentPass->Render(s);
-    glDepthFunc( GL_LEQUAL );
-    glDisable(GL_BLEND);
+    this->State->vtkglDepthFunc( GL_LEQUAL );
+    this->State->vtkglDisable(GL_BLEND);
 
 #if GL_ES_VERSION_3_0 != 1
     glEndQuery(GL_SAMPLES_PASSED);
@@ -649,15 +623,15 @@ void vtkDepthPeelingPass::Render(const vtkRenderState *s)
 
 
   // Restore the original viewport and scissor test settings
-  glViewport(this->ViewportX, this->ViewportY,
+  this->State->vtkglViewport(this->ViewportX, this->ViewportY,
              this->ViewportWidth, this->ViewportHeight);
   if (saveScissorTestState)
   {
-    glEnable(GL_SCISSOR_TEST);
+    this->State->vtkglEnable(GL_SCISSOR_TEST);
   }
   else
   {
-    glDisable(GL_SCISSOR_TEST);
+    this->State->vtkglDisable(GL_SCISSOR_TEST);
   }
 
   //blit if we drew something
@@ -684,7 +658,7 @@ void vtkDepthPeelingPass::Render(const vtkRenderState *s)
 #ifdef GL_MULTISAMPLE
    if(multiSampleStatus)
    {
-      glEnable(GL_MULTISAMPLE);
+      this->State->vtkglEnable(GL_MULTISAMPLE);
    }
 #endif
 
@@ -694,9 +668,11 @@ void vtkDepthPeelingPass::Render(const vtkRenderState *s)
   this->TranslucentRGBATexture[0]->Deactivate();
   this->TranslucentRGBATexture[1]->Deactivate();
   this->TranslucentRGBATexture[2]->Deactivate();
+  this->TranslucentZTexture[0]->Deactivate();
+  this->TranslucentZTexture[1]->Deactivate();
 
   // restore blending
-  glEnable(GL_BLEND);
+  this->State->vtkglEnable(GL_BLEND);
 
   this->PostRender(s);
   for (int j = 0; j < numProps; ++j)

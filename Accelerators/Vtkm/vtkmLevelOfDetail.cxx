@@ -129,39 +129,39 @@ int vtkmLevelOfDetail::RequestData(vtkInformation* vtkNotUsed(request),
   vtkPolyData* output =
       vtkPolyData::SafeDownCast(outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
-  // convert the input dataset to a vtkm::cont::DataSet
-  vtkm::cont::DataSet in = tovtkm::Convert(input);
-  const bool dataSetValid =
-      in.GetNumberOfCoordinateSystems() > 0 && in.GetNumberOfCellSets() > 0;
-  if (!dataSetValid)
+  if (!input || input->GetNumberOfPoints() == 0)
   {
-    vtkErrorMacro(<< "Unable convert dataset over to VTK-m for input.");
+    // empty output for empty inputs
+    return 1;
+  }
+
+  try
+  {
+    // convert the input dataset to a vtkm::cont::DataSet
+    auto in = tovtkm::Convert(input, tovtkm::FieldsFlag::PointsAndCells);
+
+    vtkmInputFilterPolicy policy;
+    vtkm::filter::VertexClustering filter;
+    filter.SetNumberOfDivisions(vtkm::make_Vec(this->NumberOfDivisions[0],
+                                              this->NumberOfDivisions[1],
+                                              this->NumberOfDivisions[2]));
+
+    auto result = filter.Execute(in, policy);
+
+    // convert back the dataset to VTK
+    if (!fromvtkm::Convert(result, output, input))
+    {
+      vtkErrorMacro(<< "Unable to convert VTKm DataSet back to VTK");
+      return 0;
+    }
+  }
+  catch (const vtkm::cont::Error& e)
+  {
+    vtkErrorMacro(<< "VTK-m error: " << e.GetMessage());
     return 0;
   }
 
-  vtkm::filter::VertexClustering filter;
-
-  filter.SetNumberOfDivisions(vtkm::make_Vec(this->NumberOfDivisions[0],
-                                             this->NumberOfDivisions[1],
-                                             this->NumberOfDivisions[2]));
-
-  vtkmInputFilterPolicy policy;
-  vtkm::filter::ResultDataSet result = filter.Execute(in, policy);
-
-  // currently we can't convert point based scalar arrays over to the new output
-  // as the algorithm doesn't cache any of the interpolation data
-  //
-  // This shouldn't be hard, the question that we need answered is should
-  // we average the point field like we average the coordinates, or should
-  // we just take a random value
-  bool convertedDataSet = false;
-  if (result.IsValid())
-  {
-    // convert back the dataset to VTK
-    convertedDataSet = fromvtkm::Convert(result.GetDataSet(), output, input);
-  }
-
-  return static_cast<int>(convertedDataSet);
+  return 1;
 }
 
 //------------------------------------------------------------------------------

@@ -57,12 +57,12 @@ public:
 
   // Description:
   // Destructor
-  ~QVTKInteractorAdapter() VTK_OVERRIDE;
+  ~QVTKInteractorAdapter() override;
 
   // Description:
-  // Set the device pixel ration, this defaults to 1, but in Qt 5 can be 2.
-  void SetDevicePixelRatio(int ratio, vtkRenderWindowInteractor* iren = nullptr);
-  int GetDevicePixelRatio() { return this->DevicePixelRatio; }
+  // Set the device pixel ratio, this defaults to 1.0, but in Qt 5 can be != 1.0.
+  void SetDevicePixelRatio(float ratio, vtkRenderWindowInteractor* iren = nullptr);
+  float GetDevicePixelRatio() { return this->DevicePixelRatio; }
 
   // Description:
   // Process a QEvent and send it to the interactor
@@ -71,7 +71,8 @@ public:
 
 protected:
   int AccumulatedDelta;
-  int DevicePixelRatio;
+  float DevicePixelRatio;
+  static const double DevicePixelRatioTolerance;
 };
 
 #endif

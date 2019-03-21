@@ -35,9 +35,7 @@ vtkOpenGLIndexBufferObject::vtkOpenGLIndexBufferObject()
   this->SetType(vtkOpenGLIndexBufferObject::ElementArrayBuffer);
 }
 
-vtkOpenGLIndexBufferObject::~vtkOpenGLIndexBufferObject()
-{
-}
+vtkOpenGLIndexBufferObject::~vtkOpenGLIndexBufferObject() = default;
 
 namespace
 {
@@ -201,7 +199,7 @@ void vtkOpenGLIndexBufferObject::AppendPointIndexBuffer(
   vtkCellArray *cells,
   vtkIdType vOffset)
 {
-  vtkIdType* indices(NULL);
+  vtkIdType* indices(nullptr);
   vtkIdType npts(0);
   size_t targetSize = indexArray.size() +
     cells->GetNumberOfConnectivityEntries() -
@@ -249,7 +247,7 @@ void vtkOpenGLIndexBufferObject::AppendTriangleLineIndexBuffer(
   vtkCellArray *cells,
   vtkIdType vOffset)
 {
-  vtkIdType* indices(NULL);
+  vtkIdType* indices(nullptr);
   vtkIdType npts(0);
   size_t targetSize = indexArray.size() + 2*(
     cells->GetNumberOfConnectivityEntries() -
@@ -301,7 +299,7 @@ void vtkOpenGLIndexBufferObject::AppendLineIndexBuffer(
   vtkCellArray *cells,
   vtkIdType vOffset)
 {
-  vtkIdType* indices(NULL);
+  vtkIdType* indices(nullptr);
   vtkIdType npts(0);
 
   // possibly adjust size
@@ -369,7 +367,7 @@ void vtkOpenGLIndexBufferObject::AppendStripIndexBuffer(
   vtkCellArray *cells,
   vtkIdType vOffset, bool wireframeTriStrips)
 {
-  vtkIdType      *pts = 0;
+  vtkIdType      *pts = nullptr;
   vtkIdType      npts = 0;
 
   size_t triCount = cells->GetNumberOfConnectivityEntries()
@@ -407,7 +405,7 @@ void vtkOpenGLIndexBufferObject::AppendStripIndexBuffer(
   }
 }
 
-// Create supporting arays that are needed when rendering cell data
+// Create supporting arrays that are needed when rendering cell data
 // Some VTK cells have to be broken into smaller cells for OpenGL
 // When we have cell data we have to map cell attributes from the VTK
 // cell number to the actual OpenGL cell
@@ -426,7 +424,7 @@ void vtkOpenGLIndexBufferObject::CreateCellSupportArrays(
                    prims[1]->GetNumberOfCells() +
                    prims[2]->GetNumberOfCells() +
                    prims[3]->GetNumberOfCells();
-  vtkIdType* indices(NULL);
+  vtkIdType* indices(nullptr);
   vtkIdType npts(0);
 
   // make sure we have at least minSize
@@ -540,7 +538,7 @@ void vtkOpenGLIndexBufferObject::AppendEdgeFlagIndexBuffer(
   vtkIdType vOffset,
   vtkDataArray *ef)
 {
-  vtkIdType* pts(NULL);
+  vtkIdType* pts(nullptr);
   vtkIdType npts(0);
 
   unsigned char *ucef = vtkArrayDownCast<vtkUnsignedCharArray>(ef)->GetPointer(0);
@@ -599,7 +597,7 @@ void vtkOpenGLIndexBufferObject::AppendVertexIndexBuffer(
   vtkCellArray **cells,
   vtkIdType vOffset)
 {
-  vtkIdType* indices(NULL);
+  vtkIdType* indices(nullptr);
   vtkIdType npts(0);
 
   // we use a set to make them unique

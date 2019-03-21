@@ -22,7 +22,7 @@
 #include "vtkPolyData.h"
 #include "vtkTransformPolyDataFilter.h"
 
-#include <locale.h>
+#include <clocale>
 
 vtkStandardNewMacro(vtkVectorText);
 
@@ -1693,7 +1693,7 @@ static const VTK_VECTOR_TEXT_GLYPH Letters[] = {
 // Construct object with no string set and backing enabled.
 vtkVectorText::vtkVectorText()
 {
-  this->Text = NULL;
+  this->Text = nullptr;
 
   this->SetNumberOfInputPorts(0);
 }
@@ -1706,7 +1706,7 @@ int vtkVectorText::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -1722,7 +1722,7 @@ int vtkVectorText::RequestData(
   float width;
   float ftmp[3];
 
-  if (this->Text == NULL)
+  if (this->Text == nullptr)
   {
     vtkErrorMacro (<< "Text is not set!");
     return 0;

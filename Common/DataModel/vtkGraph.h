@@ -45,7 +45,7 @@
  * be used to look up values in assiciated edge data arrays. Source and Target
  * store the ids of the source and target vertices of the edge. Note that the
  * edge list iterator DOES NOT necessarily iterate over edges in order of ascending
- * id. To traverse edges from wrapper code (Python, Tcl, Java), use
+ * id. To traverse edges from wrapper code (Python, Java), use
  * it->NextGraphEdge() instead of it->Next().  This will return a heavyweight,
  * wrappable vtkGraphEdge object, which has the same fields as vtkEdgeType
  * accessible through getter methods.
@@ -131,7 +131,7 @@
  * an instance of a vtkDistributedGraphHelper via the
  * SetDistributedGraphHelper() method. To determine whether a graph is
  * distributed or not, call GetDistributedGraphHelper() and check
- * whether the result is non-NULL. For a distributed graph, the number
+ * whether the result is non-nullptr. For a distributed graph, the number
  * of processors across which the graph is distributed can be
  * retrieved by extracting the value for the DATA_NUMBER_OF_PIECES key
  * in the vtkInformation object (retrieved by GetInformation())
@@ -282,7 +282,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkGraph : public vtkDataObject
 {
 public:
   vtkTypeMacro(vtkGraph, vtkDataObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -295,12 +295,12 @@ public:
   /**
    * Return what type of dataset this is.
    */
-  int GetDataObjectType() VTK_OVERRIDE {return VTK_GRAPH;}
+  int GetDataObjectType() override {return VTK_GRAPH;}
 
   /**
    * Initialize to an empty graph.
    */
-  void Initialize() VTK_OVERRIDE;
+  void Initialize() override;
 
   //@{
   /**
@@ -344,7 +344,7 @@ public:
   /**
    * The modified time of the graph.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   /**
    * Initializes the out edge iterator to iterate over
@@ -471,13 +471,13 @@ public:
    * Shallow copies the data object into this graph.
    * If it is an incompatible graph, reports an error.
    */
-  void ShallowCopy(vtkDataObject *obj) VTK_OVERRIDE;
+  void ShallowCopy(vtkDataObject *obj) override;
 
   /**
    * Deep copies the data object into this graph.
    * If it is an incompatible graph, reports an error.
    */
-  void DeepCopy(vtkDataObject *obj) VTK_OVERRIDE;
+  void DeepCopy(vtkDataObject *obj) override;
 
   /**
    * Does a shallow copy of the topological information,
@@ -547,8 +547,8 @@ public:
    * The size of the pts array is 3*npts, and holds the x,y,z
    * location of each edge control point.
    */
-  void SetEdgePoints(vtkIdType e, vtkIdType npts, double* pts);
-  void GetEdgePoints(vtkIdType e, vtkIdType& npts, double*& pts);
+  void SetEdgePoints(vtkIdType e, vtkIdType npts, const double pts[]) VTK_SIZEHINT(pts, 3 * npts);
+  void GetEdgePoints(vtkIdType e, vtkIdType& npts, double*& pts) VTK_SIZEHINT(pts, 3 * npts);
   //@}
 
   /**
@@ -559,7 +559,7 @@ public:
   /**
    * Get the x,y,z location of a point along edge e.
    */
-  double* GetEdgePoint(vtkIdType e, vtkIdType i);
+  double* GetEdgePoint(vtkIdType e, vtkIdType i) VTK_SIZEHINT(3);
 
   /**
    * Clear all points associated with an edge.
@@ -571,14 +571,14 @@ public:
    * This assumes there is already a point at location i, and simply
    * overwrites it.
    */
-  void SetEdgePoint(vtkIdType e, vtkIdType i, double x[3]);
+  void SetEdgePoint(vtkIdType e, vtkIdType i, const double x[3]);
   void SetEdgePoint(vtkIdType e, vtkIdType i, double x, double y, double z)
     { double p[3] = {x, y, z}; this->SetEdgePoint(e, i, p); }
 
   /**
    * Adds a point to the end of the list of edge points for a certain edge.
    */
-  void AddEdgePoint(vtkIdType e, double x[3]);
+  void AddEdgePoint(vtkIdType e, const double x[3]);
   void AddEdgePoint(vtkIdType e, double x, double y, double z)
     { double p[3] = {x, y, z}; this->AddEdgePoint(e, p); }
 
@@ -610,12 +610,12 @@ public:
    * in addition to the case of FIELD, which will return the field data
    * for any vtkDataObject subclass.
    */
-  vtkFieldData* GetAttributesAsFieldData(int type) VTK_OVERRIDE;
+  vtkFieldData* GetAttributesAsFieldData(int type) override;
 
   /**
    * Get the number of elements for a specific attribute type (VERTEX, EDGE, etc.).
    */
-  vtkIdType GetNumberOfElements(int type) VTK_OVERRIDE;
+  vtkIdType GetNumberOfElements(int type) override;
 
   /**
    * Dump the contents of the graph to standard output.
@@ -645,7 +645,7 @@ public:
 protected:
 
   vtkGraph();
-  ~vtkGraph() VTK_OVERRIDE;
+  ~vtkGraph() override;
 
   /**
    * Protected method for adding vertices, optionally with properties,
@@ -654,8 +654,8 @@ protected:
    * non-null and the vertex data contains pedigree IDs, a vertex will
    * only be added if there is no vertex with that pedigree ID.
    */
-  void AddVertexInternal(vtkVariantArray *propertyArr = 0,
-                         vtkIdType *vertex = 0);
+  void AddVertexInternal(vtkVariantArray *propertyArr = nullptr,
+                         vtkIdType *vertex = nullptr);
 
   /**
    * Adds a vertex with the given pedigree ID to the graph. If a vertex with
@@ -722,7 +722,7 @@ protected:
   vtkGraphInternals *Internals;
 
   /**
-   * The distributed graph helper. Only non-NULL for distributed graphs.
+   * The distributed graph helper. Only non-nullptr for distributed graphs.
    */
   vtkDistributedGraphHelper *DistributedHelper;
 
@@ -809,8 +809,8 @@ protected:
   //@}
 
 private:
-  vtkGraph(const vtkGraph&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGraph&) VTK_DELETE_FUNCTION;
+  vtkGraph(const vtkGraph&) = delete;
+  void operator=(const vtkGraph&) = delete;
 };
 
 bool VTKCOMMONDATAMODEL_EXPORT operator==(vtkEdgeBase e1, vtkEdgeBase e2);

@@ -306,6 +306,7 @@ void vtkParse_ExpandTypedef(
   unsigned int pointers;
   unsigned int refbit;
   unsigned int qualifiers;
+  unsigned int attributes;
   unsigned int tmp1, tmp2;
   int i;
 
@@ -314,6 +315,7 @@ void vtkParse_ExpandTypedef(
   pointers = (typedefinfo->Type & VTK_PARSE_POINTER_MASK);
   refbit = (valinfo->Type & VTK_PARSE_REF);
   qualifiers = (typedefinfo->Type & VTK_PARSE_CONST);
+  attributes = (valinfo->Type & VTK_PARSE_ATTRIBUTES);
 
   /* handle const */
   if ((valinfo->Type & VTK_PARSE_CONST) != 0)
@@ -377,7 +379,7 @@ void vtkParse_ExpandTypedef(
   }
 
   /* put everything together */
-  valinfo->Type = (baseType | pointers | refbit | qualifiers);
+  valinfo->Type = (baseType | pointers | refbit | qualifiers | attributes);
   valinfo->Class = classname;
   valinfo->Function = typedefinfo->Function;
   valinfo->Count *= typedefinfo->Count;
@@ -491,7 +493,7 @@ size_t vtkParse_BasicTypeFromString(
     { 7,  "ssize_t", VTK_PARSE_SSIZE_T },
     { 7,  "ostream", VTK_PARSE_OSTREAM },
     { 7,  "istream", VTK_PARSE_ISTREAM },
-    { 8,  "string", VTK_PARSE_STRING },
+    { 6,  "string", VTK_PARSE_STRING },
     { 0, 0, 0 } };
 
   const char *cp = text;
@@ -659,7 +661,8 @@ size_t vtkParse_BasicTypeFromString(
 
         for (i = 0; stdtypes[i].len != 0; i++)
         {
-          if (n == stdtypes[i].len && strncmp(tmpcp, stdtypes[i].name, n) == 0)
+          if (n == m + stdtypes[i].len &&
+              strncmp(tmpcp, stdtypes[i].name, n - m) == 0)
           {
             classname = stdtypes[i].name;
             base_bits = stdtypes[i].type;
@@ -739,7 +742,7 @@ size_t vtkParse_BasicTypeFromString(
   if (classname_ptr)
   {
     *classname_ptr = classname;
-    if (len == 0)
+    if (classname && len == 0)
     {
       len = strlen(classname);
     }
@@ -810,6 +813,7 @@ size_t vtkParse_ValueInfoFromString(
   }
 
   /* look for array brackets */
+  /* (should also look for parenthesized parameter list, for func types) */
   if (*cp == '[')
   {
     count = 1;
@@ -1308,6 +1312,22 @@ size_t vtkParse_FunctionInfoToString(
   return k;
 }
 
+/* compare two types to see if they are equivalent */
+static int override_compatible(unsigned int t1, unsigned int t2)
+{
+  /* const and virtual qualifiers are part of the type for the
+     sake of method resolution, but only if the type is a pointer
+     or reference */
+  unsigned int typebits = (VTK_PARSE_UNQUALIFIED_TYPE |
+                           VTK_PARSE_CONST |
+                           VTK_PARSE_VOLATILE |
+                           VTK_PARSE_RVALUE);
+  unsigned int diff = (t1 ^ t2) & typebits;
+  return (diff == 0 ||
+          ((t1 & VTK_PARSE_INDIRECT) == 0 &&
+           (diff & VTK_PARSE_UNQUALIFIED_TYPE) == 0));
+}
+
 /* Compare two functions */
 int vtkParse_CompareFunctionSignature(
   const FunctionInfo *func1, const FunctionInfo *func2)
@@ -1331,7 +1351,8 @@ int vtkParse_CompareFunctionSignature(
     {
       p1 = func1->Parameters[k];
       p2 = func2->Parameters[k];
-      if (p2->Type != p1->Type || strcmp(p2->Class, p1->Class) != 0)
+      if (!override_compatible(p2->Type, p1->Type) ||
+          strcmp(p2->Class, p1->Class) != 0)
       {
         break;
       }
@@ -1368,7 +1389,8 @@ int vtkParse_CompareFunctionSignature(
   {
     p1 = func1->ReturnValue;
     p2 = func2->ReturnValue;
-    if (p2->Type == p1->Type && strcmp(p2->Class, p1->Class) == 0)
+    if (override_compatible(p2->Type, p1->Type) &&
+        strcmp(p2->Class, p1->Class) == 0)
     {
       if (p1->Function && p2->Function)
       {
@@ -1614,7 +1636,7 @@ size_t vtkParse_DecomposeTemplatedType(
     assert(defaults != NULL);
     arg = defaults[template_arg_count];
     assert(arg != NULL);
-    new_text = (char *)malloc(strlen(arg + 1));
+    new_text = (char *)malloc(strlen(arg) + 1);
     strcpy(new_text, arg);
     vtkParse_AddStringToArray(&template_args, &template_arg_count, new_text);
   }

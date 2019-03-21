@@ -48,9 +48,7 @@ vtkImageSlab::vtkImageSlab()
 }
 
 //----------------------------------------------------------------------------
-vtkImageSlab::~vtkImageSlab()
-{
-}
+vtkImageSlab::~vtkImageSlab() = default;
 
 //----------------------------------------------------------------------------
 int vtkImageSlab::RequestInformation(
@@ -278,7 +276,7 @@ void vtkImageSlabExecute(vtkImageSlab *self,
   }
 
   // averaging requires double precision summation
-  double *rowBuffer = 0;
+  double *rowBuffer = nullptr;
   if (operation == VTK_IMAGE_SLAB_MEAN ||
       operation == VTK_IMAGE_SLAB_SUM)
   {

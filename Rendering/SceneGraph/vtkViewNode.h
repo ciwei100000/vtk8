@@ -39,7 +39,7 @@ class VTKRENDERINGSCENEGRAPH_EXPORT vtkViewNode :
 {
 public:
   vtkTypeMacro(vtkViewNode, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -105,7 +105,7 @@ public:
   vtkViewNode *GetFirstAncestorOfType(const char *type);
 
   /**
-   * Alow explicit setting of the renderable for a
+   * Allow explicit setting of the renderable for a
    * view node.
    */
   virtual void SetRenderable(vtkObject *);
@@ -136,7 +136,7 @@ protected:
 
   //@{
   /**
-   * convienience method to add node or nodes
+   * convenience method to add node or nodes
    * if missing from our current list
    */
   void AddMissingNode(vtkObject *obj);
@@ -171,8 +171,8 @@ protected:
   friend class vtkViewNodeFactory;
 
 private:
-  vtkViewNode(const vtkViewNode&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkViewNode&) VTK_DELETE_FUNCTION;
+  vtkViewNode(const vtkViewNode&) = delete;
+  void operator=(const vtkViewNode&) = delete;
 };
 
 #endif

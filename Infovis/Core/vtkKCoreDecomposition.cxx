@@ -31,7 +31,8 @@
 #include "vtkUndirectedGraph.h"
 #include "vtkDirectedGraph.h"
 #include "vtkType.h"
-#include <vtksys/hash_map.hxx>
+
+#include <unordered_map>
 
 vtkStandardNewMacro(vtkKCoreDecomposition);
 
@@ -156,7 +157,7 @@ public:
     if(this->_array)
     {
       this->_array->Delete();
-      this->_array = 0;
+      this->_array = nullptr;
     }
   }
 
@@ -181,7 +182,7 @@ class tableDeg {
 public:
   tableDeg()
   {
-    this->_array = 0;
+    this->_array = nullptr;
   }
 
   ~tableDeg()
@@ -189,7 +190,7 @@ public:
     if(this->_array)
     {
       this->_array->Delete();
-      this->_array = 0;
+      this->_array = nullptr;
     }
   }
 
@@ -231,7 +232,7 @@ private:
 
 vtkKCoreDecomposition::vtkKCoreDecomposition()
 {
-  this->OutputArrayName = 0;
+  this->OutputArrayName = nullptr;
   this->UseInDegreeNeighbors = true;
   this->UseOutDegreeNeighbors = true;
   this->CheckInputGraph = true;
@@ -239,7 +240,7 @@ vtkKCoreDecomposition::vtkKCoreDecomposition()
 
 vtkKCoreDecomposition::~vtkKCoreDecomposition()
 {
-  this->SetOutputArrayName(0);
+  this->SetOutputArrayName(nullptr);
 }
 
 // This is the O(edges) k-cores algorithm implementation
@@ -381,7 +382,7 @@ int vtkKCoreDecomposition::RequestData(vtkInformation *vtkNotUsed(request),
     // <source, target> pair.  This unique integer is used as a key in a hash map
     // to keep track of all of the unique edges we have seen so far.
     vtkEdgeListIterator* it = vtkEdgeListIterator::New();
-    vtksys::hash_map<unsigned long int, bool> hmap;
+    std::unordered_map<unsigned long int, bool> hmap;
     input->GetEdges(it);
     bool foundParallelEdges = false;
     bool foundLoops = false;

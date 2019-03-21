@@ -21,13 +21,9 @@
 vtkStandardNewMacro(vtkCylindricalTransform);
 
 //----------------------------------------------------------------------------
-vtkCylindricalTransform::vtkCylindricalTransform()
-{
-}
+vtkCylindricalTransform::vtkCylindricalTransform() = default;
 
-vtkCylindricalTransform::~vtkCylindricalTransform()
-{
-}
+vtkCylindricalTransform::~vtkCylindricalTransform() = default;
 
 void vtkCylindricalTransform::PrintSelf(ostream& os, vtkIndent indent)
 {
@@ -110,14 +106,14 @@ void vtkRectangularToCylindrical(const T inPoint[3], T outPoint[3])
 void vtkCylindricalTransform::ForwardTransformPoint(const float inPoint[3],
                                                     float outPoint[3])
 {
-  vtkCylindricalToRectangular(inPoint, outPoint, static_cast<float (*)[3]>(0));
+  vtkCylindricalToRectangular(inPoint, outPoint, static_cast<float (*)[3]>(nullptr));
 }
 
 void vtkCylindricalTransform::ForwardTransformPoint(const double inPoint[3],
                                                     double outPoint[3])
 {
   vtkCylindricalToRectangular(inPoint, outPoint,
-                              static_cast<double (*)[3]>(0));
+                              static_cast<double (*)[3]>(nullptr));
 }
 
 void vtkCylindricalTransform::ForwardTransformDerivative(

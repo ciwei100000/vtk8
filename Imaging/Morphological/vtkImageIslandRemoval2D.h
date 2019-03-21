@@ -45,7 +45,7 @@ public:
    */
   static vtkImageIslandRemoval2D *New();
   vtkTypeMacro(vtkImageIslandRemoval2D,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -60,9 +60,9 @@ public:
   /**
    * Set/Get whether to use 4 or 8 neighbors
    */
-  vtkSetMacro(SquareNeighborhood, int);
-  vtkGetMacro(SquareNeighborhood, int);
-  vtkBooleanMacro(SquareNeighborhood, int);
+  vtkSetMacro(SquareNeighborhood, vtkTypeBool);
+  vtkGetMacro(SquareNeighborhood, vtkTypeBool);
+  vtkBooleanMacro(SquareNeighborhood, vtkTypeBool);
   //@}
 
   //@{
@@ -83,20 +83,20 @@ public:
 
 protected:
   vtkImageIslandRemoval2D();
-  ~vtkImageIslandRemoval2D()VTK_OVERRIDE {}
+  ~vtkImageIslandRemoval2D() override {}
 
   int AreaThreshold;
-  int SquareNeighborhood;
+  vtkTypeBool SquareNeighborhood;
   double IslandValue;
   double ReplaceValue;
 
   int RequestData(vtkInformation *,
                           vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
 
 private:
-  vtkImageIslandRemoval2D(const vtkImageIslandRemoval2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageIslandRemoval2D&) VTK_DELETE_FUNCTION;
+  vtkImageIslandRemoval2D(const vtkImageIslandRemoval2D&) = delete;
+  void operator=(const vtkImageIslandRemoval2D&) = delete;
 };
 
 #endif

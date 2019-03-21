@@ -54,14 +54,12 @@ void vtkDistributedGraphHelper::PrintSelf(ostream& os, vtkIndent indent)
 //----------------------------------------------------------------------------
 vtkDistributedGraphHelper::vtkDistributedGraphHelper()
 {
-  this->Graph = 0;
-  this->VertexDistribution = 0;
+  this->Graph = nullptr;
+  this->VertexDistribution = nullptr;
 }
 
 //----------------------------------------------------------------------------
-vtkDistributedGraphHelper::~vtkDistributedGraphHelper()
-{
-}
+vtkDistributedGraphHelper::~vtkDistributedGraphHelper() = default;
 
 //----------------------------------------------------------------------------
 vtkIdType vtkDistributedGraphHelper::GetVertexOwner(vtkIdType v) const

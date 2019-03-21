@@ -37,18 +37,19 @@
 
 class vtkImageData;
 
+#if !defined(VTK_LEGACY_REMOVE)
 class VTKFILTERSSMP_EXPORT vtkThreadedSynchronizedTemplates3D : public vtkMultiBlockDataSetAlgorithm
 {
 public:
   static vtkThreadedSynchronizedTemplates3D *New();
 
   vtkTypeMacro(vtkThreadedSynchronizedTemplates3D,vtkMultiBlockDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Because we delegate to vtkContourValues
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -57,9 +58,9 @@ public:
    * processed by filters that modify topology or geometry, it may be
    * wise to turn Normals and Gradients off.
    */
-  vtkSetMacro(ComputeNormals,int);
-  vtkGetMacro(ComputeNormals,int);
-  vtkBooleanMacro(ComputeNormals,int);
+  vtkSetMacro(ComputeNormals,vtkTypeBool);
+  vtkGetMacro(ComputeNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputeNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -71,18 +72,18 @@ public:
    * will be processed by filters that modify topology or geometry, it
    * may be wise to turn Normals and Gradients off.
    */
-  vtkSetMacro(ComputeGradients,int);
-  vtkGetMacro(ComputeGradients,int);
-  vtkBooleanMacro(ComputeGradients,int);
+  vtkSetMacro(ComputeGradients,vtkTypeBool);
+  vtkGetMacro(ComputeGradients,vtkTypeBool);
+  vtkBooleanMacro(ComputeGradients,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get the computation of scalars.
    */
-  vtkSetMacro(ComputeScalars,int);
-  vtkGetMacro(ComputeScalars,int);
-  vtkBooleanMacro(ComputeScalars,int);
+  vtkSetMacro(ComputeScalars,vtkTypeBool);
+  vtkGetMacro(ComputeScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeScalars,vtkTypeBool);
   //@}
 
  //@{
@@ -90,9 +91,9 @@ public:
   * If this is enabled (by default), the output will be triangles
   * otherwise, the output will be the intersection polygons
   */
-  vtkSetMacro(GenerateTriangles,int);
-  vtkGetMacro(GenerateTriangles,int);
-  vtkBooleanMacro(GenerateTriangles,int);
+  vtkSetMacro(GenerateTriangles,vtkTypeBool);
+  vtkGetMacro(GenerateTriangles,vtkTypeBool);
+  vtkBooleanMacro(GenerateTriangles,vtkTypeBool);
  //@}
 
   /**
@@ -155,7 +156,7 @@ public:
 
   //@{
   /**
-   * Determines the chunk size fro streaming.  This filter will act like a
+   * Determines the chunk size for streaming.  This filter will act like a
    * collector: ask for many input pieces, but generate one output.  Limit is
    * in KBytes
    */
@@ -173,24 +174,24 @@ public:
 
 protected:
   vtkThreadedSynchronizedTemplates3D();
-  ~vtkThreadedSynchronizedTemplates3D() VTK_OVERRIDE;
+  ~vtkThreadedSynchronizedTemplates3D() override;
 
-  int ComputeNormals;
-  int ComputeGradients;
-  int ComputeScalars;
+  vtkTypeBool ComputeNormals;
+  vtkTypeBool ComputeGradients;
+  vtkTypeBool ComputeScalars;
   vtkContourValues *ContourValues;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   int ArrayComponent;
 
-  int GenerateTriangles;
+  vtkTypeBool GenerateTriangles;
 
 private:
-  vtkThreadedSynchronizedTemplates3D(const vtkThreadedSynchronizedTemplates3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkThreadedSynchronizedTemplates3D&) VTK_DELETE_FUNCTION;
+  vtkThreadedSynchronizedTemplates3D(const vtkThreadedSynchronizedTemplates3D&) = delete;
+  void operator=(const vtkThreadedSynchronizedTemplates3D&) = delete;
 };
 
 
@@ -199,4 +200,5 @@ private:
 extern int VTKFILTERSSMP_EXPORT VTK_TSYNCHRONIZED_TEMPLATES_3D_TABLE_1[];
 extern int VTKFILTERSSMP_EXPORT VTK_TSYNCHRONIZED_TEMPLATES_3D_TABLE_2[];
 
+#endif //VTK_LEGACY_REMOVE
 #endif

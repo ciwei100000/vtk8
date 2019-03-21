@@ -74,7 +74,7 @@ public:
    * Standard type and print methods.
    */
   vtkTypeMacro(vtkLocator,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -111,9 +111,9 @@ public:
    * there will be an explicit method to control the construction of the
    * locator (found in the subclass).
    */
-  vtkSetMacro(Automatic,int);
-  vtkGetMacro(Automatic,int);
-  vtkBooleanMacro(Automatic,int);
+  vtkSetMacro(Automatic,vtkTypeBool);
+  vtkGetMacro(Automatic,vtkTypeBool);
+  vtkBooleanMacro(Automatic,vtkTypeBool);
   //@}
 
   //@{
@@ -165,27 +165,27 @@ public:
   /**
    * Handle the PointSet <-> Locator loop.
    */
-  void Register(vtkObjectBase *o) VTK_OVERRIDE;
-  void UnRegister(vtkObjectBase *o) VTK_OVERRIDE;
+  void Register(vtkObjectBase *o) override;
+  void UnRegister(vtkObjectBase *o) override;
   //@}
 
 protected:
   vtkLocator();
-  ~vtkLocator() VTK_OVERRIDE;
+  ~vtkLocator() override;
 
   vtkDataSet *DataSet;
-  int Automatic; // boolean controls automatic subdivision (or uses user spec.)
+  vtkTypeBool Automatic; // boolean controls automatic subdivision (or uses user spec.)
   double Tolerance; // for performing merging
   int MaxLevel;
   int Level;
 
   vtkTimeStamp BuildTime;  // time at which locator was built
 
-  void ReportReferences(vtkGarbageCollector*) VTK_OVERRIDE;
+  void ReportReferences(vtkGarbageCollector*) override;
 
 private:
-  vtkLocator(const vtkLocator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkLocator&) VTK_DELETE_FUNCTION;
+  vtkLocator(const vtkLocator&) = delete;
+  void operator=(const vtkLocator&) = delete;
 };
 
 #endif

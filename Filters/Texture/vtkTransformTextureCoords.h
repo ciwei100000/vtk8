@@ -19,7 +19,7 @@
  * vtkTransformTextureCoords is a filter that operates on texture
  * coordinates. It ingests any type of dataset, and outputs a dataset of the
  * same type. The filter lets you scale, translate, and rotate texture
- * coordinates. For example, by using the the Scale ivar, you can shift
+ * coordinates. For example, by using the Scale ivar, you can shift
  * texture coordinates that range from (0->1) to range from (0->10) (useful
  * for repeated patterns).
  *
@@ -42,7 +42,7 @@ class VTKFILTERSTEXTURE_EXPORT vtkTransformTextureCoords : public vtkDataSetAlgo
 {
 public:
   vtkTypeMacro(vtkTransformTextureCoords,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Create instance with Origin (0.5,0.5,0.5); Position (0,0,0); and Scale
@@ -93,9 +93,9 @@ public:
    * Boolean indicates whether the texture map should be flipped around the
    * s-axis. Note that the flips occur around the texture origin.
    */
-  vtkSetMacro(FlipR,int);
-  vtkGetMacro(FlipR,int);
-  vtkBooleanMacro(FlipR,int);
+  vtkSetMacro(FlipR,vtkTypeBool);
+  vtkGetMacro(FlipR,vtkTypeBool);
+  vtkBooleanMacro(FlipR,vtkTypeBool);
   //@}
 
   //@{
@@ -103,9 +103,9 @@ public:
    * Boolean indicates whether the texture map should be flipped around the
    * s-axis. Note that the flips occur around the texture origin.
    */
-  vtkSetMacro(FlipS,int);
-  vtkGetMacro(FlipS,int);
-  vtkBooleanMacro(FlipS,int);
+  vtkSetMacro(FlipS,vtkTypeBool);
+  vtkGetMacro(FlipS,vtkTypeBool);
+  vtkBooleanMacro(FlipS,vtkTypeBool);
   //@}
 
   //@{
@@ -113,26 +113,26 @@ public:
    * Boolean indicates whether the texture map should be flipped around the
    * t-axis. Note that the flips occur around the texture origin.
    */
-  vtkSetMacro(FlipT,int);
-  vtkGetMacro(FlipT,int);
-  vtkBooleanMacro(FlipT,int);
+  vtkSetMacro(FlipT,vtkTypeBool);
+  vtkGetMacro(FlipT,vtkTypeBool);
+  vtkBooleanMacro(FlipT,vtkTypeBool);
   //@}
 
 protected:
   vtkTransformTextureCoords();
-  ~vtkTransformTextureCoords() VTK_OVERRIDE {}
+  ~vtkTransformTextureCoords() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double Origin[3]; //point around which map rotates
   double Position[3]; //controls translation of map
   double Scale[3]; //scales the texture map
-  int FlipR; //boolean indicates whether to flip texture around r-axis
-  int FlipS; //boolean indicates whether to flip texture around s-axis
-  int FlipT; //boolean indicates whether to flip texture around t-axis
+  vtkTypeBool FlipR; //boolean indicates whether to flip texture around r-axis
+  vtkTypeBool FlipS; //boolean indicates whether to flip texture around s-axis
+  vtkTypeBool FlipT; //boolean indicates whether to flip texture around t-axis
 private:
-  vtkTransformTextureCoords(const vtkTransformTextureCoords&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTransformTextureCoords&) VTK_DELETE_FUNCTION;
+  vtkTransformTextureCoords(const vtkTransformTextureCoords&) = delete;
+  void operator=(const vtkTransformTextureCoords&) = delete;
 };
 
 #endif

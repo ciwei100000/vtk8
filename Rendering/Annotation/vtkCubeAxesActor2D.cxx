@@ -50,7 +50,7 @@ vtkCubeAxesActor2D::vtkCubeAxesActor2D()
 {
   this->ConnectionHolder = vtkCubeAxesActor2DConnection::New();
 
-  this->ViewProp = NULL;
+  this->ViewProp = nullptr;
   this->Bounds[0] = -1.0; this->Bounds[1] = 1.0;
   this->Bounds[2] = -1.0; this->Bounds[3] = 1.0;
   this->Bounds[4] = -1.0; this->Bounds[5] = 1.0;
@@ -60,7 +60,7 @@ vtkCubeAxesActor2D::vtkCubeAxesActor2D()
   this->Ranges[2] = 0; this->Ranges[3] = 0;
   this->Ranges[4] = 0; this->Ranges[5] = 0;
 
-  this->Camera = NULL;
+  this->Camera = nullptr;
   this->FlyMode = VTK_FLY_CLOSEST_TRIAD;
   this->Scaling = 1;
 
@@ -157,14 +157,14 @@ vtkCubeAxesActor2D::~vtkCubeAxesActor2D()
   this->ZAxis->Delete();
 
   delete [] this->LabelFormat;
-  this->LabelFormat = NULL;
+  this->LabelFormat = nullptr;
 
   delete [] this->XLabel;
   delete [] this->YLabel;
   delete [] this->ZLabel;
 
-  this->SetAxisLabelTextProperty(NULL);
-  this->SetAxisTitleTextProperty(NULL);
+  this->SetAxisLabelTextProperty(nullptr);
+  this->SetAxisTitleTextProperty(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -419,7 +419,7 @@ int vtkCubeAxesActor2D::RenderOpaqueGeometry(vtkViewport *viewport)
   double AxisFontFactor = this->FontFactor*.75;
 
 
-  // Upate axes
+  // Update axes
   this->Labels[0] = this->XLabel;
   this->Labels[1] = this->YLabel;
   this->Labels[2] = this->ZLabel;
@@ -519,7 +519,7 @@ int vtkCubeAxesActor2D::RenderOpaqueGeometry(vtkViewport *viewport)
 //-----------------------------------------------------------------------------
 // Description:
 // Does this prop have some translucent polygonal geometry?
-int vtkCubeAxesActor2D::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkCubeAxesActor2D::HasTranslucentPolygonalGeometry()
 {
   return 0;
 }
@@ -715,7 +715,7 @@ void vtkCubeAxesActor2D::GetBounds(double bounds[6])
     }
   }
   else if ( this->ViewProp &&
-            ((propBounds = this->ViewProp->GetBounds()) && propBounds != NULL) )
+            ((propBounds = this->ViewProp->GetBounds()) && propBounds != nullptr) )
   {
     for (i=0; i< 6; i++)
     {
@@ -953,7 +953,7 @@ int vtkCubeAxesActor2D::ClipBounds(vtkViewport *viewport, double pts[8][3],
     return 0; //couldn't find a point inside
   }
 
-  // Now  iteratively scale the bounding box until all points are inside
+  // Now iteratively scale the bounding box until all points are inside
   // the frustrum. Use bisection method.
   scale = 1.0;
   scale2 = 0.00001;

@@ -16,7 +16,7 @@
  * @class   vtkResliceCursorPicker
  * @brief   ray-cast cell picker for the reslice cursor
  *
- * This class is is used by the vtkResliceCursorWidget to pick reslice axes
+ * This class is used by the vtkResliceCursorWidget to pick reslice axes
  * drawn by a vtkResliceCursorActor. The class returns the axes picked if
  * any, whether one has picked the center. It takes as input an instance
  * of vtkResliceCursorPolyDataAlgorithm. This is all done internally by
@@ -44,7 +44,7 @@ class VTKINTERACTIONWIDGETS_EXPORT vtkResliceCursorPicker : public vtkPicker
 public:
   static vtkResliceCursorPicker *New();
   vtkTypeMacro(vtkResliceCursorPicker, vtkPicker);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Perform pick operation with selection point provided. Normally the
@@ -53,7 +53,7 @@ public:
    * something was successfully picked.
    */
   int Pick(double selectionX, double selectionY, double selectionZ,
-                   vtkRenderer *renderer) VTK_OVERRIDE;
+                   vtkRenderer *renderer) override;
 
   //@{
   /**
@@ -78,14 +78,14 @@ public:
 
   /**
    * Overloaded pick method that returns the picked coordinates of the current
-   * resliced  plane in world coordinates when given a display position
+   * resliced plane in world coordinates when given a display position
    */
   void Pick(
     double displayPos[2], double world[3], vtkRenderer *ren );
 
 protected:
   vtkResliceCursorPicker();
-  ~vtkResliceCursorPicker() VTK_OVERRIDE;
+  ~vtkResliceCursorPicker() override;
 
   virtual int IntersectPolyDataWithLine(
       double p1[3], double p2[3], vtkPolyData *, double tol );
@@ -108,8 +108,8 @@ private:
   vtkPlane     * Plane;
 
 private:
-  vtkResliceCursorPicker(const vtkResliceCursorPicker&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkResliceCursorPicker&) VTK_DELETE_FUNCTION;
+  vtkResliceCursorPicker(const vtkResliceCursorPicker&) = delete;
+  void operator=(const vtkResliceCursorPicker&) = delete;
 };
 
 #endif

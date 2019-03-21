@@ -200,9 +200,7 @@ vtkPointInterpolator2D::vtkPointInterpolator2D()
 }
 
 //----------------------------------------------------------------------------
-vtkPointInterpolator2D::~vtkPointInterpolator2D()
-{
-}
+vtkPointInterpolator2D::~vtkPointInterpolator2D() = default;
 
 //----------------------------------------------------------------------------
 // The driver of the algorithm
@@ -232,7 +230,7 @@ Probe(vtkDataSet *input, vtkDataSet *source, vtkDataSet *output)
   projPoints->SetNumberOfPoints(numSourcePts);
   projSource->SetPoints(projPoints);
   projPoints->UnRegister(this);
-  vtkDoubleArray *zScalars=NULL;
+  vtkDoubleArray *zScalars=nullptr;
 
   // Create elevation scalars if necessary
   if ( this->InterpolateZ )
@@ -263,7 +261,7 @@ Probe(vtkDataSet *input, vtkDataSet *source, vtkDataSet *output)
   outPD->InterpolateAllocate(inPD,numPts);
 
   // Masking if requested
-  char *mask=NULL;
+  char *mask=nullptr;
   if ( this->NullPointsStrategy == vtkPointInterpolator2D::MASK_POINTS )
   {
     this->ValidPointsMask = vtkCharArray::New();

@@ -36,14 +36,14 @@ class VTKRENDERINGOPENGL2_EXPORT vtkOpenGLActor : public vtkActor
 public:
   static vtkOpenGLActor *New();
   vtkTypeMacro(vtkOpenGLActor, vtkActor);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Actual actor render method.
    */
-  void Render(vtkRenderer *ren, vtkMapper *mapper) VTK_OVERRIDE;
+  void Render(vtkRenderer *ren, vtkMapper *mapper) override;
 
-  void GetKeyMatrices(vtkMatrix4x4 *&WCVCMatrix, vtkMatrix3x3 *&normalMatrix);
+  virtual void GetKeyMatrices(vtkMatrix4x4 *&WCVCMatrix, vtkMatrix3x3 *&normalMatrix);
 
   /**
    * If this key is set in GetPropertyKeys(), the glDepthMask will be adjusted
@@ -63,7 +63,7 @@ public:
 
 protected:
   vtkOpenGLActor();
-  ~vtkOpenGLActor() VTK_OVERRIDE;
+  ~vtkOpenGLActor() override;
 
   vtkMatrix4x4 *MCWCMatrix;
   vtkMatrix3x3 *NormalMatrix;
@@ -71,8 +71,8 @@ protected:
   vtkTimeStamp KeyMatrixTime;
 
 private:
-  vtkOpenGLActor(const vtkOpenGLActor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLActor&) VTK_DELETE_FUNCTION;
+  vtkOpenGLActor(const vtkOpenGLActor&) = delete;
+  void operator=(const vtkOpenGLActor&) = delete;
 };
 
 #endif

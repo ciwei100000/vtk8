@@ -238,6 +238,7 @@ int TestPolygonalSurfaceConstrainedDistanceWidget(int argc, char*argv[])
     if (strcmp("-DistanceOffset", argv[i]) == 0)
     {
       distanceOffset = atof(argv[i+1]);
+      distanceOffsetSpecified = true;
     }
   }
 
@@ -300,7 +301,7 @@ int TestPolygonalSurfaceConstrainedDistanceWidget(int argc, char*argv[])
     vtkSmartPointer< vtkDistanceRepresentation2D >::New();
   rep->GetAxis()->GetProperty()->SetColor( 0.0, 0.0, 1.0 );
 
-  // Create a 3D handle reprensentation template for this distance
+  // Create a 3D handle representation template for this distance
   // widget
   vtkSmartPointer< vtkPointHandleRepresentation3D > handleRep3D =
     vtkSmartPointer< vtkPointHandleRepresentation3D >::New();

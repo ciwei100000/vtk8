@@ -45,7 +45,7 @@ public:
     if(vtkImageReader2Factory::AvailableReaders)
     {
       vtkImageReader2Factory::AvailableReaders->Delete();
-      vtkImageReader2Factory::AvailableReaders = 0;
+      vtkImageReader2Factory::AvailableReaders = nullptr;
     }
   }
 };
@@ -67,13 +67,9 @@ void vtkImageReader2Factory::PrintSelf(ostream& os, vtkIndent indent)
   }
 }
 
-vtkImageReader2Factory::vtkImageReader2Factory()
-{
-}
+vtkImageReader2Factory::vtkImageReader2Factory() = default;
 
-vtkImageReader2Factory::~vtkImageReader2Factory()
-{
-}
+vtkImageReader2Factory::~vtkImageReader2Factory() = default;
 
 void vtkImageReader2Factory::RegisterReader(vtkImageReader2* r)
 {
@@ -115,7 +111,7 @@ vtkImageReader2* vtkImageReader2Factory::CreateImageReader2(const char* path)
       return ret->NewInstance();
     }
   }
-  return 0;
+  return nullptr;
 }
 
 

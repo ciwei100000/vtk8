@@ -40,9 +40,7 @@ vtkDijkstraImageGeodesicPath::vtkDijkstraImageGeodesicPath()
 }
 
 //----------------------------------------------------------------------------
-vtkDijkstraImageGeodesicPath::~vtkDijkstraImageGeodesicPath()
-{
-}
+vtkDijkstraImageGeodesicPath::~vtkDijkstraImageGeodesicPath() = default;
 
 
 //----------------------------------------------------------------------------
@@ -105,7 +103,7 @@ vtkImageData* vtkDijkstraImageGeodesicPath::GetInputAsImageData()
 {
   if ( this->GetNumberOfInputConnections( 0 ) < 1 )
   {
-    return NULL;
+    return nullptr;
   }
   return vtkImageData::SafeDownCast(
     this->GetExecutive()->GetInputData( 0, 0 ));

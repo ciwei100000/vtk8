@@ -106,7 +106,7 @@ class VTKFILTERSCORE_EXPORT vtkGlyph3D : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkGlyph3D,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with scaling on, scaling mode is by scalar value,
@@ -154,9 +154,9 @@ public:
   /**
    * Turn on/off scaling of source geometry.
    */
-  vtkSetMacro(Scaling,int);
-  vtkBooleanMacro(Scaling,int);
-  vtkGetMacro(Scaling,int);
+  vtkSetMacro(Scaling,vtkTypeBool);
+  vtkBooleanMacro(Scaling,vtkTypeBool);
+  vtkGetMacro(Scaling,vtkTypeBool);
   //@}
 
   //@{
@@ -211,9 +211,9 @@ public:
   /**
    * Turn on/off orienting of input geometry along vector/normal.
    */
-  vtkSetMacro(Orient,int);
-  vtkBooleanMacro(Orient,int);
-  vtkGetMacro(Orient,int);
+  vtkSetMacro(Orient,vtkTypeBool);
+  vtkBooleanMacro(Orient,vtkTypeBool);
+  vtkGetMacro(Orient,vtkTypeBool);
   //@}
 
   //@{
@@ -221,9 +221,9 @@ public:
    * Turn on/off clamping of "scalar" values to range. (Scalar value may be
    * vector magnitude if ScaleByVector() is enabled.)
    */
-  vtkSetMacro(Clamping,int);
-  vtkBooleanMacro(Clamping,int);
-  vtkGetMacro(Clamping,int);
+  vtkSetMacro(Clamping,vtkTypeBool);
+  vtkBooleanMacro(Clamping,vtkTypeBool);
+  vtkGetMacro(Clamping,vtkTypeBool);
   //@}
 
   //@{
@@ -262,9 +262,9 @@ public:
    * stored in the output point field data and named "InputPointIds". Point
    * generation is useful for debugging and pick operations.
    */
-  vtkSetMacro(GeneratePointIds,int);
-  vtkGetMacro(GeneratePointIds,int);
-  vtkBooleanMacro(GeneratePointIds,int);
+  vtkSetMacro(GeneratePointIds,vtkTypeBool);
+  vtkGetMacro(GeneratePointIds,vtkTypeBool);
+  vtkBooleanMacro(GeneratePointIds,vtkTypeBool);
   //@}
 
   //@{
@@ -282,9 +282,9 @@ public:
    * The cell data at each cell will match the point data of the input
    * at the glyphed point.
    */
-  vtkSetMacro(FillCellData,int);
-  vtkGetMacro(FillCellData,int);
-  vtkBooleanMacro(FillCellData,int);
+  vtkSetMacro(FillCellData,vtkTypeBool);
+  vtkGetMacro(FillCellData,vtkTypeBool);
+  vtkBooleanMacro(FillCellData,vtkTypeBool);
   //@}
 
   /**
@@ -306,15 +306,25 @@ public:
   /**
    * Overridden to include SourceTransform's MTime.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
+
+  //@{
+  /**
+   * Set/get the desired precision for the output types. See the documentation
+   * for the vtkAlgorithm::DesiredOutputPrecision enum for an explanation of
+   * the available precision settings.
+   */
+  vtkSetMacro(OutputPointsPrecision,int);
+  vtkGetMacro(OutputPointsPrecision,int);
+  //@}
 
 protected:
   vtkGlyph3D();
-  ~vtkGlyph3D() VTK_OVERRIDE;
+  ~vtkGlyph3D() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int, vtkInformation *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int, vtkInformation *) override;
 
   vtkPolyData* GetSource(int idx, vtkInformationVector *sourceInfo);
 
@@ -335,23 +345,24 @@ protected:
   //@}
 
   vtkPolyData **Source; // Geometry to copy to each point
-  int Scaling; // Determine whether scaling of geometry is performed
+  vtkTypeBool Scaling; // Determine whether scaling of geometry is performed
   int ScaleMode; // Scale by scalar value or vector magnitude
   int ColorMode; // new scalars based on scale, scalar or vector
   double ScaleFactor; // Scale factor to use to scale geometry
   double Range[2]; // Range to use to perform scalar scaling
   int Orient; // boolean controls whether to "orient" data
   int VectorMode; // Orient/scale via normal or via vector data
-  int Clamping; // whether to clamp scale factor
+  vtkTypeBool Clamping; // whether to clamp scale factor
   int IndexMode; // what to use to index into glyph table
-  int GeneratePointIds; // produce input points ids for each output point
-  int FillCellData; // whether to fill output cell data
+  vtkTypeBool GeneratePointIds; // produce input points ids for each output point
+  vtkTypeBool FillCellData; // whether to fill output cell data
   char *PointIdsName;
   vtkTransform* SourceTransform;
+  int OutputPointsPrecision;
 
 private:
-  vtkGlyph3D(const vtkGlyph3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGlyph3D&) VTK_DELETE_FUNCTION;
+  vtkGlyph3D(const vtkGlyph3D&) = delete;
+  void operator=(const vtkGlyph3D&) = delete;
 };
 
 //@{

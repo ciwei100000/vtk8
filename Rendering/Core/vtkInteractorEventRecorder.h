@@ -43,11 +43,11 @@ class VTKRENDERINGCORE_EXPORT vtkInteractorEventRecorder : public vtkInteractorO
 public:
   static vtkInteractorEventRecorder *New();
   vtkTypeMacro(vtkInteractorEventRecorder,vtkInteractorObserver);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   // Satisfy the superclass API. Enable/disable listening for events.
-  void SetEnabled(int) VTK_OVERRIDE;
-  void SetInteractor(vtkRenderWindowInteractor* iren) VTK_OVERRIDE;
+  void SetEnabled(int) override;
+  void SetInteractor(vtkRenderWindowInteractor* iren) override;
 
   //@{
   /**
@@ -84,9 +84,9 @@ public:
    * Enable reading from an InputString as compared to the default
    * behavior, which is to read from a file.
    */
-  vtkSetMacro(ReadFromInputString,int);
-  vtkGetMacro(ReadFromInputString,int);
-  vtkBooleanMacro(ReadFromInputString,int);
+  vtkSetMacro(ReadFromInputString,vtkTypeBool);
+  vtkGetMacro(ReadFromInputString,vtkTypeBool);
+  vtkBooleanMacro(ReadFromInputString,vtkTypeBool);
   //@}
 
   //@{
@@ -99,7 +99,7 @@ public:
 
 protected:
   vtkInteractorEventRecorder();
-  ~vtkInteractorEventRecorder() VTK_OVERRIDE;
+  ~vtkInteractorEventRecorder() override;
 
   // file to read/write from
   char *FileName;
@@ -108,7 +108,7 @@ protected:
   vtkCallbackCommand* DeleteEventCallbackCommand;
 
   // control whether to read from string
-  int ReadFromInputString;
+  vtkTypeBool ReadFromInputString;
   char *InputString;
 
   // for reading and writing
@@ -123,9 +123,8 @@ protected:
   static void ProcessEvents(vtkObject* object, unsigned long event,
                             void* clientdata, void* calldata);
 
-  virtual void WriteEvent(const char* event, int pos[2], int ctrlKey,
-                          int shiftKey, int keyCode, int repeatCount,
-                          char* keySym);
+  virtual void WriteEvent(const char* event, int pos[2], int modifiers,
+                          int keyCode, int repeatCount, char* keySym);
 
   virtual void ReadEvent();
 
@@ -138,11 +137,19 @@ protected:
     Recording
   };
 
+  // Associate a modifier with a bit
+  enum ModifierKey
+  {
+    ShiftKey=1,
+    ControlKey=2,
+    AltKey=4
+  };
+
   static float StreamVersion;
 
 private:
-  vtkInteractorEventRecorder(const vtkInteractorEventRecorder&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkInteractorEventRecorder&) VTK_DELETE_FUNCTION;
+  vtkInteractorEventRecorder(const vtkInteractorEventRecorder&) = delete;
+  void operator=(const vtkInteractorEventRecorder&) = delete;
 
 };
 

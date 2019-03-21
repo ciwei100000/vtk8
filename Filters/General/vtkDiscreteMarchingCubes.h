@@ -80,22 +80,22 @@ public:
   /**
    * Set/Get the computation of neighbouring voxel values.
    */
-  vtkSetMacro(ComputeAdjacentScalars,int);
-  vtkGetMacro(ComputeAdjacentScalars,int);
-  vtkBooleanMacro(ComputeAdjacentScalars,int);
+  vtkSetMacro(ComputeAdjacentScalars,vtkTypeBool);
+  vtkGetMacro(ComputeAdjacentScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeAdjacentScalars,vtkTypeBool);
   //@}
 
 protected:
   vtkDiscreteMarchingCubes();
-  ~vtkDiscreteMarchingCubes() VTK_OVERRIDE;
+  ~vtkDiscreteMarchingCubes() override;
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
-  int ComputeAdjacentScalars;
+                          vtkInformationVector *) override;
+  vtkTypeBool ComputeAdjacentScalars;
 
 private:
-  vtkDiscreteMarchingCubes(const vtkDiscreteMarchingCubes&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDiscreteMarchingCubes&) VTK_DELETE_FUNCTION;
+  vtkDiscreteMarchingCubes(const vtkDiscreteMarchingCubes&) = delete;
+  void operator=(const vtkDiscreteMarchingCubes&) = delete;
 
 };
 

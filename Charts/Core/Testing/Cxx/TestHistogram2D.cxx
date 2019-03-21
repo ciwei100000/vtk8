@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    TestLinePlot.cxx
+  Module:    TestHistogram2D.cxx
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -26,7 +26,6 @@
 #include "vtkPlotLine.h"
 #include "vtkRenderWindow.h"
 #include "vtkRenderWindowInteractor.h"
-#include "vtkSmartPointer.h"
 #include "vtkTable.h"
 #include "vtkVector.h"
 
@@ -40,19 +39,19 @@ int TestHistogram2D(int, char * [])
 
   // Define a chart
   vtkNew<vtkChartHistogram2D> chart;
-  view->GetScene()->AddItem(chart.GetPointer());
+  view->GetScene()->AddItem(chart);
 
   view->GetRenderWindow()->SetMultiSamples(0);
   view->GetInteractor()->Initialize();
   view->GetRenderWindow()->Render();
 
   // Add only a plot without an image data
-  vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
-  vtkSmartPointer<vtkDoubleArray> X = vtkSmartPointer<vtkDoubleArray>::New();
+  vtkNew<vtkTable> table;
+  vtkNew<vtkDoubleArray> X;
   X->SetName("X");
   X->SetNumberOfComponents(1);
   X->SetNumberOfTuples(size);
-  vtkSmartPointer<vtkDoubleArray> Y = vtkSmartPointer<vtkDoubleArray>::New();
+  vtkNew<vtkDoubleArray> Y;
   Y->SetName("Y");
   Y->SetNumberOfComponents(1);
   Y->SetNumberOfTuples(size);
@@ -65,7 +64,7 @@ int TestHistogram2D(int, char * [])
   table->AddColumn(X);
   table->AddColumn(Y);
 
-  vtkPlotLine* plot = vtkPlotLine::SafeDownCast(chart->AddPlot((int)vtkChart::LINE));
+  vtkPlotLine* plot = vtkPlotLine::SafeDownCast(chart->AddPlot(vtkChart::LINE));
   plot->SetInputData(table, 0, 1);
   plot->SetColor(1.0, 0.0, 0.0);
   plot->SetWidth(5);
@@ -104,7 +103,7 @@ int TestHistogram2D(int, char * [])
           cos(vtkMath::RadiansFromDegrees(double(j)));
     }
   }
-  chart->SetInputData(data.GetPointer());
+  chart->SetInputData(data);
 
   vtkNew<vtkColorTransferFunction> transferFunction;
   transferFunction->AddHSVSegment(0.0, 0.0, 1.0, 1.0,
@@ -114,7 +113,7 @@ int TestHistogram2D(int, char * [])
   transferFunction->AddHSVSegment(0.6666, 0.6666, 1.0, 1.0,
                                   1.0, 0.2, 1.0, 0.3);
   transferFunction->Build();
-  chart->SetTransferFunction(transferFunction.GetPointer());
+  chart->SetTransferFunction(transferFunction);
 
   view->GetInteractor()->Start();
 

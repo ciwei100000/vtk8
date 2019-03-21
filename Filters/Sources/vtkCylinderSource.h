@@ -38,7 +38,7 @@ class VTKFILTERSSOURCES_EXPORT vtkCylinderSource : public vtkPolyDataAlgorithm
 public:
   static vtkCylinderSource *New();
   vtkTypeMacro(vtkCylinderSource,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -76,9 +76,9 @@ public:
   /**
    * Turn on/off whether to cap cylinder with polygons. Initial value is true.
    */
-  vtkSetMacro(Capping,int);
-  vtkGetMacro(Capping,int);
-  vtkBooleanMacro(Capping,int);
+  vtkSetMacro(Capping,vtkTypeBool);
+  vtkGetMacro(Capping,vtkTypeBool);
+  vtkBooleanMacro(Capping,vtkTypeBool);
   //@}
 
   //@{
@@ -93,19 +93,19 @@ public:
 
 protected:
   vtkCylinderSource(int res=6);
-  ~vtkCylinderSource() VTK_OVERRIDE {}
+  ~vtkCylinderSource() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   double Height;
   double Radius;
   double Center[3];
   int Resolution;
-  int Capping;
+  vtkTypeBool Capping;
   int OutputPointsPrecision;
 
 private:
-  vtkCylinderSource(const vtkCylinderSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCylinderSource&) VTK_DELETE_FUNCTION;
+  vtkCylinderSource(const vtkCylinderSource&) = delete;
+  void operator=(const vtkCylinderSource&) = delete;
 };
 
 #endif

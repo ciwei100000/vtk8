@@ -27,6 +27,7 @@
 
 vtkStandardNewMacro(vtkLinearExtrusionFilter);
 
+//----------------------------------------------------------------------------
 // Create object with normal extrusion type, capping on, scale factor=1.0,
 // vector (0,0,1), and extrusion point (0,0,0).
 vtkLinearExtrusionFilter::vtkLinearExtrusionFilter()
@@ -38,6 +39,7 @@ vtkLinearExtrusionFilter::vtkLinearExtrusionFilter()
   this->ExtrusionPoint[0] = this->ExtrusionPoint[1] = this->ExtrusionPoint[2] = 0.0;
 }
 
+//----------------------------------------------------------------------------
 void vtkLinearExtrusionFilter::ViaNormal(double x[3], vtkIdType id,
                                            vtkDataArray *n)
 {
@@ -50,6 +52,7 @@ void vtkLinearExtrusionFilter::ViaNormal(double x[3], vtkIdType id,
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkLinearExtrusionFilter::ViaVector(double x[3],
                                            vtkIdType vtkNotUsed(id),
                                            vtkDataArray *vtkNotUsed(n))
@@ -60,6 +63,7 @@ void vtkLinearExtrusionFilter::ViaVector(double x[3],
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkLinearExtrusionFilter::ViaPoint(double x[3], vtkIdType vtkNotUsed(id),
                                           vtkDataArray *vtkNotUsed(n))
 {
@@ -69,6 +73,7 @@ void vtkLinearExtrusionFilter::ViaPoint(double x[3], vtkIdType vtkNotUsed(id),
   }
 }
 
+//----------------------------------------------------------------------------
 int vtkLinearExtrusionFilter::RequestData(
   vtkInformation *vtkNotUsed(request),
   vtkInformationVector **inputVector,
@@ -86,19 +91,19 @@ int vtkLinearExtrusionFilter::RequestData(
 
   vtkIdType numPts, numCells;
   vtkPointData *pd=input->GetPointData();
-  vtkDataArray *inNormals=NULL;
+  vtkDataArray *inNormals=nullptr;
   vtkPolyData *mesh;
   vtkPoints *inPts;
   vtkCellArray *inVerts, *inLines, *inPolys, *inStrips;
   vtkIdType inCellId, outCellId;
   int numEdges, dim;
-  vtkIdType *pts = 0;
+  vtkIdType *pts = nullptr;
   vtkIdType npts = 0;
   vtkIdType ptId, ncells, p1, p2;
   vtkIdType i, j;
   double x[3];
   vtkPoints *newPts;
-  vtkCellArray *newLines=NULL, *newPolys=NULL, *newStrips;
+  vtkCellArray *newLines=nullptr, *newPolys=nullptr, *newStrips;
   vtkCell *edge;
   vtkIdList *cellIds, *cellPts;
   vtkPointData *outputPD = output->GetPointData();
@@ -119,7 +124,7 @@ int vtkLinearExtrusionFilter::RequestData(
     vtkErrorMacro(<<"No data to extrude!");
     return 1;
   }
-  //
+
   // Decide which vector to use for extrusion
   //
   if ( this->ExtrusionType == VTK_POINT_EXTRUSION )
@@ -127,7 +132,7 @@ int vtkLinearExtrusionFilter::RequestData(
     this->ExtrudePoint = &vtkLinearExtrusionFilter::ViaPoint;
   }
   else if ( this->ExtrusionType == VTK_NORMAL_EXTRUSION  &&
-            (inNormals = pd->GetNormals()) != NULL )
+            (inNormals = pd->GetNormals()) != nullptr )
   {
     this->ExtrudePoint = &vtkLinearExtrusionFilter::ViaNormal;
     inNormals = pd->GetNormals();
@@ -157,7 +162,6 @@ int vtkLinearExtrusionFilter::RequestData(
 
   cellIds = vtkIdList::New();
   cellIds->Allocate(VTK_CELL_SIZE);
-
 
   // Allocate memory for output. We don't copy normals because surface geometry
   // is modified. Copy all points - this is the usual requirement and it makes
@@ -355,7 +359,7 @@ int vtkLinearExtrusionFilter::RequestData(
   lineIds->Delete();
   stripIds->Delete();
   polyIds->Delete();
-  polyIds = NULL;
+  polyIds = nullptr;
 
 
   // Send data to output and release memory
@@ -385,6 +389,7 @@ int vtkLinearExtrusionFilter::RequestData(
   return 1;
 }
 
+//----------------------------------------------------------------------------
 void vtkLinearExtrusionFilter::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);

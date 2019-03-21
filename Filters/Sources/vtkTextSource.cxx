@@ -142,7 +142,7 @@ static unsigned char vtkfont_bits[] = {
 // Construct object with no string set and backing enabled.
 vtkTextSource::vtkTextSource()
 {
-  this->Text = NULL;
+  this->Text = nullptr;
   this->Backing = 1;
   this->ForegroundColor[0] = 1.0;
   this->ForegroundColor[1] = 1.0;
@@ -170,7 +170,7 @@ int vtkTextSource::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -189,7 +189,7 @@ int vtkTextSource::RequestData(
   unsigned char white[4];
   unsigned char black[4];
 
-  if (this->Text == NULL)
+  if (this->Text == nullptr)
   {
     vtkErrorMacro (<< "Text is not set!");
     return 1;

@@ -27,10 +27,11 @@ vtkStandardNewMacro(vtkGeoTreeNode);
 //----------------------------------------------------------------------------
 vtkGeoTreeNode::vtkGeoTreeNode()
 {
+  VTK_LEGACY_BODY(vtkGeoTreeNode::vtkGeoTreeNode, "VTK 8.2");
   this->Level = 0;
-  this->Parent = 0;
-  this->Older = 0;
-  this->Newer = 0;
+  this->Parent = nullptr;
+  this->Older = nullptr;
+  this->Newer = nullptr;
   this->Id = 0; // make valgrind happy
   this->LatitudeRange[0]  = this->LatitudeRange[1]  = 0.;
   this->LongitudeRange[0] = this->LongitudeRange[1] = 0.;
@@ -40,7 +41,7 @@ vtkGeoTreeNode::vtkGeoTreeNode()
 //-----------------------------------------------------------------------------
 vtkGeoTreeNode::~vtkGeoTreeNode()
 {
-  this->SetParent(0);
+  this->SetParent(nullptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -91,7 +92,7 @@ int vtkGeoTreeNode::GetWhichChildAreYou()
 //-----------------------------------------------------------------------------
 bool vtkGeoTreeNode::IsDescendantOf(vtkGeoTreeNode* elder)
 {
-  if (elder == 0)
+  if (elder == nullptr)
   {
     return false;
   }

@@ -52,6 +52,13 @@ macro(vtk_module_load mod)
     if(NOT ${mod}_LOADED)
       message(FATAL_ERROR "No such module: \"${mod}\"")
     endif()
+    # Include the targets file if it has been defined. Targets files other
+    # than VTKTargets.cmake are created when modules are built externally. Do not
+    # include the targets file inside the module itself -- which occurs in a module's
+    # test configuration.
+    if(EXISTS "${${mod}_TARGETS_FILE}" AND NOT vtk-module STREQUAL mod)
+      include("${${mod}_TARGETS_FILE}")
+    endif()
   endif()
 endmacro()
 
@@ -73,9 +80,6 @@ endmacro()
 #  <module>_HEADERS_LOADED      = True if the module header info has been loaded
 #  <module>_HEADERS             = List of headers
 #  <module>_HEADER_<header>_EXISTS
-#  <module>_HEADER_<header>_ABSTRACT
-#  <module>_HEADER_<header>_WRAP_EXCLUDE
-#  <module>_HEADER_<header>_WRAP_EXCLUDE_PYTHON
 macro(vtk_module_headers_load mod)
   if(NOT ${mod}_HEADERS_LOADED)
     include("${VTK_MODULES_DIR}/${mod}-Headers.cmake"
@@ -108,9 +112,25 @@ endmacro()
 #
 # Do not name a module as the namespace.
 macro(vtk_module_config ns)
+
+  # Sanity check
+  if(NOT DEFINED VTK_MODULES_DIR)
+    message(FATAL_ERROR "VTK_MODULES_DIR is not defined !")
+  endif()
+
+  # Determine list of available VTK-modules by scanning the VTK_MODULES_DIR.
+  set(VTK_MODULES_AVAILABLE)
+  file(GLOB config_files RELATIVE "${VTK_MODULES_DIR}" "${VTK_MODULES_DIR}/*.cmake")
+  foreach (_file ${config_files})
+    if (NOT "${_file}" MATCHES "[^\\-]+-[a-zA-Z]+\\.cmake")
+      string(REGEX REPLACE "\\.cmake$" "" _${ns}_module "${_file}")
+      list(APPEND VTK_MODULES_AVAILABLE "${_${ns}_module}")
+    endif()
+  endforeach()
+
   set(_${ns}_MISSING ${ARGN})
   if(_${ns}_MISSING)
-    list(REMOVE_ITEM _${ns}_MISSING ${VTK_MODULES_ENABLED})
+    list(REMOVE_ITEM _${ns}_MISSING ${VTK_MODULES_AVAILABLE})
   endif()
   if(_${ns}_MISSING)
     set(msg "")

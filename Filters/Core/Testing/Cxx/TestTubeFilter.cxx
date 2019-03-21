@@ -27,6 +27,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkSmartPointer.h>
 #include <vtkTestUtilities.h>
+#include <vtkTexture.h>
 #include <vtkTubeFilter.h>
 
 namespace
@@ -278,7 +279,7 @@ int TestTubeFilter(int argc, char *argv[])
   renderer->ResetCamera();
   renderWindow->Render();
 
-  int retVal = vtkRegressionTestImage(renderWindow.GetPointer());
+  int retVal = vtkRegressionTestImage(renderWindow);
   if (retVal == vtkRegressionTester::DO_INTERACTOR)
   {
     renderWindowInteractor->Start();

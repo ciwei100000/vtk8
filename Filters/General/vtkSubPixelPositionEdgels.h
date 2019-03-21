@@ -48,7 +48,7 @@ class VTKFILTERSGENERAL_EXPORT vtkSubPixelPositionEdgels : public vtkPolyDataAlg
 public:
   static vtkSubPixelPositionEdgels *New();
   vtkTypeMacro(vtkSubPixelPositionEdgels,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -63,20 +63,20 @@ public:
    * These methods can make the positioning look for a target scalar value
    * instead of looking for a maximum.
    */
-  vtkSetMacro(TargetFlag, int);
-  vtkGetMacro(TargetFlag, int);
-  vtkBooleanMacro(TargetFlag, int);
+  vtkSetMacro(TargetFlag, vtkTypeBool);
+  vtkGetMacro(TargetFlag, vtkTypeBool);
+  vtkBooleanMacro(TargetFlag, vtkTypeBool);
   vtkSetMacro(TargetValue, double);
   vtkGetMacro(TargetValue, double);
   //@}
 
 protected:
   vtkSubPixelPositionEdgels();
-  ~vtkSubPixelPositionEdgels() VTK_OVERRIDE;
+  ~vtkSubPixelPositionEdgels() override;
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   void Move(int xdim, int ydim, int zdim, int x, int y,
             float *img, vtkDataArray *inVecs,
@@ -85,11 +85,11 @@ protected:
             double *img, vtkDataArray *inVecs,
             double *result, int z, double *aspect, double *resultNormal);
   // extension for target instead of maximum
-  int TargetFlag;
+  vtkTypeBool TargetFlag;
   double TargetValue;
 private:
-  vtkSubPixelPositionEdgels(const vtkSubPixelPositionEdgels&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSubPixelPositionEdgels&) VTK_DELETE_FUNCTION;
+  vtkSubPixelPositionEdgels(const vtkSubPixelPositionEdgels&) = delete;
+  void operator=(const vtkSubPixelPositionEdgels&) = delete;
 };
 
 #endif

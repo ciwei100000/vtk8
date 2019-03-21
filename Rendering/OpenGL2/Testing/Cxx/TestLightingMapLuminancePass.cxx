@@ -60,6 +60,8 @@ int TestLightingMapLuminancePass(int argc, char *argv[])
   reader->SetFileName(fileName);
   reader->Update();
 
+  delete [] fileName;
+
   vtkSmartPointer<vtkPolyDataMapper> mapper =
     vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(reader->GetOutputPort());
@@ -121,7 +123,7 @@ int TestLightingMapLuminancePass(int argc, char *argv[])
   cameraPass->SetDelegatePass(sequence);
 
   vtkOpenGLRenderer *glRenderer =
-    vtkOpenGLRenderer::SafeDownCast(renderer.GetPointer());
+    vtkOpenGLRenderer::SafeDownCast(renderer);
   glRenderer->SetPass(cameraPass);
 
   // 3. Render image and compare against baseline

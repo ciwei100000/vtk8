@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 {
   // Initialize parameters from the command line.
   const char* labelArray = ".tagname";
-  const char* colorArray = NULL;
+  const char* colorArray = nullptr;
   if (argc < 2)
   {
     usage();
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   // Read in the XML file into a tree.
   // This creates a tree with string columns for every attribute
   // present in the file, plus the special arrays named .tagname
-  // (containing the XML tag name) and .chardata (containg the
+  // (containing the XML tag name) and .chardata (containing the
   // character data within the tag).
   vtkXMLTreeReader* reader = vtkXMLTreeReader::New();
   reader->SetFileName(filename);
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
   // the specified label and color arrays exist.
   stringToNumeric->Update();
   vtkTree* tree = vtkTree::SafeDownCast(stringToNumeric->GetOutput());
-  if (tree->GetVertexData()->GetAbstractArray(labelArray) == NULL)
+  if (tree->GetVertexData()->GetAbstractArray(labelArray) == nullptr)
   {
     cerr << "ERROR: The label attribute " << labelArray << " is not defined in the file." << endl;
     reader->Delete();
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     return 0;
   }
   if (colorArray &&
-      tree->GetVertexData()->GetAbstractArray(colorArray) == NULL)
+      tree->GetVertexData()->GetAbstractArray(colorArray) == nullptr)
   {
     cerr << "ERROR: The color attribute " << colorArray << " is not defined in the file." << endl;
     reader->Delete();
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
     return 0;
   }
   if (colorArray &&
-      vtkArrayDownCast<vtkDataArray>(tree->GetVertexData()->GetAbstractArray(colorArray)) == NULL)
+      vtkArrayDownCast<vtkDataArray>(tree->GetVertexData()->GetAbstractArray(colorArray)) == nullptr)
   {
     cerr << "ERROR: The color attribute " << colorArray << " does not have numeric values." << endl;
     reader->Delete();

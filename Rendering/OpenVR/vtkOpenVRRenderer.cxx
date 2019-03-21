@@ -41,7 +41,7 @@ vtkOpenVRRenderer::vtkOpenVRRenderer()
   this->FloorActor = vtkActor::New();
 
   vtkNew<vtkPolyDataMapper> pdm;
-  this->FloorActor->SetMapper(pdm.Get());
+  this->FloorActor->SetMapper(pdm);
   vtkNew<vtkPlaneSource> plane;
   pdm->SetInputConnection(plane->GetOutputPort());
   plane->SetOrigin(-5.0, 0.0,-5.0);
@@ -50,10 +50,10 @@ vtkOpenVRRenderer::vtkOpenVRRenderer()
 
   vtkNew<vtkTransform> tf;
   tf->Identity();
-  this->FloorActor->SetUserTransform(tf.Get());
+  this->FloorActor->SetUserTransform(tf);
 
   vtkNew<vtkTexture> texture;
-  this->FloorActor->SetTexture(texture.Get());
+  this->FloorActor->SetTexture(texture);
 
   // build a grid fading off in the distance
   vtkNew<vtkImageCanvasSource2D> grid;
@@ -93,18 +93,16 @@ void vtkOpenVRRenderer::DeviceRender()
 {
   if (this->ShowFloor)
   {
-    vtkOpenVRCamera *cam = static_cast<vtkOpenVRCamera *>(
-      this->GetActiveCamera());
     vtkOpenVRRenderWindow *win =
       static_cast<vtkOpenVRRenderWindow *>(this->GetRenderWindow());
 
-    double distance = cam->GetDistance();
+    double physicalScale = win->GetPhysicalScale();
 
     double trans[3];
-    cam->GetTranslation(trans);
+    win->GetPhysicalTranslation(trans);
 
-    double *vup = win->GetInitialViewUp();
-    double *dop = win->GetInitialViewDirection();
+    double *vup = win->GetPhysicalViewUp();
+    double *dop = win->GetPhysicalViewDirection();
     double vr[3];
     vtkMath::Cross(dop,vup,vr);
     double rot[16] = {
@@ -115,7 +113,7 @@ void vtkOpenVRRenderer::DeviceRender()
 
     static_cast<vtkTransform *>(this->FloorActor->GetUserTransform())->Identity();
     static_cast<vtkTransform *>(this->FloorActor->GetUserTransform())->Translate(-trans[0], -trans[1], -trans[2]);
-    static_cast<vtkTransform *>(this->FloorActor->GetUserTransform())->Scale(distance, distance, distance);
+    static_cast<vtkTransform *>(this->FloorActor->GetUserTransform())->Scale(physicalScale, physicalScale, physicalScale);
     static_cast<vtkTransform *>(this->FloorActor->GetUserTransform())->Concatenate(rot);
   }
   this->Superclass::DeviceRender();
@@ -163,7 +161,7 @@ void vtkOpenVRRenderer::ResetCamera(double bounds[6])
   double vn[3], *vup;
 
   this->GetActiveCamera();
-  if ( this->ActiveCamera != NULL )
+  if ( this->ActiveCamera != nullptr )
   {
     this->ActiveCamera->GetViewPlaneNormal(vn);
   }
@@ -256,8 +254,10 @@ void vtkOpenVRRenderer::ResetCamera(double bounds[6])
   // matrix as that is broken.
   // The +distance in the Y translation is because we want
   // the center of the world to be 1 meter up
-  vtkOpenVRCamera *cam = vtkOpenVRCamera::SafeDownCast(this->ActiveCamera);
-  cam->SetTranslation(-center[0],-center[1]+distance,-center[2]);
+  vtkOpenVRRenderWindow *win =
+    static_cast<vtkOpenVRRenderWindow *>(this->GetRenderWindow());
+  win->SetPhysicalTranslation(-center[0],-center[1]+distance,-center[2]);
+  win->SetPhysicalScale(distance);
 }
 
 // Alternative version of ResetCamera(bounds[6]);
@@ -290,7 +290,7 @@ void vtkOpenVRRenderer::ResetCameraClippingRange( double bounds[6] )
   }
 
   this->GetActiveCameraAndResetIfCreated();
-  if ( this->ActiveCamera == NULL )
+  if ( this->ActiveCamera == nullptr )
   {
     vtkErrorMacro(<< "Trying to reset clipping range of non-existant camera");
     return;
@@ -298,9 +298,11 @@ void vtkOpenVRRenderer::ResetCameraClippingRange( double bounds[6] )
 
   this->ExpandBounds(bounds, this->ActiveCamera->GetModelTransformMatrix());
 
-  double distance = this->ActiveCamera->GetDistance();
   double trans[3];
-  static_cast<vtkOpenVRCamera *>(this->ActiveCamera)->GetTranslation(trans);
+  vtkOpenVRRenderWindow *win =
+    static_cast<vtkOpenVRRenderWindow *>(this->GetRenderWindow());
+  win->GetPhysicalTranslation(trans);
+  double physicalScale = win->GetPhysicalScale();
 
   range[0] = 0.2; // 20 cm in front of HMD
   range[1] = 0.0;
@@ -321,7 +323,7 @@ void vtkOpenVRRenderer::ResetCameraClippingRange( double bounds[6] )
     }
   }
 
-  range[1] /= distance; // convert to physical scale
+  range[1] /= physicalScale; // convert to physical scale
   range[1] += 3.0; // add 3 meters for room to walk around
 
   // to see transmitters make sure far is at least 10 meters
@@ -330,7 +332,7 @@ void vtkOpenVRRenderer::ResetCameraClippingRange( double bounds[6] )
     range[1] = 10.0;
   }
 
-  this->ActiveCamera->SetClippingRange( range[0]*distance, range[1]*distance );
+  this->ActiveCamera->SetClippingRange( range[0]*physicalScale, range[1]*physicalScale );
 }
 
 void vtkOpenVRRenderer::PrintSelf(ostream& os, vtkIndent indent)

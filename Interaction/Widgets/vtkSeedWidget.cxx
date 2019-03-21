@@ -107,7 +107,7 @@ vtkHandleWidget * vtkSeedWidget::GetSeed(int i)
 {
  if( this->Seeds->size() <= static_cast< size_t >(i) )
  {
-   return NULL;
+   return nullptr;
  }
   vtkSeedListIterator iter = this->Seeds->begin();
   std::advance(iter,i);
@@ -155,6 +155,8 @@ void vtkSeedWidget::AddPointAction(vtkAbstractWidget *w)
     return;
   }
 
+  self->InvokeEvent(vtkCommand::MouseMoveEvent, nullptr);
+
   // compute some info we need for all cases
   int X = self->Interactor->GetEventPosition()[0];
   int Y = self->Interactor->GetEventPosition()[1];
@@ -166,9 +168,12 @@ void vtkSeedWidget::AddPointAction(vtkAbstractWidget *w)
     self->WidgetState = vtkSeedWidget::MovingSeed;
 
     // Invoke an event on ourself for the handles
-    self->InvokeEvent(vtkCommand::LeftButtonPressEvent,NULL);
+    self->InvokeEvent(vtkCommand::LeftButtonPressEvent,nullptr);
     self->Superclass::StartInteraction();
-    self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+    vtkSeedRepresentation *rep = static_cast<
+      vtkSeedRepresentation * >(self->WidgetRep);
+    int seedIdx = rep->GetActiveHandle();
+    self->InvokeEvent(vtkCommand::StartInteractionEvent, &seedIdx);
 
     self->EventCallbackCommand->SetAbortFlag(1);
     self->Render();
@@ -238,15 +243,7 @@ void vtkSeedWidget::MoveAction(vtkAbstractWidget *w)
 {
   vtkSeedWidget *self = reinterpret_cast<vtkSeedWidget*>(w);
 
-  // Do nothing if outside
-  if ( self->WidgetState == vtkSeedWidget::Start )
-  {
-    return;
-  }
-
-  // else we are moving a seed
-
-  self->InvokeEvent(vtkCommand::MouseMoveEvent, NULL);
+  self->InvokeEvent(vtkCommand::MouseMoveEvent, nullptr);
 
   // set the cursor shape to a hand if we are near a seed.
   int X = self->Interactor->GetEventPosition()[0];
@@ -290,9 +287,9 @@ void vtkSeedWidget::EndSelectAction(vtkAbstractWidget *w)
     vtkSeedWidget::PlacingSeeds : vtkSeedWidget::PlacedSeeds;
 
   // Invoke event for seed handle
-  self->InvokeEvent(vtkCommand::LeftButtonReleaseEvent,NULL);
+  self->InvokeEvent(vtkCommand::LeftButtonReleaseEvent,nullptr);
   self->EventCallbackCommand->SetAbortFlag(1);
-  self->InvokeEvent(vtkCommand::EndInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::EndInteractionEvent,nullptr);
   self->Superclass::EndInteraction();
   self->Render();
 }
@@ -312,15 +309,11 @@ void vtkSeedWidget::DeleteAction(vtkAbstractWidget *w)
   vtkSeedRepresentation *rep =
     reinterpret_cast<vtkSeedRepresentation*>(self->WidgetRep);
   int removeId = rep->GetActiveHandle();
-  if ( removeId != -1 )
-  {
-    rep->RemoveActiveHandle();
-  }
-  else
-  {
-    rep->RemoveLastHandle();
-    removeId = static_cast<int>(self->Seeds->size())-1;
-  }
+  removeId =
+    removeId != -1 ? removeId : static_cast<int>(self->Seeds->size()) - 1;
+  // Invoke event for seed handle before actually deleting
+  self->InvokeEvent(vtkCommand::DeletePointEvent, &(removeId));
+
   self->DeleteSeed(removeId);
   // Got this event, abort processing if it
   self->EventCallbackCommand->SetAbortFlag(1);
@@ -328,7 +321,7 @@ void vtkSeedWidget::DeleteAction(vtkAbstractWidget *w)
 }
 
 //----------------------------------------------------------------------
-void vtkSeedWidget::SetProcessEvents(int pe)
+void vtkSeedWidget::SetProcessEvents(vtkTypeBool pe)
 {
   this->Superclass::SetProcessEvents(pe);
 
@@ -359,7 +352,7 @@ void vtkSeedWidget::SetCurrentRenderer( vtkRenderer *ren )
   {
     if (!ren)
     {
-      // Disable widget if its being removed from the the renderer
+      // Disable widget if it's being removed from the renderer
       (*iter)->EnabledOff();
     }
     (*iter)->SetCurrentRenderer(ren);
@@ -376,7 +369,7 @@ vtkHandleWidget * vtkSeedWidget::CreateNewHandle()
   {
     vtkErrorMacro( << "Please set, or create a default seed representation "
         << "before adding requesting creation of a new handle." );
-    return NULL;
+    return nullptr;
   }
 
   // Create the handle widget or reuse an old one
@@ -390,7 +383,7 @@ vtkHandleWidget * vtkSeedWidget::CreateNewHandle()
   if (!handleRep)
   {
     widget->Delete();
-    return NULL;
+    return nullptr;
   }
   else
   {

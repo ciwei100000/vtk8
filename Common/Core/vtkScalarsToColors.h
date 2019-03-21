@@ -61,12 +61,12 @@ class VTKCOMMONCORE_EXPORT vtkScalarsToColors : public vtkObject
 {
 public:
   vtkTypeMacro(vtkScalarsToColors,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   static vtkScalarsToColors *New();
 
   /**
    * Return true if all of the values defining the mapping have an opacity
-   * equal to 1. Default implementation return true.
+   * equal to 1. Default implementation returns true.
    */
   virtual int IsOpaque();
 
@@ -80,17 +80,17 @@ public:
   /**
    * Sets/Gets the range of scalars that will be mapped.
    */
-  virtual double *GetRange();
+  virtual double *GetRange() VTK_SIZEHINT(2);
   virtual void SetRange(double min, double max);
-  void SetRange(double rng[2])
+  virtual void SetRange(const double rng[2])
     {this->SetRange(rng[0],rng[1]);}
   //@}
 
   /**
    * Map one value through the lookup table and return a color defined
-   * as a RGBA unsigned char tuple (4 bytes).
+   * as an RGBA unsigned char tuple (4 bytes).
    */
-  virtual unsigned char *MapValue(double v);
+  virtual const unsigned char *MapValue(double v);
 
   /**
    * Map one value through the lookup table and store the color as
@@ -102,7 +102,7 @@ public:
    * Map one value through the lookup table and return the color as
    * an RGB array of doubles between 0 and 1.
    */
-  double *GetColor(double v)
+  double *GetColor(double v) VTK_SIZEHINT(3)
     {this->GetColor(v,this->RGB); return this->RGB;}
 
   /**
@@ -266,7 +266,7 @@ public:
    * Set a list of discrete values, either
    * as a categorical set of values (when IndexedLookup is true) or
    * as a set of annotations to add to a scalar array (when IndexedLookup is false).
-   * The two arrays must both either be NULL or of the same length or
+   * The two arrays must both either be nullptr or of the same length or
    * the call will be ignored.
 
    * Note that these arrays are deep copied rather than being used directly
@@ -322,7 +322,7 @@ public:
    * value. Does no pointer checks. Returns -1 when \p val not
    * present.
    */
-  vtkIdType GetAnnotatedValueIndexInternal(vtkVariant& val);
+  vtkIdType GetAnnotatedValueIndexInternal(const vtkVariant& val);
 
   /**
    * Get the "indexed color" assigned to an index.
@@ -331,7 +331,7 @@ public:
    * the annotations were set).
    * Subclasses must implement this and interpret how to treat the index.
    * vtkLookupTable simply returns GetTableValue(\a index % \a this->GetNumberOfTableValues()).
-   * vtkColorTransferFunction returns the color assocated with node \a index % \a this->GetSize().
+   * vtkColorTransferFunction returns the color associated with node \a index % \a this->GetSize().
 
    * Note that implementations *must* set the opacity (alpha) component of the color, even if they
    * do not provide opacity values in their colormaps. In that case, alpha = 1 should be used.
@@ -360,22 +360,22 @@ public:
    * When categorical data is present, only values in the lookup table will be
    * considered valid; all other values will be assigned \a NanColor.
    */
-  vtkSetMacro(IndexedLookup,int);
-  vtkGetMacro(IndexedLookup,int);
-  vtkBooleanMacro(IndexedLookup,int);
+  vtkSetMacro(IndexedLookup,vtkTypeBool);
+  vtkGetMacro(IndexedLookup,vtkTypeBool);
+  vtkBooleanMacro(IndexedLookup,vtkTypeBool);
   //@}
 
 
   //@{
   /**
    * Converts a color from numeric type T to uchar. We assume the integral type
-   * is already in the range 0-255. If it is not, it is going to be truncated.
+   * is already in the range 0-255. If it is not, behavior is undefined.
    * Floating point types are assumed to be in interval 0.0-1.0
    */
   template<typename T> static
     unsigned char ColorToUChar(T t)
   {
-    return t;
+    return static_cast<unsigned char>(t);
   }
   template<typename T> static
     void ColorToUChar(T t, unsigned char* dest)
@@ -388,7 +388,7 @@ public:
 
 protected:
   vtkScalarsToColors();
-  ~vtkScalarsToColors() VTK_OVERRIDE;
+  ~vtkScalarsToColors() override;
 
   /**
    * An internal method that assumes that the input already has the right
@@ -442,7 +442,7 @@ protected:
   class vtkInternalAnnotatedValueMap;
   vtkInternalAnnotatedValueMap* AnnotatedValueMap;
 
-  int IndexedLookup;
+  vtkTypeBool IndexedLookup;
 
   double Alpha;
 
@@ -460,8 +460,8 @@ private:
   double RGB[3];
   double InputRange[2];
 
-  vtkScalarsToColors(const vtkScalarsToColors&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkScalarsToColors&) VTK_DELETE_FUNCTION;
+  vtkScalarsToColors(const vtkScalarsToColors&) = delete;
+  void operator=(const vtkScalarsToColors&) = delete;
 };
 
 //@{

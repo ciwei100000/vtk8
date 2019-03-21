@@ -42,12 +42,13 @@
 #include "vtkIOExportModule.h" // For export macro
 #include "vtkObject.h"
 class vtkRenderWindow;
+class vtkRenderer;
 
 class VTKIOEXPORT_EXPORT vtkExporter : public vtkObject
 {
 public:
   vtkTypeMacro(vtkExporter,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Write data to output. Method executes subclasses WriteData() method, as
@@ -66,6 +67,21 @@ public:
    */
   virtual void SetRenderWindow(vtkRenderWindow*);
   vtkGetObjectMacro(RenderWindow,vtkRenderWindow);
+  //@}
+
+  //@{
+  /**
+   * Set/Get the renderer that contains actors to be written.
+   * If it is set to nullptr (by default), then in most subclasses
+   * the behavior is to only export actors of the first renderer.
+   * In some subclasses, if ActiveRenderer is nullptr then
+   * actors of all renderers will be exported.
+   * The renderer must be in the renderer collection of the specified
+   * RenderWindow.
+   * \sa SetRenderWindow()
+   */
+  virtual void SetActiveRenderer(vtkRenderer*);
+  vtkGetObjectMacro(ActiveRenderer,vtkRenderer);
   //@}
 
   //@{
@@ -102,13 +118,14 @@ public:
   /**
    * Returns the MTime also considering the RenderWindow.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkExporter();
-  ~vtkExporter() VTK_OVERRIDE;
+  ~vtkExporter() override;
 
   vtkRenderWindow *RenderWindow;
+  vtkRenderer *ActiveRenderer;
   virtual void WriteData() = 0;
 
   void (*StartWrite)(void *);
@@ -118,8 +135,8 @@ protected:
   void (*EndWriteArgDelete)(void *);
   void *EndWriteArg;
 private:
-  vtkExporter(const vtkExporter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExporter&) VTK_DELETE_FUNCTION;
+  vtkExporter(const vtkExporter&) = delete;
+  void operator=(const vtkExporter&) = delete;
 };
 
 #endif

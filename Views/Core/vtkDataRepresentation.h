@@ -68,7 +68,7 @@ class VTKVIEWSCORE_EXPORT vtkDataRepresentation : public vtkPassInputTypeAlgorit
 public:
   static vtkDataRepresentation *New();
   vtkTypeMacro(vtkDataRepresentation, vtkPassInputTypeAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Convenience override method for obtaining the input connection
@@ -97,7 +97,7 @@ public:
    * The representation takes this selection and converts it into
    * a selection on its data by calling ConvertSelection,
    * then calls UpdateSelection with the converted selection.
-   * Subclasses should not overrride this method, but should instead
+   * Subclasses should not override this method, but should instead
    * override ConvertSelection.
    * The optional third argument specifies whether the selection should be
    * added to the previous selection on this representation.
@@ -112,7 +112,7 @@ public:
    * creation of annotations). The representation takes the annotations
    * and converts them into a selection on its data by calling ConvertAnnotations,
    * then calls UpdateAnnotations with the converted selection.
-   * Subclasses should not overrride this method, but should instead
+   * Subclasses should not override this method, but should instead
    * override ConvertSelection.
    * The optional third argument specifies whether the selection should be
    * added to the previous selection on this representation.
@@ -133,7 +133,7 @@ public:
 
   /**
    * Updates the selection in the selection link and fires a selection
-   * change event. Subclasses should not overrride this method,
+   * change event. Subclasses should not override this method,
    * but should instead override ConvertSelection.
    * The optional second argument specifies whether the selection should be
    * added to the previous selection on this representation.
@@ -144,7 +144,7 @@ public:
 
   /**
    * Updates the selection in the selection link and fires a selection
-   * change event. Subclasses should not overrride this method,
+   * change event. Subclasses should not override this method,
    * but should instead override ConvertSelection.
    * The optional second argument specifies whether the selection should be
    * added to the previous selection on this representation.
@@ -221,13 +221,13 @@ public:
    * For the superclass, we just return the same selection.
    * Subclasses may do something more fancy, like convert the selection
    * from a frustrum to a list of pedigree ids.  If the selection cannot
-   * be applied to this representation, return NULL.
+   * be applied to this representation, return nullptr.
    */
   virtual vtkSelection* ConvertSelection(vtkView* view, vtkSelection* selection);
 
 protected:
   vtkDataRepresentation();
-  ~vtkDataRepresentation() VTK_OVERRIDE;
+  ~vtkDataRepresentation() override;
 
   /**
    * Subclasses should override this to connect inputs to the internal pipeline
@@ -242,7 +242,7 @@ protected:
   int RequestData(
     vtkInformation*,
     vtkInformationVector**,
-    vtkInformationVector*) VTK_OVERRIDE
+    vtkInformationVector*) override
     { return 1; }
 
   /**
@@ -258,7 +258,7 @@ protected:
   vtkAnnotationLink* AnnotationLinkInternal;
   //@}
 
-  // Whether is represenation can handle a selection.
+  // Whether its representation can handle a selection.
   bool Selectable;
 
   /**
@@ -298,7 +298,7 @@ protected:
   /**
    * Analogous to ConvertSelection(), allows subclasses to manipulate annotations
    * before passing them off to vtkAnnotationLink.  If the annotations cannot
-   * be applied to this representation, return NULL.
+   * be applied to this representation, return nullptr.
    */
   virtual vtkAnnotationLayers* ConvertAnnotations(vtkView* view, vtkAnnotationLayers* annotations);
 
@@ -306,8 +306,8 @@ protected:
   void SetInternalInput(int port, int conn, vtkTrivialProducer* producer);
 
 private:
-  vtkDataRepresentation(const vtkDataRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataRepresentation&) VTK_DELETE_FUNCTION;
+  vtkDataRepresentation(const vtkDataRepresentation&) = delete;
+  void operator=(const vtkDataRepresentation&) = delete;
 
   class Internals;
   Internals* Implementation;

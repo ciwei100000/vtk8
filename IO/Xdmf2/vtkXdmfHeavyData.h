@@ -16,6 +16,8 @@
 
 #ifndef vtkXdmfHeavyData_h
 #define vtkXdmfHeavyData_h
+#ifndef __VTK_WRAP__
+#ifndef VTK_WRAPPING_CXX
 
 #include "XdmfDataItem.h"
 #include "XdmfGrid.h" //won't compile without it
@@ -110,8 +112,8 @@ private:
   // vtkStructuredGrid. If non-null, then the only the points for the sub-grid
   // are read.
   vtkPoints* ReadPoints(xdmf2::XdmfGeometry* xmfGeometry,
-    int *update_extents=NULL,
-    int *whole_extents=NULL);
+    int *update_extents=nullptr,
+    int *whole_extents=nullptr);
 
   // Description:
   // Read attributes.
@@ -136,7 +138,7 @@ private:
 
   // Description:
   // Used when reading node-sets.
-  // Creates a new dataset with points with given ids extracted from  the input
+  // Creates a new dataset with points with given ids extracted from the input
   // dataset.
   vtkDataSet* ExtractPoints(xdmf2::XdmfSet* xmfSet, vtkDataSet* dataSet);
 
@@ -154,9 +156,11 @@ private:
 
   // Description:
   // Used when reading edge-sets.
-  // Creates a new dataset with egdes selected by the set, extracting them from
+  // Creates a new dataset with edges selected by the set, extracting them from
   // the input dataset.
   vtkDataSet* ExtractEdges(xdmf2::XdmfSet* xmfSet, vtkDataSet* dataSet);
 };
 
+#endif
+#endif
 #endif

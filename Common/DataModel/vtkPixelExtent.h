@@ -108,7 +108,7 @@ public:
 
   //@{
   /**
-   * Return non-zero if this extent conatins the other.
+   * Return non-zero if this extent contains the other.
    */
   int Contains(const vtkPixelExtent &other) const;
   int Contains(int i, int j) const;
@@ -184,7 +184,7 @@ public:
   /**
    * Divide the extent in half in the given direction. The
    * operation is done in-place the other half of the split
-   * extent is returned. The retunr will be empty if the split
+   * extent is returned. The return will be empty if the split
    * could not be made.
    */
   vtkPixelExtent Split(int dir);
@@ -289,7 +289,7 @@ public:
    */
   static void Subtract(
         const vtkPixelExtent &A,
-        vtkPixelExtent B,
+        const vtkPixelExtent& B,
         std::deque<vtkPixelExtent> &newExts);
 
   /**

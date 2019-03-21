@@ -38,9 +38,7 @@ vtkDistancePolyDataFilter::vtkDistancePolyDataFilter() : vtkPolyDataAlgorithm()
 }
 
 //-----------------------------------------------------------------------------
-vtkDistancePolyDataFilter::~vtkDistancePolyDataFilter()
-{
-}
+vtkDistancePolyDataFilter::~vtkDistancePolyDataFilter() = default;
 
 
 //-----------------------------------------------------------------------------
@@ -147,7 +145,7 @@ vtkPolyData* vtkDistancePolyDataFilter::GetSecondDistanceOutput()
 {
   if (!this->ComputeSecondDistance)
   {
-    return 0;
+    return nullptr;
   }
   return vtkPolyData::SafeDownCast(this->GetOutputDataObject(1));
 }

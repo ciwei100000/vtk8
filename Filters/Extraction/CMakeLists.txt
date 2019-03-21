@@ -1,8 +1,9 @@
 set(Module_SRCS
+  vtkBlockSelector.cxx
   vtkConvertSelection.cxx
-  vtkExtractArraysOverTime.cxx
   vtkExtractBlock.cxx
   vtkExtractCells.cxx
+  vtkExtractDataArraysOverTime.cxx
   vtkExtractDataOverTime.cxx
   vtkExtractDataSets.cxx
   vtkExtractEdges.cxx
@@ -11,6 +12,7 @@ set(Module_SRCS
   vtkExtractLevel.cxx
   vtkExtractPolyDataGeometry.cxx
   vtkExtractRectilinearGrid.cxx
+  vtkExtractSelectedArraysOverTime.cxx
   vtkExtractSelectedBlock.cxx
   vtkExtractSelectedIds.cxx
   vtkExtractSelectedLocations.cxx
@@ -23,15 +25,19 @@ set(Module_SRCS
   vtkExtractTimeSteps.cxx
   vtkExtractUnstructuredGrid.cxx
   vtkExtractVectorComponents.cxx
-
-  vtkProbeSelectedLocations.cxx
+  vtkFrustumSelector.cxx
   vtkHierarchicalDataExtractDataSets.cxx
   vtkHierarchicalDataExtractLevel.cxx
+  vtkLocationSelector.cxx
+  vtkProbeSelectedLocations.cxx
+  vtkSelector.cxx
+  vtkValueSelector.cxx
   )
 
-set_source_files_properties(
-  vtkExtractSelectionBase
-  ABSTRACT
-  )
+if (NOT VTK_LEGACY_REMOVE)
+  list(APPEND Module_SRCS
+    vtkExtractArraysOverTime.cxx
+    vtkExtractSelectionLegacy.cxx)
+endif()
 
 vtk_module_library(vtkFiltersExtraction ${Module_SRCS})

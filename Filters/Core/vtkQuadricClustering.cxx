@@ -26,7 +26,8 @@
 #include "vtkPolyData.h"
 #include "vtkTimerLog.h"
 #include "vtkTriangle.h"
-#include <vtksys/hash_set.hxx> // keep track of inserted triangles
+
+#include <unordered_set> // keep track of inserted triangles
 
 vtkStandardNewMacro(vtkQuadricClustering);
 
@@ -35,7 +36,7 @@ vtkStandardNewMacro(vtkQuadricClustering);
 struct vtkQuadricClusteringIdTypeHash {
   size_t operator()(vtkIdType val) const { return static_cast<size_t>(val); }
 };
-class vtkQuadricClusteringCellSet : public vtksys::hash_set<vtkIdType, vtkQuadricClusteringIdTypeHash> {};
+class vtkQuadricClusteringCellSet : public std::unordered_set<vtkIdType, vtkQuadricClusteringIdTypeHash> {};
 typedef vtkQuadricClusteringCellSet::iterator vtkQuadricClusteringCellSetIterator;
 
 
@@ -53,7 +54,7 @@ vtkQuadricClustering::vtkQuadricClustering()
   this->NumberOfXDivisions = 50;
   this->NumberOfYDivisions = 50;
   this->NumberOfZDivisions = 50;
-  this->QuadricArray = NULL;
+  this->QuadricArray = nullptr;
   this->NumberOfBinsUsed = 0;
   this->AbortExecute = 0;
 
@@ -74,11 +75,11 @@ vtkQuadricClustering::vtkQuadricClustering()
   this->UseInputPoints = 0;
 
   this->PreventDuplicateCells = 1;
-  this->CellSet = NULL;
+  this->CellSet = nullptr;
   this->NumberOfBins = 0;
 
-  this->OutputTriangleArray = NULL;
-  this->OutputLines = NULL;
+  this->OutputTriangleArray = nullptr;
+  this->OutputLines = nullptr;
 
   // Used for matching boundaries.
   this->FeatureEdges = vtkFeatureEdges::New();
@@ -94,22 +95,22 @@ vtkQuadricClustering::vtkQuadricClustering()
 vtkQuadricClustering::~vtkQuadricClustering()
 {
   this->FeatureEdges->Delete();
-  this->FeatureEdges = NULL;
+  this->FeatureEdges = nullptr;
   this->FeaturePoints->Delete();
-  this->FeaturePoints = NULL;
+  this->FeaturePoints = nullptr;
   delete this->CellSet;
-  this->CellSet = NULL;
+  this->CellSet = nullptr;
   delete [] this->QuadricArray;
-  this->QuadricArray = NULL;
+  this->QuadricArray = nullptr;
   if (this->OutputTriangleArray)
   {
     this->OutputTriangleArray->Delete();
-    this->OutputTriangleArray = NULL;
+    this->OutputTriangleArray = nullptr;
   }
   if (this->OutputLines)
   {
     this->OutputLines->Delete();
-    this->OutputLines = NULL;
+    this->OutputLines = nullptr;
   }
 }
 
@@ -124,7 +125,7 @@ int vtkQuadricClustering::RequestData(
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
   // get the input and output
-  vtkPolyData *input = 0;
+  vtkPolyData *input = nullptr;
   if (inInfo)
   {
     input = vtkPolyData::SafeDownCast(
@@ -133,7 +134,7 @@ int vtkQuadricClustering::RequestData(
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
-  vtkTimerLog *tlog=NULL;
+  vtkTimerLog *tlog=nullptr;
 
   if (!input || (input->GetNumberOfPoints() == 0))
   {
@@ -205,7 +206,7 @@ int vtkQuadricClustering::RequestData(
 
   // Free up some memory.
   delete [] this->QuadricArray;
-  this->QuadricArray = NULL;
+  this->QuadricArray = nullptr;
 
   if ( this->Debug )
   {
@@ -269,13 +270,13 @@ void vtkQuadricClustering::StartAppend(double *bounds)
   if (this->OutputTriangleArray)
   {
     this->OutputTriangleArray->Delete();
-    this->OutputTriangleArray = NULL;
+    this->OutputTriangleArray = nullptr;
     //vtkWarningMacro("Array already created.  Did you call EndAppend?");
   }
   if (this->OutputLines)
   {
     this->OutputLines->Delete();
-    this->OutputLines = NULL;
+    this->OutputLines = nullptr;
     //vtkWarningMacro("Array already created.  Did you call EndAppend?");
   }
 
@@ -296,7 +297,7 @@ void vtkQuadricClustering::StartAppend(double *bounds)
     new vtkQuadricClustering::PointQuadric[this->NumberOfDivisions[0] *
                                           this->NumberOfDivisions[1] *
                                           this->NumberOfDivisions[2]];
-  if (this->QuadricArray == NULL)
+  if (this->QuadricArray == nullptr)
   {
     vtkErrorMacro("Could not allocate quadric grid.");
     return;
@@ -304,7 +305,7 @@ void vtkQuadricClustering::StartAppend(double *bounds)
 
   vtkInformation *inInfo = this->GetExecutive()->GetInputInformation(0, 0);
   vtkInformation *outInfo = this->GetExecutive()->GetOutputInformation(0);
-  vtkPolyData *input = 0;
+  vtkPolyData *input = nullptr;
   if (inInfo)
   {
     input = vtkPolyData::SafeDownCast(
@@ -329,7 +330,7 @@ void vtkQuadricClustering::Append(vtkPolyData *pd)
   vtkPoints *inputPoints = pd->GetPoints();
 
   // Check for mis-use of the Append methods.
-  if (this->OutputTriangleArray == NULL || this->OutputLines == NULL)
+  if (this->OutputTriangleArray == nullptr || this->OutputLines == nullptr)
   {
     vtkDebugMacro("Missing Array:  Did you call StartAppend?");
     return;
@@ -373,7 +374,7 @@ void vtkQuadricClustering::AddPolygons(vtkCellArray *polys, vtkPoints *points,
                                        int geometryFlag,
                                        vtkPolyData *input, vtkPolyData *output)
 {
-  vtkIdType *ptIds = 0;
+  vtkIdType *ptIds = nullptr;
   vtkIdType numPts = 0;
   double pts0[3], pts1[3], pts2[3];
   vtkIdType binIds[3];
@@ -414,7 +415,7 @@ void vtkQuadricClustering::AddStrips(vtkCellArray *strips, vtkPoints *points,
                                      int geometryFlag,
                                      vtkPolyData *input, vtkPolyData *output)
 {
-  vtkIdType *ptIds = 0;
+  vtkIdType *ptIds = nullptr;
   vtkIdType numPts = 0;
   double pts[3][3];
   vtkIdType binIds[3];
@@ -504,7 +505,7 @@ void vtkQuadricClustering::AddTriangle(vtkIdType *binIds, double *pt0, double *p
       this->InitializeQuadric(this->QuadricArray[binIds[i]].Quadric);
     }
     if (this->QuadricArray[binIds[i]].Dimension == 2)
-    { // Points and segments supercede triangles.
+    { // Points and segments supersede triangles.
       this->AddQuadric(binIds[i], quadric);
     }
   }
@@ -605,12 +606,12 @@ void vtkQuadricClustering::AddEdges(vtkCellArray *edges, vtkPoints *points,
                                     vtkPolyData *input, vtkPolyData *output)
 {
   vtkIdType numCells;
-  vtkIdType *ptIds = 0;
+  vtkIdType *ptIds = nullptr;
   vtkIdType numPts = 0;
   double pt0[3], pt1[3];
   vtkIdType binIds[2];
 
-  // Add the edges to the error fuction.
+  // Add the edges to the error function.
   numCells = edges->GetNumberOfCells();
   edges->InitTraversal();
   for (vtkIdType i = 0; i < numCells; ++i)
@@ -647,7 +648,7 @@ void vtkQuadricClustering::AddEdge(vtkIdType *binIds, double *pt0, double *pt1,
   vtkIdType edgePtIds[2];
   double length2, tmp;
   double d[3];
-  double m[3];  // The mid point of the segement.(p1 or p2 could be used also).
+  double m[3];  // The mid point of the segment.(p1 or p2 could be used also).
   double md;    // The dot product of m and d.
   double q[9];
 
@@ -658,7 +659,7 @@ void vtkQuadricClustering::AddEdge(vtkIdType *binIds, double *pt0, double *pt1,
   d[1] = pt1[1] - pt0[1];
   d[2] = pt1[2] - pt0[2];
 
-  // Compute the length^2 of the line segement.
+  // Compute the length^2 of the line segment.
   length2 = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
 
   if (length2 == 0.0)
@@ -711,7 +712,7 @@ void vtkQuadricClustering::AddEdge(vtkIdType *binIds, double *pt0, double *pt1,
       this->InitializeQuadric(this->QuadricArray[binIds[i]].Quadric);
     }
     if (this->QuadricArray[binIds[i]].Dimension == 1)
-    { // Points supercede segements.
+    { // Points supersede segments.
       this->AddQuadric(binIds[i], q);
     }
   }
@@ -749,7 +750,7 @@ void vtkQuadricClustering::AddVertices(vtkCellArray *verts, vtkPoints *points,
                                        vtkPolyData *output)
 {
   vtkIdType numCells;
-  vtkIdType *ptIds = 0;
+  vtkIdType *ptIds = nullptr;
   vtkIdType numPts = 0;
   double pt[3];
   vtkIdType binId;
@@ -828,7 +829,7 @@ void vtkQuadricClustering::AddVertex(vtkIdType binId, double *pt,
     this->InitializeQuadric(this->QuadricArray[binId].Quadric);
   }
   if (this->QuadricArray[binId].Dimension == 0)
-  { // Points supercede all other types of quadrics.
+  { // Points supersede all other types of quadrics.
     this->AddQuadric(binId, q);
   }
 
@@ -910,7 +911,7 @@ void vtkQuadricClustering::EndAppend()
 {
   vtkInformation *inInfo = this->GetExecutive()->GetInputInformation(0, 0);
   vtkInformation *outInfo = this->GetExecutive()->GetOutputInformation(0);
-  vtkPolyData *input = 0;
+  vtkPolyData *input = nullptr;
   if (inInfo)
   {
     input = vtkPolyData::SafeDownCast(
@@ -933,7 +934,7 @@ void vtkQuadricClustering::EndAppend()
   double cstep = 0;
 
   // Check for mis use of the Append methods.
-  if (this->OutputTriangleArray == NULL || this->OutputLines == NULL)
+  if (this->OutputTriangleArray == nullptr || this->OutputLines == nullptr)
   {
     vtkDebugMacro("Missing Array:  Did you call StartAppend?");
     return;
@@ -943,7 +944,7 @@ void vtkQuadricClustering::EndAppend()
   if ( this->PreventDuplicateCells )
   {
     delete this->CellSet;
-    this->CellSet = NULL;
+    this->CellSet = nullptr;
   }
 
   // Compute the representative points for each bin
@@ -975,24 +976,24 @@ void vtkQuadricClustering::EndAppend()
     output->SetPolys(this->OutputTriangleArray);
   }
   this->OutputTriangleArray->Delete();
-  this->OutputTriangleArray = NULL;
+  this->OutputTriangleArray = nullptr;
 
   if (this->OutputLines->GetNumberOfCells() > 0)
   {
     output->SetLines(this->OutputLines);
   }
   this->OutputLines->Delete();
-  this->OutputLines = NULL;
+  this->OutputLines = nullptr;
 
   this->EndAppendVertexGeometry(input, output);
 
-  // Tell the data is is up to date
+  // Tell the data it is up to date
   // (in case the user calls this method directly).
   output->DataHasBeenGenerated();
 
   // Free the quadric array.
   delete [] this->QuadricArray;
-  this->QuadricArray = NULL;
+  this->QuadricArray = nullptr;
 }
 
 
@@ -1244,13 +1245,13 @@ void vtkQuadricClustering::EndAppendUsingPoints(vtkPolyData *input,
   double       *q;
 
   inputPoints = input->GetPoints();
-  if (inputPoints == NULL)
+  if (inputPoints == nullptr)
   {
     return;
   }
 
   // Check for misuse of the Append methods.
-  if (this->OutputTriangleArray == NULL || this->OutputLines == NULL)
+  if (this->OutputTriangleArray == nullptr || this->OutputLines == nullptr)
   {
     vtkDebugMacro("Missing Array:  Did you call StartAppend?");
     return;
@@ -1260,7 +1261,7 @@ void vtkQuadricClustering::EndAppendUsingPoints(vtkPolyData *input,
   if ( this->PreventDuplicateCells )
   {
     delete this->CellSet;
-    this->CellSet = NULL;
+    this->CellSet = nullptr;
   }
 
   outputPoints = vtkPoints::New();
@@ -1315,19 +1316,19 @@ void vtkQuadricClustering::EndAppendUsingPoints(vtkPolyData *input,
   output->SetPoints(outputPoints);
   outputPoints->Delete();
   this->OutputTriangleArray->Delete();
-  this->OutputTriangleArray = NULL;
+  this->OutputTriangleArray = nullptr;
 
   if (this->OutputLines->GetNumberOfCells() > 0)
   {
     output->SetLines(this->OutputLines);
   }
   this->OutputLines->Delete();
-  this->OutputLines = NULL;
+  this->OutputLines = nullptr;
 
   this->EndAppendVertexGeometry(input, output);
 
   delete [] this->QuadricArray;
-  this->QuadricArray = NULL;
+  this->QuadricArray = nullptr;
 
   delete [] minError;
 }
@@ -1339,11 +1340,11 @@ void vtkQuadricClustering::EndAppendVertexGeometry(vtkPolyData *input,
                                                    vtkPolyData *output)
 {
   vtkCellArray *inVerts, *outVerts;
-  vtkIdType *tmp = NULL;
+  vtkIdType *tmp = nullptr;
   vtkIdType  tmpLength = 0;
   vtkIdType  tmpIdx;
   double pt[3];
-  vtkIdType *ptIds = 0;
+  vtkIdType *ptIds = nullptr;
   vtkIdType numPts = 0;
   vtkIdType outPtId;
   vtkIdType binId, cellId, outCellId;
@@ -1427,7 +1428,7 @@ void vtkQuadricClustering::AppendFeatureQuadrics(vtkPolyData *pd,
   }
 
   // Release data.
-  this->FeatureEdges->SetInputConnection(0, 0);
+  this->FeatureEdges->SetInputConnection(0, nullptr);
   this->FeatureEdges->GetOutput()->ReleaseData();
   input->Delete();
 }
@@ -1441,7 +1442,7 @@ void vtkQuadricClustering::FindFeaturePoints(vtkCellArray *edges,
                                              double vtkNotUsed(angle))
 {
   vtkIdType pointIds[2];
-  vtkIdType *cellPts = 0;
+  vtkIdType *cellPts = nullptr;
   vtkIdType numCellPts;
   vtkIdList *pointIdList = vtkIdList::New();
   vtkIdType numPts = edgePts->GetNumberOfPoints();

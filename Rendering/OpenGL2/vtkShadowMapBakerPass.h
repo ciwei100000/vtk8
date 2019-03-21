@@ -44,7 +44,7 @@
 #include "vtkRenderingOpenGL2Module.h" // For export macro
 #include "vtkSmartPointer.h" // for ivars
 #include <vector> // STL Header
-#include "vtkRenderPass.h"
+#include "vtkOpenGLRenderPass.h"
 
 class vtkOpenGLRenderWindow;
 class vtkInformationIntegerKey;
@@ -53,25 +53,25 @@ class vtkLight;
 class vtkOpenGLFramebufferObject;
 class vtkTextureObject;
 
-class VTKRENDERINGOPENGL2_EXPORT vtkShadowMapBakerPass : public vtkRenderPass
+class VTKRENDERINGOPENGL2_EXPORT vtkShadowMapBakerPass : public vtkOpenGLRenderPass
 {
 public:
   static vtkShadowMapBakerPass *New();
-  vtkTypeMacro(vtkShadowMapBakerPass,vtkRenderPass);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  vtkTypeMacro(vtkShadowMapBakerPass,vtkOpenGLRenderPass);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Perform rendering according to a render state \p s.
    * \pre s_exists: s!=0
    */
-  void Render(const vtkRenderState *s) VTK_OVERRIDE;
+  void Render(const vtkRenderState *s) override;
 
   /**
    * Release graphics resources and ask components to release their own
    * resources.
    * \pre w_exists: w!=0
    */
-  void ReleaseGraphicsResources(vtkWindow *w) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *w) override;
 
   //@{
   /**
@@ -167,7 +167,17 @@ public:
   /**
    * Destructor.
    */
-  ~vtkShadowMapBakerPass() VTK_OVERRIDE;
+  ~vtkShadowMapBakerPass() override;
+
+  // vtkOpenGLRenderPass virtuals:
+  bool PreReplaceShaderValues(std::string &vertexShader,
+                                   std::string &geometryShader,
+                                   std::string &fragmentShader,
+                                   vtkAbstractMapper *mapper,
+                                   vtkProp *prop) override;
+  bool SetShaderParameters(vtkShaderProgram *program,
+                          vtkAbstractMapper *mapper, vtkProp *prop,
+                          vtkOpenGLVertexArrayObject* VAO = nullptr) override;
 
   /**
    * Helper method to compute the mNearest point in a given direction.
@@ -229,10 +239,12 @@ public:
 
   vtkTimeStamp LastRenderTime;
   bool NeedUpdate;
+  size_t CurrentLightIndex;
+
 
 private:
-  vtkShadowMapBakerPass(const vtkShadowMapBakerPass&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkShadowMapBakerPass&) VTK_DELETE_FUNCTION;
+  vtkShadowMapBakerPass(const vtkShadowMapBakerPass&) = delete;
+  void operator=(const vtkShadowMapBakerPass&) = delete;
 };
 
 #endif

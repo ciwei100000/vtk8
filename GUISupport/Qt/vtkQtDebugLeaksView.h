@@ -29,8 +29,6 @@
 #include "vtkGUISupportQtModule.h" // For export macro
 #include <QWidget>
 
-#include "vtkConfigure.h" //for VTK_OVERRIDE
-
 class QModelIndex;
 class vtkObjectBase;
 class vtkQtDebugLeaksModel;
@@ -41,8 +39,8 @@ class VTKGUISUPPORTQT_EXPORT vtkQtDebugLeaksView : public QWidget
 
 public:
 
-  vtkQtDebugLeaksView(QWidget *p=0);
-  ~vtkQtDebugLeaksView() VTK_OVERRIDE;
+  vtkQtDebugLeaksView(QWidget *p=nullptr);
+  ~vtkQtDebugLeaksView() override;
 
   vtkQtDebugLeaksModel* model();
 

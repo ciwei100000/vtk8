@@ -29,6 +29,7 @@ class vtkInformationStringKey;
 class VTKIOGDAL_EXPORT vtkGDAL : public vtkObject
 {
  public:
+  vtkTypeMacro(vtkGDAL,vtkObject);
   // Key used to put GDAL map projection string in the output information
   // by readers.
   static vtkInformationStringKey* MAP_PROJECTION();
@@ -37,9 +38,9 @@ class VTKIOGDAL_EXPORT vtkGDAL : public vtkObject
 
  private:
   vtkGDAL();  // Static class
-  ~vtkGDAL();
-  vtkGDAL(const vtkGDAL&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGDAL&) VTK_DELETE_FUNCTION;
+  ~vtkGDAL() override;
+  vtkGDAL(const vtkGDAL&) = delete;
+  void operator=(const vtkGDAL&) = delete;
 };
 
 #endif // vtkGDAL_h

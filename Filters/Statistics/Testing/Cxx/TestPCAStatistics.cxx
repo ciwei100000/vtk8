@@ -23,11 +23,6 @@
 
 #include "vtksys/SystemTools.hxx"
 
-//=============================================================================
-// When changing this file, change the corresponding file in
-// StatisticsGnuR/Testing/Cxx as well.
-//=============================================================================
-
 // Perform a fuzzy compare of floats/doubles
 template<class A>
 bool fuzzyCompare(A a, A b) {
@@ -107,15 +102,15 @@ int TestPCARobust2()
   }
 
   vtkNew<vtkTable> datasetTable;
-  datasetTable->AddColumn( dataset1Arr.GetPointer() );
-  datasetTable->AddColumn( dataset2Arr.GetPointer() );
+  datasetTable->AddColumn( dataset1Arr );
+  datasetTable->AddColumn( dataset2Arr );
 
   // Set PCA statistics algorithm and its input data port
   vtkNew<vtkPCAStatistics> pcas;
 
   // Prepare first test with data
   pcas->SetInputData( vtkStatisticsAlgorithm::INPUT_DATA,
-    datasetTable.GetPointer() );
+    datasetTable );
   pcas->MedianAbsoluteDeviationOn();
 
   // -- Select Column Pairs of Interest ( Learn Mode ) --
@@ -475,14 +470,26 @@ int TestEigen()
     std::cout << "Eigenvector " << i << " : ";
     double* evec = new double[eigenvectors->GetNumberOfComponents()];
     eigenvectors->GetTuple(i, evec);
+    int iamax = 0;
+    double vamax = fabs(eigenvectorsGroundTruth[i][0]);
+    for(vtkIdType j = 1; j < eigenvectors->GetNumberOfComponents(); j++)
+    {
+      double tmp = fabs(eigenvectorsGroundTruth[i][j]);
+      if (tmp > vamax)
+      {
+        iamax = j;
+        vamax = tmp;
+      }
+    }
+    double factor = (vamax == eigenvectorsGroundTruth[i][iamax]) ? +1 : -1;
     for(vtkIdType j = 0; j < eigenvectors->GetNumberOfComponents(); j++)
     {
       std::cout << evec[j] << " ";
       vtkSmartPointer<vtkDoubleArray> eigenvectorSingle =
         vtkSmartPointer<vtkDoubleArray>::New();
       pcaStatistics->GetEigenvector(i, eigenvectorSingle);
-      if(!fuzzyCompare(eigenvectorsGroundTruth[i][j], evec[j]) ||
-         !fuzzyCompare(eigenvectorsGroundTruth[i][j], eigenvectorSingle->GetValue(j)) )
+      if(!fuzzyCompare(factor * eigenvectorsGroundTruth[i][j], evec[j]) ||
+         !fuzzyCompare(factor * eigenvectorsGroundTruth[i][j], eigenvectorSingle->GetValue(j)) )
       {
          std::cerr << "Eigenvectors do not match!" << std::endl;
          return EXIT_FAILURE;

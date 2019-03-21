@@ -29,14 +29,10 @@
 vtkStandardNewMacro(vtkFixedPointVolumeRayCastMIPHelper);
 
 // Construct a new vtkFixedPointVolumeRayCastMIPHelper with default values
-vtkFixedPointVolumeRayCastMIPHelper::vtkFixedPointVolumeRayCastMIPHelper()
-{
-}
+vtkFixedPointVolumeRayCastMIPHelper::vtkFixedPointVolumeRayCastMIPHelper() = default;
 
 // Destruct a vtkFixedPointVolumeRayCastMIPHelper - clean up any memory used
-vtkFixedPointVolumeRayCastMIPHelper::~vtkFixedPointVolumeRayCastMIPHelper()
-{
-}
+vtkFixedPointVolumeRayCastMIPHelper::~vtkFixedPointVolumeRayCastMIPHelper() = default;
 
 // This method is called when the interpolation type is nearest neighbor and
 // the data contains one component. In the inner loop we will compute the
@@ -717,7 +713,7 @@ void vtkFixedPointVolumeRayCastMIPHelper::GenerateImage(
         }
       }
     }
-    // Indepedent components (more than one)
+    // Independent components (more than one)
     else if ( vol->GetProperty()->GetIndependentComponents() )
     {
       switch ( scalarType )

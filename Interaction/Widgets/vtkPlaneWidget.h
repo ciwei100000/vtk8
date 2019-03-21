@@ -106,18 +106,18 @@ public:
   static vtkPlaneWidget *New();
 
   vtkTypeMacro(vtkPlaneWidget,vtkPolyDataSourceWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Methods that satisfy the superclass' API.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void PlaceWidget() VTK_OVERRIDE
+  void SetEnabled(int) override;
+  void PlaceWidget(double bounds[6]) override;
+  void PlaceWidget() override
     {this->Superclass::PlaceWidget();}
   void PlaceWidget(double xmin, double xmax, double ymin, double ymax,
-                   double zmin, double zmax) VTK_OVERRIDE
+                   double zmin, double zmax) override
     {this->Superclass::PlaceWidget(xmin,xmax,ymin,ymax,zmin,zmax);}
   //@}
 
@@ -135,7 +135,7 @@ public:
    */
   void SetOrigin(double x, double y, double z);
   void SetOrigin(double x[3]);
-  double* GetOrigin();
+  double* GetOrigin() VTK_SIZEHINT(3);
   void GetOrigin(double xyz[3]);
   //@}
 
@@ -145,7 +145,7 @@ public:
    */
   void SetPoint1(double x, double y, double z);
   void SetPoint1(double x[3]);
-  double* GetPoint1();
+  double* GetPoint1() VTK_SIZEHINT(3);
   void GetPoint1(double xyz[3]);
   //@}
 
@@ -155,7 +155,7 @@ public:
    */
   void SetPoint2(double x, double y, double z);
   void SetPoint2(double x[3]);
-  double* GetPoint2();
+  double* GetPoint2() VTK_SIZEHINT(3);
   void GetPoint2(double xyz[3]);
   //@}
 
@@ -165,7 +165,7 @@ public:
    */
   void SetCenter(double x, double y, double z);
   void SetCenter(double x[3]);
-  double* GetCenter();
+  double* GetCenter() VTK_SIZEHINT(3);
   void GetCenter(double xyz[3]);
   //@}
 
@@ -175,7 +175,7 @@ public:
    */
   void SetNormal(double x, double y, double z);
   void SetNormal(double x[3]);
-  double* GetNormal();
+  double* GetNormal() VTK_SIZEHINT(3);
   void GetNormal(double xyz[3]);
   //@}
 
@@ -207,15 +207,15 @@ public:
    * This can be used to snap the plane to the axes if it is originally
    * not aligned.
    */
-  vtkSetMacro(NormalToXAxis,int);
-  vtkGetMacro(NormalToXAxis,int);
-  vtkBooleanMacro(NormalToXAxis,int);
-  vtkSetMacro(NormalToYAxis,int);
-  vtkGetMacro(NormalToYAxis,int);
-  vtkBooleanMacro(NormalToYAxis,int);
-  vtkSetMacro(NormalToZAxis,int);
-  vtkGetMacro(NormalToZAxis,int);
-  vtkBooleanMacro(NormalToZAxis,int);
+  vtkSetMacro(NormalToXAxis,vtkTypeBool);
+  vtkGetMacro(NormalToXAxis,vtkTypeBool);
+  vtkBooleanMacro(NormalToXAxis,vtkTypeBool);
+  vtkSetMacro(NormalToYAxis,vtkTypeBool);
+  vtkGetMacro(NormalToYAxis,vtkTypeBool);
+  vtkBooleanMacro(NormalToYAxis,vtkTypeBool);
+  vtkSetMacro(NormalToZAxis,vtkTypeBool);
+  vtkGetMacro(NormalToZAxis,vtkTypeBool);
+  vtkBooleanMacro(NormalToZAxis,vtkTypeBool);
   //@}
 
   /**
@@ -243,13 +243,13 @@ public:
    * to have the initial placement follow suit.  Or, make changes after the
    * widget has been initialised and call UpdatePlacement() to realise.
    */
-  vtkPolyDataAlgorithm* GetPolyDataAlgorithm() VTK_OVERRIDE;
+  vtkPolyDataAlgorithm* GetPolyDataAlgorithm() override;
 
   /**
    * Satisfies superclass API.  This will change the state of the widget to
    * match changes that have been made to the underlying PolyDataSource
    */
-  void UpdatePlacement(void) VTK_OVERRIDE;
+  void UpdatePlacement(void) override;
 
   //@{
   /**
@@ -273,7 +273,7 @@ public:
 
 protected:
   vtkPlaneWidget();
-  ~vtkPlaneWidget() VTK_OVERRIDE;
+  ~vtkPlaneWidget() override;
 
   // Manage the state of the widget
   int State;
@@ -308,9 +308,9 @@ protected:
   void OnEndPinch();
 
   // controlling ivars
-  int NormalToXAxis;
-  int NormalToYAxis;
-  int NormalToZAxis;
+  vtkTypeBool NormalToXAxis;
+  vtkTypeBool NormalToYAxis;
+  vtkTypeBool NormalToZAxis;
   int Representation;
   void SelectRepresentation();
 
@@ -329,7 +329,7 @@ protected:
   void HandlesOn(double length);
   void HandlesOff();
   int HighlightHandle(vtkProp *prop); //returns cell id
-  void SizeHandles() VTK_OVERRIDE;
+  void SizeHandles() override;
 
   // the normal cone
   vtkActor          *ConeActor;
@@ -358,7 +358,7 @@ protected:
   vtkActor *CurrentHandle;
 
   // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  void RegisterPickers() override;
 
   // Methods to manipulate the hexahedron.
   void MoveOrigin(double *p1, double *p2);
@@ -391,8 +391,8 @@ protected:
   double HandleSizeFactor;
 
 private:
-  vtkPlaneWidget(const vtkPlaneWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPlaneWidget&) VTK_DELETE_FUNCTION;
+  vtkPlaneWidget(const vtkPlaneWidget&) = delete;
+  void operator=(const vtkPlaneWidget&) = delete;
 };
 
 #endif

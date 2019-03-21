@@ -24,20 +24,20 @@ class vtkBitArrayLookup
 public:
   vtkBitArrayLookup() : Rebuild(true)
   {
-    this->ZeroArray = NULL;
-    this->OneArray = NULL;
+    this->ZeroArray = nullptr;
+    this->OneArray = nullptr;
   }
   ~vtkBitArrayLookup()
   {
     if (this->ZeroArray)
     {
       this->ZeroArray->Delete();
-      this->ZeroArray = NULL;
+      this->ZeroArray = nullptr;
     }
     if (this->OneArray)
     {
       this->OneArray->Delete();
-      this->OneArray = NULL;
+      this->OneArray = nullptr;
     }
   }
   vtkIdList* ZeroArray;
@@ -51,19 +51,19 @@ vtkStandardNewMacro(vtkBitArray);
 // Instantiate object.
 vtkBitArray::vtkBitArray()
 {
-  this->Array = NULL;
+  this->Array = nullptr;
   this->TupleSize = 3;
   this->Tuple = new double[this->TupleSize]; //used for conversion
-  this->SaveUserArray = 0;
-  this->Lookup = NULL;
+  this->DeleteFunction = ::operator delete[];
+  this->Lookup = nullptr;
 }
 
 //----------------------------------------------------------------------------
 vtkBitArray::~vtkBitArray()
 {
-  if (!this->SaveUserArray)
+  if(this->DeleteFunction)
   {
-    delete [] this->Array;
+    this->DeleteFunction(this->Array);
   }
   delete [] this->Tuple;
   delete this->Lookup;
@@ -92,17 +92,18 @@ unsigned char *vtkBitArray::WritePointer(vtkIdType id, vtkIdType number)
 // from deleting the array when it cleans up or reallocates memory.
 // The class uses the actual array provided; it does not copy the data
 // from the supplied array.
-void vtkBitArray::SetArray(unsigned char* array, vtkIdType size, int save)
+void vtkBitArray::SetArray(unsigned char* array, vtkIdType size,
+                           int save, int deleteMethod)
 {
 
-  if ((this->Array) && (!this->SaveUserArray))
+  if ((this->Array) && (this->DeleteFunction))
   {
-      vtkDebugMacro (<< "Deleting the array...");
-      delete [] this->Array;
+    vtkDebugMacro (<< "Deleting the array...");
+    this->DeleteFunction(this->Array);
   }
   else
   {
-      vtkDebugMacro (<<"Warning, array not deleted, but will point to new array.");
+    vtkDebugMacro (<<"Warning, array not deleted, but will point to new array.");
   }
 
   vtkDebugMacro(<<"Setting array to: " << array);
@@ -110,8 +111,36 @@ void vtkBitArray::SetArray(unsigned char* array, vtkIdType size, int save)
   this->Array = array;
   this->Size = size;
   this->MaxId = size-1;
-  this->SaveUserArray = save;
+
+  if(save!=0)
+  {
+    this->DeleteFunction = nullptr;
+  }
+  else if(deleteMethod == VTK_DATA_ARRAY_DELETE ||
+          deleteMethod == VTK_DATA_ARRAY_USER_DEFINED)
+  {
+    this->DeleteFunction = ::operator delete[];
+  }
+  else if(deleteMethod == VTK_DATA_ARRAY_ALIGNED_FREE)
+  {
+#ifdef _WIN32
+    this->DeleteFunction = _aligned_free;
+#else
+    this->DeleteFunction = free;
+#endif
+  }
+  else if(deleteMethod == VTK_DATA_ARRAY_FREE)
+  {
+    this->DeleteFunction = free;
+  }
+
   this->DataChanged();
+}
+
+//-----------------------------------------------------------------------------
+void vtkBitArray::SetArrayFreeFunction(void (*callback)(void *))
+{
+  this->DeleteFunction = callback;
 }
 
 //----------------------------------------------------------------------------
@@ -127,20 +156,20 @@ int vtkBitArray::GetValue(vtkIdType id)
 
 //----------------------------------------------------------------------------
 // Allocate memory for this array. Delete old storage only if necessary.
-int vtkBitArray::Allocate(vtkIdType sz, vtkIdType vtkNotUsed(ext))
+vtkTypeBool vtkBitArray::Allocate(vtkIdType sz, vtkIdType vtkNotUsed(ext))
 {
   if ( sz > this->Size )
   {
-    if (!this->SaveUserArray)
+    if(this->DeleteFunction)
     {
-      delete [] this->Array;
+      this->DeleteFunction(this->Array);
     }
     this->Size = ( sz > 0 ? sz : 1);
-    if ( (this->Array = new unsigned char[(this->Size+7)/8]) == NULL )
+    if ( (this->Array = new unsigned char[(this->Size+7)/8]) == nullptr )
     {
       return 0;
     }
-    this->SaveUserArray = 0;
+    this->DeleteFunction = ::operator delete[];
   }
 
   this->MaxId = -1;
@@ -153,14 +182,14 @@ int vtkBitArray::Allocate(vtkIdType sz, vtkIdType vtkNotUsed(ext))
 // Release storage and reset array to initial state.
 void vtkBitArray::Initialize()
 {
-  if (!this->SaveUserArray)
+  if(this->DeleteFunction)
   {
-    delete [] this->Array;
+    this->DeleteFunction(this->Array);
   }
-  this->Array = NULL;
+  this->Array = nullptr;
   this->Size = 0;
   this->MaxId = -1;
-  this->SaveUserArray = 0;
+  this->DeleteFunction = ::operator delete[];
   this->DataChanged();
 }
 
@@ -168,8 +197,8 @@ void vtkBitArray::Initialize()
 // Deep copy of another bit array.
 void vtkBitArray::DeepCopy(vtkDataArray *ia)
 {
-  // Do nothing on a NULL input.
-  if (ia == NULL)
+  // Do nothing on a nullptr input.
+  if (ia == nullptr)
   {
     return;
   }
@@ -191,19 +220,20 @@ void vtkBitArray::DeepCopy(vtkDataArray *ia)
 
   if ( this != ia )
   {
-    if (!this->SaveUserArray)
+    if(this->DeleteFunction)
     {
-      delete [] this->Array;
+      this->DeleteFunction(this->Array);
     }
 
     this->NumberOfComponents = ia->GetNumberOfComponents();
     this->MaxId = ia->GetMaxId();
     this->Size = ia->GetSize();
-    this->SaveUserArray = 0;
+    this->DeleteFunction = ::operator delete[];
 
     this->Array = new unsigned char[(this->Size+7)/8];
     memcpy(this->Array, static_cast<unsigned char*>(ia->GetVoidPointer(0)),
            static_cast<size_t>((this->Size+7)/8)*sizeof(unsigned char));
+
   }
 }
 
@@ -246,13 +276,13 @@ unsigned char *vtkBitArray::ResizeAndExtend(vtkIdType sz)
   if (newSize <= 0)
   {
     this->Initialize();
-    return 0;
+    return nullptr;
   }
 
-  if ( (newArray = new unsigned char[(newSize+7)/8]) == NULL )
+  if ( (newArray = new unsigned char[(newSize+7)/8]) == nullptr )
   {
     vtkErrorMacro(<< "Cannot allocate memory\n");
-    return 0;
+    return nullptr;
   }
 
   if (this->Array)
@@ -261,9 +291,9 @@ unsigned char *vtkBitArray::ResizeAndExtend(vtkIdType sz)
 
     memcpy(newArray, this->Array,
          static_cast<size_t>((usedSize+7)/8)*sizeof(unsigned char));
-    if (!this->SaveUserArray)
+    if(this->DeleteFunction)
     {
-        delete[] this->Array;
+      this->DeleteFunction(this->Array);
     }
   }
 
@@ -273,14 +303,14 @@ unsigned char *vtkBitArray::ResizeAndExtend(vtkIdType sz)
   }
   this->Size = newSize;
   this->Array = newArray;
-  this->SaveUserArray = 0;
+  this->DeleteFunction = ::operator delete[];
   this->DataChanged();
 
   return this->Array;
 }
 
 //----------------------------------------------------------------------------
-int vtkBitArray::Resize(vtkIdType sz)
+vtkTypeBool vtkBitArray::Resize(vtkIdType sz)
 {
   unsigned char *newArray;
   vtkIdType newSize = sz*this->NumberOfComponents;
@@ -296,7 +326,7 @@ int vtkBitArray::Resize(vtkIdType sz)
     return 1;
   }
 
-  if ( (newArray = new unsigned char[(newSize+7)/8]) == NULL )
+  if ( (newArray = new unsigned char[(newSize+7)/8]) == nullptr )
   {
     vtkErrorMacro(<< "Cannot allocate memory\n");
     return 0;
@@ -308,9 +338,9 @@ int vtkBitArray::Resize(vtkIdType sz)
 
     memcpy(newArray, this->Array,
            static_cast<size_t>((usedSize+7)/8)*sizeof(unsigned char));
-    if (!this->SaveUserArray)
+    if (this->DeleteFunction)
     {
-        delete[] this->Array;
+      this->DeleteFunction(this->Array);
     }
   }
 
@@ -320,7 +350,7 @@ int vtkBitArray::Resize(vtkIdType sz)
   }
   this->Size = newSize;
   this->Array = newArray;
-  this->SaveUserArray = 0;
+  this->DeleteFunction = ::operator delete[];
   this->DataChanged();
 
   return 1;
@@ -740,5 +770,5 @@ void vtkBitArray::DataChanged()
 void vtkBitArray::ClearLookup()
 {
   delete this->Lookup;
-  this->Lookup = NULL;
+  this->Lookup = nullptr;
 }

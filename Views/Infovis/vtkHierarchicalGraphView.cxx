@@ -29,19 +29,15 @@
 
 vtkStandardNewMacro(vtkHierarchicalGraphView);
 //----------------------------------------------------------------------------
-vtkHierarchicalGraphView::vtkHierarchicalGraphView()
-{
-}
+vtkHierarchicalGraphView::vtkHierarchicalGraphView() = default;
 
 //----------------------------------------------------------------------------
-vtkHierarchicalGraphView::~vtkHierarchicalGraphView()
-{
-}
+vtkHierarchicalGraphView::~vtkHierarchicalGraphView() = default;
 
 //----------------------------------------------------------------------------
 vtkRenderedGraphRepresentation* vtkHierarchicalGraphView::GetGraphRepresentation()
 {
-  vtkRenderedHierarchyRepresentation* graphRep = 0;
+  vtkRenderedHierarchyRepresentation* graphRep = nullptr;
   for (int i = 0; i < this->GetNumberOfRepresentations(); ++i)
   {
     vtkDataRepresentation* rep = this->GetRepresentation(i);

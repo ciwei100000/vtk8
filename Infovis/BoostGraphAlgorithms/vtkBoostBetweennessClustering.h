@@ -40,7 +40,7 @@ class VTKINFOVISBOOSTGRAPHALGORITHMS_EXPORT vtkBoostBetweennessClustering :
 public:
   static vtkBoostBetweennessClustering* New();
   vtkTypeMacro(vtkBoostBetweennessClustering, vtkGraphAlgorithm);
-  void PrintSelf(ostream &os, vtkIndent indent);
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   vtkBoostBetweennessClustering();
   virtual ~vtkBoostBetweennessClustering();
@@ -87,9 +87,9 @@ protected:
 
   virtual int RequestData(vtkInformation* request,
                           vtkInformationVector** inputVector,
-                          vtkInformationVector* outputVector);
+                          vtkInformationVector* outputVector) override;
 
-  virtual int FillOutputPortInformation(int port, vtkInformation* info);
+  virtual int FillOutputPortInformation(int port, vtkInformation* info) override;
 
 
 private:
@@ -100,8 +100,8 @@ private:
   char*   EdgeWeightArrayName;
   char*   EdgeCentralityArrayName;
 
-  vtkBoostBetweennessClustering(const vtkBoostBetweennessClustering&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoostBetweennessClustering&) VTK_DELETE_FUNCTION;
+  vtkBoostBetweennessClustering(const vtkBoostBetweennessClustering&) = delete;
+  void operator=(const vtkBoostBetweennessClustering&) = delete;
 };
 
 #endif // vtkBoostBetweennessClustering_h

@@ -49,9 +49,7 @@ vtkWarpScalar::vtkWarpScalar()
 }
 
 //----------------------------------------------------------------------------
-vtkWarpScalar::~vtkWarpScalar()
-{
-}
+vtkWarpScalar::~vtkWarpScalar() = default;
 
 //----------------------------------------------------------------------------
 double *vtkWarpScalar::DataNormal(vtkIdType id, vtkDataArray *normals)
@@ -100,7 +98,7 @@ int vtkWarpScalar::RequestDataObject(vtkInformation *request,
     {
       vtkNew<vtkStructuredGrid> newOutput;
       outputVector->GetInformationObject(0)->Set(
-        vtkDataObject::DATA_OBJECT(), newOutput.GetPointer());
+        vtkDataObject::DATA_OBJECT(), newOutput);
     }
     return 1;
   }

@@ -39,13 +39,11 @@ vtkArcParallelEdgeStrategy::vtkArcParallelEdgeStrategy()
   this->NumberOfSubdivisions = 10;
 }
 
-vtkArcParallelEdgeStrategy::~vtkArcParallelEdgeStrategy()
-{
-}
+vtkArcParallelEdgeStrategy::~vtkArcParallelEdgeStrategy() = default;
 
 void vtkArcParallelEdgeStrategy::Layout()
 {
-  bool directed = vtkDirectedGraph::SafeDownCast(this->Graph) != 0;
+  bool directed = vtkDirectedGraph::SafeDownCast(this->Graph) != nullptr;
   std::map<std::pair<vtkIdType, vtkIdType>, int> edgeCount;
   std::map<std::pair<vtkIdType, vtkIdType>, int> edgeNumber;
   std::vector<vtkEdgeType> edgeVector(this->Graph->GetNumberOfEdges());

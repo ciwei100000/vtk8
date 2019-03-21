@@ -41,11 +41,11 @@ vtkAxisActor2D::vtkAxisActor2D()
 
   this->Position2Coordinate->SetCoordinateSystemToNormalizedViewport();
   this->Position2Coordinate->SetValue(0.75, 0.0);
-  this->Position2Coordinate->SetReferenceCoordinate(NULL);
+  this->Position2Coordinate->SetReferenceCoordinate(nullptr);
 
   this->NumberOfLabels = 5;
 
-  this->Title = NULL;
+  this->Title = nullptr;
 
   this->TitlePosition = 0.5;
 
@@ -63,6 +63,7 @@ vtkAxisActor2D::vtkAxisActor2D()
   this->LabelFactor = 0.75;
 
   this->SizeFontRelativeToAxis = 0;
+  this->UseFontSizeFromProperty = 0;
 
   this->RulerMode = 0;
   this->RulerDistance = 1.0;
@@ -116,15 +117,15 @@ vtkAxisActor2D::vtkAxisActor2D()
 vtkAxisActor2D::~vtkAxisActor2D()
 {
   delete [] this->LabelFormat;
-  this->LabelFormat = NULL;
+  this->LabelFormat = nullptr;
 
   this->TitleMapper->Delete();
   this->TitleActor->Delete();
 
   delete [] this->Title;
-  this->Title = NULL;
+  this->Title = nullptr;
 
-  if (this->LabelMappers != NULL )
+  if (this->LabelMappers != nullptr )
   {
     for (int i=0; i < VTK_MAX_LABELS; i++)
     {
@@ -139,8 +140,8 @@ vtkAxisActor2D::~vtkAxisActor2D()
   this->AxisMapper->Delete();
   this->AxisActor->Delete();
 
-  this->SetLabelTextProperty(NULL);
-  this->SetTitleTextProperty(NULL);
+  this->SetLabelTextProperty(nullptr);
+  this->SetTitleTextProperty(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -153,7 +154,7 @@ int vtkAxisActor2D::RenderOpaqueGeometry(vtkViewport *viewport)
   this->BuildAxis(viewport);
 
   // Everything is built, just have to render
-  if ( this->Title != NULL && this->Title[0] != 0 && this->TitleVisibility )
+  if ( this->Title != nullptr && this->Title[0] != 0 && this->TitleVisibility )
   {
     renderedSomething += this->TitleActor->RenderOpaqueGeometry(viewport);
   }
@@ -183,7 +184,7 @@ int vtkAxisActor2D::RenderOverlay(vtkViewport *viewport)
   int i, renderedSomething=0;
 
   // Everything is built, just have to render
-  if ( this->Title != NULL && this->Title[0] != 0 && this->TitleVisibility )
+  if ( this->Title != nullptr && this->Title[0] != 0 && this->TitleVisibility )
   {
     renderedSomething += this->TitleActor->RenderOverlay(viewport);
   }
@@ -207,7 +208,7 @@ int vtkAxisActor2D::RenderOverlay(vtkViewport *viewport)
 //-----------------------------------------------------------------------------
 // Description:
 // Does this prop have some translucent polygonal geometry?
-int vtkAxisActor2D::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkAxisActor2D::HasTranslucentPolygonalGeometry()
 {
   return 0;
 }
@@ -604,7 +605,7 @@ void vtkAxisActor2D::BuildAxis(vtkViewport *viewport)
   } // If labels visible
 
   // Now build the title
-  if (this->Title != NULL && this->Title[0] != 0 && this->TitleVisibility)
+  if (this->Title != nullptr && this->Title[0] != 0 && this->TitleVisibility)
   {
     this->TitleMapper->SetInput(this->Title);
 
@@ -623,15 +624,22 @@ void vtkAxisActor2D::BuildAxis(vtkViewport *viewport)
     if (positionsHaveChanged || viewportSizeHasChanged ||
         this->TitleTextProperty->GetMTime() > this->BuildTime)
     {
-      if ( ! this->SizeFontRelativeToAxis )
+      if ( ! this->UseFontSizeFromProperty )
       {
-        vtkTextMapper::SetRelativeFontSize(this->TitleMapper, viewport, size, stringSize, 0.015*this->FontFactor);
+        if ( ! this->SizeFontRelativeToAxis )
+        {
+          vtkTextMapper::SetRelativeFontSize(this->TitleMapper, viewport, size, stringSize, 0.015*this->FontFactor);
+        }
+        else
+        {
+          this->TitleMapper->SetConstrainedFontSize(viewport,
+                                                    static_cast<int>(0.33*len),
+                                                    static_cast<int>(0.2*len) );
+          this->TitleMapper->GetSize(viewport, stringSize);
+        }
       }
       else
       {
-        this->TitleMapper->SetConstrainedFontSize(viewport,
-                                                  static_cast<int>(0.33*len),
-                                                  static_cast<int>(0.2*len) );
         this->TitleMapper->GetSize(viewport, stringSize);
       }
     }
@@ -921,7 +929,7 @@ double vtkAxisActor2D::ComputeStringOffset(double width, double height,
 void vtkAxisActor2D::ShallowCopy(vtkProp *prop)
 {
   vtkAxisActor2D *a = vtkAxisActor2D::SafeDownCast(prop);
-  if ( a != NULL )
+  if ( a != nullptr )
   {
     this->SetRange(a->GetRange());
     this->SetNumberOfLabels(a->GetNumberOfLabels());

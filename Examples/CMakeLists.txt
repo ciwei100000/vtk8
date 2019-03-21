@@ -1,8 +1,4 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
-if(POLICY CMP0020)
-  cmake_policy(SET CMP0020 NEW)
-endif()
-
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
 
 PROJECT(VTKExamples)
 include_regular_expression("^.*$")
@@ -26,13 +22,13 @@ else()
       if (NOT VTK_RENDERING_BACKEND STREQUAL "None")
         add_subdirectory(AMR/Cxx)
         add_subdirectory(ImageProcessing/Cxx)
+        add_subdirectory(IO/Cxx)
         add_subdirectory(Medical/Cxx)
         add_subdirectory(Modelling/Cxx)
         add_subdirectory(MultiBlock/Cxx)
         add_subdirectory(VisualizationAlgorithms/Cxx)
         add_subdirectory(Widgets/Cxx)
       endif ()
-      add_subdirectory(IO/Cxx)
     endif()
 
     if (NOT VTK_RENDERING_BACKEND STREQUAL "None")
@@ -48,12 +44,10 @@ else()
       add_subdirectory(VolumeRendering/Cxx)
     endif ()
 
-    if(VTK_RENDERING_BACKEND STREQUAL "OpenGL" AND vtkTestingCore_LOADED)
-      add_subdirectory(LIC/Cxx)
+    if(vtkParallelMPI_LOADED AND vtkRenderingParallel_LOADED)
+      add_subdirectory(ParallelProcessing/Generic)
     endif()
- if(vtkParallelMPI_LOADED AND vtkRenderingParallel_LOADED)
-  add_subdirectory(ParallelProcessing/Generic)
- endif()
+
     # This may have been already built as part of the VTK build.
     # If so we cannot create the target "vtkLocalExample" because
     # an imported target of the same name already exists in the
@@ -72,12 +66,12 @@ else()
    if (NOT VTK_RENDERING_BACKEND STREQUAL "None")
      add_subdirectory(Infovis/Cxx)
    endif ()
-#  add_subdirectory(GUI/Motif)
+
+   if (vtkChartsCore_LOADED)
+    add_subdirectory(Charts/Cxx)
+   endif()
 #
 #  IF(VTK_USE_INFOVIS)
-#    IF(VTK_USE_CHARTS)
-#      add_subdirectory(Charts/Cxx)
-#    ENDIF()
 #    IF(VTK_USE_N_WAY_ARRAYS)
 #      add_subdirectory(Array/Cxx)
 #    ENDIF()

@@ -77,7 +77,7 @@ public:
    * Standard methods for type information and printing.
    */
   vtkTypeMacro(vtkSpiderPlotActor,vtkActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -118,9 +118,9 @@ public:
   /**
    * Enable/Disable the display of a plot title.
    */
-  vtkSetMacro(TitleVisibility, int);
-  vtkGetMacro(TitleVisibility, int);
-  vtkBooleanMacro(TitleVisibility, int);
+  vtkSetMacro(TitleVisibility, vtkTypeBool);
+  vtkGetMacro(TitleVisibility, vtkTypeBool);
+  vtkBooleanMacro(TitleVisibility, vtkTypeBool);
   //@}
 
   //@{
@@ -143,9 +143,9 @@ public:
   // of each radial axis on the circumference of the spider plot. The label
   // text strings are derived from the names of the data object arrays
   // associated with the input.
-  vtkSetMacro(LabelVisibility, int);
-  vtkGetMacro(LabelVisibility, int);
-  vtkBooleanMacro(LabelVisibility, int);
+  vtkSetMacro(LabelVisibility, vtkTypeBool);
+  vtkGetMacro(LabelVisibility, vtkTypeBool);
+  vtkBooleanMacro(LabelVisibility, vtkTypeBool);
 
   //@{
   /**
@@ -201,9 +201,9 @@ public:
    * be created automatically unless the per plot legend symbol has been
    * set.
    */
-  vtkSetMacro(LegendVisibility, int);
-  vtkGetMacro(LegendVisibility, int);
-  vtkBooleanMacro(LegendVisibility, int);
+  vtkSetMacro(LegendVisibility, vtkTypeBool);
+  vtkGetMacro(LegendVisibility, vtkTypeBool);
+  vtkBooleanMacro(LegendVisibility, vtkTypeBool);
   //@}
 
   //@{
@@ -218,39 +218,39 @@ public:
   /**
    * Draw the spider plot.
    */
-  int RenderOverlay(vtkViewport*) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport* ) VTK_OVERRIDE {return 0;}
+  int RenderOverlay(vtkViewport*) override;
+  int RenderOpaqueGeometry(vtkViewport*) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport* ) override {return 0;}
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
   /**
    * Release any graphics resources that are being consumed by this actor.
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
 protected:
   vtkSpiderPlotActor();
-  ~vtkSpiderPlotActor() VTK_OVERRIDE;
+  ~vtkSpiderPlotActor() override;
 
 private:
 
   vtkSpiderPlotActorConnection* ConnectionHolder;
 
   int IndependentVariables;    // Use column or row
-  int TitleVisibility;         // Should I see the title?
+  vtkTypeBool TitleVisibility;         // Should I see the title?
   char *Title;                 // The title string
   vtkTextProperty *TitleTextProperty;
-  int LabelVisibility;
+  vtkTypeBool LabelVisibility;
   vtkTextProperty *LabelTextProperty;
   vtkAxisLabelArray *Labels;
-  int LegendVisibility;
+  vtkTypeBool LegendVisibility;
   vtkLegendBoxActor *LegendActor;
   vtkGlyphSource2D *GlyphSource;
   int NumberOfRings;
@@ -291,8 +291,8 @@ private:
   int BuildPlot(vtkViewport*);
 
 private:
-  vtkSpiderPlotActor(const vtkSpiderPlotActor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSpiderPlotActor&) VTK_DELETE_FUNCTION;
+  vtkSpiderPlotActor(const vtkSpiderPlotActor&) = delete;
+  void operator=(const vtkSpiderPlotActor&) = delete;
 };
 
 

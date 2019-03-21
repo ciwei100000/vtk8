@@ -17,7 +17,9 @@
  * @brief   A utility class used by various contour filters
  *
  *  This is a simple utility class that can be used by various contour filters to
- *  produce either triangles or polygons based on the outputTriangles parameter
+ *  produce either triangles and/or polygons based on the outputTriangles parameter
+ *  When working with multidimensional dataset, it is needed to process cells
+ *  from low to high dimensions.
  * @sa
  * vtkContourGrid vtkCutter vtkContourFilter
 */
@@ -54,8 +56,8 @@ public:
   void Contour(vtkCell* cell, double value, vtkDataArray *cellScalars, vtkIdType cellId);
 
  private:
-  vtkContourHelper(const vtkContourHelper&) VTK_DELETE_FUNCTION;
-  vtkContourHelper& operator=(const vtkContourHelper&) VTK_DELETE_FUNCTION;
+  vtkContourHelper(const vtkContourHelper&) = delete;
+  vtkContourHelper& operator=(const vtkContourHelper&) = delete;
 
   vtkIncrementalPointLocator* Locator;
   vtkCellArray* Verts;

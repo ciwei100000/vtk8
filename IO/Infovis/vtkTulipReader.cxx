@@ -59,14 +59,14 @@ vtkStandardNewMacro(vtkTulipReader);
 vtkTulipReader::vtkTulipReader()
 {
   // Default values for the origin vertex
-  this->FileName = 0;
+  this->FileName = nullptr;
   this->SetNumberOfInputPorts(0);
   this->SetNumberOfOutputPorts(2);
 }
 
 vtkTulipReader::~vtkTulipReader()
 {
-  this->SetFileName(0);
+  this->SetFileName(nullptr);
 }
 
 void vtkTulipReader::PrintSelf(std::ostream& os, vtkIndent indent)
@@ -199,7 +199,7 @@ int vtkTulipReader::RequestData(
   vtkInformationVector **vtkNotUsed(inputVector),
   vtkInformationVector *outputVector)
 {
-  if (this->FileName == NULL)
+  if (this->FileName == nullptr)
   {
     vtkErrorMacro("File name undefined");
     return 0;
@@ -364,7 +364,7 @@ int vtkTulipReader::RequestData(
       // int : This type is used to store integers on elements.
       // size : This type is used to store the size of elements.
       //   The size is defined with a sequence of three double.
-      //   "(width,heigth,depth)"
+      //   "(width,height,depth)"
       // string : This is used to store text on elements.
 
       if (type == "string")

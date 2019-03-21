@@ -85,11 +85,11 @@ struct ArrayPair : public BaseArrayPair
     BaseArrayPair(num,numComp,outArray), Input(in), Output(out), NullValue(null)
   {
   }
-  ~ArrayPair() VTK_OVERRIDE  //calm down some finicky compilers
+  ~ArrayPair() override  //calm down some finicky compilers
   {
   }
 
-  void Copy(vtkIdType inId, vtkIdType outId) VTK_OVERRIDE
+  void Copy(vtkIdType inId, vtkIdType outId) override
   {
     for (int j=0; j < this->NumComp; ++j)
     {
@@ -98,7 +98,7 @@ struct ArrayPair : public BaseArrayPair
   }
 
   void Interpolate(int numWeights, const vtkIdType *ids,
-                           const double *weights, vtkIdType outId) VTK_OVERRIDE
+                           const double *weights, vtkIdType outId) override
   {
     for (int j=0; j < this->NumComp; ++j)
     {
@@ -111,7 +111,7 @@ struct ArrayPair : public BaseArrayPair
     }
   }
 
-  void InterpolateEdge(vtkIdType v0, vtkIdType v1, double t, vtkIdType outId) VTK_OVERRIDE
+  void InterpolateEdge(vtkIdType v0, vtkIdType v1, double t, vtkIdType outId) override
   {
     double v;
     vtkIdType numComp=this->NumComp;
@@ -123,7 +123,7 @@ struct ArrayPair : public BaseArrayPair
     }
   }
 
-  void AssignNullValue(vtkIdType outId) VTK_OVERRIDE
+  void AssignNullValue(vtkIdType outId) override
   {
     for (int j=0; j < this->NumComp; ++j)
     {
@@ -131,7 +131,7 @@ struct ArrayPair : public BaseArrayPair
     }
   }
 
-  void Realloc(vtkIdType sze) VTK_OVERRIDE
+  void Realloc(vtkIdType sze) override
   {
       this->OutputArray->WriteVoidPointer(0,sze*this->NumComp);
       this->Output = static_cast<T*>(this->OutputArray->GetVoidPointer(0));
@@ -152,11 +152,11 @@ struct RealArrayPair : public BaseArrayPair
     BaseArrayPair(num,numComp,outArray), Input(in), Output(out), NullValue(null)
   {
   }
-  ~RealArrayPair() VTK_OVERRIDE  //calm down some finicky compilers
+  ~RealArrayPair() override  //calm down some finicky compilers
   {
   }
 
-  void Copy(vtkIdType inId, vtkIdType outId) VTK_OVERRIDE
+  void Copy(vtkIdType inId, vtkIdType outId) override
   {
     for (int j=0; j < this->NumComp; ++j)
     {
@@ -165,7 +165,7 @@ struct RealArrayPair : public BaseArrayPair
   }
 
   void Interpolate(int numWeights, const vtkIdType *ids,
-                           const double *weights, vtkIdType outId) VTK_OVERRIDE
+                           const double *weights, vtkIdType outId) override
   {
     for (int j=0; j < this->NumComp; ++j)
     {
@@ -178,7 +178,7 @@ struct RealArrayPair : public BaseArrayPair
     }
   }
 
-  void InterpolateEdge(vtkIdType v0, vtkIdType v1, double t, vtkIdType outId) VTK_OVERRIDE
+  void InterpolateEdge(vtkIdType v0, vtkIdType v1, double t, vtkIdType outId) override
   {
     double v;
     vtkIdType numComp=this->NumComp;
@@ -190,7 +190,7 @@ struct RealArrayPair : public BaseArrayPair
     }
   }
 
-  void AssignNullValue(vtkIdType outId) VTK_OVERRIDE
+  void AssignNullValue(vtkIdType outId) override
   {
     for (int j=0; j < this->NumComp; ++j)
     {
@@ -198,7 +198,7 @@ struct RealArrayPair : public BaseArrayPair
     }
   }
 
-  void Realloc(vtkIdType sze) VTK_OVERRIDE
+  void Realloc(vtkIdType sze) override
   {
       this->OutputArray->WriteVoidPointer(0,sze*this->NumComp);
       this->Output = static_cast<TOutput*>(this->OutputArray->GetVoidPointer(0));
@@ -224,7 +224,7 @@ struct ArrayList
   // Add the arrays to interpolate here (from attribute data)
   void AddArrays(vtkIdType numOutPts, vtkDataSetAttributes *inPD,
                  vtkDataSetAttributes *outPD, double nullValue=0.0,
-                 bool promote=true);
+                 vtkTypeBool promote=true);
 
   // Add an array that interpolates from its own attribute values
   void AddSelfInterpolatingArrays(vtkIdType numOutPts, vtkDataSetAttributes *attr,
@@ -234,12 +234,13 @@ struct ArrayList
   // if any. No array may be created if \c inArray was previously marked as
   // excluded using ExcludeArray().
   vtkDataArray* AddArrayPair(vtkIdType numTuples, vtkDataArray *inArray,
-                             vtkStdString &outArrayName, double nullValue, bool promote);
+                             vtkStdString &outArrayName, double nullValue,
+                             vtkTypeBool promote);
 
   // Any array excluded here is not added by AddArrays() or AddArrayPair, hence not
   // processed. Also check whether an array is excluded.
   void ExcludeArray(vtkDataArray *da);
-  bool IsExcluded(vtkDataArray *da);
+  vtkTypeBool IsExcluded(vtkDataArray *da);
 
   // Loop over the array pairs and copy data from one to another
   void Copy(vtkIdType inId, vtkIdType outId)

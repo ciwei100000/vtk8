@@ -30,14 +30,13 @@ vtkStandardNewMacro(vtkGeoImageNode);
 //----------------------------------------------------------------------------
 vtkGeoImageNode::vtkGeoImageNode()
 {
+  VTK_LEGACY_BODY(vtkGeoImageNode::vtkGeoImageNode, "VTK 8.2");
   this->Image = vtkSmartPointer<vtkImageData>::New();
   this->Texture = vtkSmartPointer<vtkTexture>::New();
 }
 
 //-----------------------------------------------------------------------------
-vtkGeoImageNode::~vtkGeoImageNode()
-{
-}
+vtkGeoImageNode::~vtkGeoImageNode() = default;
 
 //-----------------------------------------------------------------------------
 void vtkGeoImageNode::PrintSelf(ostream& os, vtkIndent indent)
@@ -75,7 +74,7 @@ vtkGeoImageNode* vtkGeoImageNode::GetChild(int idx)
   if (idx < 0 || idx > 3)
   {
     vtkErrorMacro("Index out of range.");
-    return 0;
+    return nullptr;
   }
   return vtkGeoImageNode::SafeDownCast(this->Children[idx]);
 }
@@ -91,14 +90,14 @@ vtkGeoImageNode* vtkGeoImageNode::GetParent()
 // We have to get a power of 2 for dimensions of the image.  VTK
 // resamples every time a tile is selected anr changed otherwise.
 //
-// We have two choises for dealing with images.
+// We have two choices for dealing with images.
 //
 // 1: Treat pixels like cell data.
 //   This makes subsampling easy.  Simply use vtkImageShrink3D.
 //   Tile images do not overlap.
 //   Difficult:
 //   Texture mapping is point data.  TCoords have to be extended half a pixel.
-//   vtkImageData is point data.  Have to handle meta data extenal to object.
+//   vtkImageData is point data.  Have to handle meta data external to object.
 //   Interpolated texture map will have seams between tiles.
 // 2: Treat pixels like point data.
 //   We would need a new shrink filter that uses a 3x3 kernel.
@@ -155,7 +154,7 @@ void vtkGeoImageNode::CropImageForTile(
     ext[2] = wholeExt[2];
   }
 
-  if (this->Image == 0)
+  if (this->Image == nullptr)
   {
     this->Image = vtkSmartPointer<vtkImageData>::New();
   }
@@ -232,7 +231,7 @@ void vtkGeoImageNode::ShallowCopy(vtkGeoTreeNode *src)
 {
   vtkGeoImageNode *imageNode = vtkGeoImageNode::SafeDownCast(src);
 
-  if(imageNode != NULL)
+  if(imageNode != nullptr)
   {
     this->Image = imageNode->Image;
     this->Texture = imageNode->Texture;
@@ -245,13 +244,13 @@ void vtkGeoImageNode::DeepCopy(vtkGeoTreeNode *src)
 {
   vtkGeoImageNode *imageNode = vtkGeoImageNode::SafeDownCast(src);
 
-  if(imageNode != NULL)
+  if(imageNode != nullptr)
   {
     vtkImageData * image = vtkImageData::New();
     image->DeepCopy(imageNode->Image);
     this->SetImage(image);
     image->Delete();
-    image = NULL;
+    image = nullptr;
 
     this->Texture = imageNode->Texture;
   }
@@ -261,12 +260,12 @@ void vtkGeoImageNode::DeepCopy(vtkGeoTreeNode *src)
 //-----------------------------------------------------------------------------
 bool vtkGeoImageNode::HasData()
 {
-  return (this->Image != 0);
+  return (this->Image != nullptr);
 }
 
 //-----------------------------------------------------------------------------
 void vtkGeoImageNode::DeleteData()
 {
-  this->Image = 0;
-  this->Texture = 0;
+  this->Image = nullptr;
+  this->Texture = nullptr;
 }

@@ -1,11 +1,17 @@
+set(Deprecated_DEPS)
+
+if(NOT VTK_LEGACY_REMOVE)
+  list(APPEND Deprecated_DEPS vtkViewsGeovis)
+endif()
+
 vtk_module(vtkGeovisCore
   GROUPS
     Rendering
   TEST_DEPENDS
-    vtkViewsGeovis
+    ${Deprecated_DEPS}
     vtkViewsInfovis
     vtkRenderingCore
-    vtkRendering${VTK_RENDERING_BACKEND}
+    vtkRenderingOpenGL2
     vtkTestingRendering
     vtkInteractionStyle
   DEPENDS
@@ -18,7 +24,7 @@ vtk_module(vtkGeovisCore
     vtkInteractionWidgets
     vtkRenderingCore
     vtkViewsCore
-    vtklibproj4
+    vtklibproj
   PRIVATE_DEPENDS
     vtkCommonSystem
     vtkFiltersCore

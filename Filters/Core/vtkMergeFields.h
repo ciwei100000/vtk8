@@ -16,7 +16,7 @@
  * @class   vtkMergeFields
  * @brief   Merge multiple fields into one.
  *
- * vtkMergeFields is used to merge mutliple field into one.
+ * vtkMergeFields is used to merge multiple field into one.
  * The new field is put in the same field data as the original field.
  * For example
  * @verbatim
@@ -27,14 +27,6 @@
  * @endverbatim
  * will tell vtkMergeFields to use the 2nd component of array1 and
  * the 1st component of array2 to create a 2 component field called foo.
- * The same can be done using Tcl:
- * @verbatim
- * mf SetOutputField foo POINT_DATA
- * mf Merge 0 array1 1
- * mf Merge 1 array2 0
- *
- * Field locations: DATA_OBJECT, POINT_DATA, CELL_DATA
- * @endverbatim
  *
  * @sa
  * vtkFieldData vtkDataSet vtkDataObjectToDataSetFilter
@@ -55,7 +47,7 @@ class VTKFILTERSCORE_EXPORT vtkMergeFields : public vtkDataSetAlgorithm
 {
 public:
   vtkTypeMacro(vtkMergeFields,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Create a new vtkMergeFields.
@@ -105,15 +97,19 @@ public:
     void SetName(const char* name)
     {
         delete[] this->FieldName;
-        this->FieldName = 0;
+        this->FieldName = nullptr;
         if (name)
         {
           size_t len = strlen(name)+1;
           this->FieldName = new char[len];
+#ifdef _MSC_VER
+          strncpy_s(this->FieldName, len, name, len - 1);
+#else
           strncpy(this->FieldName, name, len);
+#endif
         }
     }
-    Component() { FieldName = 0; }
+    Component() { FieldName = nullptr; }
     ~Component() { delete[] FieldName; }
   };
 
@@ -126,9 +122,9 @@ protected:
   };
 
   vtkMergeFields();
-  ~vtkMergeFields() VTK_OVERRIDE;
+  ~vtkMergeFields() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   char* FieldName;
   int FieldLocation;
@@ -156,8 +152,8 @@ protected:
   void PrintComponent(Component* op, ostream& os, vtkIndent indent);
   void PrintAllComponents(ostream& os, vtkIndent indent);
 private:
-  vtkMergeFields(const vtkMergeFields&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMergeFields&) VTK_DELETE_FUNCTION;
+  vtkMergeFields(const vtkMergeFields&) = delete;
+  void operator=(const vtkMergeFields&) = delete;
 };
 
 #endif

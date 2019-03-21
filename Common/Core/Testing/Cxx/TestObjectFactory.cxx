@@ -28,33 +28,29 @@ class vtkTestPoints : public vtkPoints
 {
 public:
   // Methods from vtkObject
-  ~vtkTestPoints() VTK_OVERRIDE
-  {
-  }
+  ~vtkTestPoints() override = default;
 
   vtkTypeMacro(vtkTestPoints,vtkPoints);
   static vtkTestPoints* New() { VTK_STANDARD_NEW_BODY(vtkTestPoints) }
-  vtkTestPoints() {  }
+  vtkTestPoints() = default;
 private:
-  vtkTestPoints(const vtkTestPoints&);
-  void operator=(const vtkTestPoints&);
+  vtkTestPoints(const vtkTestPoints&) = delete;
+  vtkTestPoints& operator=(const vtkTestPoints&) = delete;
 };
 
 
 class vtkTestPoints2 : public vtkPoints
 {
 public:
-  ~vtkTestPoints2() VTK_OVERRIDE
-  {
-  }
+  ~vtkTestPoints2() override = default;
 
   // Methods from vtkObject
   vtkTypeMacro(vtkTestPoints2,vtkPoints);
   static vtkTestPoints2* New() { VTK_STANDARD_NEW_BODY(vtkTestPoints2) }
-  vtkTestPoints2() { }
+  vtkTestPoints2() = default;
 private:
-  vtkTestPoints2(const vtkTestPoints2&);
-  void operator=(const vtkTestPoints2&);
+  vtkTestPoints2(const vtkTestPoints2&) = delete;
+  vtkTestPoints2& operator=(const vtkTestPoints2&) = delete;
 };
 
 
@@ -71,12 +67,12 @@ public:
     f->InitializeObjectBase();
     return f;
   }
-  const char* GetVTKSourceVersion() VTK_OVERRIDE { return VTK_SOURCE_VERSION; }
-  const char* GetDescription() VTK_OVERRIDE { return "A fine Test Factory"; }
+  const char* GetVTKSourceVersion() override { return VTK_SOURCE_VERSION; }
+  const char* GetDescription() override { return "A fine Test Factory"; }
 
 protected:
-  TestFactory(const TestFactory&);
-  void operator=(const TestFactory&);
+  TestFactory(const TestFactory&) = delete;
+  TestFactory& operator=(const TestFactory&) = delete;
 };
 
 TestFactory::TestFactory()

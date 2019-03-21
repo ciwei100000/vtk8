@@ -56,7 +56,7 @@ int TestMultipleScalarsToColors(int , char * [])
     0.5,0.5,1.0,1.0};
 
   // Save one of the context actors
-  vtkContextActor *actor = 0;
+  vtkContextActor *actor = nullptr;
 
   // Lookup Table
   vtkSmartPointer<vtkLookupTable> lookupTable =
@@ -154,20 +154,10 @@ int TestMultipleScalarsToColors(int , char * [])
   // down to there. For now disable is < OpenGL 2, should fix Mesa segfaults.
   renwin->Render();
 
-#if defined(VTK_OPENGL2)
-  bool openGL2Backend = true;
-#else
-  bool openGL2Backend = false;
-#endif
-
-  if (openGL2Backend || actor->GetContext()->GetDevice()->IsA("vtkOpenGL2ContextDevice2D"))
+  if (actor->GetContext()->GetDevice()->IsA("vtkOpenGL2ContextDevice2D"))
   {
     iren->Initialize();
     iren->Start();
-  }
-  else
-  {
-    cout << "GL version 2 or higher is required." << endl;
   }
 
   return EXIT_SUCCESS;

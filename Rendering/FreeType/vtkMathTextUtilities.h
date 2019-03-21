@@ -44,15 +44,15 @@ public:
   ~vtkMathTextUtilitiesCleanup();
 
 private:
-  vtkMathTextUtilitiesCleanup(const vtkMathTextUtilitiesCleanup& other) VTK_DELETE_FUNCTION;
-  vtkMathTextUtilitiesCleanup& operator=(const vtkMathTextUtilitiesCleanup& rhs) VTK_DELETE_FUNCTION;
+  vtkMathTextUtilitiesCleanup(const vtkMathTextUtilitiesCleanup& other) = delete;
+  vtkMathTextUtilitiesCleanup& operator=(const vtkMathTextUtilitiesCleanup& rhs) = delete;
 };
 
 class VTKRENDERINGFREETYPE_EXPORT vtkMathTextUtilities : public vtkObject
 {
 public:
   vtkTypeMacro(vtkMathTextUtilities, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Returns true if mathtext rendering is available.
@@ -102,7 +102,7 @@ public:
    */
  virtual bool RenderString(const char *str, vtkImageData *data,
                            vtkTextProperty *tprop, int dpi,
-                           int textDims[2] = NULL) = 0;
+                           int textDims[2] = nullptr) = 0;
 
   /**
    * Parse the MathText expression in str and fill path with a contour of the
@@ -124,7 +124,7 @@ public:
 
   //@{
   /**
-   * Set to true if the graphics implmentation requires texture image dimensions
+   * Set to true if the graphics implementation requires texture image dimensions
    * to be a power of two. Default is true, but this member will be set
    * appropriately when GL is inited.
    */
@@ -134,11 +134,11 @@ public:
 
 protected:
   vtkMathTextUtilities();
-  ~vtkMathTextUtilities() VTK_OVERRIDE;
+  ~vtkMathTextUtilities() override;
 
 private:
-  vtkMathTextUtilities(const vtkMathTextUtilities&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMathTextUtilities&) VTK_DELETE_FUNCTION;
+  vtkMathTextUtilities(const vtkMathTextUtilities&) = delete;
+  void operator=(const vtkMathTextUtilities&) = delete;
 
   //@{
   /**

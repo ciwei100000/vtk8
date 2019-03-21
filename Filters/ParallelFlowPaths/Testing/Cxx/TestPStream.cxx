@@ -102,7 +102,6 @@ void MyMain( vtkMultiProcessController *controller, void *arg )
 
   vtkPolyDataMapper* Mapper5 = vtkPolyDataMapper::New();
   Mapper5->SetInputConnection(Geometry5->GetOutputPort());
-  Mapper5->SetImmediateModeRendering(1);
   Mapper5->UseLookupTableScalarRangeOn();
   Mapper5->SetScalarVisibility(0);
   Mapper5->SetScalarModeToDefault();
@@ -126,7 +125,7 @@ void MyMain( vtkMultiProcessController *controller, void *arg )
   LineSourceWidget0->SetPoint2(6.3766, -0.5886, 26.6274);
   LineSourceWidget0->SetResolution(20);
 
-  vtkPStreamTracer* Stream0 = vtkPStreamTracer::New();;
+  vtkPStreamTracer* Stream0 = vtkPStreamTracer::New();
   Stream0->SetInputConnection(tv->GetOutputPort());
   Stream0->SetSourceConnection(LineSourceWidget0->GetOutputPort());
   Stream0->SetIntegrationStepUnit(2);
@@ -137,7 +136,7 @@ void MyMain( vtkMultiProcessController *controller, void *arg )
   Stream0->SetMaximumNumberOfSteps(2000);
   Stream0->SetTerminalSpeed(1e-12);
 
-  vtkGeometryFilter* Geometry6 = vtkGeometryFilter::New();;
+  vtkGeometryFilter* Geometry6 = vtkGeometryFilter::New();
   Geometry6->SetInputConnection(Stream0->GetOutputPort());
 
   vtkLookupTable* LookupTable1 = vtkLookupTable::New();
@@ -151,7 +150,6 @@ void MyMain( vtkMultiProcessController *controller, void *arg )
 
   vtkPolyDataMapper* Mapper6 = vtkPolyDataMapper::New();
   Mapper6->SetInputConnection(Geometry6->GetOutputPort());
-  Mapper6->SetImmediateModeRendering(1);
   Mapper6->UseLookupTableScalarRangeOn();
   Mapper6->SetScalarVisibility(1);
   Mapper6->SetScalarModeToUsePointFieldData();

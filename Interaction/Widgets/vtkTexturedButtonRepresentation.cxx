@@ -85,19 +85,19 @@ vtkTexturedButtonRepresentation::~vtkTexturedButtonRepresentation()
   if ( this->Property )
   {
     this->Property->Delete();
-    this->Property = NULL;
+    this->Property = nullptr;
   }
 
   if ( this->HoveringProperty )
   {
     this->HoveringProperty->Delete();
-    this->HoveringProperty = NULL;
+    this->HoveringProperty = nullptr;
   }
 
   if ( this->SelectingProperty )
   {
     this->SelectingProperty->Delete();
-    this->SelectingProperty = NULL;
+    this->SelectingProperty = nullptr;
   }
 
   delete this->TextureArray;
@@ -165,15 +165,19 @@ GetButtonTexture(int i)
   }
   else
   {
-    return NULL;
+    return nullptr;
   }
 }
 
 //----------------------------------------------------------------------
 void vtkTexturedButtonRepresentation::RegisterPickers()
 {
-  this->Renderer->GetRenderWindow()->GetInteractor()->GetPickingManager()
-    ->AddPicker(this->Picker, this);
+  vtkPickingManager* pm = this->GetPickingManager();
+  if (!pm)
+  {
+    return;
+  }
+  pm->AddPicker(this->Picker, this);
 }
 
 //-------------------------------------------------------------------------
@@ -184,8 +188,8 @@ PlaceWidget(double scale, double xyz[3], double normal[3])
   double bds[6], center[3];
   this->Actor->GetBounds(bds);
   center[0] = (bds[0]+bds[1]) / 2.0;
-  center[1] = (bds[2]+bds[3]) / 2.0;;
-  center[2] = (bds[4]+bds[5]) / 2.0;;
+  center[1] = (bds[2]+bds[3]) / 2.0;
+  center[2] = (bds[4]+bds[5]) / 2.0;
 
   this->Actor->AddPosition(center[0]-xyz[0],
                            center[1]-xyz[1],
@@ -229,8 +233,8 @@ void vtkTexturedButtonRepresentation::PlaceWidget(double bds[6])
   // Get the bounds of the actor
   this->Actor->GetBounds(aBds);
   aCenter[0] = (aBds[0]+aBds[1]) / 2.0;
-  aCenter[1] = (aBds[2]+aBds[3]) / 2.0;;
-  aCenter[2] = (aBds[4]+aBds[5]) / 2.0;;
+  aCenter[1] = (aBds[2]+aBds[3]) / 2.0;
+  aCenter[2] = (aBds[4]+aBds[5]) / 2.0;
 
   // Now fit the actor bounds in the place bounds by tampering with its
   // transform.
@@ -267,7 +271,7 @@ int vtkTexturedButtonRepresentation
 
   vtkAssemblyPath* path = this->GetAssemblyPath(X, Y, 0., this->Picker);
 
-  if ( path != NULL )
+  if ( path != nullptr )
   {
     this->InteractionState = vtkButtonRepresentation::Inside;
   }
@@ -354,7 +358,7 @@ void vtkTexturedButtonRepresentation::BuildRepresentation()
     }
     else
     {
-      this->Texture->SetInputData(NULL);
+      this->Texture->SetInputData(nullptr);
     }
 
     this->BuildTime.Modified();
@@ -426,8 +430,7 @@ RenderTranslucentPolygonalGeometry(vtkViewport *viewport)
   }
 }
 //-----------------------------------------------------------------------------
-int vtkTexturedButtonRepresentation::
-HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkTexturedButtonRepresentation::HasTranslucentPolygonalGeometry()
 {
   this->BuildRepresentation();
 

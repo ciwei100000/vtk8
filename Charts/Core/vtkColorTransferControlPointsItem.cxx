@@ -37,7 +37,7 @@ vtkStandardNewMacro(vtkColorTransferControlPointsItem);
 //-----------------------------------------------------------------------------
 vtkColorTransferControlPointsItem::vtkColorTransferControlPointsItem()
 {
-  this->ColorTransferFunction = 0;
+  this->ColorTransferFunction = nullptr;
   this->ColorFill = false;
 }
 
@@ -48,7 +48,7 @@ vtkColorTransferControlPointsItem::~vtkColorTransferControlPointsItem()
   {
     this->ColorTransferFunction->RemoveObserver(this->Callback);
     this->ColorTransferFunction->Delete();
-    this->ColorTransferFunction = 0;
+    this->ColorTransferFunction = nullptr;
   }
 }
 
@@ -239,21 +239,15 @@ void vtkColorTransferControlPointsItem::ComputeBounds(double* bounds)
 {
   if (this->ColorTransferFunction)
   {
-    const double* range = this->ColorTransferFunction->GetRange();
-    bounds[0] = range[0];
-    bounds[1] = range[1];
+    this->ColorTransferFunction->GetRange(bounds);
     bounds[2] = 0.5;
     bounds[3] = 0.5;
+
+    this->TransformDataToScreen(bounds[0], bounds[2], bounds[0], bounds[2]);
+    this->TransformDataToScreen(bounds[1], bounds[3], bounds[1], bounds[3]);
   }
   else
   {
     this->Superclass::ComputeBounds(bounds);
   }
-}
-
-//-----------------------------------------------------------------------------
-bool vtkColorTransferControlPointsItem::UsingLogScale()
-{
-  return (this->ColorTransferFunction?
-    (this->ColorTransferFunction->UsingLogScale() != 0) : false);
 }

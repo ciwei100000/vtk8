@@ -49,7 +49,7 @@ class VTKIMAGINGCORE_EXPORT vtkExtractVOI : public vtkImageAlgorithm
 {
 public:
   vtkTypeMacro(vtkExtractVOI,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object to extract all of the input data.
@@ -86,24 +86,24 @@ public:
    * though the sample rate is not an even multiple of the grid
    * dimensions. (By default IncludeBoundary is off.)
    */
-  vtkSetMacro(IncludeBoundary,int);
-  vtkGetMacro(IncludeBoundary,int);
-  vtkBooleanMacro(IncludeBoundary,int);
+  vtkSetMacro(IncludeBoundary,vtkTypeBool);
+  vtkGetMacro(IncludeBoundary,vtkTypeBool);
+  vtkBooleanMacro(IncludeBoundary,vtkTypeBool);
   //@}
 
 protected:
   vtkExtractVOI();
-  ~vtkExtractVOI() VTK_OVERRIDE;
+  ~vtkExtractVOI() override;
 
   int RequestUpdateExtent(vtkInformation*,
                                   vtkInformationVector**,
-                                  vtkInformationVector*) VTK_OVERRIDE;
+                                  vtkInformationVector*) override;
   int RequestInformation (vtkInformation*,
                                   vtkInformationVector**,
-                                  vtkInformationVector*) VTK_OVERRIDE;
+                                  vtkInformationVector*) override;
   int RequestData(vtkInformation* request,
                           vtkInformationVector** inputVector,
-                          vtkInformationVector* outputVector) VTK_OVERRIDE;
+                          vtkInformationVector* outputVector) override;
 
   /**
    * Implementation for RequestData using a specified VOI. This is because the
@@ -116,12 +116,12 @@ protected:
 
   int VOI[6];
   int SampleRate[3];
-  int IncludeBoundary;
+  vtkTypeBool IncludeBoundary;
 
   vtkExtractStructuredGridHelper* Internal;
 private:
-  vtkExtractVOI(const vtkExtractVOI&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtractVOI&) VTK_DELETE_FUNCTION;
+  vtkExtractVOI(const vtkExtractVOI&) = delete;
+  void operator=(const vtkExtractVOI&) = delete;
 };
 
 #endif

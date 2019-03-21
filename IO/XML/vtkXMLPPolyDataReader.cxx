@@ -25,14 +25,10 @@
 vtkStandardNewMacro(vtkXMLPPolyDataReader);
 
 //----------------------------------------------------------------------------
-vtkXMLPPolyDataReader::vtkXMLPPolyDataReader()
-{
-}
+vtkXMLPPolyDataReader::vtkXMLPPolyDataReader() = default;
 
 //----------------------------------------------------------------------------
-vtkXMLPPolyDataReader::~vtkXMLPPolyDataReader()
-{
-}
+vtkXMLPPolyDataReader::~vtkXMLPPolyDataReader() = default;
 
 //----------------------------------------------------------------------------
 void vtkXMLPPolyDataReader::PrintSelf(ostream& os, vtkIndent indent)
@@ -229,7 +225,7 @@ void vtkXMLPPolyDataReader::CopyArrayForCells(vtkDataArray* inArray,
   {
     return;
   }
-  if (inArray == NULL || outArray == NULL)
+  if (inArray == nullptr || outArray == nullptr)
   {
     return;
   }

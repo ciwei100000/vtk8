@@ -148,7 +148,7 @@ public:
   {
     return new vtkSliderMultipleViewportsCallback;
   }
-  void Execute(vtkObject* caller, unsigned long, void*) VTK_OVERRIDE
+  void Execute(vtkObject* caller, unsigned long, void*) override
   {
     vtkSliderWidget* sliderWidget = reinterpret_cast<vtkSliderWidget*>(caller);
     this->Glyph->SetScaleFactor(
@@ -156,7 +156,7 @@ public:
         ->GetValue());
   }
   vtkSliderMultipleViewportsCallback()
-    : Glyph(0)
+    : Glyph(nullptr)
   {
   }
   vtkGlyph3D* Glyph;

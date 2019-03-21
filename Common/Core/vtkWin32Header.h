@@ -23,8 +23,8 @@
 #ifndef vtkWin32Header_h
 #define vtkWin32Header_h
 
-#ifndef __VTK_SYSTEM_INCLUDES__INSIDE
-Do_not_include_vtkWin32Header_directly__vtkSystemIncludes_includes_it;
+#ifndef VTK_SYSTEM_INCLUDES_INSIDE
+Do_not_include_vtkWin32Header_directly_vtkSystemIncludes_includes_it;
 #endif
 
 #include "vtkConfigure.h"
@@ -86,14 +86,15 @@ Do_not_include_vtkWin32Header_directly__vtkSystemIncludes_includes_it;
 # endif
   // Enable workaround for windows header name mangling.
   // See VTK/Utilities/Upgrading/README.WindowsMangling.txt for details.
-#if !defined(__VTK_WRAP__)
+#if !defined(__VTK_WRAP__) && !defined(__WRAP_GCCXML__)
 # define VTK_WORKAROUND_WINDOWS_MANGLE
 #endif
 
 #if defined(_MSC_VER) // Visual studio
 #pragma warning ( disable : 4311 )
 #pragma warning ( disable : 4312 )
-#endif //
+#endif
+
 #define vtkGetWindowLong GetWindowLongPtr
 #define vtkSetWindowLong SetWindowLongPtr
 #define vtkLONG LONG_PTR
@@ -141,9 +142,6 @@ Do_not_include_vtkWin32Header_directly__vtkSystemIncludes_includes_it;
 #else
 # define VTK_EXPORT
 #endif
-
-// this is exclusively for the tcl Init functions
-#define VTK_TK_EXPORT VTK_ABI_EXPORT
 
 #endif
 // VTK-HeaderTest-Exclude: vtkWin32Header.h

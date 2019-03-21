@@ -31,7 +31,7 @@ class VTKFILTERSGENERAL_EXPORT vtkExtractSelectionBase : public vtkDataObjectAlg
 {
 public:
   vtkTypeMacro(vtkExtractSelectionBase, vtkDataObjectAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Convenience method to specify the selection connection (2nd input
@@ -48,28 +48,28 @@ public:
    * output into an unstructured grid, but instead to produce a vtkInsidedness
    * array and add it to the input dataset. Default value is false(0).
    */
-  vtkSetMacro(PreserveTopology, int);
-  vtkGetMacro(PreserveTopology, int);
-  vtkBooleanMacro(PreserveTopology, int);
+  vtkSetMacro(PreserveTopology, vtkTypeBool);
+  vtkGetMacro(PreserveTopology, vtkTypeBool);
+  vtkBooleanMacro(PreserveTopology, vtkTypeBool);
   //@}
 
 protected:
   vtkExtractSelectionBase();
-  ~vtkExtractSelectionBase() VTK_OVERRIDE;
+  ~vtkExtractSelectionBase() override;
 
   /**
    * Sets up empty output dataset
    */
   int RequestDataObject(vtkInformation* request,
                         vtkInformationVector** inputVector,
-                        vtkInformationVector* outputVector) VTK_OVERRIDE;
+                        vtkInformationVector* outputVector) override;
 
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
 
-  int PreserveTopology;
+  vtkTypeBool PreserveTopology;
 private:
-  vtkExtractSelectionBase(const vtkExtractSelectionBase&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtractSelectionBase&) VTK_DELETE_FUNCTION;
+  vtkExtractSelectionBase(const vtkExtractSelectionBase&) = delete;
+  void operator=(const vtkExtractSelectionBase&) = delete;
 
 };
 

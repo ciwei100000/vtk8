@@ -42,7 +42,7 @@ class VTKFILTERSHYBRID_EXPORT vtkTemporalShiftScale: public vtkAlgorithm
 public:
   static vtkTemporalShiftScale *New();
   vtkTypeMacro(vtkTemporalShiftScale, vtkAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -81,12 +81,12 @@ public:
    * shifted and scaled time frame of reference.
    * Note: Since the input time may not start at zero, the wrapping of time
    * from the end of one period to the start of the next, will subtract the
-   * initial time - a source with T{5..6} repeated periodicaly will have output
+   * initial time - a source with T{5..6} repeated periodically will have output
    * time {5..6..7..8} etc.
    */
-  vtkSetMacro(Periodic, int);
-  vtkGetMacro(Periodic, int);
-  vtkBooleanMacro(Periodic, int);
+  vtkSetMacro(Periodic, vtkTypeBool);
+  vtkGetMacro(Periodic, vtkTypeBool);
+  vtkBooleanMacro(Periodic, vtkTypeBool);
   //@}
 
   //@{
@@ -99,9 +99,9 @@ public:
    * the data is assumed to be literal and output is of the form 0,1,2,3...N,0,1,2,3...
    * By default this flag is ON
    */
-  vtkSetMacro(PeriodicEndCorrection, int);
-  vtkGetMacro(PeriodicEndCorrection, int);
-  vtkBooleanMacro(PeriodicEndCorrection, int);
+  vtkSetMacro(PeriodicEndCorrection, vtkTypeBool);
+  vtkGetMacro(PeriodicEndCorrection, vtkTypeBool);
+  vtkBooleanMacro(PeriodicEndCorrection, vtkTypeBool);
   //@}
 
   //@{
@@ -116,13 +116,13 @@ public:
 
 protected:
   vtkTemporalShiftScale();
-  ~vtkTemporalShiftScale() VTK_OVERRIDE;
+  ~vtkTemporalShiftScale() override;
 
   double PreShift;
   double PostShift;
   double Scale;
-  int    Periodic;
-  int    PeriodicEndCorrection;
+  vtkTypeBool    Periodic;
+  vtkTypeBool    PeriodicEndCorrection;
   double MaximumNumberOfPeriods;
   //
   double InRange[2];
@@ -136,14 +136,14 @@ protected:
    */
   int ProcessRequest(vtkInformation* request,
                              vtkInformationVector** inputVector,
-                             vtkInformationVector* outputVector) VTK_OVERRIDE;
+                             vtkInformationVector* outputVector) override;
 
   virtual int RequestUpdateExtent (vtkInformation *,
                                    vtkInformationVector **,
                                    vtkInformationVector *);
 
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
-  int FillOutputPortInformation(int vtkNotUsed(port), vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
+  int FillOutputPortInformation(int vtkNotUsed(port), vtkInformation* info) override;
 
 
   virtual int RequestDataObject(vtkInformation *,
@@ -163,8 +163,8 @@ protected:
   double BackwardConvert(double T1);
 
 private:
-  vtkTemporalShiftScale(const vtkTemporalShiftScale&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTemporalShiftScale&) VTK_DELETE_FUNCTION;
+  vtkTemporalShiftScale(const vtkTemporalShiftScale&) = delete;
+  void operator=(const vtkTemporalShiftScale&) = delete;
 };
 
 

@@ -45,7 +45,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkEncodedGradientEstimator : public vtkObject
 {
 public:
   vtkTypeMacro(vtkEncodedGradientEstimator,vtkObject);
-  void PrintSelf( ostream& os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream& os, vtkIndent indent ) override;
 
   //@{
   /**
@@ -75,9 +75,9 @@ public:
    * Turn on / off the bounding of the normal computation by
    * the this->Bounds bounding box
    */
-  vtkSetClampMacro( BoundsClip, int, 0, 1 );
-  vtkGetMacro( BoundsClip, int );
-  vtkBooleanMacro( BoundsClip, int );
+  vtkSetClampMacro( BoundsClip, vtkTypeBool, 0, 1 );
+  vtkGetMacro( BoundsClip, vtkTypeBool );
+  vtkBooleanMacro( BoundsClip, vtkTypeBool );
   //@}
 
   //@{
@@ -138,9 +138,9 @@ public:
    * if you a non-constant gradient magnitude transfer function and
    * you turn this on, it may crash
    */
-  vtkSetMacro( ComputeGradientMagnitudes, int );
-  vtkGetMacro( ComputeGradientMagnitudes, int );
-  vtkBooleanMacro( ComputeGradientMagnitudes, int );
+  vtkSetMacro( ComputeGradientMagnitudes, vtkTypeBool );
+  vtkGetMacro( ComputeGradientMagnitudes, vtkTypeBool );
+  vtkBooleanMacro( ComputeGradientMagnitudes, vtkTypeBool );
   //@}
 
   //@{
@@ -149,9 +149,9 @@ public:
    * within the slice, and the slice is square, then don't compute anything
    * outside the circle. This circle through the slices forms a cylinder.
    */
-  vtkSetMacro( CylinderClip, int );
-  vtkGetMacro( CylinderClip, int );
-  vtkBooleanMacro( CylinderClip, int );
+  vtkSetMacro( CylinderClip, vtkTypeBool );
+  vtkGetMacro( CylinderClip, vtkTypeBool );
+  vtkBooleanMacro( CylinderClip, vtkTypeBool );
   //@}
 
   //@{
@@ -183,9 +183,9 @@ public:
    * Assume that the data value outside the volume is zero when
    * computing normals.
    */
-  vtkSetClampMacro( ZeroPad, int, 0, 1 );
-  vtkGetMacro( ZeroPad, int );
-  vtkBooleanMacro( ZeroPad, int );
+  vtkSetClampMacro( ZeroPad, vtkTypeBool, 0, 1 );
+  vtkGetMacro( ZeroPad, vtkTypeBool );
+  vtkBooleanMacro( ZeroPad, vtkTypeBool );
   //@}
 
 
@@ -212,9 +212,9 @@ public:
 
 protected:
   vtkEncodedGradientEstimator();
-  ~vtkEncodedGradientEstimator() VTK_OVERRIDE;
+  ~vtkEncodedGradientEstimator() override;
 
-  void ReportReferences(vtkGarbageCollector*) VTK_OVERRIDE;
+  void ReportReferences(vtkGarbageCollector*) override;
 
   // The number of threads to use when encoding normals
   int                        NumberOfThreads;
@@ -233,25 +233,25 @@ protected:
 
   float                      ZeroNormalThreshold;
 
-  int                        CylinderClip;
+  vtkTypeBool                        CylinderClip;
   int                        *CircleLimits;
   int                        CircleLimitsSize;
   int                        UseCylinderClip;
   void                       ComputeCircleLimits( int size );
 
-  int                        BoundsClip;
+  vtkTypeBool                        BoundsClip;
   int                        Bounds[6];
 
   int                        InputSize[3];
   float                      InputAspect[3];
 
-  int                        ComputeGradientMagnitudes;
+  vtkTypeBool                        ComputeGradientMagnitudes;
 
-  int                        ZeroPad;
+  vtkTypeBool                        ZeroPad;
 
 private:
-  vtkEncodedGradientEstimator(const vtkEncodedGradientEstimator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkEncodedGradientEstimator&) VTK_DELETE_FUNCTION;
+  vtkEncodedGradientEstimator(const vtkEncodedGradientEstimator&) = delete;
+  void operator=(const vtkEncodedGradientEstimator&) = delete;
 };
 
 

@@ -19,17 +19,22 @@
 #include "vtkCompositeDataSet.h"
 #include "vtkDataArray.h"
 #include "vtkInformation.h"
+#include "vtkInformationDoubleKey.h"
 #include "vtkInformationIntegerKey.h"
 #include "vtkInformationObjectBaseKey.h"
 #include "vtkInformationStringKey.h"
+#include "vtkImageData.h"
 #include "vtkMapper.h"
 #include "vtkObjectFactory.h"
 #include "vtkPiecewiseFunction.h"
 #include "vtkPolyData.h"
+#include "vtkProperty.h"
+#include "vtkTexture.h"
 #include "vtkViewNodeCollection.h"
 
 #include "ospray/ospray.h"
 
+vtkInformationKeyMacro(vtkOSPRayActorNode, LUMINOSITY, Double);
 vtkInformationKeyMacro(vtkOSPRayActorNode, ENABLE_SCALING, Integer);
 vtkInformationKeyMacro(vtkOSPRayActorNode, SCALE_ARRAY_NAME, String);
 vtkInformationKeyMacro(vtkOSPRayActorNode, SCALE_FUNCTION, ObjectBase);
@@ -40,7 +45,7 @@ vtkStandardNewMacro(vtkOSPRayActorNode);
 //----------------------------------------------------------------------------
 vtkOSPRayActorNode::vtkOSPRayActorNode()
 {
-  this->LastMapper = NULL;
+  this->LastMapper = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -121,6 +126,33 @@ void vtkOSPRayActorNode::SetScaleFunction(vtkPiecewiseFunction *scaleFunction,
 }
 
 //----------------------------------------------------------------------------
+void vtkOSPRayActorNode::SetLuminosity(double value, vtkProperty *property)
+{
+  if (!property)
+  {
+    return;
+  }
+  vtkInformation *info = property->GetInformation();
+  info->Set(vtkOSPRayActorNode::LUMINOSITY(), value);
+}
+
+//----------------------------------------------------------------------------
+double vtkOSPRayActorNode::GetLuminosity(vtkProperty *property)
+{
+  if (!property)
+  {
+    return 0.0;
+  }
+  vtkInformation *info = property->GetInformation();
+  if (info && info->Has(vtkOSPRayActorNode::LUMINOSITY()))
+  {
+    double retval = info->Get(vtkOSPRayActorNode::LUMINOSITY());
+    return retval;
+  }
+  return 0.0;
+}
+
+//----------------------------------------------------------------------------
 vtkMTimeType vtkOSPRayActorNode::GetMTime()
 {
   vtkMTimeType mtime = this->Superclass::GetMTime();
@@ -129,9 +161,21 @@ vtkMTimeType vtkOSPRayActorNode::GetMTime()
   {
     mtime = act->GetMTime();
   }
-  vtkDataObject * dobj = NULL;
-  vtkPolyData *poly = NULL;
+  if (vtkProperty *prop = act->GetProperty())
+  {
+    if (prop->GetMTime() > mtime)
+    {
+      mtime = prop->GetMTime();
+    }
+    if (prop->GetInformation()->GetMTime() > mtime)
+    {
+      mtime = prop->GetInformation()->GetMTime();
+    }
+  }
+  vtkDataObject * dobj = nullptr;
+  vtkPolyData *poly = nullptr;
   vtkMapper *mapper = act->GetMapper();
+  vtkTexture *texture = act->GetTexture();
   if (mapper)
   {
     //if (act->GetRedrawMTime() > mtime)
@@ -192,6 +236,17 @@ vtkMTimeType vtkOSPRayActorNode::GetMTime()
         dit->GoToNextItem();
       }
       dit->Delete();
+    }
+  }
+  if (texture)
+  {
+    if (texture->GetMTime() > mtime)
+    {
+      mtime = texture->GetMTime();
+    }
+    if (texture->GetInput() && texture->GetInput()->GetMTime() > mtime)
+    {
+      mtime = texture->GetInput()->GetMTime();
     }
   }
   return mtime;

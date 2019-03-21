@@ -31,7 +31,7 @@ vtkCxxSetObjectMacro(vtkArcPlotter,Camera,vtkCamera);
 
 vtkArcPlotter::vtkArcPlotter()
 {
-  this->Camera = NULL;
+  this->Camera = nullptr;
   this->PlotMode = VTK_PLOT_SCALARS;
   this->PlotComponent = (-1); //plot all components
   this->Radius = 0.5;
@@ -44,8 +44,8 @@ vtkArcPlotter::vtkArcPlotter()
 
   this->FieldDataArray = 0;
 
-  this->DataRange = NULL;
-  this->Tuple = NULL;
+  this->DataRange = nullptr;
+  this->Tuple = nullptr;
   this->ActiveComponent = 0;
   this->NumberOfComponents = 0;
 }
@@ -60,7 +60,7 @@ vtkArcPlotter::~vtkArcPlotter()
   if ( this->Camera )
   {
     this->Camera->UnRegister (this);
-    this->Camera = NULL;
+    this->Camera = nullptr;
   }
 }
 
@@ -85,8 +85,8 @@ int vtkArcPlotter::RequestData(
   int j;
   vtkIdType numPts, i;
   double x[3], normal[3], point[3], aveNormal[3];
-  int id;
-  vtkIdType *pts = 0;
+  vtkIdType id;
+  vtkIdType *pts = nullptr;
   vtkIdType npts = 0;
   double x1[3], x2[3], x21[3], n[3];
   vtkFloatArray *lineNormals;
@@ -260,7 +260,7 @@ int vtkArcPlotter::ProcessComponents(vtkIdType numPts, vtkPointData *pd)
   int j;
   double *range;
 
-  this->Data = NULL;
+  this->Data = nullptr;
   switch (this->PlotMode)
   {
     case VTK_PLOT_SCALARS:
@@ -361,7 +361,7 @@ int vtkArcPlotter::ProcessComponents(vtkIdType numPts, vtkPointData *pd)
 }
 
 
-int  vtkArcPlotter::OffsetPoint(vtkIdType ptId, vtkPoints *inPts, double n[3],
+vtkIdType vtkArcPlotter::OffsetPoint(vtkIdType ptId, vtkPoints *inPts, double n[3],
                                 vtkPoints *newPts, double offset,
                                 double *range, double v)
 {

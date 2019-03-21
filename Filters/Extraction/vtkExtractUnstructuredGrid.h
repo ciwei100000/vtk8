@@ -48,7 +48,7 @@ class VTKFILTERSEXTRACTION_EXPORT vtkExtractUnstructuredGrid : public vtkUnstruc
 {
 public:
   vtkTypeMacro(vtkExtractUnstructuredGrid,vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with all types of clipping turned off.
@@ -59,27 +59,27 @@ public:
   /**
    * Turn on/off selection of geometry by point id.
    */
-  vtkSetMacro(PointClipping,int);
-  vtkGetMacro(PointClipping,int);
-  vtkBooleanMacro(PointClipping,int);
+  vtkSetMacro(PointClipping,vtkTypeBool);
+  vtkGetMacro(PointClipping,vtkTypeBool);
+  vtkBooleanMacro(PointClipping,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off selection of geometry by cell id.
    */
-  vtkSetMacro(CellClipping,int);
-  vtkGetMacro(CellClipping,int);
-  vtkBooleanMacro(CellClipping,int);
+  vtkSetMacro(CellClipping,vtkTypeBool);
+  vtkGetMacro(CellClipping,vtkTypeBool);
+  vtkBooleanMacro(CellClipping,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off selection of geometry via bounding box.
    */
-  vtkSetMacro(ExtentClipping,int);
-  vtkGetMacro(ExtentClipping,int);
-  vtkBooleanMacro(ExtentClipping,int);
+  vtkSetMacro(ExtentClipping,vtkTypeBool);
+  vtkGetMacro(ExtentClipping,vtkTypeBool);
+  vtkBooleanMacro(ExtentClipping,vtkTypeBool);
   //@}
 
   //@{
@@ -125,7 +125,7 @@ public:
    * Set / get a (xmin,xmax, ymin,ymax, zmin,zmax) bounding box to clip data.
    */
   void SetExtent(double extent[6]);
-  double *GetExtent() { return this->Extent;};
+  double *GetExtent() VTK_SIZEHINT(6) { return this->Extent;};
   //@}
 
   //@{
@@ -134,9 +134,9 @@ public:
    * on, points with different point attributes (e.g., normals) are merged,
    * which may cause rendering artifacts.
    */
-  vtkSetMacro(Merging,int);
-  vtkGetMacro(Merging,int);
-  vtkBooleanMacro(Merging,int);
+  vtkSetMacro(Merging,vtkTypeBool);
+  vtkGetMacro(Merging,vtkTypeBool);
+  vtkBooleanMacro(Merging,vtkTypeBool);
   //@}
 
   //@{
@@ -156,28 +156,28 @@ public:
   /**
    * Return the MTime also considering the locator.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkExtractUnstructuredGrid();
-  ~vtkExtractUnstructuredGrid()VTK_OVERRIDE {}
+  ~vtkExtractUnstructuredGrid() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   vtkIdType PointMinimum;
   vtkIdType PointMaximum;
   vtkIdType CellMinimum;
   vtkIdType CellMaximum;
   double Extent[6];
-  int PointClipping;
-  int CellClipping;
-  int ExtentClipping;
+  vtkTypeBool PointClipping;
+  vtkTypeBool CellClipping;
+  vtkTypeBool ExtentClipping;
 
-  int Merging;
+  vtkTypeBool Merging;
   vtkIncrementalPointLocator *Locator;
 private:
-  vtkExtractUnstructuredGrid(const vtkExtractUnstructuredGrid&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtractUnstructuredGrid&) VTK_DELETE_FUNCTION;
+  vtkExtractUnstructuredGrid(const vtkExtractUnstructuredGrid&) = delete;
+  void operator=(const vtkExtractUnstructuredGrid&) = delete;
 };
 
 #endif

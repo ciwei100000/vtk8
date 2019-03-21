@@ -41,7 +41,7 @@
  * \par
  * So why maintain the display position? Consider drawing a contour on a
  * volume widget. You might want the contour to be located at a certain world
- * position in the volume or you might want to be overlayed over the window
+ * position in the volume or you might want to be overlaid over the window
  * like an Actor2D. The default behaviour of this class is to provide the
  * former behaviour.
  *
@@ -123,7 +123,7 @@ public:
    * Standard VTK methods.
    */
   vtkTypeMacro(vtkContourRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -161,7 +161,7 @@ public:
   virtual int ActivateNode( int X, int Y );
   //@}
 
-  // Descirption:
+  // Description:
   // Move the active node to a specified world position.
   // Will return 0 if there is no active node or the node
   // could not be moved to that position. 1 will be returned
@@ -276,7 +276,7 @@ public:
    */
   virtual int  GetNthNodeSlope( int idx, double slope[3] );
 
-  // Descirption:
+  // Description:
   // For a given node n, get the number of intermediate
   // points between this node and the node at
   // (n+1). If n is the last node and the loop is
@@ -390,7 +390,7 @@ public:
     {this->SetCurrentOperation( vtkContourRepresentation::Scale ); }
   //@}
 
-  // Descirption:
+  // Description:
   // Set / get the Point Placer. The point placer is
   // responsible for converting display coordinates into
   // world coordinates according to some constraints, and
@@ -412,21 +412,21 @@ public:
   /**
    * These are methods that satisfy vtkWidgetRepresentation's API.
    */
-  void BuildRepresentation() VTK_OVERRIDE =0;
-  int ComputeInteractionState(int X, int Y, int modified=0) VTK_OVERRIDE =0;
-  void StartWidgetInteraction(double e[2]) VTK_OVERRIDE =0;
-  void WidgetInteraction(double e[2]) VTK_OVERRIDE =0;
+  void BuildRepresentation() override =0;
+  int ComputeInteractionState(int X, int Y, int modified=0) override =0;
+  void StartWidgetInteraction(double e[2]) override =0;
+  void WidgetInteraction(double e[2]) override =0;
   //@}
 
   //@{
   /**
    * Methods required by vtkProp superclass.
    */
-  void ReleaseGraphicsResources(vtkWindow *w) VTK_OVERRIDE =0;
-  int RenderOverlay(vtkViewport *viewport) VTK_OVERRIDE =0;
-  int RenderOpaqueGeometry(vtkViewport *viewport) VTK_OVERRIDE =0;
-  int RenderTranslucentPolygonalGeometry(vtkViewport *viewport) VTK_OVERRIDE =0;
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE =0;
+  void ReleaseGraphicsResources(vtkWindow *w) override =0;
+  int RenderOverlay(vtkViewport *viewport) override =0;
+  int RenderOpaqueGeometry(vtkViewport *viewport) override =0;
+  int RenderTranslucentPolygonalGeometry(vtkViewport *viewport) override =0;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override =0;
   //@}
 
   //@{
@@ -434,9 +434,9 @@ public:
    * Set / Get the ClosedLoop value. This ivar indicates whether the contour
    * forms a closed loop.
    */
-  void SetClosedLoop( int val );
-  vtkGetMacro( ClosedLoop, int );
-  vtkBooleanMacro( ClosedLoop, int );
+  void SetClosedLoop( vtkTypeBool val );
+  vtkGetMacro( ClosedLoop, vtkTypeBool );
+  vtkBooleanMacro( ClosedLoop, vtkTypeBool );
   //@}
 
   //@{
@@ -444,9 +444,9 @@ public:
    * A flag to indicate whether to show the Selected nodes
    * Default is to set it to false.
    */
-  virtual void SetShowSelectedNodes(int);
-  vtkGetMacro( ShowSelectedNodes, int );
-  vtkBooleanMacro( ShowSelectedNodes, int );
+  virtual void SetShowSelectedNodes(vtkTypeBool);
+  vtkGetMacro( ShowSelectedNodes, vtkTypeBool );
+  vtkBooleanMacro( ShowSelectedNodes, vtkTypeBool );
   //@}
 
   /**
@@ -464,7 +464,7 @@ public:
 
 protected:
   vtkContourRepresentation();
-  ~vtkContourRepresentation() VTK_OVERRIDE;
+  ~vtkContourRepresentation() override;
 
   // Selection tolerance for the handles
   int    PixelTolerance;
@@ -476,10 +476,10 @@ protected:
   int ActiveNode;
 
   int CurrentOperation;
-  int ClosedLoop;
+  vtkTypeBool ClosedLoop;
 
   // A flag to indicate whether to show the Selected nodes
-  int                   ShowSelectedNodes;
+  vtkTypeBool                   ShowSelectedNodes;
 
   vtkContourRepresentationInternals *Internal;
 
@@ -537,8 +537,8 @@ protected:
   virtual void Initialize( vtkPolyData *, vtkIdList *);
 
   /**
-   * Overloaded initialize method, that is called when the vtkIdList is NULL
-   * to mantain backwards compatibility.
+   * Overloaded initialize method, that is called when the vtkIdList is nullptr
+   * to maintain backwards compatibility.
    */
   virtual void Initialize( vtkPolyData *);
 
@@ -566,8 +566,8 @@ protected:
 
 
 private:
-  vtkContourRepresentation(const vtkContourRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkContourRepresentation&) VTK_DELETE_FUNCTION;
+  vtkContourRepresentation(const vtkContourRepresentation&) = delete;
+  void operator=(const vtkContourRepresentation&) = delete;
 };
 
 #endif

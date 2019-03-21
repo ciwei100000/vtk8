@@ -15,7 +15,8 @@
 #include <vector>
 #include <sstream>
 
-#include "alglib/svd.h"
+#include "vtk_eigen.h"
+#include VTK_EIGEN(Dense)
 
 // To Do:
 // - Add option to pre-multiply EigenVectors by normalization coeffs
@@ -53,7 +54,7 @@ void vtkPCAStatistics::GetEigenvalues(int request, vtkDoubleArray* eigenvalues)
 
   if(!outputMetaDS)
   {
-    vtkErrorMacro(<<"NULL dataset pointer!");
+    vtkErrorMacro(<<"nullptr dataset pointer!");
   }
 
   vtkSmartPointer<vtkTable> outputMeta =
@@ -61,7 +62,7 @@ void vtkPCAStatistics::GetEigenvalues(int request, vtkDoubleArray* eigenvalues)
 
   if(!outputMetaDS)
   {
-    vtkErrorMacro(<<"NULL table pointer!");
+    vtkErrorMacro(<<"nullptr table pointer!");
   }
 
   vtkDoubleArray* meanCol = vtkArrayDownCast<vtkDoubleArray>(outputMeta->GetColumnByName("Mean"));
@@ -122,7 +123,7 @@ void vtkPCAStatistics::GetEigenvectors(int request, vtkDoubleArray* eigenvectors
 
   if(!outputMetaDS)
   {
-    vtkErrorMacro(<<"NULL dataset pointer!");
+    vtkErrorMacro(<<"nullptr dataset pointer!");
   }
 
   vtkSmartPointer<vtkTable> outputMeta =
@@ -130,7 +131,7 @@ void vtkPCAStatistics::GetEigenvectors(int request, vtkDoubleArray* eigenvectors
 
   if(!outputMeta)
   {
-    vtkErrorMacro(<<"NULL table pointer!");
+    vtkErrorMacro(<<"nullptr table pointer!");
   }
 
   vtkDoubleArray* meanCol = vtkArrayDownCast<vtkDoubleArray>(outputMeta->GetColumnByName("Mean"));
@@ -198,13 +199,13 @@ class vtkPCAAssessFunctor : public vtkMultiCorrelativeAssessFunctor
 public:
   static vtkPCAAssessFunctor* New();
 
-  vtkPCAAssessFunctor() { }
-  ~vtkPCAAssessFunctor() VTK_OVERRIDE { }
+  vtkPCAAssessFunctor() = default;
+  ~vtkPCAAssessFunctor() override = default;
   virtual bool InitializePCA(
                              vtkTable* inData, vtkTable* reqModel,
                              int normScheme, int basisScheme, int basisSize, double basisEnergy );
 
-  void operator () ( vtkDoubleArray* result, vtkIdType row ) VTK_OVERRIDE;
+  void operator () ( vtkDoubleArray* result, vtkIdType row ) override;
 
   std::vector<double> EigenValues;
   std::vector<std::vector<double> > EigenVectors;
@@ -369,9 +370,7 @@ vtkPCAStatistics::vtkPCAStatistics()
 }
 
 // ----------------------------------------------------------------------
-vtkPCAStatistics::~vtkPCAStatistics()
-{
-}
+vtkPCAStatistics::~vtkPCAStatistics() = default;
 
 // ----------------------------------------------------------------------
 void vtkPCAStatistics::PrintSelf( ostream& os, vtkIndent indent )
@@ -493,7 +492,7 @@ int vtkPCAStatistics::FillInputPortInformation( int port, vtkInformation* info )
 
 // ----------------------------------------------------------------------
 static void vtkPCAStatisticsNormalizeSpec( vtkVariantArray* normData,
-                                           ap::real_2d_array& cov,
+                                           Eigen::MatrixXd& cov,
                                            vtkTable* normSpec,
                                            vtkTable* reqModel,
                                            bool triangle )
@@ -605,16 +604,16 @@ static void vtkPCAStatisticsNormalizeSpec( vtkVariantArray* normData,
   {
     vtkGenericWarningMacro(
                            "The following normalization factors were expected but not provided: "
-                           << missing.str().c_str() );
+                           << missing.str() );
   }
 }
 
 // ----------------------------------------------------------------------
 static void vtkPCAStatisticsNormalizeVariance( vtkVariantArray* normData,
-                                               ap::real_2d_array& cov )
+                                               Eigen::MatrixXd& cov )
 {
   vtkIdType i, j;
-  vtkIdType m = cov.gethighbound( 0 ) - cov.getlowbound( 0 ) + 1;
+  vtkIdType m = cov.rows();
   for ( i = 0; i < m; ++ i )
   {
     normData->InsertNextValue( cov( i, i ) );
@@ -656,8 +655,7 @@ void vtkPCAStatistics::Derive( vtkMultiBlockDataSet* inMeta )
       continue;
     }
     vtkIdType m = reqModel->GetNumberOfColumns() - 2;
-    ap::real_2d_array cov;
-    cov.setbounds( 0, m - 1, 0, m - 1 );
+    Eigen::MatrixXd cov(m, m);
     // Fill the cov array with values from the vtkTable
     vtkIdType i, j;
     for ( j = 2; j < 2 + m; ++ j )
@@ -694,17 +692,9 @@ void vtkPCAStatistics::Derive( vtkMultiBlockDataSet* inMeta )
         // do nothing
         break;
     }
-    ap::real_2d_array u;
-    ap::real_1d_array s;
-    ap::real_2d_array vt;
-    // Now that we have the covariance matrix, compute the SVD.
-    // Note that vt is not computed since the VtNeeded parameter is 0.
-    bool status = rmatrixsvd( cov, m, m, 2, 0, 2, s, u, vt );
-    if ( ! status )
-    {
-      vtkWarningMacro( "Could not compute PCA for request " << b );
-      continue;
-    }
+    Eigen::BDCSVD<Eigen::MatrixXd> svd(cov, Eigen::ComputeFullU);
+    const Eigen::MatrixXd& u = svd.matrixU();
+    const Eigen::MatrixXd& s = svd.singularValues();
     vtkVariantArray* row = vtkVariantArray::New();
     //row->SetNumberOfComponents( m + 2 );
     //row->SetNumberOfTuples( 1 );
@@ -835,7 +825,7 @@ void vtkPCAStatistics::Test( vtkTable* inData,
   {
     vtkTable* derivedTab = vtkTable::SafeDownCast( inMeta->GetBlock( b ) );
 
-    // Silenty ignore empty blocks
+    // Silently ignore empty blocks
     if ( ! derivedTab )
     {
       continue;
@@ -996,7 +986,7 @@ void vtkPCAStatistics::Assess( vtkTable* inData,
   // per-request metadata tables.
   vtkIdType nRow = inData->GetNumberOfRows();
   int nb = static_cast<int>( inMeta->GetNumberOfBlocks() );
-  AssessFunctor* dfunc = 0;
+  AssessFunctor* dfunc = nullptr;
   for ( int req = 1; req < nb; ++ req )
   {
     vtkTable* reqModel = vtkTable::SafeDownCast( inMeta->GetBlock( req ) );
@@ -1007,7 +997,7 @@ void vtkPCAStatistics::Assess( vtkTable* inData,
 
     this->SelectAssessFunctor( inData,
                                reqModel,
-                               0,
+                               nullptr,
                                dfunc );
 
     vtkPCAAssessFunctor* pcafunc = static_cast<vtkPCAAssessFunctor*>( dfunc );
@@ -1064,7 +1054,7 @@ void vtkPCAStatistics::SelectAssessFunctor( vtkTable* inData,
                                             vtkStringArray* vtkNotUsed(rowNames),
                                             AssessFunctor*& dfunc )
 {
-  dfunc = 0;
+  dfunc = nullptr;
   vtkTable* reqModel = vtkTable::SafeDownCast( inMetaDO );
   if ( ! reqModel )
   {

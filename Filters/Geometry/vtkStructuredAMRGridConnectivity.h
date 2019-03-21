@@ -25,7 +25,7 @@
  *  implementation see vtkPStructuredAMRGridConnectivity.
  *
  * @sa
- *  vtkGhostArray vtkPStructuredAMRGridConnectivity vtkAbstractGridConnectivity
+ *  vtkPStructuredAMRGridConnectivity vtkAbstractGridConnectivity
 */
 
 #ifndef vtkStructuredAMRGridConnectivity_h
@@ -49,7 +49,7 @@ class VTKFILTERSGEOMETRY_EXPORT vtkStructuredAMRGridConnectivity :
 public:
   static vtkStructuredAMRGridConnectivity* New();
   vtkTypeMacro(vtkStructuredAMRGridConnectivity, vtkAbstractGridConnectivity);
-  void PrintSelf(ostream& os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent ) override;
 
   /**
    * Initializes this instance of vtkStructuredAMRGridConnectivity where N
@@ -65,12 +65,12 @@ public:
   /**
    * Computes neighboring information.
    */
-  void ComputeNeighbors() VTK_OVERRIDE;
+  void ComputeNeighbors() override;
 
   /**
    * Creates ghost layers.
    */
-  void CreateGhostLayers(const int N=1) VTK_OVERRIDE;
+  void CreateGhostLayers(const int N=1) override;
 
   /**
    * Registers the AMR grid with the given global linear grid ID (starting
@@ -111,7 +111,7 @@ public:
 
   //@{
   /**
-   * Get/Set macor NodeCentered property which indicates if the data is
+   * Get/Set macro NodeCentered property which indicates if the data is
    * node-centered or cell-centered. By default, node-centered is set to false
    * since AMR datasets are primarily cell-centered.
    */
@@ -146,12 +146,12 @@ public:
 
 protected:
   vtkStructuredAMRGridConnectivity();
-  ~vtkStructuredAMRGridConnectivity() VTK_OVERRIDE;
+  ~vtkStructuredAMRGridConnectivity() override;
 
   /**
    * Sets the total number of grids(blocks) in the AMR hierarchy
    */
-  void SetNumberOfGrids( const unsigned int N ) VTK_OVERRIDE;
+  void SetNumberOfGrids( const unsigned int N ) override;
 
   /**
    * Creates the ghosted mask arrays
@@ -175,7 +175,7 @@ protected:
       const int gridIdx, int fromLevel, int toLevel, int ext[6]);
 
   /**
-   * Gets the refined extent fro the grid with the given grid index.
+   * Gets the refined extent for the grid with the given grid index.
    */
   void GetRefinedExtent(
       const int gridIdx, int fromLevel, int toLevel, int ext[6]);
@@ -266,7 +266,7 @@ protected:
   void GetWholeExtentAtLevel(const int level, int ext[6]);
 
   /**
-   * Establishes neighboring relationship between grids i,j  wheren i,j are
+   * Establishes neighboring relationship between grids i,j wheren i,j are
    * global indices.
    */
   void EstablishNeighbors(const int i, const int j);
@@ -326,7 +326,7 @@ protected:
   /**
    * Checks if the block corresponding to the given grid ID has a block
    * adjacent to it in the given block direction.
-   * NOTE: The block direction is essentially one of the 6 faces  of the
+   * NOTE: The block direction is essentially one of the 6 faces of the
    * block defined as follows:
    * <ul>
    * <li> FRONT  = 0 (+k diretion)  </li>
@@ -358,7 +358,7 @@ protected:
   /**
    * Removes a block connection along the given direction for the block
    * corresponding to the given gridID.
-   * NOTE: The block direction is essentially one of the 6 faces  of the
+   * NOTE: The block direction is essentially one of the 6 faces of the
    * block defined as follows:
    * <ul>
    * <li> FRONT  = 0 (+k diretion)  </li>
@@ -374,7 +374,7 @@ protected:
   /**
    * Adds a block connection along the given direction for the block
    * corresponding to the given gridID.
-   * NOTE: The block direction is essentially one of the 6 faces  of the
+   * NOTE: The block direction is essentially one of the 6 faces of the
    * block defined as follows:
    * <ul>
    * <li> FRONT  = 0 (+k diretion)  </li>
@@ -388,7 +388,7 @@ protected:
   void AddBlockConnection(const int gridID, const int blockDirection);
 
   /**
-   * Clears all block connections for the  block corresponding to the given
+   * Clears all block connections for the block corresponding to the given
    * grid ID.
    */
   void ClearBlockConnections( const int gridID );
@@ -419,7 +419,7 @@ protected:
   void FillGhostArrays(
             const int gridId,
             vtkUnsignedCharArray* nodesArray,
-            vtkUnsignedCharArray* cellsArray ) VTK_OVERRIDE;
+            vtkUnsignedCharArray* cellsArray ) override;
 
   /**
    * Compute the AMR neighbor of grid "i" and its neighbor grid "j".
@@ -527,7 +527,7 @@ protected:
   /**
    * Loops through all arrays in the source and for each array, it copies the
    * tuples from sourceIdx to the target at targetIdx. This method assumes
-   * that the source and target have a one-to-one array correspondance, that
+   * that the source and target have a one-to-one array correspondence, that
    * is array i in the source corresponds to array i in the target.
    */
   void CopyFieldData(
@@ -552,7 +552,7 @@ protected:
                             // grids in the hierarchy can only differ by one
                             // level.
 
-  // AMRHierarchy stores the the set of grid Ids in [0,N] for each level
+  // AMRHierarchy stores the set of grid Ids in [0,N] for each level
   std::map< int, std::set<int> > AMRHierarchy;
 
   // For each grid, [0,N] store the grid extents,level, and list of neighbors
@@ -573,8 +573,8 @@ protected:
   std::vector< int > RefinementRatios;
 
 private:
-   vtkStructuredAMRGridConnectivity(const vtkStructuredAMRGridConnectivity&) VTK_DELETE_FUNCTION;
-   void operator=(const vtkStructuredAMRGridConnectivity&) VTK_DELETE_FUNCTION;
+   vtkStructuredAMRGridConnectivity(const vtkStructuredAMRGridConnectivity&) = delete;
+   void operator=(const vtkStructuredAMRGridConnectivity&) = delete;
 };
 
 //=============================================================================

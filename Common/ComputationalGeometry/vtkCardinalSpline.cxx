@@ -22,9 +22,7 @@ vtkStandardNewMacro(vtkCardinalSpline);
 
 //----------------------------------------------------------------------------
 // Construct a Cardinal Spline.
-vtkCardinalSpline::vtkCardinalSpline ()
-{
-}
+vtkCardinalSpline::vtkCardinalSpline () = default;
 
 //----------------------------------------------------------------------------
 // Evaluate a 1D Spline
@@ -438,7 +436,7 @@ void vtkCardinalSpline::DeepCopy(vtkSpline *s)
 {
   vtkCardinalSpline *spline = vtkCardinalSpline::SafeDownCast(s);
 
-  if ( spline != NULL )
+  if ( spline != nullptr )
   {
     //nothing to do
   }

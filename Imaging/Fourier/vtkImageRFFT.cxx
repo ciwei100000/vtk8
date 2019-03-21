@@ -137,7 +137,7 @@ void vtkImageRFFTExecute(vtkImageRFFT *self,
         pComplex->Imag = 0.0;
         if (numberOfComponents > 1)
         { // yes we have an imaginary input
-          pComplex->Imag = static_cast<double>(inPtr0[1]);;
+          pComplex->Imag = static_cast<double>(inPtr0[1]);
         }
         inPtr0 += inInc0;
         ++pComplex;
@@ -197,7 +197,7 @@ void vtkImageRFFT::ThreadedRequestData(
   // this filter expects that the output be doubles.
   if (outData->GetScalarType() != VTK_DOUBLE)
   {
-    vtkErrorMacro(<< "Execute: Output must be be type double.");
+    vtkErrorMacro(<< "Execute: Output must be type double.");
     return;
   }
 

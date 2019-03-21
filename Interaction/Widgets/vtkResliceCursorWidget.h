@@ -55,7 +55,7 @@ public:
    * Standard VTK class macros.
    */
   vtkTypeMacro(vtkResliceCursorWidget,vtkAbstractWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -76,22 +76,22 @@ public:
   /**
    * Create the default widget representation if one is not set.
    */
-  void CreateDefaultRepresentation() VTK_OVERRIDE;
+  void CreateDefaultRepresentation() override;
 
   /**
    * Methods for activiating this widget. This implementation extends the
    * superclasses' in order to resize the widget handles due to a render
    * start event.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
+  void SetEnabled(int) override;
 
   //@{
   /**
    * Also perform window level ?
    */
-  vtkSetMacro( ManageWindowLevel, int );
-  vtkGetMacro( ManageWindowLevel, int );
-  vtkBooleanMacro( ManageWindowLevel, int );
+  vtkSetMacro( ManageWindowLevel, vtkTypeBool );
+  vtkGetMacro( ManageWindowLevel, vtkTypeBool );
+  vtkBooleanMacro( ManageWindowLevel, vtkTypeBool );
   //@}
 
   /**
@@ -112,7 +112,7 @@ public:
 
 protected:
   vtkResliceCursorWidget();
-  ~vtkResliceCursorWidget() VTK_OVERRIDE;
+  ~vtkResliceCursorWidget() override;
 
   // These are the callbacks for this widget
   static void SelectAction(vtkAbstractWidget*);
@@ -124,7 +124,7 @@ protected:
   static void ResetResliceCursorAction(vtkAbstractWidget*);
 
   // helper methods for cursor management
-  void SetCursor(int state) VTK_OVERRIDE;
+  void SetCursor(int state) override;
 
   // Start Window Level
   void StartWindowLevel();
@@ -142,11 +142,11 @@ protected:
 
   // Keep track whether key modifier key is pressed
   int ModifierActive;
-  int ManageWindowLevel;
+  vtkTypeBool ManageWindowLevel;
 
 private:
-  vtkResliceCursorWidget(const vtkResliceCursorWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkResliceCursorWidget&) VTK_DELETE_FUNCTION;
+  vtkResliceCursorWidget(const vtkResliceCursorWidget&) = delete;
+  void operator=(const vtkResliceCursorWidget&) = delete;
 };
 
 #endif

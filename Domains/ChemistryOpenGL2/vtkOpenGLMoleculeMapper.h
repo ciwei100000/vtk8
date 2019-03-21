@@ -39,22 +39,29 @@ public:
   /**
    * Reimplemented from base class
    */
-  void Render(vtkRenderer *, vtkActor *) VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void Render(vtkRenderer *, vtkActor *) override;
+  void ReleaseGraphicsResources(vtkWindow *) override;
   //@}
 
   /**
    * provide access to the underlying mappers
    */
   vtkOpenGLSphereMapper *GetFastAtomMapper() {
-      return this->FastAtomMapper.Get(); }
+      return this->FastAtomMapper; }
+  /**
+   * allows a mapper to update a selections color buffers
+   * Called from a prop which in turn is called from the selector
+   */
+  void ProcessSelectorPixelBuffers(vtkHardwareSelector *sel,
+    std::vector<unsigned int> &pixeloffsets,
+    vtkProp *prop) override;
 
 protected:
   vtkOpenGLMoleculeMapper();
-  ~vtkOpenGLMoleculeMapper() VTK_OVERRIDE;
+  ~vtkOpenGLMoleculeMapper() override;
 
-  void UpdateAtomGlyphPolyData() VTK_OVERRIDE;
-  void UpdateBondGlyphPolyData() VTK_OVERRIDE;
+  void UpdateAtomGlyphPolyData() override;
+  void UpdateBondGlyphPolyData() override;
 
   //@{
   /**
@@ -65,8 +72,8 @@ protected:
   //@}
 
 private:
-  vtkOpenGLMoleculeMapper(const vtkOpenGLMoleculeMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLMoleculeMapper&) VTK_DELETE_FUNCTION;
+  vtkOpenGLMoleculeMapper(const vtkOpenGLMoleculeMapper&) = delete;
+  void operator=(const vtkOpenGLMoleculeMapper&) = delete;
 };
 
 #endif

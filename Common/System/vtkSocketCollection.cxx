@@ -22,13 +22,11 @@ vtkStandardNewMacro(vtkSocketCollection);
 //-----------------------------------------------------------------------------
 vtkSocketCollection::vtkSocketCollection()
 {
-  this->SelectedSocket = 0;
+  this->SelectedSocket = nullptr;
 }
 
 //-----------------------------------------------------------------------------
-vtkSocketCollection::~vtkSocketCollection()
-{
-}
+vtkSocketCollection::~vtkSocketCollection() = default;
 
 //-----------------------------------------------------------------------------
 void vtkSocketCollection::AddItem(vtkSocket* soc)
@@ -40,7 +38,7 @@ void vtkSocketCollection::AddItem(vtkSocket* soc)
 int vtkSocketCollection::SelectSockets(unsigned long msec /*=0*/)
 {
   // clear last selected socket.
-  this->SelectedSocket = 0;
+  this->SelectedSocket = nullptr;
 
   int max = this->GetNumberOfItems();
   if (max <= 0)
@@ -105,7 +103,7 @@ void vtkSocketCollection::RemoveItem(vtkObject* a)
 {
   if (this->SelectedSocket && this->SelectedSocket == a)
   {
-    this->SelectedSocket = 0;
+    this->SelectedSocket = nullptr;
   }
   this->Superclass::RemoveItem(a);
 }
@@ -115,7 +113,7 @@ void vtkSocketCollection::RemoveItem(int i)
 {
   if (this->SelectedSocket && this->GetItemAsObject(i) == this->SelectedSocket)
   {
-    this->SelectedSocket = 0;
+    this->SelectedSocket = nullptr;
   }
   this->Superclass::RemoveItem(i);
 }
@@ -126,7 +124,7 @@ void vtkSocketCollection::ReplaceItem(int i, vtkObject* a)
 {
   if (this->SelectedSocket && this->GetItemAsObject(i) == this->SelectedSocket)
   {
-    this->SelectedSocket = 0;
+    this->SelectedSocket = nullptr;
   }
   this->Superclass::ReplaceItem(i, a);
 }
@@ -134,7 +132,7 @@ void vtkSocketCollection::ReplaceItem(int i, vtkObject* a)
 //-----------------------------------------------------------------------------
 void vtkSocketCollection::RemoveAllItems()
 {
-  this->SelectedSocket = 0;
+  this->SelectedSocket = nullptr;
   this->Superclass::RemoveAllItems();
 }
 

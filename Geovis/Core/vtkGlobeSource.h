@@ -27,7 +27,7 @@
  * given its Longitude-Latitude extent.  It adds two point scalar arrays
  * Longitude and Latitude to the output.  These arrays can be transformed
  * to generate texture coordinates for any texture map.  This source is
- * imperfect near the poles as implmented.  It should really reduce the
+ * imperfect near the poles as implemented.  It should really reduce the
  * longitude resolution as the triangles become slivers.
  *
  * \image html vtkGlobeSourceSphericalToCartesianFigure.png
@@ -44,11 +44,12 @@ class vtkCellArray;
 class vtkFloatArray;
 
 
+#if !defined(VTK_LEGACY_REMOVE)
 class VTKGEOVISCORE_EXPORT vtkGlobeSource : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkGlobeSource,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
 
   //@{
@@ -118,9 +119,9 @@ public:
    * except at the poles. This can be useful for generating a wireframe
    * sphere with natural latitude and longitude lines.
    */
-  vtkSetMacro(QuadrilateralTessellation,int);
-  vtkGetMacro(QuadrilateralTessellation,int);
-  vtkBooleanMacro(QuadrilateralTessellation,int);
+  vtkSetMacro(QuadrilateralTessellation,vtkTypeBool);
+  vtkGetMacro(QuadrilateralTessellation,vtkTypeBool);
+  vtkBooleanMacro(QuadrilateralTessellation,vtkTypeBool);
   //@}
 
   /**
@@ -135,7 +136,7 @@ public:
    * at the spherical coordinates theta and phi.
    */
   static void ComputeGlobePoint(
-    double theta, double phi, double radius, double* point, double* normal = 0);
+    double theta, double phi, double radius, double* point, double* normal = nullptr);
 
   /**
    * Calculates the spherical coordinates theta and phi based on the
@@ -146,12 +147,12 @@ public:
 
 protected:
   vtkGlobeSource();
-  ~vtkGlobeSource() VTK_OVERRIDE {}
+  ~vtkGlobeSource() override {}
 
   int RequestData(
     vtkInformation *,
     vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
 
   void AddPoint(
     double theta, double phi, double radius,
@@ -174,11 +175,12 @@ protected:
   double StartLatitude;
   double EndLatitude;
 
-  int QuadrilateralTessellation;
+  vtkTypeBool QuadrilateralTessellation;
 
 private:
-  vtkGlobeSource(const vtkGlobeSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGlobeSource&) VTK_DELETE_FUNCTION;
+  vtkGlobeSource(const vtkGlobeSource&) = delete;
+  void operator=(const vtkGlobeSource&) = delete;
 };
 
+#endif //VTK_LEGACY_REMOVE
 #endif

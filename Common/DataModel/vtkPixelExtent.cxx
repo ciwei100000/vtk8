@@ -180,7 +180,7 @@ void vtkPixelExtent::Split(
 //-----------------------------------------------------------------------------
 void vtkPixelExtent::Subtract(
       const vtkPixelExtent &A,
-      vtkPixelExtent B,
+      const vtkPixelExtent& B,
       deque<vtkPixelExtent> &C)
 {
   // split method requires split point inside the extent
@@ -199,7 +199,7 @@ void vtkPixelExtent::Subtract(
     return;
   }
 
-  // split left and bellow this cells
+  // split left and below this cells
   I.CellToNode();
 
   deque<vtkPixelExtent> tmpA0;

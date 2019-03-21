@@ -49,9 +49,7 @@ vtkRectilinearWipeWidget::vtkRectilinearWipeWidget()
 }
 
 //----------------------------------------------------------------------
-vtkRectilinearWipeWidget::~vtkRectilinearWipeWidget()
-{
-}
+vtkRectilinearWipeWidget::~vtkRectilinearWipeWidget() = default;
 
 //-------------------------------------------------------------------------
 void vtkRectilinearWipeWidget::SetCursor(int cState)
@@ -103,7 +101,7 @@ void vtkRectilinearWipeWidget::SelectAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->StartInteraction();
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
 }
 
 //----------------------------------------------------------------------
@@ -131,7 +129,7 @@ void vtkRectilinearWipeWidget::MoveAction(vtkAbstractWidget *w)
 
   // moving something
   self->EventCallbackCommand->SetAbortFlag(1);
-  self->InvokeEvent(vtkCommand::InteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::InteractionEvent,nullptr);
   self->Render();
 }
 
@@ -152,7 +150,7 @@ void vtkRectilinearWipeWidget::EndSelectAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->EndInteraction();
-  self->InvokeEvent(vtkCommand::EndInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::EndInteractionEvent,nullptr);
   self->WidgetState = vtkRectilinearWipeWidget::Start;
 }
 

@@ -40,7 +40,7 @@ public:
   static vtkAppendSelection *New();
 
   vtkTypeMacro(vtkAppendSelection,vtkSelectionAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -49,9 +49,9 @@ public:
    * SetNumberOfInputs/SetInputByNumber should not be mixed with calls
    * to AddInput/RemoveInput. By default, UserManagedInputs is false.
    */
-  vtkSetMacro(UserManagedInputs,int);
-  vtkGetMacro(UserManagedInputs,int);
-  vtkBooleanMacro(UserManagedInputs,int);
+  vtkSetMacro(UserManagedInputs,vtkTypeBool);
+  vtkGetMacro(UserManagedInputs,vtkTypeBool);
+  vtkBooleanMacro(UserManagedInputs,vtkTypeBool);
   //@}
 
   /**
@@ -62,7 +62,7 @@ public:
 
   /**
    * Remove a dataset from the list of data to append. Should not be
-   * used when UserManagedInputs is true, use SetInputByNumber (NULL) instead.
+   * used when UserManagedInputs is true, use SetInputByNumber (nullptr) instead.
    */
   void RemoveInputData(vtkSelection *);
 
@@ -92,30 +92,30 @@ public:
    * for selections with different content types and properties. Default is
    * true.
    */
-  vtkSetMacro(AppendByUnion, int);
-  vtkGetMacro(AppendByUnion, int);
-  vtkBooleanMacro(AppendByUnion, int);
+  vtkSetMacro(AppendByUnion, vtkTypeBool);
+  vtkGetMacro(AppendByUnion, vtkTypeBool);
+  vtkBooleanMacro(AppendByUnion, vtkTypeBool);
   //@}
 
 protected:
   vtkAppendSelection();
-  ~vtkAppendSelection() VTK_OVERRIDE;
+  ~vtkAppendSelection() override;
 
   // Usual data generation method
   int RequestData(vtkInformation *,
-                  vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int, vtkInformation *) VTK_OVERRIDE;
+                  vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int, vtkInformation *) override;
 
  private:
   // hide the superclass' AddInput() from the user and the compiler
   void AddInputData(vtkDataObject *)
     { vtkErrorMacro( << "AddInput() must be called with a vtkSelection not a vtkDataObject."); };
 
-  int UserManagedInputs;
-  int AppendByUnion;
+  vtkTypeBool UserManagedInputs;
+  vtkTypeBool AppendByUnion;
 private:
-  vtkAppendSelection(const vtkAppendSelection&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAppendSelection&) VTK_DELETE_FUNCTION;
+  vtkAppendSelection(const vtkAppendSelection&) = delete;
+  void operator=(const vtkAppendSelection&) = delete;
 };
 
 #endif

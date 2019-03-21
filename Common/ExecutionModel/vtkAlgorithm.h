@@ -55,13 +55,14 @@ class VTKCOMMONEXECUTIONMODEL_EXPORT vtkAlgorithm : public vtkObject
 public:
   static vtkAlgorithm *New();
   vtkTypeMacro(vtkAlgorithm,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Values used for setting the desired output precision for various
    * algorithms. Currently, the following algorithms support changing their
    * output precision: vtkAppendFilter, vtkAppendPoints, vtkContourFilter,
-   * vtkContourGrid, vtkCutter, vtkGridSynchronizedTemplates3D,
+   * vtkContourGrid, vtkCutter, vtkGlyph3D, vtkGeometryFilter,
+   * vtkGridSynchronizedTemplates3D,
    * vtkPolyDataNormals, vtkSynchronizedTemplatesCutter3D,
    * vtkTableBasedClipDataSet, vtkThreshold, vtkTransformFilter, and
    * vtkTransformPolyData.
@@ -190,8 +191,8 @@ public:
   /**
    * Participate in garbage collection.
    */
-  void Register(vtkObjectBase* o) VTK_OVERRIDE;
-  void UnRegister(vtkObjectBase* o) VTK_OVERRIDE;
+  void Register(vtkObjectBase* o) override;
+  void UnRegister(vtkObjectBase* o) override;
   //@}
 
   //@{
@@ -199,9 +200,9 @@ public:
    * Set/Get the AbortExecute flag for the process object. Process objects
    * may handle premature termination of execution in different ways.
    */
-  vtkSetMacro(AbortExecute,int);
-  vtkGetMacro(AbortExecute,int);
-  vtkBooleanMacro(AbortExecute,int);
+  vtkSetMacro(AbortExecute,vtkTypeBool);
+  vtkGetMacro(AbortExecute,vtkTypeBool);
+  vtkBooleanMacro(AbortExecute,vtkTypeBool);
   //@}
 
   //@{
@@ -240,7 +241,7 @@ public:
   //@}
 
   // left public for performance since it is used in inner loops
-  int AbortExecute;
+  vtkTypeBool AbortExecute;
 
   /**
    * Keys used to specify input port requirements.
@@ -574,7 +575,7 @@ public:
    * Supports piece and extent (optional) requests.
    */
   virtual int UpdatePiece(
-    int piece, int numPieces, int ghostLevels, const int extents[6]=0);
+    int piece, int numPieces, int ghostLevels, const int extents[6]=nullptr);
 
   /**
    * Convenience method to update an algorithm after passing requests
@@ -590,7 +591,7 @@ public:
    * Supports time, piece (optional) and extent (optional) requests.
    */
   virtual int UpdateTimeStep(double time,
-    int piece=-1, int numPieces=1, int ghostLevels=0, const int extents[6]=0);
+    int piece=-1, int numPieces=1, int ghostLevels=0, const int extents[6]=nullptr);
 
   /**
    * Bring the algorithm's information up-to-date.
@@ -653,54 +654,17 @@ public:
    */
   static void SetDefaultExecutivePrototype(vtkExecutive* proto);
 
-  /**
-   * If the whole output extent is required, this method can be called to set
-   * the output update extent to the whole extent. This method assumes that
-   * the whole extent is known (that UpdateInformation has been called).
-   */
-  VTK_LEGACY(int SetUpdateExtentToWholeExtent(int port));
-
-  /**
-   * Convenience function equivalent to SetUpdateExtentToWholeExtent(0)
-   * This method assumes that the whole extent is known (that UpdateInformation
-   * has been called).
-   */
-  VTK_LEGACY(int SetUpdateExtentToWholeExtent());
-
-  /**
-   * Set the output update extent in terms of piece and ghost levels.
-   */
-  VTK_LEGACY(void SetUpdateExtent(int port,
-                       int piece,int numPieces, int ghostLevel));
-
-  /**
-   * Convenience function equivalent to SetUpdateExtent(0, piece,
-   * numPieces, ghostLevel)
-   */
-  VTK_LEGACY(void SetUpdateExtent(
-    int piece,int numPieces, int ghostLevel));
-
-  /**
-   * Set the output update extent for data objects that use 3D extents
-   */
-  VTK_LEGACY(void SetUpdateExtent(int port, int extent[6]));
-
-  /**
-   * Convenience function equivalent to SetUpdateExtent(0, extent)
-   */
-  VTK_LEGACY(void SetUpdateExtent(int extent[6]));
-
   //@{
   /**
    * These functions return the update extent for output ports that
    * use 3D extents. Where port is not specified, it is assumed to
    * be 0.
    */
-  int* GetUpdateExtent()
+  int* GetUpdateExtent() VTK_SIZEHINT(6)
   {
     return this->GetUpdateExtent(0);
   }
-  int* GetUpdateExtent(int port);
+  int* GetUpdateExtent(int port) VTK_SIZEHINT(6);
   void GetUpdateExtent(int& x0, int& x1, int& y0, int& y1,
                        int& z0, int& z1)
   {
@@ -755,7 +719,7 @@ public:
 
 protected:
   vtkAlgorithm();
-  ~vtkAlgorithm() VTK_OVERRIDE;
+  ~vtkAlgorithm() override;
 
   // Keys used to indicate that input/output port information has been
   // filled.
@@ -830,7 +794,7 @@ protected:
    * this signature. This will override the connection id that the
    * user set in SetInputArrayToProcess() with the connection id
    * passed. This way, the user specifies one array to process and
-   * that information is  used to obtain arrays for all the connection
+   * that information is used to obtain arrays for all the connection
    * on the port with the appropriate connection id substituted.
    */
   vtkDataArray *GetInputArrayToProcess(int idx,
@@ -864,7 +828,7 @@ protected:
    * this signature. This will override the connection id that the
    * user set in SetInputArrayToProcess() with the connection id
    * passed. This way, the user specifies one array to process and
-   * that information is  used to obtain arrays for all the connection
+   * that information is used to obtain arrays for all the connection
    * on the port with the appropriate connection id substituted.
    */
   vtkAbstractArray *GetInputAbstractArrayToProcess(int idx,
@@ -916,14 +880,14 @@ protected:
   char  *ProgressText;
 
   // Garbage collection support.
-  void ReportReferences(vtkGarbageCollector*) VTK_OVERRIDE;
+  void ReportReferences(vtkGarbageCollector*) override;
 
   // executive methods below
 
   /**
    * Replace the Nth connection on the given input port.  For use only
-   * by this class and subclasses.  If this is used to store a NULL
-   * input then the subclass must be able to handle NULL inputs in its
+   * by this class and subclasses.  If this is used to store a nullptr
+   * input then the subclass must be able to handle nullptr inputs in its
    * ProcessRequest method.
    */
   virtual void SetNthInputConnection(int port, int index,
@@ -932,7 +896,7 @@ protected:
   /**
    * Set the number of input connections on the given input port.  For
    * use only by this class and subclasses.  If this is used to store
-   * a NULL input then the subclass must be able to handle NULL inputs
+   * a nullptr input then the subclass must be able to handle nullptr inputs
    * in its ProcessRequest method.
    */
   virtual void SetNumberOfInputConnections(int port, int n);
@@ -965,8 +929,8 @@ private:
   static void ConnectionRemoveAllOutput(vtkAlgorithm* producer, int port);
 
 private:
-  vtkAlgorithm(const vtkAlgorithm&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAlgorithm&) VTK_DELETE_FUNCTION;
+  vtkAlgorithm(const vtkAlgorithm&) = delete;
+  void operator=(const vtkAlgorithm&) = delete;
 };
 
 #endif

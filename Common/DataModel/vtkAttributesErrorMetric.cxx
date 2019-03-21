@@ -34,9 +34,7 @@ vtkAttributesErrorMetric::vtkAttributesErrorMetric()
 }
 
 //-----------------------------------------------------------------------------
-vtkAttributesErrorMetric::~vtkAttributesErrorMetric()
-{
-}
+vtkAttributesErrorMetric::~vtkAttributesErrorMetric() = default;
 
 //-----------------------------------------------------------------------------
 // Description:
@@ -78,9 +76,9 @@ int vtkAttributesErrorMetric::RequiresEdgeSubdivision(double *leftPoint,
                                                       double *rightPoint,
                                                       double alpha)
 {
-  assert("pre: leftPoint_exists" && leftPoint!=0);
-  assert("pre: midPoint_exists" && midPoint!=0);
-  assert("pre: rightPoint_exists" && rightPoint!=0);
+  assert("pre: leftPoint_exists" && leftPoint!=nullptr);
+  assert("pre: midPoint_exists" && midPoint!=nullptr);
+  assert("pre: rightPoint_exists" && rightPoint!=nullptr);
   assert("pre: clamped_alpha" && alpha>0 && alpha<1);
 
   int result;
@@ -167,9 +165,9 @@ double vtkAttributesErrorMetric::GetError(double *leftPoint,
                                           double *rightPoint,
                                           double alpha)
 {
-  assert("pre: leftPoint_exists" && leftPoint!=0);
-  assert("pre: midPoint_exists" && midPoint!=0);
-  assert("pre: rightPoint_exists" && rightPoint!=0);
+  assert("pre: leftPoint_exists" && leftPoint!=nullptr);
+  assert("pre: midPoint_exists" && midPoint!=nullptr);
+  assert("pre: rightPoint_exists" && rightPoint!=nullptr);
   assert("pre: clamped_alpha" && alpha>0 && alpha<1);
 
   double ae;

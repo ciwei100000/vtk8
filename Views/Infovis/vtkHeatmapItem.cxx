@@ -48,10 +48,10 @@ vtkHeatmapItem::vtkHeatmapItem() : PositionVector(0, 0)
   this->HeatmapBuildTime = 0;
   this->Table = vtkSmartPointer<vtkTable>::New();
   this->NameColumn = "name";
-  this->RowNames = NULL;
+  this->RowNames = nullptr;
 
-  this->CollapsedRowsArray = NULL;
-  this->CollapsedColumnsArray = NULL;
+  this->CollapsedRowsArray = nullptr;
+  this->CollapsedColumnsArray = nullptr;
 
   /* initialize bounds so that the mouse cursor is never considered
    * "inside" the heatmap */
@@ -68,23 +68,21 @@ vtkHeatmapItem::vtkHeatmapItem() : PositionVector(0, 0)
 
   this->CategoryLegend->SetVisible(false);
   this->CategoryLegend->CacheBoundsOff();
-  this->AddItem(this->CategoryLegend.GetPointer());
+  this->AddItem(this->CategoryLegend);
 
   this->ColorLegend->SetVisible(false);
   this->ColorLegend->DrawBorderOn();
   this->ColorLegend->CacheBoundsOff();
-  this->AddItem(this->ColorLegend.GetPointer());
+  this->AddItem(this->ColorLegend);
 
   this->LegendPositionSet = false;
 
   this->Tooltip->SetVisible(false);
-  this->AddItem(this->Tooltip.GetPointer());
+  this->AddItem(this->Tooltip);
 }
 
 //-----------------------------------------------------------------------------
-vtkHeatmapItem::~vtkHeatmapItem()
-{
-}
+vtkHeatmapItem::~vtkHeatmapItem() = default;
 
 //-----------------------------------------------------------------------------
 void vtkHeatmapItem::SetPosition(const vtkVector2f &pos)
@@ -101,7 +99,7 @@ vtkVector2f vtkHeatmapItem::GetPositionVector()
 //-----------------------------------------------------------------------------
 void vtkHeatmapItem::SetTable(vtkTable *table)
 {
-  if (table == NULL || table->GetNumberOfRows() == 0)
+  if (table == nullptr || table->GetNumberOfRows() == 0)
   {
     this->Table = vtkSmartPointer<vtkTable>::New();
     return;
@@ -111,16 +109,16 @@ void vtkHeatmapItem::SetTable(vtkTable *table)
   // get the row names for this table
   vtkStringArray *rowNames = vtkArrayDownCast<vtkStringArray>(
     this->Table->GetColumnByName(this->NameColumn));
-  if (rowNames == NULL)
+  if (rowNames == nullptr)
   {
     rowNames = vtkArrayDownCast<vtkStringArray>(
       this->Table->GetColumn(0));
   }
-  if (rowNames == NULL)
+  if (rowNames == nullptr)
   {
     vtkWarningMacro("Could not determine row name column."
       "Try calling vtkHeatmapItem::SetNameColumn(vtkStdString)");
-    this->RowNames = NULL;
+    this->RowNames = nullptr;
   }
   else
   {
@@ -259,9 +257,9 @@ void vtkHeatmapItem::GenerateContinuousDataLookupTable()
   }
 
   this->ColorLegendLookupTable->DeepCopy(
-    this->ContinuousDataLookupTable.GetPointer());
+    this->ContinuousDataLookupTable);
   this->ColorLegend->SetTransferFunction(
-    this->ColorLegendLookupTable.GetPointer());
+    this->ColorLegendLookupTable);
 }
 
 //-----------------------------------------------------------------------------
@@ -314,10 +312,10 @@ void vtkHeatmapItem::GenerateCategoricalDataLookupTable()
 
   vtkNew<vtkColorSeries> colorSeries;
   colorSeries->SetColorScheme(vtkColorSeries::BREWER_QUALITATIVE_SET3);
-  colorSeries->BuildLookupTable(this->CategoricalDataLookupTable.GetPointer());
+  colorSeries->BuildLookupTable(this->CategoricalDataLookupTable);
 
   this->CategoryLegend->SetScalarsToColors(
-    this->CategoricalDataLookupTable.GetPointer());
+    this->CategoricalDataLookupTable);
 }
 
 //-----------------------------------------------------------------------------
@@ -469,7 +467,7 @@ void vtkHeatmapItem::PaintBuffers(vtkContext2D *painter)
     currentlyCollapsingRows = false;
 
     // get the name of this row
-    std::string name = "";
+    std::string name;
     if (this->RowNames)
     {
       name = this->RowNames->GetValue(row);
@@ -608,7 +606,7 @@ void vtkHeatmapItem::PaintBuffers(vtkContext2D *painter)
         break;
     }
 
-    if (name != "" &&
+    if (!name.empty() &&
         this->SceneBottomLeft[0] < labelStartX &&
         this->SceneTopRight[0] > labelStartX   &&
         this->SceneBottomLeft[1] < labelStartY &&
@@ -725,7 +723,7 @@ void vtkHeatmapItem::UpdateVisibleSceneExtent(vtkContext2D *painter)
     static_cast<double>(this->GetScene()->GetSceneHeight() - position[1]);
   this->SceneTopRight[2] = 0.0;
   vtkNew<vtkMatrix3x3> inverse;
-  painter->GetTransform()->GetInverse(inverse.GetPointer());
+  painter->GetTransform()->GetInverse(inverse);
   inverse->MultiplyPoint(this->SceneBottomLeft, this->SceneBottomLeft);
   inverse->MultiplyPoint(this->SceneTopRight, this->SceneTopRight);
 }
@@ -734,7 +732,7 @@ void vtkHeatmapItem::UpdateVisibleSceneExtent(vtkContext2D *painter)
 bool vtkHeatmapItem::LineIsVisible(double x0, double y0,
                                         double x1, double y1)
 {
-  // use local variables to improve readibility
+  // use local variables to improve readability
   double xMinScene = this->SceneBottomLeft[0];
   double yMinScene = this->SceneBottomLeft[1];
   double xMaxScene = this->SceneTopRight[0];
@@ -804,7 +802,7 @@ bool vtkHeatmapItem::MouseMoveEvent(const vtkContextMouseEvent &event)
     pos[0] = event.GetPos().GetX();
     pos[1] = event.GetPos().GetY();
     pos[2] = 0;
-    this->GetScene()->GetTransform()->GetInverse(inverse.GetPointer());
+    this->GetScene()->GetTransform()->GetInverse(inverse);
     inverse->MultiplyPoint(pos, pos);
     if (pos[0] <= this->MaxX && pos[0] >= this->MinX &&
         pos[1] <= this->MaxY && pos[1] >= this->MinY)
@@ -1118,7 +1116,7 @@ void vtkHeatmapItem::GetBounds(double bounds[4])
 }
 
 //-----------------------------------------------------------------------------
-void vtkHeatmapItem::MarkRowAsBlank(std::string rowName)
+void vtkHeatmapItem::MarkRowAsBlank(const std::string& rowName)
 {
   this->BlankRows.insert(rowName);
 }
@@ -1132,7 +1130,7 @@ bool vtkHeatmapItem::MouseDoubleClickEvent(const vtkContextMouseEvent &event)
   pos[0] = event.GetPos().GetX();
   pos[1] = event.GetPos().GetY();
   pos[2] = 0;
-  this->GetScene()->GetTransform()->GetInverse(inverse.GetPointer());
+  this->GetScene()->GetTransform()->GetInverse(inverse);
   inverse->MultiplyPoint(pos, pos);
   if (pos[0] <= this->MaxX && pos[0] >= this->MinX &&
       pos[1] <= this->MaxY && pos[1] >= this->MinY)
@@ -1165,11 +1163,11 @@ bool vtkHeatmapItem::MouseDoubleClickEvent(const vtkContextMouseEvent &event)
       this->CategoryLegendValues->Squeeze();
       stringColumn->SetMaxDiscreteValues(stringColumn->GetNumberOfTuples() - 1);
       stringColumn->GetProminentComponentValues(
-        0, this->CategoryLegendValues.GetPointer());
+        0, this->CategoryLegendValues);
       this->CategoryLegendValues->Modified();
 
-      // these distinct values become the the input to our categorical legend
-      this->CategoryLegend->SetValues(this->CategoryLegendValues.GetPointer());
+      // these distinct values become the input to our categorical legend
+      this->CategoryLegend->SetValues(this->CategoryLegendValues);
       this->CategoryLegend->SetTitle(this->Table->GetColumn(column)->GetName());
       this->CategoryLegend->SetVisible(true);
       this->ColorLegend->SetVisible(false);

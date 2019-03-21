@@ -30,6 +30,8 @@
  * you prefer. (Note: the label format specifies the format to use for
  * a single component. The label is creating by looping over all components
  * and using the label format to render each component.)
+ * The character separator between components can be set. By default,
+ * it is set to a single whitespace.
  *
  * @warning
  * Use this filter in combination with vtkSelectVisiblePoints if you want
@@ -75,7 +77,7 @@ public:
   static vtkLabeledDataMapper *New();
 
   vtkTypeMacro(vtkLabeledDataMapper,vtkMapper2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -104,6 +106,14 @@ public:
    */
   vtkSetMacro(LabeledComponent,int);
   vtkGetMacro(LabeledComponent,int);
+  //@}
+
+  //@{
+  /**
+   * Set/Get the separator between components.
+   */
+  vtkSetMacro(ComponentSeparator,char);
+  vtkGetMacro(ComponentSeparator,char);
   //@}
 
   //@{
@@ -175,14 +185,14 @@ public:
   /**
    * Draw the text to the screen at each input point.
    */
-  void RenderOpaqueGeometry(vtkViewport* viewport, vtkActor2D* actor) VTK_OVERRIDE;
-  void RenderOverlay(vtkViewport* viewport, vtkActor2D* actor) VTK_OVERRIDE;
+  void RenderOpaqueGeometry(vtkViewport* viewport, vtkActor2D* actor) override;
+  void RenderOverlay(vtkViewport* viewport, vtkActor2D* actor) override;
   //@}
 
   /**
    * Release any graphics resources that are being consumed by this actor.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   //@{
   /**
@@ -213,7 +223,7 @@ public:
   /**
    * Return the modified time for this object.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -242,7 +252,7 @@ public:
 
 protected:
   vtkLabeledDataMapper();
-  ~vtkLabeledDataMapper() VTK_OVERRIDE;
+  ~vtkLabeledDataMapper() override;
 
   vtkDataSet *Input;
 
@@ -253,6 +263,8 @@ protected:
   char  *FieldDataName;
   int CoordinateSystem;
 
+  char  ComponentSeparator;
+
   vtkTimeStamp BuildTime;
 
   int NumberOfLabels;
@@ -261,7 +273,7 @@ protected:
   double* LabelPositions;
   vtkTransform *Transform;
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
   void AllocateLabels(int numLabels);
   void BuildLabels();
@@ -271,8 +283,8 @@ protected:
   Internals* Implementation;
 
 private:
-  vtkLabeledDataMapper(const vtkLabeledDataMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkLabeledDataMapper&) VTK_DELETE_FUNCTION;
+  vtkLabeledDataMapper(const vtkLabeledDataMapper&) = delete;
+  void operator=(const vtkLabeledDataMapper&) = delete;
 };
 
 #endif

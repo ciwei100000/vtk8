@@ -76,7 +76,7 @@ vtkParallelTimer::vtkParallelTimerDestructor::~vtkParallelTimerDestructor()
   if (this->Log)
   {
     this->Log->Delete();
-    this->Log = NULL;
+    this->Log = nullptr;
   }
 }
 
@@ -248,18 +248,33 @@ vtkParallelTimerBuffer &vtkParallelTimerBuffer::operator>>(ostringstream &s)
     switch (c)
     {
       case 'i':
-        s << *(reinterpret_cast<int*>(this->Data+i));
-        i += sizeof(int);
+      {
+        int temp;
+        size_t n = sizeof(temp);
+        memcpy(&temp, this->Data+i, n);
+        s << temp;
+        i += n;
+      }
         break;
 
       case 'l':
-        s << *(reinterpret_cast<long long*>(this->Data+i));
-        i += sizeof(long long);
+      {
+        long long temp;
+        size_t n = sizeof(temp);
+        memcpy(&temp, this->Data+i, n);
+        s << temp;
+        i += n;
+      }
         break;
 
       case 'd':
-        s << *(reinterpret_cast<double*>(this->Data+i));
-        i += sizeof(double);
+      {
+        double temp;
+        size_t n = sizeof(temp);
+        memcpy(&temp, this->Data+i, n);
+        s << temp;
+        i += n;
+      }
         break;
 
       case 's':
@@ -454,7 +469,11 @@ vtkParallelTimer *vtkParallelTimer::GetGlobalInstance()
   {
     vtkParallelTimer *log=vtkParallelTimer::New();
     ostringstream oss;
+#ifdef _WIN32
+    oss << GetCurrentProcessId() << ".log";
+#else
     oss << getpid() << ".log";
+#endif
     log->SetFileName(oss.str().c_str());
 
     vtkParallelTimer::GlobalInstance=log;
@@ -473,7 +492,7 @@ void vtkParallelTimer::DeleteGlobalInstance()
   if (vtkParallelTimer::GlobalInstance)
   {
     vtkParallelTimer::GlobalInstance->Delete();
-    vtkParallelTimer::GlobalInstance = NULL;
+    vtkParallelTimer::GlobalInstance = nullptr;
 
     vtkParallelTimer::GlobalInstanceDestructor.SetLog(0);
   }
@@ -645,7 +664,7 @@ int vtkParallelTimer::Write()
       vtkErrorMacro(
         << "Failed to open "
         << this->FileName
-        << " for  writing.");
+        << " for writing.");
       return -1;
     }
     time_t t;

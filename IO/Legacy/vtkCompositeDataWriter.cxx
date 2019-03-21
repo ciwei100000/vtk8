@@ -25,6 +25,8 @@
 #include "vtkNonOverlappingAMR.h"
 #include "vtkObjectFactory.h"
 #include "vtkOverlappingAMR.h"
+#include "vtkPartitionedDataSet.h"
+#include "vtkPartitionedDataSetCollection.h"
 #include "vtkUniformGrid.h"
 #include "vtkAMRBox.h"
 #include "vtkAMRInformation.h"
@@ -37,14 +39,10 @@
 
 vtkStandardNewMacro(vtkCompositeDataWriter);
 //----------------------------------------------------------------------------
-vtkCompositeDataWriter::vtkCompositeDataWriter()
-{
-}
+vtkCompositeDataWriter::vtkCompositeDataWriter() = default;
 
 //----------------------------------------------------------------------------
-vtkCompositeDataWriter::~vtkCompositeDataWriter()
-{
-}
+vtkCompositeDataWriter::~vtkCompositeDataWriter() = default;
 
 //----------------------------------------------------------------------------
 vtkCompositeDataSet* vtkCompositeDataWriter::GetInput()
@@ -98,6 +96,9 @@ void vtkCompositeDataWriter::WriteData()
   vtkOverlappingAMR* oamr = vtkOverlappingAMR::SafeDownCast(input);
   vtkNonOverlappingAMR* noamr = vtkNonOverlappingAMR::SafeDownCast(input);
   vtkMultiPieceDataSet* mp = vtkMultiPieceDataSet::SafeDownCast(input);
+  vtkPartitionedDataSet* pd = vtkPartitionedDataSet::SafeDownCast(input);
+  vtkPartitionedDataSetCollection* pdc =
+    vtkPartitionedDataSetCollection::SafeDownCast(input);
   if (mb)
   {
     *fp << "DATASET MULTIBLOCK\n";
@@ -136,6 +137,22 @@ void vtkCompositeDataWriter::WriteData()
     if (!this->WriteCompositeData(fp, mp))
     {
       vtkErrorMacro("Error writing multi-piece dataset.");
+    }
+  }
+  else if (pd)
+  {
+    *fp << "DATASET PARTITIONED\n";
+    if (!this->WriteCompositeData(fp, pd))
+    {
+      vtkErrorMacro("Error writing partitioned dataset.");
+    }
+  }
+  else if (pdc)
+  {
+    *fp << "DATASET PARTITIONED_COLLECTION\n";
+    if (!this->WriteCompositeData(fp, pdc))
+    {
+      vtkErrorMacro("Error writing partitioned dataset collection.");
     }
   }
   else
@@ -210,6 +227,54 @@ bool vtkCompositeDataWriter::WriteCompositeData(ostream* fp,
 
 //----------------------------------------------------------------------------
 bool vtkCompositeDataWriter::WriteCompositeData(ostream* fp,
+  vtkPartitionedDataSet* pd)
+{
+  *fp << "CHILDREN " << pd->GetNumberOfPartitions() << "\n";
+  for (unsigned int cc=0; cc < pd->GetNumberOfPartitions(); cc++)
+  {
+    vtkDataSet* partition = pd->GetPartition(cc);
+    *fp << "CHILD " << (partition? partition->GetDataObjectType() : -1);
+    *fp << "\n";
+
+    if (partition)
+    {
+      if (!this->WriteBlock(fp, partition))
+      {
+        return false;
+      }
+    }
+    *fp << "ENDCHILD\n";
+  }
+
+  return true;
+}
+
+//----------------------------------------------------------------------------
+bool vtkCompositeDataWriter::WriteCompositeData(ostream* fp,
+  vtkPartitionedDataSetCollection* pd)
+{
+  *fp << "CHILDREN " << pd->GetNumberOfPartitionedDataSets() << "\n";
+  for (unsigned int cc=0; cc < pd->GetNumberOfPartitionedDataSets(); cc++)
+  {
+    vtkPartitionedDataSet* dataset = pd->GetPartitionedDataSet(cc);
+    *fp << "CHILD " << (dataset? dataset->GetDataObjectType() : -1);
+    *fp << "\n";
+
+    if (dataset)
+    {
+      if (!this->WriteBlock(fp, dataset))
+      {
+        return false;
+      }
+    }
+    *fp << "ENDCHILD\n";
+  }
+
+  return true;
+}
+
+//----------------------------------------------------------------------------
+bool vtkCompositeDataWriter::WriteCompositeData(ostream* fp,
   vtkHierarchicalBoxDataSet* hb)
 {
   (void)fp;
@@ -268,7 +333,7 @@ bool vtkCompositeDataWriter::WriteCompositeData(
   }
   *fp << "AMRBOXES "
       << idata->GetNumberOfTuples() << " " << idata->GetNumberOfComponents() << "\n";
-  this->WriteArray(fp, idata->GetDataType(), idata.GetPointer(),
+  this->WriteArray(fp, idata->GetDataType(), idata,
     "", idata->GetNumberOfTuples(), idata->GetNumberOfComponents());
 
   // now dump the real data, if any.
@@ -286,7 +351,7 @@ bool vtkCompositeDataWriter::WriteCompositeData(
         // write it.
         vtkNew<vtkImageData> image;
         image->ShallowCopy(dataset);
-        if (!this->WriteBlock(fp, image.GetPointer()))
+        if (!this->WriteBlock(fp, image))
         {
           return false;
         }

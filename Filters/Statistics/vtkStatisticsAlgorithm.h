@@ -43,7 +43,7 @@ PURPOSE.  See the above copyright notice for more information.
  *   * Input model (vtkMultiBlockDataSet)
  * * 3 output ports:
  *   * Data (input annotated with assessments when the Assess operation is ON).
- *   * Output model (identical to the the input model when Learn operation is OFF).
+ *   * Output model (identical to the input model when Learn operation is OFF).
  *   * Output of statistical tests. Some engines do not offer such tests yet, in
  *     which case this output will always be empty even when the Test operation is ON.
  *
@@ -72,7 +72,7 @@ class VTKFILTERSSTATISTICS_EXPORT vtkStatisticsAlgorithm : public vtkTableAlgori
 {
 public:
   vtkTypeMacro(vtkStatisticsAlgorithm, vtkTableAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * enumeration values to specify input port types
@@ -198,7 +198,7 @@ public:
   virtual void SetColumnStatus( const char* namCol, int status );
 
   /**
-   * Set the the status of each and every column in the current request to OFF (0).
+   * Set the status of each and every column in the current request to OFF (0).
    */
   virtual void ResetAllColumnStates();
 
@@ -237,7 +237,7 @@ public:
 
    * For the version of this routine that returns const char*,
    * if the request or column does not exist because \a r or \a c is out of bounds,
-   * the routine returns NULL. Otherwise it returns the column name.
+   * the routine returns nullptr. Otherwise it returns the column name.
    * This version is not thread-safe.
    */
   virtual const char* GetColumnForRequest( vtkIdType r, vtkIdType c );
@@ -268,7 +268,7 @@ public:
   /**
    * A convenience method (in particular for access from other applications) to
    * set parameter values of Learn mode.
-   * Return true if setting of requested parameter name was excuted, false otherwise.
+   * Return true if setting of requested parameter name was executed, false otherwise.
    * NB: default method (which is sufficient for most statistics algorithms) does not
    * have any Learn parameters to set and always returns false.
    */
@@ -284,15 +284,15 @@ public:
 
 protected:
   vtkStatisticsAlgorithm();
-  ~vtkStatisticsAlgorithm() VTK_OVERRIDE;
+  ~vtkStatisticsAlgorithm() override;
 
-  int FillInputPortInformation( int port, vtkInformation* info ) VTK_OVERRIDE;
-  int FillOutputPortInformation( int port, vtkInformation* info ) VTK_OVERRIDE;
+  int FillInputPortInformation( int port, vtkInformation* info ) override;
+  int FillOutputPortInformation( int port, vtkInformation* info ) override;
 
   int RequestData(
     vtkInformation*,
     vtkInformationVector**,
-    vtkInformationVector* ) VTK_OVERRIDE;
+    vtkInformationVector* ) override;
 
   /**
    * Execute the calculations required by the Learn option, given some input Data
@@ -345,8 +345,8 @@ protected:
   vtkStatisticsAlgorithmPrivate* Internals;
 
 private:
-  vtkStatisticsAlgorithm(const vtkStatisticsAlgorithm&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkStatisticsAlgorithm&) VTK_DELETE_FUNCTION;
+  vtkStatisticsAlgorithm(const vtkStatisticsAlgorithm&) = delete;
+  void operator=(const vtkStatisticsAlgorithm&) = delete;
 };
 
 #endif
