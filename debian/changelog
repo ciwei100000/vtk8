@@ -6,5 +6,16 @@ vtk8 (8.2.0+dfsg1-1) UNRELEASED; urgency=medium
   [ Drew Parsons ]
   * Thanks: Nico Schloemer, Johannes Schauer and Gert for initial work
     and python3 packaging.
+  * Drop deprecated patches:
+     10_allpatches.patch
+     40_use_system_sqlite.patch
+      - VTK_USE_SYSTEM_SQLITE now available
+     60_use_system_mpi4py.patch
+      - handled by VTK_USE_SYSTEM_MPI4PY
+     80_fix_arm_compilation.patch
+      - Qt5 now builds on arm
+     107_gl2ps_1.4.0.patch
+     109_use_parallel_hdf5.patch
+     111_search_multiarch_paths_for_libproj.patch
 
  -- Johannes Schauer <josch@debian.org>  Fri, 03 Nov 2017 19:59:42 +0100
