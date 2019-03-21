@@ -37,7 +37,7 @@ public:
   static vtk3DSImporter *New();
 
   vtkTypeMacro(vtk3DSImporter,vtkImporter);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -52,9 +52,9 @@ public:
    * Set/Get the computation of normals. If on, imported geometry will
    * be run through vtkPolyDataNormals.
    */
-  vtkSetMacro(ComputeNormals,int);
-  vtkGetMacro(ComputeNormals,int);
-  vtkBooleanMacro(ComputeNormals,int);
+  vtkSetMacro(ComputeNormals,vtkTypeBool);
+  vtkGetMacro(ComputeNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputeNormals,vtkTypeBool);
   //@}
 
   /**
@@ -71,23 +71,23 @@ public:
 
 protected:
   vtk3DSImporter();
-  ~vtk3DSImporter() VTK_OVERRIDE;
+  ~vtk3DSImporter() override;
 
-  int ImportBegin () VTK_OVERRIDE;
-  void ImportEnd () VTK_OVERRIDE;
-  void ImportActors (vtkRenderer *renderer) VTK_OVERRIDE;
-  void ImportCameras (vtkRenderer *renderer) VTK_OVERRIDE;
-  void ImportLights (vtkRenderer *renderer) VTK_OVERRIDE;
-  void ImportProperties (vtkRenderer *renderer) VTK_OVERRIDE;
+  int ImportBegin () override;
+  void ImportEnd () override;
+  void ImportActors (vtkRenderer *renderer) override;
+  void ImportCameras (vtkRenderer *renderer) override;
+  void ImportLights (vtkRenderer *renderer) override;
+  void ImportProperties (vtkRenderer *renderer) override;
   vtkPolyData *GeneratePolyData (vtk3DSMesh *meshPtr);
   int Read3DS ();
 
   char *FileName;
   FILE *FileFD;
-  int ComputeNormals;
+  vtkTypeBool ComputeNormals;
 private:
-  vtk3DSImporter(const vtk3DSImporter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtk3DSImporter&) VTK_DELETE_FUNCTION;
+  vtk3DSImporter(const vtk3DSImporter&) = delete;
+  void operator=(const vtk3DSImporter&) = delete;
 };
 
 #endif

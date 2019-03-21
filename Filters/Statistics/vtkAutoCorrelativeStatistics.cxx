@@ -47,9 +47,7 @@ vtkAutoCorrelativeStatistics::vtkAutoCorrelativeStatistics()
 }
 
 // ----------------------------------------------------------------------
-vtkAutoCorrelativeStatistics::~vtkAutoCorrelativeStatistics()
-{
-}
+vtkAutoCorrelativeStatistics::~vtkAutoCorrelativeStatistics() = default;
 
 // ----------------------------------------------------------------------
 void vtkAutoCorrelativeStatistics::PrintSelf( ostream &os, vtkIndent indent )
@@ -603,7 +601,7 @@ void vtkAutoCorrelativeStatistics::SelectAssessFunctor( vtkTable* outData,
                                                     vtkStringArray* rowNames,
                                                     AssessFunctor*& dfunc )
 {
-  dfunc = 0;
+  dfunc = nullptr;
   vtkMultiBlockDataSet* inMeta = vtkMultiBlockDataSet::SafeDownCast( inMetaDO );
   if ( ! inMeta )
   {

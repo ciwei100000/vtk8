@@ -18,8 +18,8 @@
  *
  * vtkGDALRasterReader is a source object that reads raster files and uses
  * GDAL as the underlying library for the task. GDAL is required for this
- * reader. The output of the reader is a vtkUniformGrid instead of vtkImageData
- * to support blanking.
+ * reader. The output of the reader is a vtkUniformGrid (vtkImageData
+ * with blanking) with cell data.
  *
  *
  * @sa
@@ -41,19 +41,15 @@ class VTKIOGDAL_EXPORT vtkGDALRasterReader : public vtkImageReader2
 public:
   static vtkGDALRasterReader* New();
   vtkTypeMacro(vtkGDALRasterReader, vtkImageReader2);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   vtkGDALRasterReader();
-  virtual ~vtkGDALRasterReader();
+  ~vtkGDALRasterReader() override;
 
-  //@{
   /**
-   * Set input file name
+   * Is this file supported
    */
-  vtkSetStringMacro(FileName);
-  // Get input file name
-  vtkGetStringMacro(FileName);
-  //@}
+  int CanReadFile(const char* fname) override;
 
   /**
    * Return proj4 spatial reference
@@ -76,7 +72,7 @@ public:
 
   //@{
   /**
-   * Get raster width and heigth
+   * Get raster width and height
    */
   vtkGetVector2Macro(RasterDimensions, int);
   //@}
@@ -104,20 +100,23 @@ public:
   const std::string& GetDriverLongName();
   //@}
 
-  vtkIdType GetNumberOfPoints();
+  /**
+   * Return the number of cells that are not set to GDAL NODATA
+   */
+  vtkIdType GetNumberOfCells();
 
 protected:
 
-  virtual int RequestData(vtkInformation* request,
-                          vtkInformationVector** inputVector,
-                          vtkInformationVector* outputVector);
+  int RequestData(vtkInformation* request,
+                  vtkInformationVector** inputVector,
+                  vtkInformationVector* outputVector) override;
 
-  virtual int RequestInformation(vtkInformation* request,
-                                 vtkInformationVector** inputVector,
-                                 vtkInformationVector* outputVector);
+  int RequestInformation(vtkInformation* request,
+                         vtkInformationVector** inputVector,
+                         vtkInformationVector* outputVector) override;
 
-  virtual int FillOutputPortInformation(int port,
-                                        vtkInformation* info);
+  int FillOutputPortInformation(int port,
+                                vtkInformation* info) override;
 
 protected:
   int TargetDimensions[2];
@@ -133,8 +132,8 @@ protected:
   vtkGDALRasterReaderInternal* Implementation;
 
 private:
-  vtkGDALRasterReader(const vtkGDALRasterReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGDALRasterReader&) VTK_DELETE_FUNCTION;
+  vtkGDALRasterReader(const vtkGDALRasterReader&) = delete;
+  void operator=(const vtkGDALRasterReader&) = delete;
 };
 
 #endif // vtkGDALRasterReader_h

@@ -28,34 +28,14 @@
 #include "vtkMPI.h"
 
 
-#ifdef VTK_OPENGL2
-# include "vtkOpenGLFramebufferObject.h"
-# include "vtkOpenGLRenderUtilities.h"
-# include "vtkOpenGLHelper.h"
-# include "vtkOpenGLShaderCache.h"
-# include "vtkShaderProgram.h"
-# include "vtkTextureObjectVS.h"
-# include "vtkPSurfaceLICComposite_CompFS.h"
-#else
-# include "vtkFrameBufferObject2.h"
-# include "vtkShader2.h"
-# include "vtkShaderProgram2.h"
-# include "vtkUniformVariables.h"
-# include "vtkShader2Collection.h"
-# include "vtkOpenGLExtensionManager.h"
-# include "vtkgl.h"
-// compositing shader
-extern const char *vtkPSurfaceLICComposite_Comp;
-# ifndef GL_FRAMEBUFFER
-#  define GL_FRAMEBUFFER vtkgl::FRAMEBUFFER_EXT
-# endif
-# ifndef GL_DRAW_FRAMEBUFFER
-#  define GL_DRAW_FRAMEBUFFER vtkgl::DRAW_FRAMEBUFFER_EXT
-# endif
-# ifndef GL_TEXTURE0
-#  define GL_TEXTURE0 vtkgl::TEXTURE0
-# endif
-#endif
+#include "vtkOpenGLFramebufferObject.h"
+#include "vtkOpenGLRenderUtilities.h"
+#include "vtkOpenGLHelper.h"
+#include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
+#include "vtkShaderProgram.h"
+#include "vtkTextureObjectVS.h"
+#include "vtkPSurfaceLICComposite_CompFS.h"
 
 
 #include <list>
@@ -317,13 +297,13 @@ vtkStandardNewMacro(vtkPSurfaceLICComposite);
 vtkPSurfaceLICComposite::vtkPSurfaceLICComposite()
         :
      vtkSurfaceLICComposite(),
-     PainterComm(NULL),
-     PixelOps(NULL),
+     PainterComm(nullptr),
+     PixelOps(nullptr),
      CommRank(0),
      CommSize(1),
-     Context(NULL),
-     FBO(NULL),
-     CompositeShader(NULL)
+     Context(nullptr),
+     FBO(nullptr),
+     CompositeShader(nullptr)
 {
   this->PainterComm = new vtkPPainterCommunicator;
   this->PixelOps = new vtkPPixelExtentOps;
@@ -336,11 +316,7 @@ vtkPSurfaceLICComposite::~vtkPSurfaceLICComposite()
   delete this->PixelOps;
   if (this->CompositeShader)
   {
-#ifdef VTK_OPENGL2
     delete this->CompositeShader;
-#else
-    this->CompositeShader->Delete();
-#endif
     this->CompositeShader = 0;
   }
   if (this->FBO)
@@ -376,25 +352,20 @@ void vtkPSurfaceLICComposite::SetContext(vtkOpenGLRenderWindow *rwin)
   // free the existing shader and fbo
   if ( this->CompositeShader )
   {
-#ifdef VTK_OPENGL2
     this->CompositeShader->ReleaseGraphicsResources(rwin);
     delete this->CompositeShader;
-#else
-    this->CompositeShader->Delete();
-#endif
-    this->CompositeShader = NULL;
+    this->CompositeShader = nullptr;
   }
 
   if ( this->FBO )
   {
     this->FBO->Delete();
-    this->FBO = NULL;
+    this->FBO = nullptr;
   }
 
   if ( this->Context )
   {
     // load, compile, and link the shader
-#ifdef VTK_OPENGL2
     this->CompositeShader = new vtkOpenGLHelper;
     std::string GSSource;
     this->CompositeShader->Program =
@@ -404,22 +375,6 @@ void vtkPSurfaceLICComposite::SetContext(vtkOpenGLRenderWindow *rwin)
 
     // setup a FBO for rendering
     this->FBO = vtkOpenGLFramebufferObject::New();
-#else
-    vtkShader2 *compositeShaderSrc = vtkShader2::New();
-    compositeShaderSrc->SetContext(this->Context);
-    compositeShaderSrc->SetType(VTK_SHADER_TYPE_FRAGMENT);
-    compositeShaderSrc->SetSourceCode(vtkPSurfaceLICComposite_Comp);
-
-    this->CompositeShader = vtkShaderProgram2::New();
-    this->CompositeShader->SetContext(this->Context);
-    this->CompositeShader->GetShaders()->AddItem(compositeShaderSrc);
-    this->CompositeShader->Build();
-
-    compositeShaderSrc->Delete();
-
-    // setup a FBO for rendering
-    this->FBO = vtkFrameBufferObject2::New();
-#endif
 
     this->FBO->SetContext(this->Context);
   }
@@ -457,7 +412,7 @@ int vtkPSurfaceLICComposite::AllGatherExtents(
         MPI_INT,
         comm);
 
-  // allocate a bufffer to receive the remote exts
+  // allocate a buffer to receive the remote exts
   int *recvCounts = static_cast<int*>(malloc(this->CommSize*sizeof(int)));
   int *recvDispls = static_cast<int*>(malloc(this->CommSize*sizeof(int)));
   int bufSize = 0;
@@ -836,7 +791,7 @@ int vtkPSurfaceLICComposite::MakeDecompDisjoint(
   // accumulate contrib from remote data
   size_t remSize = 4*ne;
   vector<int> rem(remSize);
-  int *pRem = ne ? &rem[0] : NULL;
+  int *pRem = ne ? &rem[0] : nullptr;
   for (size_t e=0; e<ne; ++e, pRem+=4)
   {
     tmpOut1[e].second.GetData(pRem);
@@ -845,7 +800,7 @@ int vtkPSurfaceLICComposite::MakeDecompDisjoint(
   MPI_Op parUnion = this->PixelOps->GetUnion();
   MPI_Allreduce(
         MPI_IN_PLACE,
-        ne ? &rem[0] : NULL,
+        ne ? &rem[0] : nullptr,
         (int)remSize,
         MPI_INT,
         parUnion,
@@ -853,7 +808,7 @@ int vtkPSurfaceLICComposite::MakeDecompDisjoint(
 
   // move from flat order back to rank indexed order and remove
   // empty extents
-  pRem = ne ? &rem[0] : NULL;
+  pRem = ne ? &rem[0] : nullptr;
   out.resize(this->CommSize);
   for (size_t e=0; e<ne; ++e, pRem+=4)
   {
@@ -959,7 +914,7 @@ int vtkPSurfaceLICComposite::AddGuardPixels(
         int ng
           = static_cast<int>(vectorMax[r][b]*arc)
           + this->NumberOfEEGuardPixels
-          + this->NumberOfAAGuardPixels;;
+          + this->NumberOfAAGuardPixels;
         ng = ng<2 ? 2 : ng;
         #ifdef vtkSurfaceLICPainterTIME
         log->GetHeader() << " " << ng;
@@ -991,7 +946,7 @@ double vtkPSurfaceLICComposite::EstimateCommunicationCost(
       const deque<deque<vtkPixelExtent> > &srcExts,
       const deque<deque<vtkPixelExtent> > &destExts)
 {
-  // compute the number off rank overlaping pixels, this is the
+  // compute the number off rank overlapping pixels, this is the
   // the number of pixels that need to be communicated. This is
   // not the number of pixels to be composited since some of those
   // may be on-rank.
@@ -1289,15 +1244,15 @@ int vtkPSurfaceLICComposite::Gather(
   {
     return -1;
   }
-  if (pSendPBO == NULL)
+  if (pSendPBO == nullptr)
   {
     return -2;
   }
-  if (this->Context == NULL)
+  if (this->Context == nullptr)
   {
     return -3;
   }
-  if (this->CompositeShader == NULL)
+  if (this->CompositeShader == nullptr)
   {
     return -4;
   }
@@ -1318,9 +1273,9 @@ int vtkPSurfaceLICComposite::Gather(
   vector<MPI_Request> mpiSendReqs;
   deque<MPI_Datatype> mpiTypes;
   #ifdef PBO_RECV_BUFFERS
-  deque<vtkPixelBufferObject*> recvPBOs(nTransactions, static_cast<vtkPixelBufferObject*>(NULL));
+  deque<vtkPixelBufferObject*> recvPBOs(nTransactions, static_cast<vtkPixelBufferObject*>(nullptr));
   #else
-  deque<void*> recvBufs(nTransactions, static_cast<void*>(NULL));
+  deque<void*> recvBufs(nTransactions, static_cast<void*>(nullptr));
   #endif
   for (int j=0; j<nTransactions; ++j)
   {
@@ -1334,7 +1289,7 @@ int vtkPSurfaceLICComposite::Gather(
     }
 
     #ifdef PBO_RECV_BUFFERS
-    void *pRecvPBO = NULL;
+    void *pRecvPBO = nullptr;
     #endif
 
     // encode transaction.
@@ -1397,7 +1352,7 @@ int vtkPSurfaceLICComposite::Gather(
   unsigned int winExtSize[2];
   this->WindowExt.Size(winExtSize);
 
-  if (newImage == NULL)
+  if (newImage == nullptr)
   {
     newImage = vtkTextureObject::New();
     newImage->SetContext(this->Context);
@@ -1424,19 +1379,15 @@ int vtkPSurfaceLICComposite::Gather(
   // the LIC'er requires all fragments in the vector
   // texture to be initialized to 0
   this->FBO->InitializeViewport(winExtSize[0], winExtSize[1]);
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_SCISSOR_TEST);
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-#ifdef VTK_OPENGL2
+  vtkOpenGLState *ostate = this->Context->GetState();
+  ostate->vtkglEnable(GL_DEPTH_TEST);
+  ostate->vtkglDisable(GL_SCISSOR_TEST);
+  ostate->vtkglClearColor(0.0, 0.0, 0.0, 0.0);
+  ostate->vtkglClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
   this->Context->GetShaderCache()->ReadyShaderProgram(
     this->CompositeShader->Program);
-#else
-  vtkUniformVariables *uniforms = this->CompositeShader->GetUniformVariables();
-  uniforms->SetUniformit("texData", 0);
-  this->CompositeShader->Use();
-#endif
 
   // overlap compositing of local data with communication
   for (int j=0; j<nTransactions; ++j)
@@ -1558,7 +1509,7 @@ int vtkPSurfaceLICComposite::Gather(
     pbo->UnmapUnpackedBuffer();
 
     free(rbuf);
-    rbuf = NULL;
+    rbuf = nullptr;
     #endif
 
     vtkTextureObject *tex = vtkTextureObject::New();
@@ -1566,7 +1517,7 @@ int vtkPSurfaceLICComposite::Gather(
     tex->Create2D(destDims[0], destDims[1], nComps, pbo, false);
 
     pbo->Delete();
-    pbo = NULL;
+    pbo = nullptr;
 
     #if vtkPSurfaceLICCompositeDEBUG>=2
     ostringstream oss;
@@ -1578,9 +1529,6 @@ int vtkPSurfaceLICComposite::Gather(
 
     tex->Delete();
   }
-#ifndef VTK_OPENGL2
-  this->CompositeShader->Restore();
-#endif
 
   this->FBO->DeactivateDrawBuffers();
   this->FBO->RemoveTexColorAttachment(GL_DRAW_FRAMEBUFFER, 0U);
@@ -1616,7 +1564,6 @@ int vtkPSurfaceLICComposite::ExecuteShader(
   float fext[4];
   next.GetData(fext);
 
-#ifdef VTK_OPENGL2
   float tcoords[8] =
     {0.0f, 0.0f,
      1.0f, 0.0f,
@@ -1639,24 +1586,6 @@ int vtkPSurfaceLICComposite::ExecuteShader(
   vtkOpenGLRenderUtilities::RenderQuad(verts, tcoords,
     this->CompositeShader->Program, this->CompositeShader->VAO);
   tex->Deactivate();
-#else
-  float tcoords[4] = {0.0f,1.0f, 0.0f,1.0f};
-
-  tex->Activate(GL_TEXTURE0);
-
-  int ids[8] = {0,2, 1,2, 1,3, 0,3};
-
-  glBegin(GL_QUADS);
-  for (int q=0; q<4; ++q)
-  {
-    int qq = 2*q;
-    glTexCoord2f(tcoords[ids[qq]], tcoords[ids[qq+1]]);
-    glVertex2f(fext[ids[qq]], fext[ids[qq+1]]);
-  }
-  glEnd();
-
-  //tex->Deactivate(GL_TEXTURE0);
-#endif
 
   return 0;
 }
@@ -1689,11 +1618,11 @@ int vtkPSurfaceLICComposite::Scatter(
   {
     return -1;
   }
-  if (pSendPBO == NULL)
+  if (pSendPBO == nullptr)
   {
     return -2;
   }
-  if (this->Context == NULL)
+  if (this->Context == nullptr)
   {
     return -3;
   }
@@ -1827,7 +1756,7 @@ int vtkPSurfaceLICComposite::Scatter(
   unsigned int winExtSize[2];
   this->WindowExt.Size(winExtSize);
 
-  if (newImage == NULL)
+  if (newImage == nullptr)
   {
     newImage = vtkTextureObject::New();
     newImage->SetContext(this->Context);
@@ -1889,7 +1818,7 @@ ostream &operator<<(ostream &os, vtkPSurfaceLICComposite &ss)
   int rankBelow = ss.CommRank-1;
   if (rankBelow >= 0)
   {
-    MPI_Recv(NULL, 0, MPI_BYTE, rankBelow, 13579, comm, MPI_STATUS_IGNORE);
+    MPI_Recv(nullptr, 0, MPI_BYTE, rankBelow, 13579, comm, MPI_STATUS_IGNORE);
   }
   os << "winExt=" << ss.WindowExt << endl;
   os << "blockExts=" << endl;
@@ -1929,7 +1858,7 @@ ostream &operator<<(ostream &os, vtkPSurfaceLICComposite &ss)
   int rankAbove = ss.CommRank+1;
   if (rankAbove < ss.CommSize)
   {
-    MPI_Send(NULL, 0, MPI_BYTE, rankAbove, 13579, comm);
+    MPI_Send(nullptr, 0, MPI_BYTE, rankAbove, 13579, comm);
   }
   return os;
 }

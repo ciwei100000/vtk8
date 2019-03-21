@@ -26,11 +26,11 @@
 //----------------------------------------------------------------------------
 vtkXMLStructuredDataReader::vtkXMLStructuredDataReader()
 {
-  this->PieceExtents = 0;
-  this->PiecePointDimensions = 0;
-  this->PiecePointIncrements = 0;
-  this->PieceCellDimensions = 0;
-  this->PieceCellIncrements = 0;
+  this->PieceExtents = nullptr;
+  this->PiecePointDimensions = nullptr;
+  this->PiecePointIncrements = nullptr;
+  this->PieceCellDimensions = nullptr;
+  this->PieceCellIncrements = nullptr;
   this->WholeSlices = 1;
 
   // Initialize these in case someone calls GetNumberOfPoints or
@@ -155,11 +155,11 @@ void vtkXMLStructuredDataReader::DestroyPieces()
   delete [] this->PiecePointIncrements;
   delete [] this->PieceCellDimensions;
   delete [] this->PieceCellIncrements;
-  this->PieceExtents = 0;
-  this->PiecePointDimensions = 0;
-  this->PiecePointIncrements = 0;
-  this->PieceCellDimensions = 0;
-  this->PieceCellIncrements = 0;
+  this->PieceExtents = nullptr;
+  this->PiecePointDimensions = nullptr;
+  this->PiecePointIncrements = nullptr;
+  this->PieceCellDimensions = nullptr;
+  this->PieceCellIncrements = nullptr;
   this->Superclass::DestroyPieces();
 }
 
@@ -353,11 +353,14 @@ int vtkXMLStructuredDataReader::ReadArrayForPoints(vtkXMLDataElement* da,
                            this->SubExtent, this->SubPointDimensions,
                            da, outArray, POINT_DATA))
   {
-    vtkErrorMacro("Error reading extent "
-      << this->SubExtent[0] << " " << this->SubExtent[1] << " "
-      << this->SubExtent[2] << " " << this->SubExtent[3] << " "
-      << this->SubExtent[4] << " " << this->SubExtent[5]
-      << " from piece " << this->Piece);
+    if (this->AbortExecute == 0)
+    {
+      vtkErrorMacro("Error reading extent "
+        << this->SubExtent[0] << " " << this->SubExtent[1] << " "
+        << this->SubExtent[2] << " " << this->SubExtent[3] << " "
+        << this->SubExtent[4] << " " << this->SubExtent[5]
+        << " from piece " << this->Piece);
+    }
     return 0;
   }
   return 1;
@@ -376,11 +379,14 @@ int vtkXMLStructuredDataReader::ReadArrayForCells(vtkXMLDataElement* da,
                            this->SubExtent, this->SubCellDimensions,
                            da, outArray, CELL_DATA))
   {
-    vtkErrorMacro("Error reading extent "
-      << this->SubExtent[0] << " " << this->SubExtent[1] << " "
-      << this->SubExtent[2] << " " << this->SubExtent[3] << " "
-      << this->SubExtent[4] << " " << this->SubExtent[5]
-      << " from piece " << this->Piece);
+    if (this->AbortExecute == 0)
+    {
+      vtkErrorMacro("Error reading extent "
+        << this->SubExtent[0] << " " << this->SubExtent[1] << " "
+        << this->SubExtent[2] << " " << this->SubExtent[3] << " "
+        << this->SubExtent[4] << " " << this->SubExtent[5]
+        << " from piece " << this->Piece);
+    }
     return 0;
   }
   return 1;

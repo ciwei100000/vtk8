@@ -39,17 +39,17 @@ class VTKIMAGINGCORE_EXPORT vtkImageClip : public vtkImageAlgorithm
 public:
   static vtkImageClip *New();
   vtkTypeMacro(vtkImageClip,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * The whole extent of the output has to be set explicitly.
    */
-  void SetOutputWholeExtent(int extent[6], vtkInformation *outInfo=0);
+  void SetOutputWholeExtent(int extent[6], vtkInformation *outInfo=nullptr);
   void SetOutputWholeExtent(int minX, int maxX, int minY, int maxY,
                             int minZ, int maxZ);
   void GetOutputWholeExtent(int extent[6]);
-  int *GetOutputWholeExtent() {return this->OutputWholeExtent;}
+  int *GetOutputWholeExtent() VTK_SIZEHINT(6) {return this->OutputWholeExtent;}
   //@}
 
   void ResetOutputWholeExtent();
@@ -60,35 +60,35 @@ public:
    * the data's extent may actually be larger.  When this flag is on,
    * the data extent will be no more than the OutputWholeExtent.
    */
-  vtkSetMacro(ClipData, int);
-  vtkGetMacro(ClipData, int);
-  vtkBooleanMacro(ClipData, int);
+  vtkSetMacro(ClipData, vtkTypeBool);
+  vtkGetMacro(ClipData, vtkTypeBool);
+  vtkBooleanMacro(ClipData, vtkTypeBool);
   //@}
 
 protected:
   vtkImageClip();
-  ~vtkImageClip() VTK_OVERRIDE {}
+  ~vtkImageClip() override {}
 
   // Time when OutputImageExtent was computed.
   vtkTimeStamp CTime;
   int Initialized; // Set the OutputImageExtent for the first time.
   int OutputWholeExtent[6];
 
-  int ClipData;
+  vtkTypeBool ClipData;
 
   int RequestInformation (vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
 
   void CopyData(vtkImageData *inData, vtkImageData *outData, int *ext);
 
   int RequestData(vtkInformation *,
                           vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
 
 private:
-  vtkImageClip(const vtkImageClip&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageClip&) VTK_DELETE_FUNCTION;
+  vtkImageClip(const vtkImageClip&) = delete;
+  void operator=(const vtkImageClip&) = delete;
 };
 
 

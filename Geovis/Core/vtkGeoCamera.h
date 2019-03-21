@@ -43,7 +43,7 @@
  *     above sea level   ???? should we make this from center of earth ????
  *                       ???? what about equatorial bulge ????
  *   Heading in degrees:  (-180->180)
- *     Relative to Logitude and Latitude.
+ *     Relative to Longitude and Latitude.
  *     0 is north.
  *     90 is east.       ???? what is the standard ????
  *     180 is south.
@@ -80,12 +80,13 @@ class vtkCamera;
 class vtkGeoTerrainNode;
 class vtkTransform;
 
+#if !defined(VTK_LEGACY_REMOVE)
 class VTKGEOVISCORE_EXPORT vtkGeoCamera : public vtkObject
 {
 public:
   static vtkGeoCamera *New();
   vtkTypeMacro(vtkGeoCamera, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -128,7 +129,7 @@ public:
   //@{
   /**
    * Heading is in degrees:  (-180->180)
-   * Relative to Logitude and Latitude.
+   * Relative to Longitude and Latitude.
    * 0 is north.
    * 90 is east.       ???? what is the standard ????
    * 180 is south.
@@ -204,7 +205,7 @@ public:
 
 protected:
   vtkGeoCamera();
-  ~vtkGeoCamera() VTK_OVERRIDE;
+  ~vtkGeoCamera() override;
 
   void UpdateVTKCamera();
   void UpdateAngleRanges();
@@ -241,8 +242,9 @@ protected:
   double Position[3];
 
 private:
-  vtkGeoCamera(const vtkGeoCamera&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGeoCamera&) VTK_DELETE_FUNCTION;
+  vtkGeoCamera(const vtkGeoCamera&) = delete;
+  void operator=(const vtkGeoCamera&) = delete;
 };
 
+#endif //VTK_LEGACY_REMOVE
 #endif

@@ -44,13 +44,13 @@ class VTKRENDERINGCORE_EXPORT vtkWindowLevelLookupTable : public vtkLookupTable
 public:
   static vtkWindowLevelLookupTable *New();
   vtkTypeMacro(vtkWindowLevelLookupTable,vtkLookupTable);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Generate lookup table as a linear ramp between MinimumTableValue
    * and MaximumTableValue.
    */
-  void Build() VTK_OVERRIDE;
+  void Build() override;
 
   //@{
   /**
@@ -82,9 +82,9 @@ public:
    * Set inverse video on or off.  You can achieve the same effect by
    * switching the MinimumTableValue and the MaximumTableValue.
    */
-  void SetInverseVideo(int iv);
-  vtkGetMacro(InverseVideo,int);
-  vtkBooleanMacro(InverseVideo,int);
+  void SetInverseVideo(vtkTypeBool iv);
+  vtkGetMacro(InverseVideo,vtkTypeBool);
+  vtkBooleanMacro(InverseVideo,vtkTypeBool);
   //@}
 
   //@{
@@ -109,16 +109,16 @@ public:
 
 protected:
   vtkWindowLevelLookupTable(int sze=256, int ext=256);
-  ~vtkWindowLevelLookupTable() VTK_OVERRIDE {}
+  ~vtkWindowLevelLookupTable() override {}
 
   double Window;
   double Level;
-  int InverseVideo;
+  vtkTypeBool InverseVideo;
   double MaximumTableValue[4];
   double MinimumTableValue[4];
 private:
-  vtkWindowLevelLookupTable(const vtkWindowLevelLookupTable&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkWindowLevelLookupTable&) VTK_DELETE_FUNCTION;
+  vtkWindowLevelLookupTable(const vtkWindowLevelLookupTable&) = delete;
+  void operator=(const vtkWindowLevelLookupTable&) = delete;
 };
 
 #endif

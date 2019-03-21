@@ -38,7 +38,7 @@ class VTKIMAGINGSOURCES_EXPORT vtkImageMandelbrotSource : public vtkImageAlgorit
 public:
   static vtkImageMandelbrotSource *New();
   vtkTypeMacro(vtkImageMandelbrotSource,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -56,14 +56,14 @@ public:
    * a data set remain constant (when extent is changed).
    * By default, size remains constant.
    */
-  vtkSetMacro(ConstantSize, int);
-  vtkGetMacro(ConstantSize, int);
-  vtkBooleanMacro(ConstantSize, int);
+  vtkSetMacro(ConstantSize, vtkTypeBool);
+  vtkGetMacro(ConstantSize, vtkTypeBool);
+  vtkBooleanMacro(ConstantSize, vtkTypeBool);
   //@}
 
   //@{
   /**
-   * Set the projection from  the 4D space (4 parameters / 2 imaginary numbers)
+   * Set the projection from the 4D space (4 parameters / 2 imaginary numbers)
    * to the axes of the 3D Volume.
    * 0=C_Real, 1=C_Imaginary, 2=X_Real, 4=X_Imaginary
    */
@@ -100,7 +100,7 @@ public:
    * Size is ignored when a dimension i 0 (collapsed).
    */
   void SetSizeCX(double cReal, double cImag, double xReal, double xImag);
-  double *GetSizeCX();
+  double *GetSizeCX() VTK_SIZEHINT(4);
   void GetSizeCX(double s[4]);
   //@}
 
@@ -116,7 +116,7 @@ public:
 
   //@{
   /**
-   * Convienence for Viewer.  Pan 3D volume relative to spacing.
+   * Convenience for Viewer.  Pan 3D volume relative to spacing.
    * Zoom constant factor.
    */
   void Zoom(double factor);
@@ -124,7 +124,7 @@ public:
   //@}
 
   /**
-   * Convienence for Viewer.  Copy the OriginCX and the SpacingCX.
+   * Convenience for Viewer.  Copy the OriginCX and the SpacingCX.
    * What about other parameters ???
    */
   void CopyOriginAndSample(vtkImageMandelbrotSource *source);
@@ -139,7 +139,7 @@ public:
 
 protected:
   vtkImageMandelbrotSource();
-  ~vtkImageMandelbrotSource() VTK_OVERRIDE;
+  ~vtkImageMandelbrotSource() override;
 
   int ProjectionAxes[3];
 
@@ -157,22 +157,22 @@ protected:
   double SizeCX[4];
 
   // A flag for keeping size constant (vs. keeping the spacing).
-  int ConstantSize;
+  vtkTypeBool ConstantSize;
 
   int SubsampleRate;
 
   // see vtkAlgorithm for details
   int RequestData(vtkInformation *request,
                   vtkInformationVector** inputVector,
-                  vtkInformationVector* outputVector) VTK_OVERRIDE;
+                  vtkInformationVector* outputVector) override;
 
   int RequestInformation (vtkInformation *,
                           vtkInformationVector**,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
   double EvaluateSet(double p[4]);
 private:
-  vtkImageMandelbrotSource(const vtkImageMandelbrotSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageMandelbrotSource&) VTK_DELETE_FUNCTION;
+  vtkImageMandelbrotSource(const vtkImageMandelbrotSource&) = delete;
+  void operator=(const vtkImageMandelbrotSource&) = delete;
 };
 
 

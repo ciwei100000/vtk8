@@ -34,6 +34,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "vtkVariantArray.h"
 
 #include <cstdlib>
+#include <cmath>
 #include <vector>
 #include <map>
 #include <set>
@@ -55,9 +56,7 @@ vtkOrderStatistics::vtkOrderStatistics()
 }
 
 // ----------------------------------------------------------------------
-vtkOrderStatistics::~vtkOrderStatistics()
-{
-}
+vtkOrderStatistics::~vtkOrderStatistics() = default;
 
 // ----------------------------------------------------------------------
 void vtkOrderStatistics::PrintSelf( ostream &os, vtkIndent indent )
@@ -87,8 +86,6 @@ void vtkOrderStatistics::SetQuantileDefinition( int qd )
 
   this->QuantileDefinition =  static_cast<vtkOrderStatistics::QuantileDefinitionType>( qd );
   this->Modified();
-
-  return;
 }
 
 // ----------------------------------------------------------------------
@@ -218,7 +215,7 @@ void vtkOrderStatistics::Learn( vtkTable* inData,
 
           // Create bucket width based on target histogram size
           // FIXME: .5 is arbitrary at this point
-          double width = ( maxi - mini ) / vtkMath::Round(  Nq / 2. );
+          double width = ( maxi - mini ) / std::round(  Nq / 2. );
 
           // Now re-calculate histogram by quantizing values
           histogram.clear();
@@ -227,8 +224,8 @@ void vtkOrderStatistics::Learn( vtkTable* inData,
           for ( vtkIdType r = 0; r < nRow; ++ r )
           {
             reading = dvals->GetTuple1( r );
-            quantum = mini + vtkMath::Round( ( reading - mini ) / width ) * width;
-            ++ histogram[quantum];
+            quantum = mini + std::round( ( reading - mini ) / width ) * width;
+            ++ histogram[static_cast<unsigned long>(quantum)];
           }
 
           // Update histogram size for conditional clause
@@ -306,8 +303,6 @@ void vtkOrderStatistics::Learn( vtkTable* inData,
     histogramTab->Delete();
     row->Delete();
   } // rit
-
-  return;
 }
 
 // ----------------------------------------------------------------------
@@ -467,7 +462,7 @@ void vtkOrderStatistics::Derive( vtkMultiBlockDataSet* inMeta )
       vtkIdType qIdx1;
       if ( this->QuantileDefinition == vtkOrderStatistics::InverseCDFAveragedSteps )
       {
-        qIdx1 = static_cast<vtkIdType>( vtkMath::Round( np ) );
+        qIdx1 = static_cast<vtkIdType>( std::round( np ) );
       }
       else
       {
@@ -532,7 +527,7 @@ void vtkOrderStatistics::Derive( vtkMultiBlockDataSet* inMeta )
 
     // Last quantile index is always cardinality with no jump (corresponding to the last and thus largest value)
     qIdxPair.first = nRowHist - 1;
-    qIdxPair.second = nRowHist - 1;;
+    qIdxPair.second = nRowHist - 1;
     quantileIndices.push_back( qIdxPair );
 
     // Finally prepare quantile values column depending on data type
@@ -846,11 +841,9 @@ public:
     this->Data      = vtkArrayDownCast<vtkDataArray>( vals );
     this->Quantiles = vtkArrayDownCast<vtkDataArray>( quantiles );
   }
-  ~DataArrayQuantizer() VTK_OVERRIDE
-  {
-  }
+  ~DataArrayQuantizer() override = default;
   void operator() ( vtkDoubleArray* result,
-                            vtkIdType id ) VTK_OVERRIDE
+                            vtkIdType id ) override
   {
     result->SetNumberOfValues( 1 );
 
@@ -887,11 +880,9 @@ public:
     this->Data      = vtkArrayDownCast<vtkStringArray>( vals );
     this->Quantiles = vtkArrayDownCast<vtkStringArray>( quantiles );
   }
-  ~StringArrayQuantizer() VTK_OVERRIDE
-  {
-  }
+  ~StringArrayQuantizer() override = default;
   void operator() ( vtkDoubleArray* result,
-                            vtkIdType id ) VTK_OVERRIDE
+                            vtkIdType id ) override
   {
     result->SetNumberOfValues( 1 );
 
@@ -928,11 +919,9 @@ public:
     this->Data      = vtkArrayDownCast<vtkVariantArray>( vals );
     this->Quantiles = vtkArrayDownCast<vtkVariantArray>( quantiles );
   }
-  ~VariantArrayQuantizer() VTK_OVERRIDE
-  {
-  }
+  ~VariantArrayQuantizer() override = default;
   void operator() ( vtkDoubleArray* result,
-                            vtkIdType id ) VTK_OVERRIDE
+                            vtkIdType id ) override
   {
     result->SetNumberOfValues( 1 );
 
@@ -962,7 +951,7 @@ void vtkOrderStatistics::SelectAssessFunctor( vtkTable* outData,
                                               vtkStringArray* rowNames,
                                               AssessFunctor*& dfunc )
 {
-  dfunc = 0;
+  dfunc = nullptr;
   vtkMultiBlockDataSet* inMeta = vtkMultiBlockDataSet::SafeDownCast( inMetaDO );
   if ( ! inMeta )
   {

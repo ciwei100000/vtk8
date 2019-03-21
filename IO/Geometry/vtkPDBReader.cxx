@@ -31,13 +31,9 @@ inline void StdStringToUpper(std::string& s)
 
 vtkStandardNewMacro(vtkPDBReader);
 
-vtkPDBReader::vtkPDBReader()
-{
-}
+vtkPDBReader::vtkPDBReader() = default;
 
-vtkPDBReader::~vtkPDBReader()
-{
-}
+vtkPDBReader::~vtkPDBReader() = default;
 
 void vtkPDBReader::ReadSpecificMolecule(FILE* fp)
 {
@@ -63,7 +59,7 @@ void vtkPDBReader::ReadSpecificMolecule(FILE* fp)
 
   vtkDebugMacro( << "PDB File (" << this->HBScale
     << ", " << this->BScale << ")");
-  while(fgets(linebuf, sizeof linebuf, fp) != NULL &&
+  while(fgets(linebuf, sizeof linebuf, fp) != nullptr &&
     strncmp("END", linebuf, 3))
   {
     char elem[3] = { 0 };
@@ -85,7 +81,9 @@ void vtkPDBReader::ReadSpecificMolecule(FILE* fp)
       if (elem[0] == '\0')
       {
         // if element symbol was not specified, just use the "Atom name".
-        strncpy(elem, dum1, 2);
+        elem[0] = dum1[0];
+        elem[1] = dum1[1];
+        elem[2] = '\0';
       }
 
       if (!((elem[0]=='H' || elem[0]=='h') && elem[1]=='\0'))

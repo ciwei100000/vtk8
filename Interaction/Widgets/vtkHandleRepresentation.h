@@ -60,7 +60,7 @@ public:
    * Standard methods for instances of this class.
    */
   vtkTypeMacro(vtkHandleRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -74,10 +74,10 @@ public:
    */
   virtual void SetDisplayPosition(double pos[3]);
   virtual void GetDisplayPosition(double pos[3]);
-  virtual double* GetDisplayPosition();
+  virtual double* GetDisplayPosition() VTK_SIZEHINT(3);
   virtual void SetWorldPosition(double pos[3]);
   virtual void GetWorldPosition(double pos[3]);
-  virtual double* GetWorldPosition();
+  virtual double* GetWorldPosition() VTK_SIZEHINT(3);
   //@}
 
   //@{
@@ -96,9 +96,9 @@ public:
    * moves close to it (i.e., the widget becomes active). By default,
    * ActiveRepresentation is off and the representation is always visible.
    */
-  vtkSetMacro(ActiveRepresentation,int);
-  vtkGetMacro(ActiveRepresentation,int);
-  vtkBooleanMacro(ActiveRepresentation,int);
+  vtkSetMacro(ActiveRepresentation,vtkTypeBool);
+  vtkGetMacro(ActiveRepresentation,vtkTypeBool);
+  vtkBooleanMacro(ActiveRepresentation,vtkTypeBool);
   //@}
 
   // Enums define the state of the representation relative to the mouse pointer
@@ -126,9 +126,9 @@ public:
    * constrained in some way (along an axis, etc.) Widgets can use this
    * to control the resulting motion.
    */
-  vtkSetMacro(Constrained,int);
-  vtkGetMacro(Constrained,int);
-  vtkBooleanMacro(Constrained,int);
+  vtkSetMacro(Constrained,vtkTypeBool);
+  vtkGetMacro(Constrained,vtkTypeBool);
+  vtkBooleanMacro(Constrained,vtkTypeBool);
   //@}
 
   /**
@@ -144,16 +144,16 @@ public:
   /**
    * Methods to make this class properly act like a vtkWidgetRepresentation.
    */
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE;
+  void ShallowCopy(vtkProp *prop) override;
   virtual void DeepCopy(vtkProp *prop);
-  void SetRenderer(vtkRenderer *ren) VTK_OVERRIDE;
+  void SetRenderer(vtkRenderer *ren) override;
   //@}
 
   /**
    * Overload the superclasses' GetMTime() because the internal vtkCoordinates
    * are used to keep the state of the representation.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -170,11 +170,11 @@ public:
 
 protected:
   vtkHandleRepresentation();
-  ~vtkHandleRepresentation() VTK_OVERRIDE;
+  ~vtkHandleRepresentation() override;
 
   int Tolerance;
-  int ActiveRepresentation;
-  int Constrained;
+  vtkTypeBool ActiveRepresentation;
+  vtkTypeBool Constrained;
 
   // Two vtkCoordinates are available to subclasses, one in display
   // coordinates and the other in world coordinates. These facilitate
@@ -191,8 +191,8 @@ protected:
   vtkPointPlacer * PointPlacer;
 
 private:
-  vtkHandleRepresentation(const vtkHandleRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkHandleRepresentation&) VTK_DELETE_FUNCTION;
+  vtkHandleRepresentation(const vtkHandleRepresentation&) = delete;
+  void operator=(const vtkHandleRepresentation&) = delete;
 };
 
 #endif

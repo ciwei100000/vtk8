@@ -21,14 +21,12 @@ vtkStandardNewMacro(vtkAlgorithmOutput);
 //----------------------------------------------------------------------------
 vtkAlgorithmOutput::vtkAlgorithmOutput()
 {
-  this->Producer = 0;
+  this->Producer = nullptr;
   this->Index = 0;
 }
 
 //----------------------------------------------------------------------------
-vtkAlgorithmOutput::~vtkAlgorithmOutput()
-{
-}
+vtkAlgorithmOutput::~vtkAlgorithmOutput() = default;
 
 //----------------------------------------------------------------------------
 void vtkAlgorithmOutput::PrintSelf(ostream& os, vtkIndent indent)

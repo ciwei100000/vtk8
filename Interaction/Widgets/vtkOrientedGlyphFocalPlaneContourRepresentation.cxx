@@ -49,8 +49,8 @@ vtkOrientedGlyphFocalPlaneContourRepresentation::vtkOrientedGlyphFocalPlaneConto
   // Initialize state
   this->InteractionState = vtkContourRepresentation::Outside;
 
-  this->CursorShape = NULL;
-  this->ActiveCursorShape = NULL;
+  this->CursorShape = nullptr;
+  this->ActiveCursorShape = nullptr;
 
   this->HandleSize = 0.01;
 
@@ -149,13 +149,11 @@ vtkOrientedGlyphFocalPlaneContourRepresentation::vtkOrientedGlyphFocalPlaneConto
   this->Mapper->SetInputConnection(this->Glypher->GetOutputPort());
   //this->Mapper->SetResolveCoincidentTopologyToPolygonOffset();
   this->Mapper->ScalarVisibilityOff();
-  //this->Mapper->ImmediateModeRenderingOn();
 
   this->ActiveMapper = vtkPolyDataMapper2D::New();
   this->ActiveMapper->SetInputConnection(this->ActiveGlypher->GetOutputPort());
   //this->ActiveMapper->SetResolveCoincidentTopologyToPolygonOffset();
   this->ActiveMapper->ScalarVisibilityOff();
-  //this->ActiveMapper->ImmediateModeRenderingOn();
 
   // Set up the initial properties
   this->CreateDefaultProperties();
@@ -192,8 +190,8 @@ vtkOrientedGlyphFocalPlaneContourRepresentation::~vtkOrientedGlyphFocalPlaneCont
   this->ActiveFocalPoint->Delete();
   this->ActiveFocalData->Delete();
 
-  this->SetCursorShape( NULL );
-  this->SetActiveCursorShape( NULL );
+  this->SetCursorShape( nullptr );
+  this->SetActiveCursorShape( nullptr );
 
   this->Glypher->Delete();
   this->Mapper->Delete();
@@ -485,8 +483,8 @@ eventPos[2])
         {
           this->GetNthNodeWorldPosition( i, ref );
           worldPos[0] = centroid[0] + ratio * ( ref[0] - centroid[0] );
-          worldPos[1] = centroid[0] + ratio * ( ref[1] - centroid[1] );
-          worldPos[2] = centroid[0] + ratio * ( ref[2] - centroid[2] );
+          worldPos[1] = centroid[1] + ratio * ( ref[1] - centroid[1] );
+          worldPos[2] = centroid[2] + ratio * ( ref[2] - centroid[2] );
           this->SetNthNodeWorldPosition( i, worldPos, worldOrient );
         }
       }
@@ -660,7 +658,7 @@ vtkMatrix4x4 * vtkOrientedGlyphFocalPlaneContourRepresentation
 
 //----------------------------------------------------------------------
 // Returns the contour representation as polydata in world co-ordinates
-// For this class, the contour is overlayed on the focal plane.
+// For this class, the contour is overlaid on the focal plane.
 //
 vtkPolyData * vtkOrientedGlyphFocalPlaneContourRepresentation
 ::GetContourRepresentationAsPolyData()
@@ -903,7 +901,7 @@ int vtkOrientedGlyphFocalPlaneContourRepresentation::RenderTranslucentPolygonalG
 }
 
 //-----------------------------------------------------------------------------
-int vtkOrientedGlyphFocalPlaneContourRepresentation::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkOrientedGlyphFocalPlaneContourRepresentation::HasTranslucentPolygonalGeometry()
 {
   int result = this->LinesActor->HasTranslucentPolygonalGeometry();
   if ( this->Actor->GetVisibility() )

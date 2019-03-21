@@ -27,10 +27,10 @@
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
+#include <vtkRTAnalyticSource.h>
 #include <vtkSmartPointer.h>
 #include <vtkTestUtilities.h>
 #include <vtkVolumeProperty.h>
-#include <vtkXMLImageDataReader.h>
 
 int TestGPURayCastClipping(int argc, char *argv[])
 {
@@ -38,13 +38,9 @@ int TestGPURayCastClipping(int argc, char *argv[])
 
   vtkNew<vtkGPUVolumeRayCastMapper> volumeMapper;
 
-  vtkNew<vtkXMLImageDataReader> reader;
-  const char* volumeFile = vtkTestUtilities::ExpandDataFileName(
-                            argc, argv, "Data/vase_1comp.vti");
-
-  reader->SetFileName(volumeFile);
-  reader->Update();
-  volumeMapper->SetInputConnection(reader->GetOutputPort());
+  vtkNew<vtkRTAnalyticSource> wavelet;
+  wavelet->Update();
+  volumeMapper->SetInputConnection(wavelet->GetOutputPort());
 
   volumeMapper->GetInput()->GetScalarRange(scalarRange);
   volumeMapper->SetBlendModeToComposite();
@@ -54,10 +50,10 @@ int TestGPURayCastClipping(int argc, char *argv[])
   renWin->SetSize(400, 400);
 
   vtkNew<vtkRenderer> ren;
-  renWin->AddRenderer(ren.GetPointer());
+  renWin->AddRenderer(ren);
 
   vtkNew<vtkRenderWindowInteractor> iren;
-  iren->SetRenderWindow(renWin.GetPointer());
+  iren->SetRenderWindow(renWin);
 
   vtkNew<vtkPiecewiseFunction> scalarOpacity;
   scalarOpacity->AddPoint(scalarRange[0], 0.0);
@@ -66,7 +62,7 @@ int TestGPURayCastClipping(int argc, char *argv[])
   vtkNew<vtkVolumeProperty> volumeProperty;
   volumeProperty->ShadeOff();
   volumeProperty->SetInterpolationType(VTK_LINEAR_INTERPOLATION);
-  volumeProperty->SetScalarOpacity(scalarOpacity.GetPointer());
+  volumeProperty->SetScalarOpacity(scalarOpacity);
 
   vtkSmartPointer<vtkColorTransferFunction> colorTransferFunction =
     volumeProperty->GetRGBTransferFunction(0);
@@ -75,7 +71,7 @@ int TestGPURayCastClipping(int argc, char *argv[])
   colorTransferFunction->AddRGBPoint(scalarRange[1], 1.0, 0.5, 0.1);
 
   // Test cropping now
-  const double* bounds = reader->GetOutput()->GetBounds();
+  const double* bounds = wavelet->GetOutput()->GetBounds();
   vtkNew<vtkPlane> clipPlane1;
   clipPlane1->SetOrigin(0.45 * (bounds[0] + bounds[1]), 0.0, 0.0);
   clipPlane1->SetNormal(0.8, 0.0, 0.0);
@@ -86,22 +82,22 @@ int TestGPURayCastClipping(int argc, char *argv[])
   clipPlane2->SetNormal(0.2, -0.2, 0.0);
 
   vtkNew<vtkPlaneCollection> clipPlaneCollection;
-  clipPlaneCollection->AddItem(clipPlane1.GetPointer());
-  clipPlaneCollection->AddItem(clipPlane2.GetPointer());
-  volumeMapper->SetClippingPlanes(clipPlaneCollection.GetPointer());
+  clipPlaneCollection->AddItem(clipPlane1);
+  clipPlaneCollection->AddItem(clipPlane2);
+  volumeMapper->SetClippingPlanes(clipPlaneCollection);
 
   // Setup volume actor
   vtkNew<vtkVolume> volume;
-  volume->SetMapper(volumeMapper.GetPointer());
-  volume->SetProperty(volumeProperty.GetPointer());
+  volume->SetMapper(volumeMapper);
+  volume->SetProperty(volumeProperty);
 
-  ren->AddViewProp(volume.GetPointer());
+  ren->AddViewProp(volume);
   ren->GetActiveCamera()->Azimuth(-40);
   ren->ResetCamera();
   renWin->Render();
   iren->Initialize();
 
-  int retVal = vtkRegressionTestImage( renWin.GetPointer() );
+  int retVal = vtkRegressionTestImage( renWin );
   if( retVal == vtkRegressionTester::DO_INTERACTOR)
   {
     iren->Start();

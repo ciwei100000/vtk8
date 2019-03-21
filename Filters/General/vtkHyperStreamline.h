@@ -26,7 +26,7 @@
  * The starting point of a hyperstreamline can be defined in one of two ways.
  * First, you may specify an initial position. This is a x-y-z global
  * coordinate. The second option is to specify a starting location. This is
- * cellId, subId, and  cell parametric coordinates.
+ * cellId, subId, and cell parametric coordinates.
  *
  * The integration of the hyperstreamline occurs through the major eigenvector
  * field. IntegrationStepLength controls the step length within each cell
@@ -66,7 +66,7 @@ class VTKFILTERSGENERAL_EXPORT vtkHyperStreamline : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkHyperStreamline,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with initial starting position (0,0,0); integration
@@ -112,7 +112,7 @@ public:
   /**
    * Get the start position of the hyperstreamline in global x-y-z coordinates.
    */
-  double *GetStartPosition();
+  double *GetStartPosition() VTK_SIZEHINT(3);
 
   //@{
   /**
@@ -239,20 +239,20 @@ public:
    * Turn on/off logarithmic scaling. If scaling is on, the log base 10
    * of the computed eigenvalues are used to scale the cross section radii.
    */
-  vtkSetMacro(LogScaling,int);
-  vtkGetMacro(LogScaling,int);
-  vtkBooleanMacro(LogScaling,int);
+  vtkSetMacro(LogScaling,vtkTypeBool);
+  vtkGetMacro(LogScaling,vtkTypeBool);
+  vtkBooleanMacro(LogScaling,vtkTypeBool);
   //@}
 
 protected:
   vtkHyperStreamline();
-  ~vtkHyperStreamline() VTK_OVERRIDE;
+  ~vtkHyperStreamline() override;
 
   // Integrate data
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   int BuildTube(vtkDataSet *input, vtkPolyData *output);
 
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   // Flag indicates where streamlines start from (either position or location)
   int StartFrom;
@@ -291,13 +291,13 @@ protected:
   double Radius;
 
   // boolean controls whether scaling is clamped
-  int LogScaling;
+  vtkTypeBool LogScaling;
 
   // which eigenvector to use as integration vector field
   int IntegrationEigenvector;
 private:
-  vtkHyperStreamline(const vtkHyperStreamline&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkHyperStreamline&) VTK_DELETE_FUNCTION;
+  vtkHyperStreamline(const vtkHyperStreamline&) = delete;
+  void operator=(const vtkHyperStreamline&) = delete;
 };
 
 #endif

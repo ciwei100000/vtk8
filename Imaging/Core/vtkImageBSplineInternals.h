@@ -54,7 +54,7 @@ public:
    */
   static void ConvertToInterpolationCoefficients(
     double data[], long size, long border, double poles[4], long numPoles,
-    double tol);
+    double tol) VTK_SIZEHINT(data, size);
 
   //@{
   /**
@@ -93,8 +93,8 @@ protected:
     double data[], long size, long border, double pole, double tol);
 
 private:
-  vtkImageBSplineInternals(const vtkImageBSplineInternals&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageBSplineInternals&) VTK_DELETE_FUNCTION;
+  vtkImageBSplineInternals(const vtkImageBSplineInternals&) = delete;
+  void operator=(const vtkImageBSplineInternals&) = delete;
 };
 
 #endif

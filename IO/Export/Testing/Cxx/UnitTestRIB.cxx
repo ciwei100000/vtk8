@@ -32,14 +32,14 @@
 
 #include <sstream>
 
-#define TEST_SET_GET_VALUE( variable, command ) \
-  if( variable != command )   \
-  {   \
-    std::cout << "Error in " << #command << std::endl; \
-    std::cout << "  In " __FILE__ ", line " << __LINE__ << std::endl;   \
-    std::cout << "Expected |" << variable << "|" << std::endl;           \
-    std::cout << "but got  |" << command << "|" << std::endl;            \
-    status += 1; \
+#define TEST_SET_GET_VALUE( variable, command )                        \
+  if( (variable) != (command) )                                        \
+  {                                                                    \
+    std::cout << "Error in " << #command << std::endl;                 \
+    std::cout << "  In " __FILE__ ", line " << __LINE__ << std::endl;  \
+    std::cout << "Expected |" << (variable) << "|" << std::endl;       \
+    std::cout << "but got  |" << (command) << "|" << std::endl;        \
+    status += 1;                                                       \
   }
 
 static int TestRIBProperty();
@@ -312,7 +312,7 @@ int TestRIBExporter()
   exporter->Update();
   std::cout << ".PASSED" << std::endl;
 
-  std::cout << "RIBExporter SetDisplacmentShader Update..";
+  std::cout << "RIBExporter SetDisplacementShader Update..";
   prop->SetVariable("Km", "float");
   prop->SetDisplacementShaderParameter("Km", "2");
   prop->SetDisplacementShader("dented");
@@ -337,20 +337,19 @@ int TestRIBExporter()
   exporter->Update();
   status += errorObserver->CheckErrorMessage("Bad representation. Only Surface is supported.");
 
-  exporter->SetFilePrefix(NULL);
+  exporter->SetFilePrefix(nullptr);
   exporter->Update();
   status += errorObserver->CheckErrorMessage("Please specify file name for the rib file");
 
   vtkSmartPointer<vtkRenderer> ren2 =
     vtkSmartPointer<vtkRenderer>::New ();
-  renWin->AddRenderer(ren2);
   exporter->SetFilePrefix("dummy");
+  exporter->SetActiveRenderer(ren2);
   exporter->Update();
-  status += errorObserver->CheckErrorMessage("RIB files only support one renderer per window");
+  status += errorObserver->CheckErrorMessage("ActiveRenderer must be a renderer owned by the RenderWindow");
 
-  renWin->RemoveRenderer(ren2);
-  ren1->RemoveActor(sphere);
-  ren1->RemoveActor(strip);
+  renWin->AddRenderer(ren2);
+  exporter->SetActiveRenderer(ren2);
   exporter->Update();
   status += errorObserver->CheckErrorMessage("No actors found for writing .RIB file");
 

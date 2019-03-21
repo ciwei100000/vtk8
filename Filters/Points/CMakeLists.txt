@@ -1,9 +1,11 @@
 set(Module_SRCS
   vtkBoundedPointSource.cxx
+  vtkConnectedPointsFilter.cxx
   vtkDensifyPointCloudFilter.cxx
   vtkEllipsoidalGaussianKernel.cxx
   vtkEuclideanClusterExtraction.cxx
   vtkExtractHierarchicalBins.cxx
+  vtkExtractEnclosedPoints.cxx
   vtkExtractPointCloudPiece.cxx
   vtkExtractPoints.cxx
   vtkExtractSurface.cxx
@@ -16,8 +18,8 @@ set(Module_SRCS
   vtkMaskPointsFilter.cxx
   vtkPCACurvatureEstimation.cxx
   vtkPCANormalEstimation.cxx
-  vtkPointDensityFilter.cxx
   vtkPointCloudFilter.cxx
+  vtkPointDensityFilter.cxx
   vtkPointInterpolator.cxx
   vtkPointInterpolator2D.cxx
   vtkPointOccupancyFilter.cxx
@@ -35,13 +37,6 @@ set(Module_SRCS
   vtkVoxelGrid.cxx
   vtkVoronoiKernel.cxx
   vtkWendlandQuinticKernel.cxx
-  )
-
-set_source_files_properties(
-  vtkGeneralizedKernel.cxx
-  vtkInterpolationKernel
-  vtkPointCloudFilter
-  ABSTRACT
   )
 
 vtk_module_library(vtkFiltersPoints ${Module_SRCS})

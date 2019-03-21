@@ -33,6 +33,7 @@
 
 #include "vtkRenderingCoreModule.h" // For export macro
 #include "vtkObject.h"
+#include <map> // used for ivar
 
 // shading models
 #define VTK_FLAT    0
@@ -45,6 +46,7 @@
 #define VTK_SURFACE   2
 
 class vtkActor;
+class vtkInformation;
 class vtkRenderer;
 class vtkShaderProgram;
 class vtkShaderDeviceAdapter2;
@@ -59,7 +61,7 @@ class VTKRENDERINGCORE_EXPORT vtkProperty : public vtkObject
 {
 public:
   vtkTypeMacro(vtkProperty,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with object color, ambient color, diffuse color,
@@ -170,7 +172,7 @@ public:
    */
   virtual void SetColor(double r, double g, double b);
   virtual void SetColor(double a[3]);
-  double *GetColor();
+  double *GetColor() VTK_SIZEHINT(3);
   void GetColor(double rgb[3]);
   void GetColor(double &r, double &g, double &b);
   //@}
@@ -249,9 +251,9 @@ public:
    * possible to render the edges of geometric primitives separately
    * from the interior.
    */
-  vtkGetMacro(EdgeVisibility, int);
-  vtkSetMacro(EdgeVisibility, int);
-  vtkBooleanMacro(EdgeVisibility, int);
+  vtkGetMacro(EdgeVisibility, vtkTypeBool);
+  vtkSetMacro(EdgeVisibility, vtkTypeBool);
+  vtkBooleanMacro(EdgeVisibility, vtkTypeBool);
   //@}
 
   //@{
@@ -268,9 +270,9 @@ public:
    * possible to render the vertices of geometric primitives separately
    * from the interior.
    */
-  vtkGetMacro(VertexVisibility, int);
-  vtkSetMacro(VertexVisibility, int);
-  vtkBooleanMacro(VertexVisibility, int);
+  vtkGetMacro(VertexVisibility, vtkTypeBool);
+  vtkSetMacro(VertexVisibility, vtkTypeBool);
+  vtkBooleanMacro(VertexVisibility, vtkTypeBool);
   //@}
 
   //@{
@@ -294,7 +296,7 @@ public:
   /**
    * Set/Get the stippling pattern of a Line, as a 16-bit binary pattern
    * (1 = pixel on, 0 = pixel off).
-   * This is only implemented for OpenGL. The default is 0xFFFF.
+   * This is only implemented for OpenGL, not OpenGL2. The default is 0xFFFF.
    */
   vtkSetMacro(LineStipplePattern, int);
   vtkGetMacro(LineStipplePattern, int);
@@ -304,7 +306,7 @@ public:
   /**
    * Set/Get the stippling repeat factor of a Line, which specifies how
    * many times each bit in the pattern is to be repeated.
-   * This is only implemented for OpenGL. The default is 1.
+   * This is only implemented for OpenGL, not OpenGL2. The default is 1.
    */
   vtkSetClampMacro(LineStippleRepeatFactor, int, 1, VTK_INT_MAX);
   vtkGetMacro(LineStippleRepeatFactor, int);
@@ -325,9 +327,9 @@ public:
    * with respect to camera. If backface culling is on, polygons facing
    * away from camera are not drawn.
    */
-  vtkGetMacro(BackfaceCulling, int);
-  vtkSetMacro(BackfaceCulling, int);
-  vtkBooleanMacro(BackfaceCulling, int);
+  vtkGetMacro(BackfaceCulling, vtkTypeBool);
+  vtkSetMacro(BackfaceCulling, vtkTypeBool);
+  vtkBooleanMacro(BackfaceCulling, vtkTypeBool);
   //@}
 
   //@{
@@ -336,15 +338,16 @@ public:
    * with respect to camera. If frontface culling is on, polygons facing
    * towards camera are not drawn.
    */
-  vtkGetMacro(FrontfaceCulling, int);
-  vtkSetMacro(FrontfaceCulling, int);
-  vtkBooleanMacro(FrontfaceCulling, int);
+  vtkGetMacro(FrontfaceCulling, vtkTypeBool);
+  vtkSetMacro(FrontfaceCulling, vtkTypeBool);
+  vtkBooleanMacro(FrontfaceCulling, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Returns the name of the material currently loaded, if any.
    */
+  vtkSetStringMacro(MaterialName);
   vtkGetStringMacro(MaterialName);
   //@}
 
@@ -353,16 +356,16 @@ public:
    * Enable/Disable shading. When shading is enabled, the
    * Material must be set.
    */
-  vtkSetMacro(Shading, int);
-  vtkGetMacro(Shading, int);
-  vtkBooleanMacro(Shading, int);
+  vtkSetMacro(Shading, vtkTypeBool);
+  vtkGetMacro(Shading, vtkTypeBool);
+  vtkBooleanMacro(Shading, vtkTypeBool);
   //@}
 
   /**
    * Get the vtkShaderDeviceAdapter2 if set, returns null otherwise.
    */
   virtual vtkShaderDeviceAdapter2* GetShaderDeviceAdapter2()
-    { return NULL; }
+    { return nullptr; }
 
   //@{
   /**
@@ -380,7 +383,7 @@ public:
 
   //@{
   /**
-   * Methods to provide to add shader variables from tcl.
+   * Methods to provide to add shader variables from wrappers.
    */
   void AddShaderVariable(const char* name, int v)
     { this->AddShaderVariable(name, 1, &v); }
@@ -425,7 +428,9 @@ public:
    * Set/Get the texture object to control rendering texture maps. This will
    * be a vtkTexture object. A property does not need to have an associated
    * texture map and multiple properties can share one texture. Textures
-   * must be assigned unique names.
+   * must be assigned unique names. Note that for texture blending the
+   * textures will be rendering is alphabetical order and after any texture
+   * defined in the actor.
    */
   void SetTexture(const char* name, vtkTexture* texture);
   vtkTexture* GetTexture(const char* name);
@@ -438,14 +443,13 @@ public:
    * texture map and multiple properties can share one texture. Textures
    * must be assigned unique names.
    */
-  void SetTexture(int unit, vtkTexture* texture);
-  vtkTexture* GetTexture(int unit);
-  void RemoveTexture(int unit);
+  VTK_LEGACY(void SetTexture(int unit, vtkTexture* texture));
+  VTK_LEGACY(vtkTexture* GetTexture(int unit));
+  VTK_LEGACY(void RemoveTexture(int unit));
   //@}
 
   /**
-   * Remove a texture from the collection. Note that the
-   * indices of all the subsequent textures, if any, will change.
+   * Remove a texture from the collection.
    */
   void RemoveTexture(const char* name);
 
@@ -460,16 +464,21 @@ public:
   int GetNumberOfTextures();
 
   /**
+   * Returns all the textures in this property and their names
+   */
+  std::map<std::string, vtkTexture *> &GetAllTextures() {
+    return this->Textures; }
+
+  /**
    * Release any graphics resources that are being consumed by this
    * property. The parameter window could be used to determine which graphic
    * resources to release.
    */
   virtual void ReleaseGraphicsResources(vtkWindow *win);
 
-  /**
-   * Used to specify which texture unit a texture will use.
-   * Only relevant when multitexturing.
-   */
+
+#ifndef VTK_LEGACY_REMOVE
+  // deprecated. Textures should use names not units
   enum VTKTextureUnit
   {
     VTK_TEXTURE_UNIT_0 = 0,
@@ -481,10 +490,19 @@ public:
     VTK_TEXTURE_UNIT_6,
     VTK_TEXTURE_UNIT_7
   };
+#endif
+
+  //@{
+  /**
+   * Set/Get the information object associated with the Property.
+   */
+  vtkGetObjectMacro(Information, vtkInformation);
+  virtual void SetInformation(vtkInformation*);
+  //@}
 
 protected:
   vtkProperty();
-  ~vtkProperty() VTK_OVERRIDE;
+  ~vtkProperty() override;
 
   /**
    * Computes composite color. Used by GetColor().
@@ -511,31 +529,27 @@ protected:
   int LineStippleRepeatFactor;
   int Interpolation;
   int Representation;
-  int EdgeVisibility;
-  int VertexVisibility;
-  int BackfaceCulling;
-  int FrontfaceCulling;
+  vtkTypeBool EdgeVisibility;
+  vtkTypeBool VertexVisibility;
+  vtkTypeBool BackfaceCulling;
+  vtkTypeBool FrontfaceCulling;
   bool Lighting;
   bool RenderPointsAsSpheres;
   bool RenderLinesAsTubes;
 
-  int Shading;
+  vtkTypeBool Shading;
 
   char* MaterialName;
-  vtkSetStringMacro(MaterialName);
 
-  // FIXME:
-  // Don't use these methods. They will be removed. They are provided only
-  // for the time-being.
-  vtkTexture* GetTextureAtIndex(int index);
-  int GetTextureUnitAtIndex(int index);
-  int GetTextureUnit(const char* name);
+  typedef std::map<std::string, vtkTexture*> MapOfTextures;
+  MapOfTextures Textures;
+
+  // Arbitrary extra information associated with this Property.
+  vtkInformation* Information;
 
 private:
-  vtkProperty(const vtkProperty&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkProperty&) VTK_DELETE_FUNCTION;
-
-  vtkPropertyInternals* Internals;
+  vtkProperty(const vtkProperty&) = delete;
+  void operator=(const vtkProperty&) = delete;
 };
 
 //@{

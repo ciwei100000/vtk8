@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
 
 
 PROJECT(ImageProcessing)
@@ -14,7 +14,7 @@ vtk_module_config(VTK
   vtkImagingStatistics
   vtkImagingStencil
   vtkInteractionStyle
-  vtkRendering${VTK_RENDERING_BACKEND}
+  vtkRenderingOpenGL2
   vtkRenderingCore
   vtkTestingCore
   vtkTestingRendering

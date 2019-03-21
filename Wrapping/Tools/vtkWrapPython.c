@@ -27,7 +27,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
+#ifdef _WIN32
+/* for Sleep() */
+#include <windows.h>
+#endif
 
 /* -------------------------------------------------------------------- */
 /* the main entry method, called by vtkParse.y */
@@ -179,7 +184,8 @@ static void vtkWrapPython_GenerateSpecialHeaders(
     for (i = 0; i < n; i++)
     {
       currentFunction = data->Functions[i];
-      if (currentFunction->Access == VTK_ACCESS_PUBLIC)
+      if (currentFunction->Access == VTK_ACCESS_PUBLIC &&
+          strcmp(currentFunction->Class, data->Name) == 0)
       {
         classname = "void";
         aType = VTK_PARSE_VOID;
@@ -276,6 +282,14 @@ static void vtkWrapPython_GenerateSpecialHeaders(
     }
   }
 
+  /* special case for the way vtkGenericDataArray template is used */
+  if (data && strcmp(data->Name, "vtkGenericDataArray") == 0)
+  {
+    fprintf(fp,
+      "#include \"vtkSOADataArrayTemplate.h\"\n"
+      "#include \"vtkAOSDataArrayTemplate.h\"\n");
+  }
+
   free((char **)types);
 }
 
@@ -314,20 +328,38 @@ int main(int argc, char *argv[])
   /* get the command-line options */
   options = vtkParse_GetCommandLineOptions();
 
-  /* get the output file */
-  fp = fopen(options->OutputFileName, "w");
-
-  if (!fp)
-  {
-    fprintf(stderr, "Error opening output file %s\n", options->OutputFileName);
-    exit(1);
-  }
-
   /* get the hierarchy info for accurate typing */
   if (options->HierarchyFileNames)
   {
     hinfo = vtkParseHierarchy_ReadFiles(
       options->NumberOfHierarchyFileNames, options->HierarchyFileNames);
+  }
+
+  /* get the output file */
+  fp = fopen(options->OutputFileName, "w");
+
+#ifdef _WIN32
+  if (!fp)
+  {
+    /* repeatedly try to open output file in case of access/sharing error */
+    /* (for example, antivirus software might be scanning the output file) */
+    int tries;
+    for (tries = 0; !fp && tries < 5 && errno == EACCES; tries++)
+    {
+      Sleep(1000);
+      fp = fopen(options->OutputFileName, "w");
+    }
+  }
+#endif
+
+  if (!fp)
+  {
+    int e = errno;
+    char *etext = strerror(e);
+    etext = (etext ? etext : "Unknown error");
+    fprintf(stderr, "Error %d opening output file %s: %s\n",
+            e, options->OutputFileName, etext);
+    exit(1);
   }
 
   /* get the filename without the extension */
@@ -353,12 +385,12 @@ int main(int argc, char *argv[])
   /* get the global namespace */
   contents = file_info->Contents;
 
-  /* use the hierarchy file to expand typedefs */
+  /* use the hierarchy file to find super classes and expand typedefs */
   if (hinfo)
   {
     for (i = 0; i < contents->NumberOfClasses; i++)
     {
-      vtkWrap_ApplyUsingDeclarations(contents->Classes[i], file_info, hinfo);
+      vtkWrap_MergeSuperClasses(contents->Classes[i], file_info, hinfo);
     }
     for (i = 0; i < contents->NumberOfClasses; i++)
     {
@@ -536,12 +568,17 @@ int main(int argc, char *argv[])
       fprintf(fp,
              "  if (o)\n"
              "  {\n"
-             "    PyObject *l = PyObject_CallMethod(o, (char *)\"values\", 0);\n"
+             "#if PY_VERSION_HEX >= 0x03040000\n"
+             "    const char *methodname = \"values\";\n"
+             "#else\n"
+             "    char methodname[] = \"values\";\n"
+             "#endif\n"
+             "    PyObject *l = PyObject_CallMethod(o, methodname, nullptr);\n"
              "    Py_ssize_t n = PyList_GET_SIZE(l);\n"
              "    for (Py_ssize_t i = 0; i < n; i++)\n"
              "    {\n"
              "      PyObject *ot = PyList_GET_ITEM(l, i);\n"
-             "      const char *nt = NULL;\n"
+             "      const char *nt = nullptr;\n"
              "      if (PyType_Check(ot))\n"
              "      {\n"
              "        nt = ((PyTypeObject *)ot)->tp_name;\n"
@@ -594,6 +631,8 @@ int main(int argc, char *argv[])
   /* close the AddFile function */
   fprintf(fp,
           "}\n\n");
+
+  fclose(fp);
 
   free(name_from_file);
 

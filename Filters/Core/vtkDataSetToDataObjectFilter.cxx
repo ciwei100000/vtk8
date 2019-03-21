@@ -42,9 +42,7 @@ vtkDataSetToDataObjectFilter::vtkDataSetToDataObjectFilter()
   this->FieldData = 1;
 }
 
-vtkDataSetToDataObjectFilter::~vtkDataSetToDataObjectFilter()
-{
-}
+vtkDataSetToDataObjectFilter::~vtkDataSetToDataObjectFilter() = default;
 
 //----------------------------------------------------------------------------
 int vtkDataSetToDataObjectFilter::RequestData(
@@ -119,19 +117,19 @@ int vtkDataSetToDataObjectFilter::RequestData(
     {
       vtkRectilinearGrid *rgrid=static_cast<vtkRectilinearGrid *>(input);
       da = rgrid->GetXCoordinates();
-      if (da != NULL)
+      if (da != nullptr)
       {
         da->SetName("XCoordinates");
         fd->AddArray( da );
       }
       da = rgrid->GetYCoordinates();
-      if (da != NULL)
+      if (da != nullptr)
       {
         da->SetName("YCoordinates");
         fd->AddArray( da );
       }
       da = rgrid->GetZCoordinates();
-      if (da != NULL)
+      if (da != nullptr)
       {
         da->SetName("ZCoordinates");
         fd->AddArray( da );
@@ -234,7 +232,7 @@ int vtkDataSetToDataObjectFilter::RequestData(
     else if ( input->GetDataObjectType() == VTK_UNSTRUCTURED_GRID )
     {
       vtkCellArray *ca=static_cast<vtkUnstructuredGrid *>(input)->GetCells();
-      if ( ca != NULL && ca->GetNumberOfCells() > 0 )
+      if ( ca != nullptr && ca->GetNumberOfCells() > 0 )
       {
         ca->GetData()->SetName("Cells");
         fd->AddArray( ca->GetData() );
@@ -242,9 +240,9 @@ int vtkDataSetToDataObjectFilter::RequestData(
         vtkIdType numCells=input->GetNumberOfCells();
         vtkIntArray *types=vtkIntArray::New();
         types->SetNumberOfValues(numCells);
-        for (i=0; i<numCells; i++)
+        for (vtkIdType cellId=0; cellId<numCells; ++cellId)
         {
-          types->SetValue(i, input->GetCellType(i));
+          types->SetValue(cellId, input->GetCellType(cellId));
         }
         types->SetName("CellTypes");
         fd->AddArray( types );

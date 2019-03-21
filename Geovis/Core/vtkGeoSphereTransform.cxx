@@ -31,13 +31,12 @@ vtkStandardNewMacro(vtkGeoSphereTransform);
 
 vtkGeoSphereTransform::vtkGeoSphereTransform()
 {
+  VTK_LEGACY_BODY(vtkGeoSphereTransform::vtkGeoSphereTransform, "VTK 8.2");
   this->ToRectangular = true;
   this->BaseAltitude = 0.0;
 }
 
-vtkGeoSphereTransform::~vtkGeoSphereTransform()
-{
-}
+vtkGeoSphereTransform::~vtkGeoSphereTransform() = default;
 
 void vtkGeoSphereTransform::PrintSelf( ostream& os, vtkIndent indent )
 {
@@ -111,4 +110,3 @@ vtkAbstractTransform* vtkGeoSphereTransform::MakeTransform()
   vtkGeoSphereTransform* geoTrans = vtkGeoSphereTransform::New();
   return geoTrans;
 }
-

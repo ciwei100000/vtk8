@@ -41,7 +41,7 @@ public:
   static vtkProcessIdScalars *New();
 
   vtkTypeMacro(vtkProcessIdScalars,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Option to centerate cell scalars of points scalars.  Default is point
@@ -55,13 +55,13 @@ public:
   // This option uses a random mapping between pieces and scalar values.
   // The scalar values are chosen between 0 and 1.  By default, random
   // mode is off.
-  vtkSetMacro(RandomMode, int);
-  vtkGetMacro(RandomMode, int);
-  vtkBooleanMacro(RandomMode, int);
+  vtkSetMacro(RandomMode, vtkTypeBool);
+  vtkGetMacro(RandomMode, vtkTypeBool);
+  vtkBooleanMacro(RandomMode, vtkTypeBool);
 
   //@{
   /**
-   * By defualt this filter uses the global controller,
+   * By default this filter uses the global controller,
    * but this method can be used to set another instead.
    */
   virtual void SetController(vtkMultiProcessController*);
@@ -71,24 +71,24 @@ public:
 
 protected:
   vtkProcessIdScalars();
-  ~vtkProcessIdScalars() VTK_OVERRIDE;
+  ~vtkProcessIdScalars() override;
 
   // Append the pieces.
   int RequestData(
-    vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   vtkIntArray *MakeProcessIdScalars(int piece, vtkIdType numScalars);
   vtkFloatArray *MakeRandomScalars(int piece, vtkIdType numScalars);
 
   vtkSetMacro(CellScalarsFlag,int);
   int CellScalarsFlag;
-  int RandomMode;
+  vtkTypeBool RandomMode;
 
   vtkMultiProcessController* Controller;
 
 private:
-  vtkProcessIdScalars(const vtkProcessIdScalars&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkProcessIdScalars&) VTK_DELETE_FUNCTION;
+  vtkProcessIdScalars(const vtkProcessIdScalars&) = delete;
+  void operator=(const vtkProcessIdScalars&) = delete;
 };
 
 #endif

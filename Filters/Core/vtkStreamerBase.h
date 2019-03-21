@@ -22,7 +22,7 @@
  * This class can be used as a superclass for filters that want to
  * stream their input pipeline by making multiple execution passes.
  * The subclass needs to set NumberOfPasses to > 1 before execution (
- * usuall in the constructor or in RequestInformation) to initiate
+ * usual in the constructor or in RequestInformation) to initiate
  * streaming. vtkStreamerBase will handle streaming while calling
  * ExecutePass() during each pass. CurrentIndex can be used to obtain
  * the index for the current pass. Finally, PostExecute() is called
@@ -40,18 +40,18 @@ class VTKFILTERSCORE_EXPORT vtkStreamerBase : public vtkAlgorithm
 {
 public:
   vtkTypeMacro(vtkStreamerBase, vtkAlgorithm);
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   /**
    * see vtkAlgorithm for details
    */
   int ProcessRequest(vtkInformation*,
                      vtkInformationVector**,
-                     vtkInformationVector*) VTK_OVERRIDE;
+                     vtkInformationVector*) override;
 
 protected:
   vtkStreamerBase();
-  ~vtkStreamerBase() VTK_OVERRIDE;
+  ~vtkStreamerBase() override;
 
   virtual int RequestInformation(vtkInformation*,
                                  vtkInformationVector**,
@@ -89,8 +89,8 @@ protected:
   unsigned int CurrentIndex;
 
 private:
-  vtkStreamerBase(const vtkStreamerBase &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkStreamerBase &) VTK_DELETE_FUNCTION;
+  vtkStreamerBase(const vtkStreamerBase &) = delete;
+  void operator=(const vtkStreamerBase &) = delete;
 
 };
 

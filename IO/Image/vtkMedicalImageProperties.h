@@ -37,10 +37,10 @@ class VTKIOIMAGE_EXPORT vtkMedicalImageProperties : public vtkObject
 public:
   static vtkMedicalImageProperties *New();
   vtkTypeMacro(vtkMedicalImageProperties,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
-   * Convenience method to reset all fields to an emptry string/value
+   * Convenience method to reset all fields to an empty string/value
    */
   virtual void Clear();
 
@@ -441,7 +441,7 @@ public:
   virtual int HasWindowLevelPreset(double w, double l);
   virtual int GetWindowLevelPresetIndex(double w, double l);
   virtual int GetNthWindowLevelPreset(int idx, double *w, double *l);
-  virtual double* GetNthWindowLevelPreset(int idx);
+  virtual double* GetNthWindowLevelPreset(int idx) VTK_SIZEHINT(2);
   virtual void SetNthWindowLevelPresetComment(int idx, const char *comment);
   virtual const char* GetNthWindowLevelPresetComment(int idx);
   //@}
@@ -480,7 +480,7 @@ public:
 
 protected:
   vtkMedicalImageProperties();
-  ~vtkMedicalImageProperties() VTK_OVERRIDE;
+  ~vtkMedicalImageProperties() override;
 
   char *StudyDate;
   char *AcquisitionDate;
@@ -521,8 +521,8 @@ protected:
   vtkMedicalImagePropertiesInternals *Internals;
 
 private:
-  vtkMedicalImageProperties(const vtkMedicalImageProperties&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMedicalImageProperties&) VTK_DELETE_FUNCTION;
+  vtkMedicalImageProperties(const vtkMedicalImageProperties&) = delete;
+  void operator=(const vtkMedicalImageProperties&) = delete;
 };
 
 #endif

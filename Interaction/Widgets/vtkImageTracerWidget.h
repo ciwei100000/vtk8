@@ -86,18 +86,18 @@ public:
   static vtkImageTracerWidget *New();
 
   vtkTypeMacro(vtkImageTracerWidget,vtk3DWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Methods that satisfy the superclass' API.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void PlaceWidget() VTK_OVERRIDE
+  void SetEnabled(int) override;
+  void PlaceWidget(double bounds[6]) override;
+  void PlaceWidget() override
     {this->Superclass::PlaceWidget();}
   void PlaceWidget(double xmin, double xmax, double ymin, double ymax,
-                   double zmin, double zmax) VTK_OVERRIDE
+                   double zmin, double zmax) override
     {this->Superclass::PlaceWidget(xmin,xmax,ymin,ymax,zmin,zmax);}
   //@}
 
@@ -132,9 +132,9 @@ public:
   /**
    * Force handles to be on a specific ortho plane. Default is Off.
    */
-  vtkSetMacro(ProjectToPlane,int);
-  vtkGetMacro(ProjectToPlane,int);
-  vtkBooleanMacro(ProjectToPlane,int);
+  vtkSetMacro(ProjectToPlane,vtkTypeBool);
+  vtkGetMacro(ProjectToPlane,vtkTypeBool);
+  vtkBooleanMacro(ProjectToPlane,vtkTypeBool);
   //@}
 
   //@{
@@ -170,9 +170,9 @@ public:
    /**
     * Force snapping to image data while tracing. Default is Off.
     */
-  void SetSnapToImage(int snap);
-  vtkGetMacro(SnapToImage,int);
-  vtkBooleanMacro(SnapToImage,int);
+  void SetSnapToImage(vtkTypeBool snap);
+  vtkGetMacro(SnapToImage,vtkTypeBool);
+  vtkBooleanMacro(SnapToImage,vtkTypeBool);
    //@}
 
   //@{
@@ -181,9 +181,9 @@ public:
    * form a closed path by connecting first to last path points.
    * Default is Off.
    */
-  vtkSetMacro(AutoClose,int);
-  vtkGetMacro(AutoClose,int);
-  vtkBooleanMacro(AutoClose,int);
+  vtkSetMacro(AutoClose,vtkTypeBool);
+  vtkGetMacro(AutoClose,vtkTypeBool);
+  vtkBooleanMacro(AutoClose,vtkTypeBool);
   //@}
 
   //@{
@@ -226,7 +226,7 @@ public:
   void SetHandlePosition(int handle, double xyz[3]);
   void SetHandlePosition(int handle, double x, double y, double z);
   void GetHandlePosition(int handle, double xyz[3]);
-  double* GetHandlePosition(int handle);
+  double* GetHandlePosition(int handle) VTK_SIZEHINT(3);
   //@}
 
   //@{
@@ -240,9 +240,9 @@ public:
   /**
    * Enable/disable mouse interaction when the widget is visible.
    */
-  void SetInteraction(int interact);
-  vtkGetMacro(Interaction,int);
-  vtkBooleanMacro(Interaction,int);
+  void SetInteraction(vtkTypeBool interact);
+  vtkGetMacro(Interaction,vtkTypeBool);
+  vtkBooleanMacro(Interaction,vtkTypeBool);
   //@}
 
   /**
@@ -261,30 +261,20 @@ public:
   /**
    * Enable/Disable mouse button events
    */
-  vtkSetMacro(HandleLeftMouseButton,int);
-  vtkGetMacro(HandleLeftMouseButton,int);
-  vtkBooleanMacro(HandleLeftMouseButton,int);
-  vtkSetMacro(HandleMiddleMouseButton,int);
-  vtkGetMacro(HandleMiddleMouseButton,int);
-  vtkBooleanMacro(HandleMiddleMouseButton,int);
-  vtkSetMacro(HandleRightMouseButton,int);
-  vtkGetMacro(HandleRightMouseButton,int);
-  vtkBooleanMacro(HandleRightMouseButton,int);
+  vtkSetMacro(HandleLeftMouseButton,vtkTypeBool);
+  vtkGetMacro(HandleLeftMouseButton,vtkTypeBool);
+  vtkBooleanMacro(HandleLeftMouseButton,vtkTypeBool);
+  vtkSetMacro(HandleMiddleMouseButton,vtkTypeBool);
+  vtkGetMacro(HandleMiddleMouseButton,vtkTypeBool);
+  vtkBooleanMacro(HandleMiddleMouseButton,vtkTypeBool);
+  vtkSetMacro(HandleRightMouseButton,vtkTypeBool);
+  vtkGetMacro(HandleRightMouseButton,vtkTypeBool);
+  vtkBooleanMacro(HandleRightMouseButton,vtkTypeBool);
   //@}
-
-#ifdef VTK_WORKAROUND_WINDOWS_MANGLE
-# define SetPropA SetProp
-# define SetPropW SetProp
-#endif
-
-#ifdef VTK_WORKAROUND_WINDOWS_MANGLE
-# undef SetPropA
-# undef SetPropW
-#endif
 
 protected:
   vtkImageTracerWidget();
-  ~vtkImageTracerWidget() VTK_OVERRIDE;
+  ~vtkImageTracerWidget() override;
 
   // Manage the state of the widget
   int State;
@@ -318,14 +308,14 @@ protected:
   void AddObservers();
 
   // Controlling ivars
-  int    Interaction;
+  vtkTypeBool    Interaction;
   int    ProjectionNormal;
   double ProjectionPosition;
-  int    ProjectToPlane;
+  vtkTypeBool    ProjectToPlane;
   int    ImageSnapType;
-  int    SnapToImage;
+  vtkTypeBool    SnapToImage;
   double CaptureRadius; // tolerance for auto path close
-  int    AutoClose;
+  vtkTypeBool    AutoClose;
   int    IsSnapping;
   int    LastX;
   int    LastY;
@@ -352,7 +342,7 @@ protected:
   void AdjustHandlePosition(const int& , double*);
   int  HighlightHandle(vtkProp* ); // returns handle index or -1 on fail
   void EraseHandle(const int& );
-  void SizeHandles() VTK_OVERRIDE;
+  void SizeHandles() override;
   void InsertHandleOnLine(double* );
 
   int NumberOfHandles;
@@ -381,7 +371,7 @@ protected:
   vtkAbstractPropPicker* CurrentPicker;
 
   // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  void RegisterPickers() override;
 
   // Properties used to control the appearance of selected objects and
   // the manipulator in general.
@@ -392,13 +382,13 @@ protected:
   void CreateDefaultProperties();
 
   // Enable/Disable mouse button events
-  int HandleLeftMouseButton;
-  int HandleMiddleMouseButton;
-  int HandleRightMouseButton;
+  vtkTypeBool HandleLeftMouseButton;
+  vtkTypeBool HandleMiddleMouseButton;
+  vtkTypeBool HandleRightMouseButton;
 
 private:
-  vtkImageTracerWidget(const vtkImageTracerWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageTracerWidget&) VTK_DELETE_FUNCTION;
+  vtkImageTracerWidget(const vtkImageTracerWidget&) = delete;
+  void operator=(const vtkImageTracerWidget&) = delete;
 };
 
 #endif

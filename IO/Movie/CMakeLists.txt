@@ -1,11 +1,5 @@
 set(Module_SRCS
   vtkGenericMovieWriter.cxx
-  #vtkMPEG2Writer.cxx # Do we want to continue supporting?
-  )
-
-set_source_files_properties(
-  vtkGenericMovieWriter
-  ABSTRACT
   )
 
 set (VTK_HAS_OGGTHEORA_SUPPORT)

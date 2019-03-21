@@ -36,7 +36,7 @@ class VTKIMAGINGGENERAL_EXPORT vtkImageSlab : public vtkThreadedImageAlgorithm
 public:
   static vtkImageSlab *New();
   vtkTypeMacro(vtkImageSlab, vtkThreadedImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -87,9 +87,9 @@ public:
    * to the default midpoint integration that weighs all slices equally.
    * It is off by default.
    */
-  vtkSetMacro(TrapezoidIntegration, int);
-  vtkBooleanMacro(TrapezoidIntegration, int);
-  vtkGetMacro(TrapezoidIntegration, int);
+  vtkSetMacro(TrapezoidIntegration, vtkTypeBool);
+  vtkBooleanMacro(TrapezoidIntegration, vtkTypeBool);
+  vtkGetMacro(TrapezoidIntegration, vtkTypeBool);
   //@}
 
   //@{
@@ -100,9 +100,9 @@ public:
    * be a projection through slices 'i' through '3+i' of the input.
    * This flag is off by default.
    */
-  vtkSetMacro(MultiSliceOutput, int);
-  vtkBooleanMacro(MultiSliceOutput, int);
-  vtkGetMacro(MultiSliceOutput, int);
+  vtkSetMacro(MultiSliceOutput, vtkTypeBool);
+  vtkBooleanMacro(MultiSliceOutput, vtkTypeBool);
+  vtkGetMacro(MultiSliceOutput, vtkTypeBool);
   //@}
 
   //@{
@@ -123,17 +123,17 @@ public:
 
 protected:
   vtkImageSlab();
-  ~vtkImageSlab() VTK_OVERRIDE;
+  ~vtkImageSlab() override;
 
   int RequestInformation(vtkInformation *, vtkInformationVector **,
-                                 vtkInformationVector *) VTK_OVERRIDE;
+                                 vtkInformationVector *) override;
   int RequestUpdateExtent(vtkInformation *, vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   void ThreadedRequestData(vtkInformation *request,
                                    vtkInformationVector **inputVector,
                                    vtkInformationVector *outputVector,
                                    vtkImageData ***inData,
-                                   vtkImageData **outData, int ext[6], int id) VTK_OVERRIDE;
+                                   vtkImageData **outData, int ext[6], int id) override;
 
   vtkSetMacro(OutputScalarType, int);
 
@@ -141,12 +141,12 @@ protected:
   int Orientation;
   int SliceRange[2];
   int OutputScalarType;
-  int MultiSliceOutput;
-  int TrapezoidIntegration;
+  vtkTypeBool MultiSliceOutput;
+  vtkTypeBool TrapezoidIntegration;
 
 private:
-  vtkImageSlab(const vtkImageSlab&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageSlab&) VTK_DELETE_FUNCTION;
+  vtkImageSlab(const vtkImageSlab&) = delete;
+  void operator=(const vtkImageSlab&) = delete;
 };
 
 #endif

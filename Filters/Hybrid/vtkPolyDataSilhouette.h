@@ -56,7 +56,7 @@ public:
   static vtkPolyDataSilhouette *New();
 
   vtkTypeMacro(vtkPolyDataSilhouette,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -79,9 +79,9 @@ public:
    * Enables or Disables generation of border edges. Note: borders exist only
    * in case of non closed surface
    */
-  vtkSetMacro(BorderEdges,int);
-  vtkGetMacro(BorderEdges,int);
-  vtkBooleanMacro(BorderEdges,int);
+  vtkSetMacro(BorderEdges,vtkTypeBool);
+  vtkGetMacro(BorderEdges,vtkTypeBool);
+  vtkBooleanMacro(BorderEdges,vtkTypeBool);
   //@}
 
   //@{
@@ -89,9 +89,9 @@ public:
    * Enables or Disables piece invariance. This is useful when dealing with
    * multi-block data sets. Note: requires one level of ghost cells
    */
-  vtkSetMacro(PieceInvariant,int);
-  vtkGetMacro(PieceInvariant,int);
-  vtkBooleanMacro(PieceInvariant,int);
+  vtkSetMacro(PieceInvariant,vtkTypeBool);
+  vtkGetMacro(PieceInvariant,vtkTypeBool);
+  vtkBooleanMacro(PieceInvariant,vtkTypeBool);
   //@}
 
   enum Directions
@@ -165,13 +165,13 @@ public:
    * Return MTime also considering the dependent objects: the camera
    * and/or the prop3D.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkPolyDataSilhouette();
-  ~vtkPolyDataSilhouette() VTK_OVERRIDE;
+  ~vtkPolyDataSilhouette() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   void ComputeProjectionVector(double vector[3], double origin[3]);
 
   int Direction;
@@ -184,14 +184,14 @@ protected:
   int EnableFeatureAngle;
   double FeatureAngle;
 
-  int BorderEdges;
-  int PieceInvariant;
+  vtkTypeBool BorderEdges;
+  vtkTypeBool PieceInvariant;
 
   vtkPolyDataEdges* PreComp; // precomputed data for a given point of view
 
 private:
-  vtkPolyDataSilhouette(const vtkPolyDataSilhouette&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPolyDataSilhouette&) VTK_DELETE_FUNCTION;
+  vtkPolyDataSilhouette(const vtkPolyDataSilhouette&) = delete;
+  void operator=(const vtkPolyDataSilhouette&) = delete;
 };
 
 #endif

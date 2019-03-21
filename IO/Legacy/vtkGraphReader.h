@@ -41,7 +41,7 @@ class VTKIOLEGACY_EXPORT vtkGraphReader : public vtkDataReader
 public:
   static vtkGraphReader *New();
   vtkTypeMacro(vtkGraphReader,vtkDataReader);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -49,12 +49,18 @@ public:
    */
   vtkGraph *GetOutput();
   vtkGraph *GetOutput(int idx);
-  void SetOutput(vtkGraph *output);
   //@}
+
+  /**
+   * Actual reading happens here
+   */
+  int ReadMeshSimple(const std::string& fname,
+                     vtkDataObject* output) override;
+
 
 protected:
   vtkGraphReader();
-  ~vtkGraphReader() VTK_OVERRIDE;
+  ~vtkGraphReader() override;
 
   enum GraphType
   {
@@ -64,31 +70,16 @@ protected:
     Molecule
   };
 
-  int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
-
-  // Override ProcessRequest to handle request data object event
-  int ProcessRequest(vtkInformation *, vtkInformationVector **,
-                             vtkInformationVector *) VTK_OVERRIDE;
-
-  // Since the Outputs[0] has the same UpdateExtent format
-  // as the generic DataObject we can copy the UpdateExtent
-  // as a default behavior.
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
-
-  // Create output (a directed or undirected graph).
-  virtual int RequestDataObject(vtkInformation *, vtkInformationVector **,
-                                vtkInformationVector *);
+  vtkDataObject* CreateOutput(vtkDataObject* currentOutput) override;
 
   // Read beginning of file to determine whether the graph is directed.
-  virtual int ReadGraphType(GraphType &type);
+  virtual int ReadGraphType(const char* fname, GraphType &type);
 
 
-  int FillOutputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillOutputPortInformation(int, vtkInformation*) override;
 private:
-  vtkGraphReader(const vtkGraphReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGraphReader&) VTK_DELETE_FUNCTION;
+  vtkGraphReader(const vtkGraphReader&) = delete;
+  void operator=(const vtkGraphReader&) = delete;
 };
 
 #endif

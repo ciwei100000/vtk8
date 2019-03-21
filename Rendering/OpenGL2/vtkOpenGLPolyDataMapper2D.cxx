@@ -31,6 +31,7 @@
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLResourceFreeCallback.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtkOpenGLTexture.h"
 #include "vtkOpenGLVertexArrayObject.h"
 #include "vtkOpenGLVertexBufferObjectCache.h"
@@ -56,12 +57,12 @@ vtkStandardNewMacro(vtkOpenGLPolyDataMapper2D);
 //-----------------------------------------------------------------------------
 vtkOpenGLPolyDataMapper2D::vtkOpenGLPolyDataMapper2D()
 {
-  this->TransformedPoints = NULL;
-  this->CellScalarTexture = NULL;
-  this->CellScalarBuffer = NULL;
-  this->AppleBugPrimIDBuffer = NULL;
+  this->TransformedPoints = nullptr;
+  this->CellScalarTexture = nullptr;
+  this->CellScalarBuffer = nullptr;
+  this->AppleBugPrimIDBuffer = nullptr;
   this->HaveAppleBug = false;
-  this->LastBoundBO = NULL;
+  this->LastBoundBO = nullptr;
   this->HaveCellScalars = false;
   this->PrimitiveIDOffset = 0;
   this->LastPickState = 0;
@@ -78,7 +79,7 @@ vtkOpenGLPolyDataMapper2D::~vtkOpenGLPolyDataMapper2D()
   {
     this->ResourceCallback->Release();
     delete this->ResourceCallback;
-    this->ResourceCallback = NULL;
+    this->ResourceCallback = nullptr;
   }
   if (this->TransformedPoints)
   {
@@ -87,12 +88,12 @@ vtkOpenGLPolyDataMapper2D::~vtkOpenGLPolyDataMapper2D()
   if (this->CellScalarTexture)
   { // Resources released previously.
     this->CellScalarTexture->Delete();
-    this->CellScalarTexture = NULL;
+    this->CellScalarTexture = nullptr;
   }
   if (this->CellScalarBuffer)
   { // Resources released previously.
     this->CellScalarBuffer->Delete();
-    this->CellScalarBuffer = NULL;
+    this->CellScalarBuffer = nullptr;
   }
   this->HaveCellScalars = false;
   if (this->AppleBugPrimIDBuffer)
@@ -100,7 +101,7 @@ vtkOpenGLPolyDataMapper2D::~vtkOpenGLPolyDataMapper2D()
     this->AppleBugPrimIDBuffer->Delete();
   }
   this->VBOs->Delete();
-  this->VBOs = NULL;
+  this->VBOs = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -143,7 +144,7 @@ bool vtkOpenGLPolyDataMapper2D::GetNeedToRebuildShaders(
   // property modified (representation interpolation and lighting)
   // input modified
   // light complexity changed
-  if (cellBO.Program == NULL ||
+  if (cellBO.Program == nullptr ||
       cellBO.ShaderSourceTime < this->GetMTime() ||
       cellBO.ShaderSourceTime < actor->GetMTime() ||
       cellBO.ShaderSourceTime < this->GetInput()->GetMTime() ||
@@ -188,8 +189,8 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
     {
       vtkShaderProgram::Substitute(VSSource,
          "//VTK::Color::Dec",
-         "attribute vec4 diffuseColor;\n"
-         "varying vec4 fcolorVSOutput;");
+         "in vec4 diffuseColor;\n"
+         "out vec4 fcolorVSOutput;");
       vtkShaderProgram::Substitute(VSSource,
           "//VTK::Color::Impl",
           "fcolorVSOutput = diffuseColor;");
@@ -202,7 +203,7 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
         "fcolorGSOutput = fcolorVSOutput[i];");
       vtkShaderProgram::Substitute(FSSource,
           "//VTK::Color::Dec",
-          "varying vec4 fcolorVSOutput;");
+          "in vec4 fcolorVSOutput;");
       vtkShaderProgram::Substitute(FSSource,
           "//VTK::Color::Impl",
           "gl_FragData[0] = fcolorVSOutput;");
@@ -225,7 +226,7 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
     {
       vtkShaderProgram::Substitute(VSSource,
         "//VTK::TCoord::Dec",
-        "attribute float tcoordMC; varying float tcoordVCVSOutput;");
+        "in float tcoordMC; out float tcoordVCVSOutput;");
       vtkShaderProgram::Substitute(VSSource,
         "//VTK::TCoord::Impl",
         "tcoordVCVSOutput = tcoordMC;");
@@ -238,7 +239,7 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
         "tcoordVCGSOutput = tcoordVCVSOutput[i];");
       vtkShaderProgram::Substitute(FSSource,
         "//VTK::TCoord::Dec",
-        "varying float tcoordVCVSOutput; uniform sampler2D texture1;");
+        "in float tcoordVCVSOutput; uniform sampler2D texture1;");
       vtkShaderProgram::Substitute(FSSource,
         "//VTK::TCoord::Impl",
         "gl_FragData[0] = gl_FragData[0]*texture2D(texture1, vec2(tcoordVCVSOutput,0));");
@@ -247,7 +248,7 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
     {
       vtkShaderProgram::Substitute(VSSource,
         "//VTK::TCoord::Dec",
-        "attribute vec2 tcoordMC; varying vec2 tcoordVCVSOutput;");
+        "in vec2 tcoordMC; out vec2 tcoordVCVSOutput;");
       vtkShaderProgram::Substitute(VSSource,
         "//VTK::TCoord::Impl",
         "tcoordVCVSOutput = tcoordMC;");
@@ -260,7 +261,7 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
         "tcoordVCGSOutput = tcoordVCVSOutput[i];");
       vtkShaderProgram::Substitute(FSSource,
         "//VTK::TCoord::Dec",
-        "varying vec2 tcoordVCVSOutput; uniform sampler2D texture1;");
+        "in vec2 tcoordVCVSOutput; uniform sampler2D texture1;");
       vtkShaderProgram::Substitute(FSSource,
         "//VTK::TCoord::Impl",
         "gl_FragData[0] = gl_FragData[0]*texture2D(texture1, tcoordVCVSOutput.st);");
@@ -268,11 +269,11 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
   }
 
   // are we handling the apple bug?
-  if (this->AppleBugPrimIDs.size())
+  if (!this->AppleBugPrimIDs.empty())
   {
     vtkShaderProgram::Substitute(VSSource,"//VTK::PrimID::Dec",
-      "attribute vec4 appleBugPrimID;\n"
-      "varying vec4 applePrimIDVSOutput;");
+      "in vec4 appleBugPrimID;\n"
+      "out vec4 applePrimIDVSOutput;");
     vtkShaderProgram::Substitute(VSSource,"//VTK::PrimID::Impl",
       "applePrimIDVSOutput = appleBugPrimID;");
     vtkShaderProgram::Substitute(GSSource,
@@ -283,7 +284,7 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
       "//VTK::PrimID::Impl",
       "applePrimIDGSOutput = applePrimIDVSOutput[i];");
     vtkShaderProgram::Substitute(FSSource,"//VTK::PrimID::Dec",
-      "varying vec4 applePrimIDVSOutput;");
+      "in vec4 applePrimIDVSOutput;");
      vtkShaderProgram::Substitute(FSSource,"//VTK::PrimID::Impl",
        "int vtkPrimID = int(applePrimIDVSOutput[0]*255.1) + int(applePrimIDVSOutput[1]*255.1)*256 + int(applePrimIDVSOutput[2]*255.1)*65536;");
     vtkShaderProgram::Substitute(FSSource,"gl_PrimitiveID","vtkPrimID");
@@ -299,7 +300,7 @@ void vtkOpenGLPolyDataMapper2D::BuildShaders(
   }
 
   vtkRenderer* ren = vtkRenderer::SafeDownCast(viewport);
-  if (ren && ren->GetRenderWindow()->GetIsPicking())
+  if (ren && ren->GetSelector())
   {
     this->ReplaceShaderPicking(FSSource, ren, actor);
   }
@@ -359,7 +360,7 @@ void vtkOpenGLPolyDataMapper2D::SetMapperShaderParameters(
 
     this->VBOs->AddAllAttributesToVAO(cellBO.Program, cellBO.VAO);
 
-    if (this->AppleBugPrimIDs.size() &&
+    if (!this->AppleBugPrimIDs.empty() &&
         cellBO.Program->IsAttributeUsed("appleBugPrimID"))
     {
       this->AppleBugPrimIDBuffer->Bind();
@@ -404,13 +405,10 @@ void vtkOpenGLPolyDataMapper2D::SetMapperShaderParameters(
   }
 
   vtkRenderer* ren = vtkRenderer::SafeDownCast(viewport);
-  bool picking = ren && ren->GetRenderWindow()->GetIsPicking();
-  if (picking && cellBO.Program->IsUniformUsed("mapperIndex"))
+  vtkHardwareSelector* selector = ren->GetSelector();
+  if (selector && cellBO.Program->IsUniformUsed("mapperIndex"))
   {
-    unsigned int idx = ren->GetCurrentPickId();
-    float color[3];
-    vtkHardwareSelector::Convert(idx, color);
-    cellBO.Program->SetUniform3f("mapperIndex", color);
+    cellBO.Program->SetUniform3f("mapperIndex", selector->GetPropColorValue());
   }
 }
 
@@ -482,10 +480,10 @@ void vtkOpenGLPolyDataMapper2D::SetCameraShaderParameters(
   {
     return;
   }
-  size[0] =
-    vtkMath::Round(size[0]*(visVP[2] - visVP[0])/(vport[2] - vport[0]));
-  size[1] =
-    vtkMath::Round(size[1]*(visVP[3] - visVP[1])/(vport[3] - vport[1]));
+  size[0] = static_cast<int>(std::round(
+   size[0]*(visVP[2] - visVP[0])/(vport[2] - vport[0])));
+  size[1] = static_cast<int>(std::round(
+   size[1]*(visVP[3] - visVP[1])/(vport[3] - vport[1])));
 
   int *winSize = viewport->GetVTKWindow()->GetSize();
 
@@ -516,7 +514,7 @@ void vtkOpenGLPolyDataMapper2D::SetCameraShaderParameters(
   if (actor->GetProperty()->GetDisplayLocation() !=
        VTK_FOREGROUND_LOCATION)
   {
-    nearV = -VTK_FLOAT_MAX;;
+    nearV = -VTK_FLOAT_MAX;
     farV = 0;
   }
 
@@ -535,10 +533,10 @@ void vtkOpenGLPolyDataMapper2D::SetCameraShaderParameters(
 /*
   if (this->VBO->GetCoordShiftAndScaleEnabled())
   {
-    this->VBOTransformInverse->GetTranspose(this->VBOShiftScale.GetPointer());
+    this->VBOTransformInverse->GetTranspose(this->VBOShiftScale);
     // Pre-multiply the inverse of the VBO's transform:
     vtkMatrix4x4::Multiply4x4(
-      this->VBOShiftScale.GetPointer(), tmpMat, tmpMat);
+      this->VBOShiftScale, tmpMat, tmpMat);
   }
 */
   program->SetUniformMatrix("WCVCMatrix", tmpMat);
@@ -551,7 +549,7 @@ void vtkOpenGLPolyDataMapper2D::SetCameraShaderParameters(
 void vtkOpenGLPolyDataMapper2D::UpdateVBO(vtkActor2D *act, vtkViewport *viewport)
 {
   vtkPolyData *poly = this->GetInput();
-  if (poly == NULL)
+  if (poly == nullptr)
   {
     return;
   }
@@ -560,11 +558,11 @@ void vtkOpenGLPolyDataMapper2D::UpdateVBO(vtkActor2D *act, vtkViewport *viewport
   this->HaveAppleBug =
     static_cast<vtkOpenGLRenderer *>(viewport)->HaveApplePrimitiveIdBug();
 
+  this->MapScalars(act->GetProperty()->GetOpacity());
   this->HaveCellScalars = false;
   if (this->ScalarVisibility)
   {
     // We must figure out how the scalars should be mapped to the polydata.
-    this->MapScalars(act->GetProperty()->GetOpacity());
     if ( (this->ScalarMode == VTK_SCALAR_MODE_USE_CELL_DATA ||
           this->ScalarMode == VTK_SCALAR_MODE_USE_CELL_FIELD_DATA ||
           this->ScalarMode == VTK_SCALAR_MODE_USE_FIELD_DATA ||
@@ -576,8 +574,8 @@ void vtkOpenGLPolyDataMapper2D::UpdateVBO(vtkActor2D *act, vtkViewport *viewport
     }
   }
 
-  // on apple with the AMD PrimID bug we use a slow
-  // painful approach to work around it
+  // on Apple Macs with the AMD PrimID bug <rdar://20747550>
+  // we use a slow painful approach to work around it (pre 10.11).
   this->AppleBugPrimIDs.resize(0);
   if (this->HaveAppleBug && this->HaveCellScalars)
   {
@@ -596,7 +594,7 @@ void vtkOpenGLPolyDataMapper2D::UpdateVBO(vtkActor2D *act, vtkViewport *viewport
     static bool warnAppleBugOnce = true;
     if (warnAppleBugOnce)
     {
-      vtkWarningMacro("VTK is working around a bug in Apple-AMD hardware related to gl_PrimitiveID.  This may cause significant memory and performance impacts. Your hardware has been identified as vendor "
+      vtkWarningMacro("VTK is working around a bug in Apple-AMD hardware related to gl_PrimitiveID. This may cause significant memory and performance impacts. You should update to macOS 10.11 or later, where the bug is fixed. Your hardware has been identified as vendor "
                       << (const char *)glGetString(GL_VENDOR) << " with renderer of "
                       << (const char *)glGetString(GL_RENDERER));
       warnAppleBugOnce = false;
@@ -656,7 +654,7 @@ void vtkOpenGLPolyDataMapper2D::UpdateVBO(vtkActor2D *act, vtkViewport *viewport
       numComp,
       VTK_UNSIGNED_CHAR,
       this->CellScalarBuffer);
-    c = NULL;
+    c = nullptr;
   }
 
   // do we have texture maps?
@@ -699,7 +697,7 @@ void vtkOpenGLPolyDataMapper2D::UpdateVBO(vtkActor2D *act, vtkViewport *viewport
 
   this->VBOs->CacheDataArray("vertexWC", p->GetData(), cache, VTK_FLOAT);
   this->VBOs->CacheDataArray("tcoordMC",
-    (haveTextures ? poly->GetPointData()->GetTCoords() : NULL), cache, VTK_FLOAT);
+    (haveTextures ? poly->GetPointData()->GetTCoords() : nullptr), cache, VTK_FLOAT);
   this->VBOs->CacheDataArray("diffuseColor", c, cache, VTK_UNSIGNED_CHAR);
 
   this->VBOs->BuildAllVBOs(cache);
@@ -726,8 +724,7 @@ bool vtkOpenGLPolyDataMapper2D::HaveWideLines(
   vtkActor2D *actor)
 {
   if (this->LastBoundBO == &this->Lines
-      && actor->GetProperty()->GetLineWidth() > 1.0
-      && vtkOpenGLRenderWindow::GetContextSupportsOpenGL32())
+      && actor->GetProperty()->GetLineWidth() > 1.0)
   {
     // we have wide lines, but the OpenGL implementation may
     // actually support them, check the range to see if we
@@ -748,7 +745,7 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
 
   vtkDebugMacro (<< "vtkOpenGLPolyDataMapper2D::Render");
 
-  if ( input == NULL )
+  if ( input == nullptr )
   {
     vtkErrorMacro(<< "No input!");
     return;
@@ -762,7 +759,7 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
     return;
   }
 
-  if ( this->LookupTable == NULL )
+  if ( this->LookupTable == nullptr )
   {
     this->CreateDefaultLookupTable();
   }
@@ -772,7 +769,14 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
   this->ResourceCallback->RegisterGraphicsResources(
     static_cast<vtkOpenGLRenderWindow *>(renWin));
 
-  int picking = renWin->GetIsPicking();
+  vtkRenderer* ren = vtkRenderer::SafeDownCast(viewport);
+  vtkHardwareSelector* selector = ren->GetSelector();
+  if (selector)
+  {
+    selector->BeginRenderProp();
+  }
+
+  int picking = (selector ? 1 : 0);
   if (picking != this->LastPickState)
   {
     this->LastPickState = picking;
@@ -781,7 +785,7 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
 
   // Assume we want to do Zbuffering for now.
   // we may turn this off later
-  glDepthMask(GL_TRUE);
+  static_cast<vtkOpenGLRenderWindow *>(renWin)->GetState()->vtkglDepthMask(GL_TRUE);
 
   // Update the VBO if needed.
   if (this->VBOUpdateTime < this->GetMTime() ||
@@ -797,7 +801,7 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
   }
 
   // this->VBOs->Bind();
-  this->LastBoundBO = NULL;
+  this->LastBoundBO = nullptr;
 
   if (this->HaveCellScalars)
   {
@@ -826,7 +830,7 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
                         static_cast<GLuint>(numVerts - 1),
                         static_cast<GLsizei>(this->Points.IBO->IndexCount),
                         GL_UNSIGNED_INT,
-                        reinterpret_cast<const GLvoid *>(NULL));
+                        nullptr);
     this->Points.IBO->Release();
     this->PrimitiveIDOffset += (int)this->Points.IBO->IndexCount;
   }
@@ -847,7 +851,7 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
                           static_cast<GLuint>(numVerts - 1),
                           static_cast<GLsizei>(this->Lines.IBO->IndexCount),
                           GL_UNSIGNED_INT,
-                          reinterpret_cast<const GLvoid *>(NULL));
+                          nullptr);
       this->Lines.IBO->Release();
     }
     this->PrimitiveIDOffset += (int)this->Lines.IBO->IndexCount/2;
@@ -865,7 +869,7 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
                           static_cast<GLuint>(numVerts - 1),
                           static_cast<GLsizei>(this->Tris.IBO->IndexCount),
                           GL_UNSIGNED_INT,
-                          reinterpret_cast<const GLvoid *>(NULL));
+                          nullptr);
       this->Tris.IBO->Release();
       this->PrimitiveIDOffset += (int)this->Tris.IBO->IndexCount/3;
     }
@@ -882,7 +886,7 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
                           static_cast<GLuint>(numVerts - 1),
                           static_cast<GLsizei>(this->TriStrips.IBO->IndexCount),
                           GL_UNSIGNED_INT,
-                          reinterpret_cast<const GLvoid *>(NULL));
+                          nullptr);
       this->TriStrips.IBO->Release();
     }
   }
@@ -895,6 +899,11 @@ void vtkOpenGLPolyDataMapper2D::RenderOverlay(vtkViewport* viewport,
   if (this->LastBoundBO)
   {
     this->LastBoundBO->VAO->Release();
+  }
+
+  if (selector)
+  {
+    selector->EndRenderProp();
   }
 
   // this->VBOs->Release();

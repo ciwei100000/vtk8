@@ -57,7 +57,7 @@ class VTKRENDERINGCORE_EXPORT vtkPicker : public vtkAbstractPropPicker
 public:
   static vtkPicker *New();
   vtkTypeMacro(vtkPicker, vtkAbstractPropPicker);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -124,7 +124,7 @@ public:
   vtkActorCollection *GetActors();
 
   /**
-   * Return a list of the points the the actors returned by GetProp3Ds
+   * Return a list of the points the actors returned by GetProp3Ds
    * were intersected at. The order of this list will match the order of
    * GetProp3Ds.
    */
@@ -138,7 +138,7 @@ public:
    * picked.
    */
   int Pick(double selectionX, double selectionY, double selectionZ,
-                   vtkRenderer *renderer) VTK_OVERRIDE;
+                   vtkRenderer *renderer) override;
 
   /**
    * Perform pick operation with selection point provided. Normally the first
@@ -148,20 +148,37 @@ public:
   int Pick(double selectionPt[3], vtkRenderer *ren)
     { return this->Pick(selectionPt[0], selectionPt[1], selectionPt[2], ren); }
 
+  /**
+   * Perform pick operation with selection point provided. The
+   * selectionPt is in world coordinates.
+   * Return non-zero if something was successfully picked.
+   */
+  int Pick3DPoint(double selectionPt[3], vtkRenderer *ren) override;
+
+  /**
+   * Perform pick operation with selection point and orientation provided.
+   * The selectionPt is in world coordinates.
+   * Return non-zero if something was successfully picked.
+   */
+  int Pick3DRay(double selectionPt[3], double orient[4], vtkRenderer *ren) override;
+
 protected:
   vtkPicker();
-  ~vtkPicker() VTK_OVERRIDE;
+  ~vtkPicker() override;
+
+  // shared code for picking
+  virtual int Pick3DInternal(vtkRenderer *ren, double p1World[4], double p2World[4]);
 
   void MarkPicked(vtkAssemblyPath *path, vtkProp3D *p, vtkAbstractMapper3D *m,
                   double tMin, double mapperPos[3]);
   void MarkPickedData(vtkAssemblyPath *path,
                   double tMin, double mapperPos[3], vtkAbstractMapper3D* mapper,
                   vtkDataSet* input, vtkIdType flatBlockIndex = -1);
-  virtual double IntersectWithLine(double p1[3], double p2[3], double tol,
+  virtual double IntersectWithLine(const double p1[3], const double p2[3], double tol,
                                   vtkAssemblyPath *path, vtkProp3D *p,
                                   vtkAbstractMapper3D *m);
-  void Initialize() VTK_OVERRIDE;
-  static bool CalculateRay(double p1[3], double p2[3],
+  void Initialize() override;
+  static bool CalculateRay(const double p1[3], const double p2[3],
                            double ray[3], double &rayFactor);
 
   double Tolerance;  //tolerance for computation (% of window)
@@ -179,8 +196,8 @@ protected:
   vtkPoints *PickedPositions; // candidate positions
 
 private:
-  vtkPicker(const vtkPicker&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPicker&) VTK_DELETE_FUNCTION;
+  vtkPicker(const vtkPicker&) = delete;
+  void operator=(const vtkPicker&) = delete;
 };
 
 #endif

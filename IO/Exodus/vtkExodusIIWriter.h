@@ -86,7 +86,7 @@ class VTKIOEXODUS_EXPORT vtkExodusIIWriter : public vtkWriter
 public:
   static vtkExodusIIWriter *New ();
   vtkTypeMacro(vtkExodusIIWriter,vtkWriter);
-  void PrintSelf (ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf (ostream& os, vtkIndent indent) override;
 
   /**
    * Specify the vtkModelMetadata object which contains the Exodus file
@@ -135,9 +135,9 @@ public:
     * you do want to include this array, set WriteOutBlockIdArray to ON.
     */
 
-  vtkSetMacro(WriteOutBlockIdArray, int);
-  vtkGetMacro(WriteOutBlockIdArray, int);
-  vtkBooleanMacro(WriteOutBlockIdArray, int);
+  vtkSetMacro(WriteOutBlockIdArray, vtkTypeBool);
+  vtkGetMacro(WriteOutBlockIdArray, vtkTypeBool);
+  vtkBooleanMacro(WriteOutBlockIdArray, vtkTypeBool);
 
   /**
    * By default, the integer array containing the global Node Ids
@@ -145,9 +145,9 @@ public:
    * you do want to include this array, set WriteOutGlobalNodeIdArray to ON.
    */
 
-  vtkSetMacro(WriteOutGlobalNodeIdArray, int);
-  vtkGetMacro(WriteOutGlobalNodeIdArray, int);
-  vtkBooleanMacro(WriteOutGlobalNodeIdArray, int);
+  vtkSetMacro(WriteOutGlobalNodeIdArray, vtkTypeBool);
+  vtkGetMacro(WriteOutGlobalNodeIdArray, vtkTypeBool);
+  vtkBooleanMacro(WriteOutGlobalNodeIdArray, vtkTypeBool);
 
   /**
    * By default, the integer array containing the global Element Ids
@@ -155,18 +155,18 @@ public:
    * do want to include this array, set WriteOutGlobalElementIdArray to ON.
    */
 
-  vtkSetMacro(WriteOutGlobalElementIdArray, int);
-  vtkGetMacro(WriteOutGlobalElementIdArray, int);
-  vtkBooleanMacro(WriteOutGlobalElementIdArray, int);
+  vtkSetMacro(WriteOutGlobalElementIdArray, vtkTypeBool);
+  vtkGetMacro(WriteOutGlobalElementIdArray, vtkTypeBool);
+  vtkBooleanMacro(WriteOutGlobalElementIdArray, vtkTypeBool);
 
   /**
    * When WriteAllTimeSteps is turned ON, the writer is executed once for
    * each timestep available from the reader.
    */
 
-  vtkSetMacro(WriteAllTimeSteps, int);
-  vtkGetMacro(WriteAllTimeSteps, int);
-  vtkBooleanMacro(WriteAllTimeSteps, int);
+  vtkSetMacro(WriteAllTimeSteps, vtkTypeBool);
+  vtkGetMacro(WriteAllTimeSteps, vtkTypeBool);
+  vtkBooleanMacro(WriteAllTimeSteps, vtkTypeBool);
 
   vtkSetStringMacro(BlockIdArrayName);
   vtkGetStringMacro(BlockIdArrayName);
@@ -182,7 +182,7 @@ public:
 
 protected:
   vtkExodusIIWriter ();
-  ~vtkExodusIIWriter () VTK_OVERRIDE;
+  ~vtkExodusIIWriter () override;
 
   vtkModelMetadata* ModelMetadata;
 
@@ -198,10 +198,10 @@ protected:
 
   int StoreDoubles;
   int GhostLevel;
-  int WriteOutBlockIdArray;
-  int WriteOutGlobalNodeIdArray;
-  int WriteOutGlobalElementIdArray;
-  int WriteAllTimeSteps;
+  vtkTypeBool WriteOutBlockIdArray;
+  vtkTypeBool WriteOutGlobalNodeIdArray;
+  vtkTypeBool WriteOutGlobalElementIdArray;
+  vtkTypeBool WriteAllTimeSteps;
   int NumberOfTimeSteps;
 
   int CurrentTimeIndex;
@@ -222,7 +222,7 @@ protected:
   {
     Block ()
     {
-      this->Name = 0;
+      this->Name = nullptr;
       this->Type = 0;
       this->NumElements = 0;
       this->ElementStartIndex = -1;
@@ -232,7 +232,7 @@ protected:
       this->GridIndex = 0;
       this->OutputIndex = -1;
       this->NumAttributes = 0;
-      this->BlockAttributes = 0;
+      this->BlockAttributes = nullptr;
     };
     const char *Name;
     int Type;
@@ -285,7 +285,7 @@ protected:
 
   int ProcessRequest (vtkInformation* request,
                       vtkInformationVector** inputVector,
-                      vtkInformationVector* outputVector) VTK_OVERRIDE;
+                      vtkInformationVector* outputVector) override;
 
   int RequestInformation (vtkInformation* request,
                           vtkInformationVector** inputVector,
@@ -295,13 +295,13 @@ protected:
                                    vtkInformationVector** inputVector,
                                    vtkInformationVector* outputVector);
 
-  int FillInputPortInformation (int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation (int port, vtkInformation* info) override;
 
   int RequestData (vtkInformation* request,
                    vtkInformationVector** inputVector,
-                   vtkInformationVector* outputVector) VTK_OVERRIDE;
+                   vtkInformationVector* outputVector) override;
 
-  void WriteData () VTK_OVERRIDE;
+  void WriteData () override;
 
   int FlattenHierarchy (vtkDataObject* input, const char *name, bool& changed);
 
@@ -367,9 +367,15 @@ protected:
   void ExtractPointData (const char *name, int comp, vtkDataArray *buffer);
   int WritePointData (int timestep, vtkDataArray *buffer);
 
+  /**
+   * Get the maximum length name in the input data set. If it is smaller
+   * than 32 characters long we just return the ExodusII default of 32.
+   */
+  virtual unsigned int GetMaxNameLength();
+
 private:
-  vtkExodusIIWriter (const vtkExodusIIWriter&) VTK_DELETE_FUNCTION;
-  void operator= (const vtkExodusIIWriter&) VTK_DELETE_FUNCTION;
+  vtkExodusIIWriter (const vtkExodusIIWriter&) = delete;
+  void operator= (const vtkExodusIIWriter&) = delete;
 };
 
 #endif

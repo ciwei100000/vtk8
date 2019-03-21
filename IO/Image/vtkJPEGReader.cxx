@@ -19,10 +19,11 @@
 #include "vtkObjectFactory.h"
 #include "vtkPointData.h"
 #include "vtkToolkits.h"
+#include <vtksys/SystemTools.hxx>
 
 extern "C" {
 #include "vtk_jpeg.h"
-#include <setjmp.h>
+#include <csetjmp>
 }
 
 
@@ -119,17 +120,17 @@ void vtkJPEGReader::ExecuteInformation()
   // certain variables must be stored here for longjmp
   struct vtk_jpeg_error_mgr jerr;
   jerr.JPEGReader = this;
-  jerr.fp = NULL;
+  jerr.fp = nullptr;
 
   this->ComputeInternalFileName(this->DataExtent[4]);
-  if (this->InternalFileName == NULL && this->MemoryBuffer == NULL)
+  if (this->InternalFileName == nullptr && this->MemoryBuffer == nullptr)
   {
     return;
   }
 
   if (!this->MemoryBuffer)
   {
-    jerr.fp = fopen(this->InternalFileName, "rb");
+    jerr.fp = vtksys::SystemTools::Fopen(this->InternalFileName, "rb");
     if (!jerr.fp)
     {
       vtkErrorWithObjectMacro(this,
@@ -226,11 +227,11 @@ int vtkJPEGReaderUpdate2(vtkJPEGReader *self, OT *outPtr,
   // certain variables must be stored here for longjmp
   struct vtk_jpeg_error_mgr jerr;
   jerr.JPEGReader = self;
-  jerr.fp = NULL;
+  jerr.fp = nullptr;
 
   if (!self->GetMemoryBuffer())
   {
-    jerr.fp = fopen(self->GetInternalFileName(), "rb");
+    jerr.fp = vtksys::SystemTools::Fopen(self->GetInternalFileName(), "rb");
     if (!jerr.fp)
     {
       return 1;
@@ -279,22 +280,39 @@ int vtkJPEGReaderUpdate2(vtkJPEGReader *self, OT *outPtr,
   // prepare to read the bulk data
   jpeg_start_decompress(&cinfo);
 
-
-  int rowbytes = cinfo.output_components * cinfo.output_width;
-  unsigned char *tempImage = new unsigned char [rowbytes*cinfo.output_height];
-  JSAMPROW *row_pointers = new JSAMPROW [cinfo.output_height];
-  for (unsigned int ui = 0; ui < cinfo.output_height; ++ui)
+  unsigned int maxChunk = cinfo.output_height;
+  if (maxChunk > 4096)
+  {
+    maxChunk = 4096;
+  }
+  vtkIdType rowbytes = cinfo.output_components * cinfo.output_width;
+  unsigned char *tempImage = new unsigned char [rowbytes*maxChunk];
+  JSAMPROW *row_pointers = new JSAMPROW [maxChunk];
+  for (unsigned int ui = 0; ui < maxChunk; ++ui)
   {
     row_pointers[ui] = tempImage + rowbytes*ui;
   }
 
   // read the bulk data
-  unsigned int remainingRows;
+  long outSize = cinfo.output_components*(outExt[1] - outExt[0] + 1);
   while (cinfo.output_scanline < cinfo.output_height)
   {
-    remainingRows = cinfo.output_height - cinfo.output_scanline;
-    jpeg_read_scanlines(&cinfo, &row_pointers[cinfo.output_scanline],
-                        remainingRows);
+    JDIMENSION linesRead = jpeg_read_scanlines(&cinfo, row_pointers, maxChunk);
+
+    // copy the data into the outPtr
+    long destLine = cinfo.output_height - cinfo.output_scanline;
+    for (unsigned int i = 0; i < linesRead; ++i)
+    {
+      if (destLine >= outExt[2] && destLine <= outExt[3])
+      {
+        OT *outPtr2 = outPtr + (destLine - outExt[2])*outInc[1];
+        memcpy(outPtr2,
+               row_pointers[linesRead - i - 1]
+               + outExt[0]*cinfo.output_components,
+               outSize);
+      }
+      destLine++;
+    }
   }
 
   // finish the decompression step
@@ -303,17 +321,6 @@ int vtkJPEGReaderUpdate2(vtkJPEGReader *self, OT *outPtr,
   // destroy the decompression object
   jpeg_destroy_decompress(&cinfo);
 
-  // copy the data into the outPtr
-  OT *outPtr2 = outPtr;
-  long outSize = cinfo.output_components*(outExt[1] - outExt[0] + 1);
-  for (int i = outExt[2]; i <= outExt[3]; ++i)
-  {
-    memcpy(outPtr2,
-           row_pointers[cinfo.output_height - i - 1]
-           + outExt[0]*cinfo.output_components,
-           outSize);
-    outPtr2 += outInc[1];
-  }
   delete [] tempImage;
   delete [] row_pointers;
 
@@ -367,7 +374,7 @@ void vtkJPEGReader::ExecuteDataWithInformation(vtkDataObject *output,
 {
   vtkImageData *data = this->AllocateOutputData(output, outInfo);
 
-  if (this->InternalFileName == NULL)
+  if (this->InternalFileName == nullptr)
   {
     vtkErrorMacro(<< "Either a FileName or FilePrefix must be specified.");
     return;
@@ -397,10 +404,9 @@ int vtkJPEGReader::CanReadFile(const char* fname)
   // certain variables must be stored here for longjmp
   struct vtk_jpeg_error_mgr jerr;
   jerr.JPEGReader = this;
-  jerr.fp = NULL;
 
   // open the file
-  jerr.fp = fopen(fname, "rb");
+  jerr.fp = vtksys::SystemTools::Fopen(fname, "rb");
   if (!jerr.fp)
   {
     return 0;

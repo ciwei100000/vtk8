@@ -53,7 +53,7 @@ class VTKDOMAINSCHEMISTRY_EXPORT vtkBlueObeliskData : public vtkObject
 {
  public:
   vtkTypeMacro(vtkBlueObeliskData,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   static vtkBlueObeliskData *New();
 
   /**
@@ -122,7 +122,7 @@ class VTKDOMAINSCHEMISTRY_EXPORT vtkBlueObeliskData : public vtkObject
   friend class vtkBlueObeliskDataParser;
 
   vtkBlueObeliskData();
-  ~vtkBlueObeliskData() VTK_OVERRIDE;
+  ~vtkBlueObeliskData() override;
 
   vtkSimpleMutexLock *WriteMutex;
   bool Initialized;
@@ -131,7 +131,7 @@ class VTKDOMAINSCHEMISTRY_EXPORT vtkBlueObeliskData : public vtkObject
    * Allocate enough memory in each array for sz elements. ext is not
    * used.
    */
-  virtual int Allocate(vtkIdType sz, vtkIdType ext=1000);
+  virtual vtkTypeBool Allocate(vtkIdType sz, vtkIdType ext=1000);
 
   /**
    * Reset each array.
@@ -178,8 +178,8 @@ class VTKDOMAINSCHEMISTRY_EXPORT vtkBlueObeliskData : public vtkObject
   void PrintSelfIfExists(const char *, vtkObject *, ostream&, vtkIndent);
 
  private:
-  vtkBlueObeliskData(const vtkBlueObeliskData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBlueObeliskData&) VTK_DELETE_FUNCTION;
+  vtkBlueObeliskData(const vtkBlueObeliskData&) = delete;
+  void operator=(const vtkBlueObeliskData&) = delete;
 };
 
 #endif

@@ -26,7 +26,7 @@
  *
  * This class is used for creating groups of processes.  A vtkProcessGroup is
  * initialized by passing the controller or communicator on which the group is
- * based off of.  You can then use the group to subset and reorder the the
+ * based off of.  You can then use the group to subset and reorder the
  * processes.  Eventually, you can pass the group object to the
  * CreateSubController method of vtkMultiProcessController to create a
  * controller for the defined group of processes.  You must use the same
@@ -56,7 +56,7 @@ class VTKPARALLELCORE_EXPORT vtkProcessGroup : public vtkObject
 public:
   vtkTypeMacro(vtkProcessGroup, vtkObject);
   static vtkProcessGroup *New();
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   //@{
   /**
@@ -139,7 +139,7 @@ public:
 
 protected:
   vtkProcessGroup();
-  ~vtkProcessGroup() VTK_OVERRIDE;
+  ~vtkProcessGroup() override;
 
   int *ProcessIds;
   int NumberOfProcessIds;
@@ -147,8 +147,8 @@ protected:
   vtkCommunicator *Communicator;
 
 private:
-  vtkProcessGroup(const vtkProcessGroup &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkProcessGroup &) VTK_DELETE_FUNCTION;
+  vtkProcessGroup(const vtkProcessGroup &) = delete;
+  void operator=(const vtkProcessGroup &) = delete;
 };
 
 #endif //vtkProcessGroup_h

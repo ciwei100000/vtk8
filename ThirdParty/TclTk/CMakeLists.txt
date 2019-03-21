@@ -11,7 +11,7 @@ INCLUDE(vtkDependentOption)
 # Use Tk Toolkit (with Tcl or Python)
 set(VTK_CAN_USE_TK OFF)
 set(VTK_USE_TK_DEFAULT ON)
-if(VTK_WRAP_PYTHON OR VTK_WRAP_TCL)
+if(VTK_WRAP_PYTHON)
   if(NOT VTK_DISABLE_TK_INIT)
     set(VTK_CAN_USE_TK ON)
   endif()
@@ -19,9 +19,7 @@ endif()
 vtk_dependent_option(VTK_USE_TK "Build VTK with Tk support"
                      ${VTK_USE_TK_DEFAULT} "VTK_CAN_USE_TK" OFF)
 
-# The cmake code to find the libs is in vtkWrapTcl
-set(VTK_WRAP_TCL_FIND_LIBS 1)
-include(vtkWrapTcl)
+include(vtkTclTkMacros)
 
 # Subdirs
 ADD_SUBDIRECTORY(internals)

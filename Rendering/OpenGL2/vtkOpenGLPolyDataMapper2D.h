@@ -51,30 +51,30 @@ class VTKRENDERINGOPENGL2_EXPORT vtkOpenGLPolyDataMapper2D : public vtkPolyDataM
 public:
   vtkTypeMacro(vtkOpenGLPolyDataMapper2D, vtkPolyDataMapper2D);
   static vtkOpenGLPolyDataMapper2D *New();
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Actually draw the poly data.
    */
-  void RenderOverlay(vtkViewport* viewport, vtkActor2D* actor) VTK_OVERRIDE;
+  void RenderOverlay(vtkViewport* viewport, vtkActor2D* actor) override;
 
   /**
    * Release any graphics resources that are being consumed by this mapper.
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
 protected:
   vtkOpenGLPolyDataMapper2D();
-  ~vtkOpenGLPolyDataMapper2D() VTK_OVERRIDE;
+  ~vtkOpenGLPolyDataMapper2D() override;
 
   vtkGenericOpenGLResourceFreeCallback *ResourceCallback;
 
   // the following is all extra stuff to work around the
   // fact that gl_PrimitiveID does not work correctly on
-  // Apple devices with AMD graphics hardware. See apple
-  // bug ID 20747550
+  // Apple Macs with AMD graphics hardware (before macOS 10.11).
+  // See <rdar://20747550>.
   bool HaveAppleBug;
   std::vector<float> AppleBugPrimIDs;
   vtkOpenGLBufferObject *AppleBugPrimIDBuffer;
@@ -116,7 +116,7 @@ protected:
   void SetPropertyShaderParameters(vtkOpenGLHelper &cellBO, vtkViewport *viewport, vtkActor2D *act);
 
   /**
-   * Perform string replacments on the shader templates, called from
+   * Perform string replacements on the shader templates, called from
    * ReplaceShaderValues
    */
   virtual void ReplaceShaderPicking(
@@ -155,8 +155,8 @@ protected:
   virtual bool HaveWideLines(vtkViewport *, vtkActor2D *);
 
 private:
-  vtkOpenGLPolyDataMapper2D(const vtkOpenGLPolyDataMapper2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLPolyDataMapper2D&) VTK_DELETE_FUNCTION;
+  vtkOpenGLPolyDataMapper2D(const vtkOpenGLPolyDataMapper2D&) = delete;
+  void operator=(const vtkOpenGLPolyDataMapper2D&) = delete;
 };
 
 #endif

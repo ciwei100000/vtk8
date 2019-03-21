@@ -36,9 +36,7 @@ vtkTree::vtkTree()
 }
 
 //----------------------------------------------------------------------------
-vtkTree::~vtkTree()
-{
-}
+vtkTree::~vtkTree() = default;
 
 //----------------------------------------------------------------------------
 vtkIdType vtkTree::GetChild(vtkIdType v, vtkIdType i)
@@ -104,7 +102,7 @@ bool vtkTree::IsLeaf(vtkIdType vertex)
 //----------------------------------------------------------------------------
 vtkTree *vtkTree::GetData(vtkInformation *info)
 {
-  return info? vtkTree::SafeDownCast(info->Get(DATA_OBJECT())) : 0;
+  return info? vtkTree::SafeDownCast(info->Get(DATA_OBJECT())) : nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -124,7 +122,7 @@ bool vtkTree::IsStructureValid(vtkGraph *g)
   vtkTree *tree = vtkTree::SafeDownCast(g);
   if (tree)
   {
-    // Since a tree has the additional root propery, we need
+    // Since a tree has the additional root property, we need
     // to set that here.
     this->Root = tree->Root;
     return true;
@@ -202,7 +200,7 @@ bool vtkTree::IsStructureValid(vtkGraph *g)
     }
   }
 
-  // Since a tree has the additional root propery, we need
+  // Since a tree has the additional root property, we need
   // to set that here.
   this->Root = root;
 

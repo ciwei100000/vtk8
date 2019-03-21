@@ -65,7 +65,7 @@ class VTKIOGEOMETRY_EXPORT vtkMCubesReader : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkMCubesReader,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with FlipNormals turned off and Normals set to true.
@@ -103,18 +103,18 @@ public:
    * in vtkPolyDataNormals which flips both the normal and the cell point
    * order.
    */
-  vtkSetMacro(FlipNormals,int);
-  vtkGetMacro(FlipNormals,int);
-  vtkBooleanMacro(FlipNormals,int);
+  vtkSetMacro(FlipNormals,vtkTypeBool);
+  vtkGetMacro(FlipNormals,vtkTypeBool);
+  vtkBooleanMacro(FlipNormals,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Specify whether to read normals.
    */
-  vtkSetMacro(Normals,int);
-  vtkGetMacro(Normals,int);
-  vtkBooleanMacro(Normals,int);
+  vtkSetMacro(Normals,vtkTypeBool);
+  vtkGetMacro(Normals,vtkTypeBool);
+  vtkBooleanMacro(Normals,vtkTypeBool);
   //@}
 
   //@{
@@ -142,9 +142,9 @@ public:
   /**
    * Turn on/off byte swapping.
    */
-  vtkSetMacro(SwapBytes,int);
-  vtkGetMacro(SwapBytes,int);
-  vtkBooleanMacro(SwapBytes,int);
+  vtkSetMacro(SwapBytes,vtkTypeBool);
+  vtkGetMacro(SwapBytes,vtkTypeBool);
+  vtkBooleanMacro(SwapBytes,vtkTypeBool);
   //@}
 
   //@{
@@ -164,25 +164,25 @@ public:
   /**
    * Return the mtime also considering the locator.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkMCubesReader();
-  ~vtkMCubesReader() VTK_OVERRIDE;
+  ~vtkMCubesReader() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   char *FileName;
   char *LimitsFileName;
   vtkIncrementalPointLocator *Locator;
-  int SwapBytes;
+  vtkTypeBool SwapBytes;
   int HeaderSize;
-  int FlipNormals;
-  int Normals;
+  vtkTypeBool FlipNormals;
+  vtkTypeBool Normals;
 
 private:
-  vtkMCubesReader(const vtkMCubesReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMCubesReader&) VTK_DELETE_FUNCTION;
+  vtkMCubesReader(const vtkMCubesReader&) = delete;
+  void operator=(const vtkMCubesReader&) = delete;
 };
 
 #endif

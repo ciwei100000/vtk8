@@ -35,11 +35,11 @@ class VTKFILTERSPARALLEL_EXPORT vtkDuplicatePolyData : public vtkPolyDataAlgorit
 public:
   static vtkDuplicatePolyData *New();
   vtkTypeMacro(vtkDuplicatePolyData, vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
-   * By defualt this filter uses the global controller,
+   * By default this filter uses the global controller,
    * but this method can be used to set another instead.
    */
   virtual void SetController(vtkMultiProcessController*);
@@ -55,9 +55,9 @@ public:
    * I want to see if it makes a difference in performance.
    * The flag is on by default.
    */
-  vtkSetMacro(Synchronous, int);
-  vtkGetMacro(Synchronous, int);
-  vtkBooleanMacro(Synchronous, int);
+  vtkSetMacro(Synchronous, vtkTypeBool);
+  vtkGetMacro(Synchronous, vtkTypeBool);
+  vtkBooleanMacro(Synchronous, vtkTypeBool);
   //@}
 
   //@{
@@ -84,15 +84,15 @@ public:
 
 protected:
   vtkDuplicatePolyData();
-  ~vtkDuplicatePolyData() VTK_OVERRIDE;
+  ~vtkDuplicatePolyData() override;
 
   // Data generation method
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   void ClientExecute(vtkPolyData *output);
 
   vtkMultiProcessController *Controller;
-  int Synchronous;
+  vtkTypeBool Synchronous;
 
   int NumberOfProcesses;
   int ScheduleLength;
@@ -105,8 +105,8 @@ protected:
   unsigned long MemorySize;
 
 private:
-  vtkDuplicatePolyData(const vtkDuplicatePolyData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDuplicatePolyData&) VTK_DELETE_FUNCTION;
+  vtkDuplicatePolyData(const vtkDuplicatePolyData&) = delete;
+  void operator=(const vtkDuplicatePolyData&) = delete;
 };
 
 #endif

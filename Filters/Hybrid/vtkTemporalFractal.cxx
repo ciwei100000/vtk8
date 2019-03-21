@@ -52,7 +52,7 @@ public:
     this->DataSets.push_back(data);
     this->Levels.push_back(level);
   }
-  ~TemporalFractalOutputUtil() VTK_OVERRIDE
+  ~TemporalFractalOutputUtil() override
   {
     this->DataSets.clear();
     this->Levels.clear();
@@ -119,7 +119,7 @@ public:
 
 
 private:
-  TemporalFractalOutputUtil(){}
+  TemporalFractalOutputUtil() = default;
   std::vector<vtkSmartPointer<vtkDataObject> > DataSets;
   std::vector<unsigned int> Levels;
 };
@@ -141,7 +141,7 @@ vtkTemporalFractal::vtkTemporalFractal()
 
   this->Levels = vtkIntArray::New();
   this->TwoDimensional = 1;
-  this->Asymetric = 1;
+  this->Asymmetric = 1;
 
   this->TopLevelSpacing[0] = 1.0;
   this->TopLevelSpacing[1] = 1.0;
@@ -162,7 +162,7 @@ vtkTemporalFractal::vtkTemporalFractal()
 vtkTemporalFractal::~vtkTemporalFractal()
 {
   this->Levels->Delete();
-  this->Levels = NULL;
+  this->Levels = nullptr;
 }
 
 int vtkTemporalFractal::FillOutputPortInformation(int vtkNotUsed(port), vtkInformation* info)
@@ -557,7 +557,7 @@ int vtkTemporalFractal::RequestData(
   vtkInformation* outInfo = outputVector->GetInformationObject(0);
 
 
-  // get how many time steps were requsted
+  // get how many time steps were requested
   double timeStep =
     info->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
 
@@ -622,7 +622,7 @@ int vtkTemporalFractal
   int ext[6];
   ext[0] = ext[2] = ext[4] = 0;
   ext[1] = ext[3] = ext[5] = this->Dimensions - 1;
-  if (this->Asymetric)
+  if (this->Asymmetric)
   { // The changes to an extra 2 in the next level.
     ext[1] += 1;
   }
@@ -692,7 +692,7 @@ int vtkTemporalFractal
   this->AddFractalArray(output);
 
 
-  this->OutputUtil = NULL;
+  this->OutputUtil = nullptr;
   return 1;
 }
 
@@ -882,7 +882,7 @@ void vtkTemporalFractal::Traverse(int &blockId,
   z1 = z2-1;
 
   if (x3-x2-x1+x0 > 2)
-  { // balance asymetric blocks.
+  { // balance asymmetric blocks.
     x2 += 2;
     x1 += 2;
   }
@@ -919,7 +919,7 @@ void vtkTemporalFractal::Traverse(int &blockId,
       if (this->BlockCount >= this->StartBlock
           && this->BlockCount <= this->EndBlock)
       {
-        vtkDataObject* newData(NULL);
+        vtkDataObject* newData(nullptr);
         if(this->GenerateRectilinearGrids)
         {
           vtkRectilinearGrid *grid=vtkRectilinearGrid::New();
@@ -992,7 +992,7 @@ void vtkTemporalFractal::Traverse(int &blockId,
       if (this->BlockCount >= this->StartBlock
           && this->BlockCount <= this->EndBlock)
       {
-        vtkDataObject* newData(NULL);
+        vtkDataObject* newData(nullptr);
         if(this->GenerateRectilinearGrids)
         {
           vtkRectilinearGrid *grid=vtkRectilinearGrid::New();
@@ -1030,7 +1030,7 @@ void vtkTemporalFractal::AddTestArray(vtkHierarchicalBoxDataSet *output)
     {
       vtkUniformGrid *grid;
       grid=vtkUniformGrid::SafeDownCast(output->GetDataSet(level,block));
-      assert("check: grid_exists" && grid!=0);
+      assert("check: grid_exists" && grid!=nullptr);
 
       vtkDoubleArray* array = vtkDoubleArray::New();
       int numCells=grid->GetNumberOfCells();
@@ -1093,7 +1093,7 @@ void vtkTemporalFractal::AddVectorArray(vtkHierarchicalBoxDataSet *output)
     {
       vtkUniformGrid *grid;
       grid=vtkUniformGrid::SafeDownCast(output->GetDataSet(level,block));
-      assert("check: grid_exists" && grid!=0);
+      assert("check: grid_exists" && grid!=nullptr);
 
       vtkDoubleArray* array = vtkDoubleArray::New();
       array->SetNumberOfComponents(3);
@@ -1156,7 +1156,7 @@ void vtkTemporalFractal::AddFractalArray(vtkCompositeDataSet* output)
     {
       vtkUniformGrid *grid = vtkUniformGrid::SafeDownCast(
         iter->GetCurrentDataObject());
-      assert("check: grid_exists" && grid!=0);
+      assert("check: grid_exists" && grid!=nullptr);
 
       vtkDoubleArray* array = vtkDoubleArray::New();
       int numCells=grid->GetNumberOfCells();
@@ -1210,7 +1210,7 @@ void vtkTemporalFractal::AddFractalArray(vtkCompositeDataSet* output)
     {
       vtkRectilinearGrid *grid = vtkRectilinearGrid::SafeDownCast(
         iter->GetCurrentDataObject());
-      assert("check: grid_exists" && grid!=0);
+      assert("check: grid_exists" && grid!=nullptr);
 
       vtkDoubleArray* array = vtkDoubleArray::New();
       int numCells=grid->GetNumberOfCells();
@@ -1243,7 +1243,7 @@ void vtkTemporalFractal::AddBlockIdArray(vtkHierarchicalBoxDataSet *output)
     {
       vtkUniformGrid *grid;
       grid=vtkUniformGrid::SafeDownCast(output->GetDataSet(level,block));
-      assert("check: grid_exists" && grid!=0);
+      assert("check: grid_exists" && grid!=nullptr);
 
 
       vtkIntArray* array = vtkIntArray::New();
@@ -1280,7 +1280,7 @@ void vtkTemporalFractal::AddDepthArray(vtkHierarchicalBoxDataSet *output)
     {
       vtkUniformGrid *grid;
       grid=vtkUniformGrid::SafeDownCast(output->GetDataSet(level,block));
-      assert("check: grid_exists" && grid!=0);
+      assert("check: grid_exists" && grid!=nullptr);
 
 
       vtkIntArray* array = vtkIntArray::New();
@@ -1618,15 +1618,7 @@ void vtkTemporalFractal::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "FractalValue: " << this->FractalValue << endl;
   os << indent << "MaximumLevel: " << this->MaximumLevel << endl;
   os << indent << "GhostLevels: " << this->GhostLevels << endl;
-  os << indent << "Asymetric: " << this->Asymetric << endl;
-  os << indent << "GenerateRectilinearGrids: ";
-  if(this->GenerateRectilinearGrids)
-  {
-    os << "True";
-  }
-  else
-  {
-    os << "False";
-  }
-  os<< endl;
+  os << indent << "Asymmetric: " << this->Asymmetric << endl;
+  os << indent << "GenerateRectilinearGrids: "
+     << (this->GenerateRectilinearGrids ? "True" : "False") << endl;
 }

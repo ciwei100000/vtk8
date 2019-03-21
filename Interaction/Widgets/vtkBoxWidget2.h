@@ -33,7 +33,7 @@
  * the event that it handles.
  *
  * To use this widget, you generally pair it with a vtkBoxRepresentation
- * (or a subclass). Variuos options are available in the representation for
+ * (or a subclass). Various options are available in the representation for
  * controlling how the widget appears, and how the widget functions.
  *
  * @par Event Bindings:
@@ -113,7 +113,7 @@ public:
    * Standard class methods for type information and printing.
    */
   vtkTypeMacro(vtkBoxWidget2,vtkAbstractWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -133,29 +133,29 @@ public:
    * scaling of the widget one face (axis) at a time (default through grabbing
    * one of the representation spherical handles).
    */
-  vtkSetMacro(TranslationEnabled,int);
-  vtkGetMacro(TranslationEnabled,int);
-  vtkBooleanMacro(TranslationEnabled,int);
-  vtkSetMacro(ScalingEnabled,int);
-  vtkGetMacro(ScalingEnabled,int);
-  vtkBooleanMacro(ScalingEnabled,int);
-  vtkSetMacro(RotationEnabled,int);
-  vtkGetMacro(RotationEnabled,int);
-  vtkBooleanMacro(RotationEnabled,int);
-  vtkSetMacro(MoveFacesEnabled,int);
-  vtkGetMacro(MoveFacesEnabled,int);
-  vtkBooleanMacro(MoveFacesEnabled,int);
+  vtkSetMacro(TranslationEnabled,vtkTypeBool);
+  vtkGetMacro(TranslationEnabled,vtkTypeBool);
+  vtkBooleanMacro(TranslationEnabled,vtkTypeBool);
+  vtkSetMacro(ScalingEnabled,vtkTypeBool);
+  vtkGetMacro(ScalingEnabled,vtkTypeBool);
+  vtkBooleanMacro(ScalingEnabled,vtkTypeBool);
+  vtkSetMacro(RotationEnabled,vtkTypeBool);
+  vtkGetMacro(RotationEnabled,vtkTypeBool);
+  vtkBooleanMacro(RotationEnabled,vtkTypeBool);
+  vtkSetMacro(MoveFacesEnabled,vtkTypeBool);
+  vtkGetMacro(MoveFacesEnabled,vtkTypeBool);
+  vtkBooleanMacro(MoveFacesEnabled,vtkTypeBool);
   //@}
 
   /**
    * Create the default widget representation if one is not set. By default,
    * this is an instance of the vtkBoxRepresentation class.
    */
-  void CreateDefaultRepresentation() VTK_OVERRIDE;
+  void CreateDefaultRepresentation() override;
 
 protected:
   vtkBoxWidget2();
-  ~vtkBoxWidget2() VTK_OVERRIDE;
+  ~vtkBoxWidget2() override;
 
   // Manage the state of the widget
   int WidgetState;
@@ -167,15 +167,20 @@ protected:
   static void TranslateAction(vtkAbstractWidget*);
   static void ScaleAction(vtkAbstractWidget*);
   static void MoveAction(vtkAbstractWidget*);
+  static void SelectAction3D(vtkAbstractWidget*);
+  static void EndSelectAction3D(vtkAbstractWidget*);
+  static void MoveAction3D(vtkAbstractWidget*);
+  static void StepAction3D(vtkAbstractWidget*);
+
 
   // Control whether scaling, rotation, and translation are supported
-  int TranslationEnabled;
-  int ScalingEnabled;
-  int RotationEnabled;
-  int MoveFacesEnabled;
+  vtkTypeBool TranslationEnabled;
+  vtkTypeBool ScalingEnabled;
+  vtkTypeBool RotationEnabled;
+  vtkTypeBool MoveFacesEnabled;
 private:
-  vtkBoxWidget2(const vtkBoxWidget2&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoxWidget2&) VTK_DELETE_FUNCTION;
+  vtkBoxWidget2(const vtkBoxWidget2&) = delete;
+  void operator=(const vtkBoxWidget2&) = delete;
 };
 
 #endif

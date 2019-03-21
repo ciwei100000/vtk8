@@ -47,7 +47,7 @@ public:
   static vtkReebGraphToJoinSplitTreeFilter* New();
   vtkTypeMacro(vtkReebGraphToJoinSplitTreeFilter,
     vtkDirectedGraphAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -77,15 +77,15 @@ protected:
 
   vtkIdType FieldId;
 
-  int FillInputPortInformation(int portNumber, vtkInformation *);
-  int FillOutputPortInformation(int, vtkInformation *);
+  int FillInputPortInformation(int portNumber, vtkInformation *) override;
+  int FillOutputPortInformation(int, vtkInformation *) override;
 
   int RequestData(vtkInformation *request,
-    vtkInformationVector **inputVector, vtkInformationVector *outputVector);
+    vtkInformationVector **inputVector, vtkInformationVector *outputVector) override;
 
 private:
-  vtkReebGraphToJoinSplitTreeFilter(const vtkReebGraphToJoinSplitTreeFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkReebGraphToJoinSplitTreeFilter&) VTK_DELETE_FUNCTION;
+  vtkReebGraphToJoinSplitTreeFilter(const vtkReebGraphToJoinSplitTreeFilter&) = delete;
+  void operator=(const vtkReebGraphToJoinSplitTreeFilter&) = delete;
 };
 
 #endif

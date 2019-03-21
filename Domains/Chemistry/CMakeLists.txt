@@ -4,37 +4,19 @@ set(Module_SRCS
   vtkBlueObeliskDataParser.cxx
   vtkCMLMoleculeReader.cxx
   vtkGaussianCubeReader2.cxx
-  vtkMoleculeAlgorithm.cxx
   vtkMoleculeMapper.cxx
   vtkMoleculeToAtomBallFilter.cxx
   vtkMoleculeToBondStickFilter.cxx
+  vtkMoleculeToLinesFilter.cxx
   vtkMoleculeToPolyDataFilter.cxx
   vtkPeriodicTable.cxx
+  vtkPointSetToMoleculeFilter.cxx
   vtkProgrammableElectronicData.cxx
   vtkProteinRibbonFilter.cxx
   vtkSimpleBondPerceiver.cxx
   vtkVASPAnimationReader.cxx
   vtkVASPTessellationReader.cxx
   vtkXYZMolReader2.cxx
-  )
-
-set_source_files_properties(
-  vtkMoleculeToPolyDataFilter.cxx
-  ABSTRACT
-  )
-
-set_source_files_properties(
-  vtkBlueObeliskData.cxx
-  vtkBlueObeliskDataInternal.h
-  vtkBlueObeliskDataParser.cxx
-  PROPERTIES
-    WRAP_EXCLUDE 1
-  )
-
-set_source_files_properties(
-  vtkBlueObeliskDataInternal.h
-  PROPERTIES
-    WRAP_EXCLUDE_PYTHON 1
   )
 
 # Generate configured header file

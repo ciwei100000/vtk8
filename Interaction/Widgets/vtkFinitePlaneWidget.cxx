@@ -48,9 +48,7 @@ vtkFinitePlaneWidget::vtkFinitePlaneWidget()
 }
 
 //----------------------------------------------------------------------------
-vtkFinitePlaneWidget::~vtkFinitePlaneWidget()
-{
-}
+vtkFinitePlaneWidget::~vtkFinitePlaneWidget() = default;
 
 //----------------------------------------------------------------------------
 void vtkFinitePlaneWidget::PrintSelf(ostream& os, vtkIndent indent)
@@ -95,7 +93,7 @@ void vtkFinitePlaneWidget::SelectAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->StartInteraction();
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   self->Render();
 }
 
@@ -144,7 +142,7 @@ void vtkFinitePlaneWidget::MoveAction(vtkAbstractWidget *w)
 
   // Moving something
   self->EventCallbackCommand->SetAbortFlag(1);
-  self->InvokeEvent(vtkCommand::InteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::InteractionEvent,nullptr);
   self->Render();
 }
 
@@ -171,7 +169,7 @@ void vtkFinitePlaneWidget::EndSelectAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->EndInteraction();
-  self->InvokeEvent(vtkCommand::EndInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::EndInteractionEvent,nullptr);
   self->Render();
 }
 

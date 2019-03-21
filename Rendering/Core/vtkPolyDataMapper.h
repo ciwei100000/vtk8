@@ -27,7 +27,7 @@
 
 #include "vtkRenderingCoreModule.h" // For export macro
 #include "vtkMapper.h"
-#include "vtkTexture.h" // used to include texture unit enum.
+//#include "vtkTexture.h" // used to include texture unit enum.
 
 class vtkPolyData;
 class vtkRenderer;
@@ -38,7 +38,7 @@ class VTKRENDERINGCORE_EXPORT vtkPolyDataMapper : public vtkMapper
 public:
   static vtkPolyDataMapper *New();
   vtkTypeMacro(vtkPolyDataMapper, vtkMapper);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Implemented by sub classes. Actual rendering is done here.
@@ -48,7 +48,7 @@ public:
   /**
    * This calls RenderPiece (in a for loop if streaming is necessary).
    */
-  void Render(vtkRenderer *ren, vtkActor *act) VTK_OVERRIDE;
+  void Render(vtkRenderer *ren, vtkActor *act) override;
 
   //@{
   /**
@@ -62,10 +62,10 @@ public:
   /**
    * Bring this algorithm's outputs up-to-date.
    */
-  void Update(int port) VTK_OVERRIDE;
-  void Update() VTK_OVERRIDE;
-  int Update(int port, vtkInformationVector* requests) VTK_OVERRIDE;
-  int Update(vtkInformation* requests) VTK_OVERRIDE;
+  void Update(int port) override;
+  void Update() override;
+  int Update(int port, vtkInformationVector* requests) override;
+  int Update(vtkInformation* requests) override;
   //@}
 
   //@{
@@ -92,14 +92,14 @@ public:
    * Return bounding box (array of six doubles) of data expressed as
    * (xmin,xmax, ymin,ymax, zmin,zmax).
    */
-  double *GetBounds() VTK_OVERRIDE;
-  void GetBounds(double bounds[6]) VTK_OVERRIDE
+  double *GetBounds() VTK_SIZEHINT(6) override;
+  void GetBounds(double bounds[6]) override
     { this->Superclass::GetBounds(bounds); }
 
   /**
    * Make a shallow copy of this mapper.
    */
-  void ShallowCopy(vtkAbstractMapper *m);
+  void ShallowCopy(vtkAbstractMapper *m) override;
 
   /**
    * Select a data array from the point/cell data
@@ -111,13 +111,17 @@ public:
    * (vtkDataObject::FIELD_ASSOCIATION_CELLS).
    * componentno indicates which component from the data array must be passed as
    * the attribute. If -1, then all components are passed.
+   * Currently only point data is supported.
    */
   virtual void MapDataArrayToVertexAttribute(
     const char* vertexAttributeName,
     const char* dataArrayName, int fieldAssociation, int componentno = -1);
 
+  // Specify a data array to use as the texture coordinate
+  // for a named texture. See vtkProperty.h for how to
+  // name textures.
   virtual void MapDataArrayToMultiTextureAttribute(
-    int unit,
+    const char *textureName,
     const char* dataArrayName, int fieldAssociation, int componentno = -1);
 
   /**
@@ -135,11 +139,11 @@ public:
    */
   int ProcessRequest(vtkInformation*,
                              vtkInformationVector**,
-                             vtkInformationVector*) VTK_OVERRIDE;
+                             vtkInformationVector*) override;
 
 protected:
   vtkPolyDataMapper();
-  ~vtkPolyDataMapper() VTK_OVERRIDE {}
+  ~vtkPolyDataMapper() override {}
 
   /**
    * Called in GetBounds(). When this method is called, the consider the input
@@ -153,11 +157,11 @@ protected:
   int NumberOfSubPieces;
   int GhostLevel;
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
 private:
-  vtkPolyDataMapper(const vtkPolyDataMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPolyDataMapper&) VTK_DELETE_FUNCTION;
+  vtkPolyDataMapper(const vtkPolyDataMapper&) = delete;
+  void operator=(const vtkPolyDataMapper&) = delete;
 };
 
 #endif

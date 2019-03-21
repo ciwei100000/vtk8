@@ -36,11 +36,11 @@ class VTKFILTERSPARALLEL_EXPORT vtkTransmitStructuredDataPiece : public vtkDataS
 public:
   static vtkTransmitStructuredDataPiece *New();
   vtkTypeMacro(vtkTransmitStructuredDataPiece, vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
-   * By defualt this filter uses the global controller,
+   * By default this filter uses the global controller,
    * but this method can be used to set another instead.
    */
   virtual void SetController(vtkMultiProcessController*);
@@ -51,30 +51,30 @@ public:
   /**
    * Turn on/off creating ghost cells (on by default).
    */
-  vtkSetMacro(CreateGhostCells, int);
-  vtkGetMacro(CreateGhostCells, int);
-  vtkBooleanMacro(CreateGhostCells, int);
+  vtkSetMacro(CreateGhostCells, vtkTypeBool);
+  vtkGetMacro(CreateGhostCells, vtkTypeBool);
+  vtkBooleanMacro(CreateGhostCells, vtkTypeBool);
   //@}
 
 protected:
   vtkTransmitStructuredDataPiece();
-  ~vtkTransmitStructuredDataPiece() VTK_OVERRIDE;
+  ~vtkTransmitStructuredDataPiece() override;
 
   // Data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   void RootExecute(vtkDataSet *input, vtkDataSet *output,
                    vtkInformation *outInfo);
   void SatelliteExecute(int procId, vtkDataSet *output,
                         vtkInformation *outInfo);
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-  int CreateGhostCells;
+  vtkTypeBool CreateGhostCells;
   vtkMultiProcessController *Controller;
 
 private:
-  vtkTransmitStructuredDataPiece(const vtkTransmitStructuredDataPiece&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTransmitStructuredDataPiece&) VTK_DELETE_FUNCTION;
+  vtkTransmitStructuredDataPiece(const vtkTransmitStructuredDataPiece&) = delete;
+  void operator=(const vtkTransmitStructuredDataPiece&) = delete;
 };
 
 #endif

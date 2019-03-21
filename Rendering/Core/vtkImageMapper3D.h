@@ -48,7 +48,7 @@ class VTKRENDERINGCORE_EXPORT vtkImageMapper3D : public vtkAbstractMapper3D
 {
 public:
   vtkTypeMacro(vtkImageMapper3D, vtkAbstractMapper3D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * This should only be called by the renderer.
@@ -60,7 +60,7 @@ public:
    * this mapper.  The parameter window is used to determine
    * which graphic resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE = 0;
+  void ReleaseGraphicsResources(vtkWindow *) override = 0;
 
   //@{
   /**
@@ -79,9 +79,9 @@ public:
    * Within this border, the image values will be extrapolated
    * rather than interpolated.
    */
-  vtkSetMacro(Border, int);
-  vtkBooleanMacro(Border, int);
-  vtkGetMacro(Border, int);
+  vtkSetMacro(Border, vtkTypeBool);
+  vtkBooleanMacro(Border, vtkTypeBool);
+  vtkGetMacro(Border, vtkTypeBool);
   //@}
 
   //@{
@@ -91,9 +91,9 @@ public:
    * background color will be the lowest color on the lookup
    * table that is being used for the image.
    */
-  vtkSetMacro(Background, int);
-  vtkBooleanMacro(Background, int);
-  vtkGetMacro(Background, int);
+  vtkSetMacro(Background, vtkTypeBool);
+  vtkBooleanMacro(Background, vtkTypeBool);
+  vtkGetMacro(Background, vtkTypeBool);
   //@}
 
   //@{
@@ -102,9 +102,9 @@ public:
    * This provides a convenient way to interact with the image, since
    * most Interactors directly control the camera.
    */
-  vtkSetMacro(SliceAtFocalPoint, int);
-  vtkBooleanMacro(SliceAtFocalPoint, int);
-  vtkGetMacro(SliceAtFocalPoint, int);
+  vtkSetMacro(SliceAtFocalPoint, vtkTypeBool);
+  vtkBooleanMacro(SliceAtFocalPoint, vtkTypeBool);
+  vtkGetMacro(SliceAtFocalPoint, vtkTypeBool);
   //@}
 
   //@{
@@ -113,9 +113,9 @@ public:
    * This provides a convenient way to interact with the image, since
    * most Interactors directly control the camera.
    */
-  vtkSetMacro(SliceFacesCamera, int);
-  vtkBooleanMacro(SliceFacesCamera, int);
-  vtkGetMacro(SliceFacesCamera, int);
+  vtkSetMacro(SliceFacesCamera, vtkTypeBool);
+  vtkBooleanMacro(SliceFacesCamera, vtkTypeBool);
+  vtkGetMacro(SliceFacesCamera, vtkTypeBool);
   //@}
 
   //@{
@@ -155,21 +155,21 @@ public:
    * only when the input data changes.  The default behavior results in
    * much faster follow-up renders when the input data is static.
    */
-  vtkSetMacro(Streaming, int);
-  vtkGetMacro(Streaming, int);
-  vtkBooleanMacro(Streaming, int);
+  vtkSetMacro(Streaming, vtkTypeBool);
+  vtkGetMacro(Streaming, vtkTypeBool);
+  vtkBooleanMacro(Streaming, vtkTypeBool);
   //@}
 
 protected:
   vtkImageMapper3D();
-  ~vtkImageMapper3D() VTK_OVERRIDE;
+  ~vtkImageMapper3D() override;
 
   //@{
   /**
    * See algorithm for more info
    */
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
-  int FillOutputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
+  int FillOutputPortInformation(int port, vtkInformation* info) override;
   //@}
 
   /**
@@ -177,7 +177,7 @@ protected:
    */
   int ProcessRequest(vtkInformation* request,
                              vtkInformationVector** inInfo,
-                             vtkInformationVector* outInfo) VTK_OVERRIDE;
+                             vtkInformationVector* outInfo) override;
 
   /**
    * Checkerboard the alpha component of an RGBA image.  The origin and
@@ -238,17 +238,17 @@ protected:
    */
   void GetBackgroundColor(vtkImageProperty *property, double color[4]);
 
-  int Border;
-  int Background;
+  vtkTypeBool Border;
+  vtkTypeBool Background;
   vtkScalarsToColors *DefaultLookupTable;
   vtkMultiThreader *Threader;
   int NumberOfThreads;
-  int Streaming;
+  vtkTypeBool Streaming;
 
   // The slice.
   vtkPlane *SlicePlane;
-  int SliceAtFocalPoint;
-  int SliceFacesCamera;
+  vtkTypeBool SliceAtFocalPoint;
+  vtkTypeBool SliceFacesCamera;
 
   // Information about the image, updated by UpdateInformation
   double DataSpacing[3];
@@ -268,8 +268,8 @@ private:
   // The cached data-to-world matrix
   vtkMatrix4x4 *DataToWorldMatrix;
 
-  vtkImageMapper3D(const vtkImageMapper3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageMapper3D&) VTK_DELETE_FUNCTION;
+  vtkImageMapper3D(const vtkImageMapper3D&) = delete;
+  void operator=(const vtkImageMapper3D&) = delete;
 
   friend class vtkImageToImageMapper3DFriendship;
 };

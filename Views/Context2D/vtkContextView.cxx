@@ -38,7 +38,7 @@ vtkContextView::vtkContextView()
 {
   this->Context = vtkSmartPointer<vtkContext2D>::New();
   vtkNew<vtkContextDevice2D> pd;
-  this->Context->Begin(pd.Get());
+  this->Context->Begin(pd);
 
   vtkContextActor *actor = vtkContextActor::New();
   this->Renderer->AddActor(actor);
@@ -57,9 +57,7 @@ vtkContextView::vtkContextView()
 }
 
 //----------------------------------------------------------------------------
-vtkContextView::~vtkContextView()
-{
-}
+vtkContextView::~vtkContextView() = default;
 
 //----------------------------------------------------------------------------
 vtkContext2D* vtkContextView::GetContext()

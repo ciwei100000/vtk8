@@ -19,6 +19,7 @@
 
 #ifndef vtkSurfaceLICHelper_h
 #define vtkSurfaceLICHelper_h
+#ifndef __VTK_WRAP__
 
 #include "vtkRenderingLICOpenGL2Module.h" // for export
 #include "vtkPixelExtent.h"
@@ -177,7 +178,7 @@ public:
   /**
    * Given world space bounds,
    * compute bounding boxes in clip and normalized device
-   * coordinates and perform view frustum visiblity test.
+   * coordinates and perform view frustum visibility test.
    * return true if the bounds are visible. If so the passed
    * in extent object is initialized with the corresponding
    * screen space extents.
@@ -254,5 +255,6 @@ protected:
 
 };
 
+#endif
 #endif
 // VTK-HeaderTest-Exclude: vtkSurfaceLICHelper.h

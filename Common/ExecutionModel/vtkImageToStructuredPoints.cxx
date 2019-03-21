@@ -36,9 +36,7 @@ vtkImageToStructuredPoints::vtkImageToStructuredPoints()
 }
 
 //----------------------------------------------------------------------------
-vtkImageToStructuredPoints::~vtkImageToStructuredPoints()
-{
-}
+vtkImageToStructuredPoints::~vtkImageToStructuredPoints() = default;
 
 
 //----------------------------------------------------------------------------
@@ -64,7 +62,7 @@ vtkImageData *vtkImageToStructuredPoints::GetVectorInput()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return NULL;
+    return nullptr;
   }
 
   return vtkImageData::SafeDownCast(this->GetExecutive()->GetInputData(1, 0));
@@ -86,7 +84,7 @@ int vtkImageToStructuredPoints::RequestData(
   int idxX, idxY, idxZ;
   int maxX = 0;
   int maxY = 0;
-  int maxZ = 0;;
+  int maxZ = 0;
   vtkIdType inIncX, inIncY, inIncZ;
   int rowLength;
   unsigned char *inPtr1, *inPtr, *outPtr;
@@ -94,7 +92,7 @@ int vtkImageToStructuredPoints::RequestData(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
   vtkImageData *data = vtkImageData::SafeDownCast(
     inInfo->Get(vtkDataObject::DATA_OBJECT()));
-  vtkImageData *vData = 0;
+  vtkImageData *vData = nullptr;
   if (vectorInfo)
   {
     vData = vtkImageData::SafeDownCast(

@@ -69,7 +69,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkIncrementalOctreeNode : public vtkObject
 {
 public:
   vtkTypeMacro( vtkIncrementalOctreeNode, vtkObject );
-  void PrintSelf( ostream & os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream & os, vtkIndent indent ) override;
 
   static vtkIncrementalOctreeNode * New();
 
@@ -82,7 +82,7 @@ public:
 
   //@{
   /**
-   * Get the list of point indices, NULL for a non-leaf node.
+   * Get the list of point indices, nullptr for a non-leaf node.
    */
   vtkGetObjectMacro( PointIdSet, vtkIdList );
   //@}
@@ -136,7 +136,7 @@ public:
   /**
    * Determine whether or not this node is a leaf.
    */
-  int IsLeaf() { return ( this->Children == NULL ) ? 1 : 0; }
+  int IsLeaf() { return ( this->Children == nullptr ) ? 1 : 0; }
 
   /**
    * Determine which specific child / octant contains a given point. Note that
@@ -155,13 +155,13 @@ public:
    * A point is in a node if and only if MinBounds[i] < p[i] <= MaxBounds[i],
    * which allows a node to be divided into eight non-overlapping children.
    */
-  int  ContainsPoint( const double pnt[3] );
+  vtkTypeBool ContainsPoint( const double pnt[3] );
 
   /**
    * A point is in a node, in terms of data, if and only if MinDataBounds[i]
    * <= p[i] <= MaxDataBounds[i].
    */
-  int  ContainsPointByData( const double pnt[3] );
+  vtkTypeBool ContainsPointByData( const double pnt[3] );
 
   /**
    * This function is called after a successful point-insertion check and
@@ -220,7 +220,7 @@ public:
 protected:
 
   vtkIncrementalOctreeNode();
-  ~vtkIncrementalOctreeNode() VTK_OVERRIDE;
+  ~vtkIncrementalOctreeNode() override;
 
 private:
 
@@ -255,12 +255,12 @@ private:
 
   /**
    * The list of indices of the points maintained by this LEAF node. It is
-   * NULL if this is a non-leaf node.
+   * nullptr if this is a non-leaf node.
    */
   vtkIdList * PointIdSet;
 
   /**
-   * The parent of this node, NULL for the root node of an octree.
+   * The parent of this node, nullptr for the root node of an octree.
    */
   vtkIncrementalOctreeNode *  Parent;
 
@@ -270,12 +270,12 @@ private:
   vtkIncrementalOctreeNode ** Children;
 
   /**
-   * Set the parent of this node, NULL for the root node of an octree.
+   * Set the parent of this node, nullptr for the root node of an octree.
    */
   virtual void SetParent( vtkIncrementalOctreeNode * );
 
   /**
-   * Set the list of point indices, NULL for a non-leaf node.
+   * Set the list of point indices, nullptr for a non-leaf node.
    */
   virtual void SetPointIdSet( vtkIdList * );
 
@@ -377,8 +377,8 @@ private:
   double GetDistance2ToBoundary( const double point[3], double closest[3],
     int innerOnly, vtkIncrementalOctreeNode* rootNode, int checkData = 0 );
 
-  vtkIncrementalOctreeNode( const vtkIncrementalOctreeNode & ) VTK_DELETE_FUNCTION;
-  void operator = ( const vtkIncrementalOctreeNode & ) VTK_DELETE_FUNCTION;
+  vtkIncrementalOctreeNode( const vtkIncrementalOctreeNode & ) = delete;
+  void operator = ( const vtkIncrementalOctreeNode & ) = delete;
 
 };
 
@@ -392,7 +392,7 @@ inline int vtkIncrementalOctreeNode::GetChildIndex( const double point[3] )
 }
 
 // In-lined for performance
-inline int vtkIncrementalOctreeNode::ContainsPoint( const double pnt[3] )
+inline vtkTypeBool vtkIncrementalOctreeNode::ContainsPoint( const double pnt[3] )
 {
   return (
             ( this->MinBounds[0] < pnt[0] && pnt[0] <= this->MaxBounds[0] &&
@@ -403,7 +403,7 @@ inline int vtkIncrementalOctreeNode::ContainsPoint( const double pnt[3] )
 }
 
 // In-lined for performance
-inline int vtkIncrementalOctreeNode::ContainsPointByData( const double pnt[3] )
+inline vtkTypeBool vtkIncrementalOctreeNode::ContainsPointByData( const double pnt[3] )
 {
   return
   (

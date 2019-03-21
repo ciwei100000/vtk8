@@ -16,6 +16,7 @@
 #include "vtkActor.h"
 #include "vtkCamera.h"
 #include "vtkCompositeDataSet.h"
+#include "vtkRenderingOpenGLConfigure.h"
 #include "vtkCompositeDataDisplayAttributes.h"
 #include "vtkCompositePolyDataMapper2.h"
 #include "vtkCullerCollection.h"
@@ -88,6 +89,7 @@ int TestCompositePolyDataMapper2Scalars(int argc, char* argv[])
   int numLeaves = 0;
   int numNodes = 0;
   vtkStdString blockName("Rolf");
+  mapper->SetInputDataObject(data.GetPointer());
   for (int level = 1; level < numLevels; ++level)
   {
     int nblocks=blocksPerLevel[level];
@@ -103,7 +105,7 @@ int TestCompositePolyDataMapper2Scalars(int argc, char* argv[])
           elev->Update();
           child->DeepCopy(elev->GetOutput(0));
           blocks[parent]->SetBlock(
-            block, (block % 2) ? NULL : child.GetPointer());
+            block, (block % 2) ? nullptr : child.GetPointer());
           blocks[parent]->GetMetaData(block)->Set(
             vtkCompositeDataSet::NAME(), blockName.c_str());
           // test not setting it on some
@@ -125,8 +127,6 @@ int TestCompositePolyDataMapper2Scalars(int argc, char* argv[])
     levelStart = levelEnd;
     levelEnd = static_cast<unsigned>(blocks.size());
   }
-
-  mapper->SetInputData((vtkPolyData *)(data.GetPointer()));
 
   vtkSmartPointer<vtkActor> actor =
     vtkSmartPointer<vtkActor>::New();

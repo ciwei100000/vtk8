@@ -32,9 +32,7 @@ vtkRowQuery::vtkRowQuery()
   this->CaseSensitiveFieldNames = false;
 }
 
-vtkRowQuery::~vtkRowQuery()
-{
-}
+vtkRowQuery::~vtkRowQuery() = default;
 
 void vtkRowQuery::PrintSelf(ostream &os, vtkIndent indent)
 {
@@ -43,7 +41,7 @@ void vtkRowQuery::PrintSelf(ostream &os, vtkIndent indent)
     << this->CaseSensitiveFieldNames << endl;
 }
 
-int vtkRowQuery::GetFieldIndex(char* name)
+int vtkRowQuery::GetFieldIndex(const char* name)
 {
   vtkStdString lcSearchName(name);
   std::transform(lcSearchName.begin(),

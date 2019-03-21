@@ -28,15 +28,10 @@
  * threads > 1. The differences may be subtle. Applications should decide
  * if the trade-off in performance is worth the lack of consistency.
  *
- * This mapper is a good replacement for vtkVolumeRayCastMapper EXCEPT:
+ * Other limitations of this ray caster include that:
  *   - it does not do isosurface ray casting
  *   - it does only interpolate before classify compositing
  *   - it does only maximum scalar value MIP
- *
- * The vtkVolumeRayCastMapper CANNOT be used in these instances when a
- * vtkFixedPointVolumeRayCastMapper can be used:
- *   - if the data is not unsigned char or unsigned short
- *   - if the data has more than one component
  *
  * This mapper handles all data type from unsigned char through double.
  * However, some of the internal calcultions are performed in float and
@@ -101,7 +96,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkFixedPointVolumeRayCastMapper : public vtkVol
 public:
   static vtkFixedPointVolumeRayCastMapper *New();
   vtkTypeMacro(vtkFixedPointVolumeRayCastMapper,vtkVolumeMapper);
-  void PrintSelf( ostream& os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream& os, vtkIndent indent ) override;
 
   //@{
   /**
@@ -157,7 +152,7 @@ public:
 
   //@{
   /**
-   * If AutoAdjustSampleDistances is on, the the ImageSampleDistance
+   * If AutoAdjustSampleDistances is on, the ImageSampleDistance
    * and the SampleDistance will be varied to achieve the allocated
    * render time of this prop (controlled by the desired update rate
    * and any culling in use). If this is an interactive render (more
@@ -165,9 +160,9 @@ public:
    * otherwise it will not be altered (a binary decision, as opposed
    * to the ImageSampleDistance which will vary continuously).
    */
-  vtkSetClampMacro( AutoAdjustSampleDistances, int, 0, 1 );
-  vtkGetMacro( AutoAdjustSampleDistances, int );
-  vtkBooleanMacro( AutoAdjustSampleDistances, int );
+  vtkSetClampMacro( AutoAdjustSampleDistances, vtkTypeBool, 0, 1 );
+  vtkGetMacro( AutoAdjustSampleDistances, vtkTypeBool );
+  vtkBooleanMacro( AutoAdjustSampleDistances, vtkTypeBool );
   //@}
 
   //@{
@@ -179,9 +174,9 @@ public:
    * voxels is 1E6. Note that ScalarOpacityUnitDistance is still taken into
    * account and if different than 1, will effect the sample distance.
    */
-  vtkSetClampMacro( LockSampleDistanceToInputSpacing, int, 0, 1 );
-  vtkGetMacro( LockSampleDistanceToInputSpacing, int );
-  vtkBooleanMacro( LockSampleDistanceToInputSpacing, int );
+  vtkSetClampMacro( LockSampleDistanceToInputSpacing, vtkTypeBool, 0, 1 );
+  vtkGetMacro( LockSampleDistanceToInputSpacing, vtkTypeBool );
+  vtkBooleanMacro( LockSampleDistanceToInputSpacing, vtkTypeBool );
   //@}
 
   //@{
@@ -199,9 +194,9 @@ public:
    * If IntermixIntersectingGeometry is turned on, the zbuffer will be
    * captured and used to limit the traversal of the rays.
    */
-  vtkSetClampMacro( IntermixIntersectingGeometry, int, 0, 1 );
-  vtkGetMacro( IntermixIntersectingGeometry, int );
-  vtkBooleanMacro( IntermixIntersectingGeometry, int );
+  vtkSetClampMacro( IntermixIntersectingGeometry, vtkTypeBool, 0, 1 );
+  vtkGetMacro( IntermixIntersectingGeometry, vtkTypeBool );
+  vtkBooleanMacro( IntermixIntersectingGeometry, vtkTypeBool );
   //@}
 
   //@{
@@ -223,7 +218,7 @@ public:
    * WARNING: INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
    * Initialize rendering for this volume.
    */
-  void Render( vtkRenderer *, vtkVolume * ) VTK_OVERRIDE;
+  void Render( vtkRenderer *, vtkVolume * ) override;
 
   unsigned int ToFixedPointPosition( float val );
   void ToFixedPointPosition( float in[3], unsigned int out[3] );
@@ -357,11 +352,11 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
 protected:
   vtkFixedPointVolumeRayCastMapper();
-  ~vtkFixedPointVolumeRayCastMapper() VTK_OVERRIDE;
+  ~vtkFixedPointVolumeRayCastMapper() override;
 
   // The helper class that displays the image
   vtkRayCastImageDisplayHelper *ImageDisplayHelper;
@@ -374,8 +369,8 @@ protected:
   float                        ImageSampleDistance;
   float                        MinimumImageSampleDistance;
   float                        MaximumImageSampleDistance;
-  int                          AutoAdjustSampleDistances;
-  int                          LockSampleDistanceToInputSpacing;
+  vtkTypeBool                          AutoAdjustSampleDistances;
+  vtkTypeBool                          LockSampleDistanceToInputSpacing;
 
   // Saved values used to restore
   float                        OldSampleDistance;
@@ -429,7 +424,7 @@ protected:
   float            RetrieveRenderTime( vtkRenderer *ren, vtkVolume *vol );
   float            RetrieveRenderTime( vtkRenderer *ren );
 
-  int              IntermixIntersectingGeometry;
+  vtkTypeBool              IntermixIntersectingGeometry;
 
   float            MinimumViewDistance;
 
@@ -548,8 +543,8 @@ protected:
   void ApplyFinalColorWindowLevel();
 
 private:
-  vtkFixedPointVolumeRayCastMapper(const vtkFixedPointVolumeRayCastMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFixedPointVolumeRayCastMapper&) VTK_DELETE_FUNCTION;
+  vtkFixedPointVolumeRayCastMapper(const vtkFixedPointVolumeRayCastMapper&) = delete;
+  void operator=(const vtkFixedPointVolumeRayCastMapper&) = delete;
 
   bool ThreadWarning;
 };

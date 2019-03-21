@@ -38,11 +38,11 @@ class VTKFILTERSPARALLEL_EXPORT vtkCollectGraph : public vtkGraphAlgorithm
 public:
   static vtkCollectGraph *New();
   vtkTypeMacro(vtkCollectGraph, vtkGraphAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
-   * By defualt this filter uses the global controller,
+   * By default this filter uses the global controller,
    * but this method can be used to set another instead.
    */
   virtual void SetController(vtkMultiProcessController*);
@@ -63,9 +63,9 @@ public:
   /**
    * To collect or just copy input to output. Off (collect) by default.
    */
-  vtkSetMacro(PassThrough, int);
-  vtkGetMacro(PassThrough, int);
-  vtkBooleanMacro(PassThrough, int);
+  vtkSetMacro(PassThrough, vtkTypeBool);
+  vtkGetMacro(PassThrough, vtkTypeBool);
+  vtkBooleanMacro(PassThrough, vtkTypeBool);
   //@}
 
   enum {
@@ -89,22 +89,22 @@ public:
 
 protected:
   vtkCollectGraph();
-  ~vtkCollectGraph() VTK_OVERRIDE;
+  ~vtkCollectGraph() override;
 
-  int PassThrough;
+  vtkTypeBool PassThrough;
   int OutputType;
 
   // Data generation method
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestDataObject(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestDataObject(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   vtkMultiProcessController *Controller;
   vtkSocketController *SocketController;
 
 private:
-  vtkCollectGraph(const vtkCollectGraph&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCollectGraph&) VTK_DELETE_FUNCTION;
+  vtkCollectGraph(const vtkCollectGraph&) = delete;
+  void operator=(const vtkCollectGraph&) = delete;
 };
 
 #endif

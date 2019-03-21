@@ -32,17 +32,15 @@ vtkStandardNewMacro(vtkPath)
 vtkPath::vtkPath()
 {
   vtkNew<vtkPoints> points;
-  this->SetPoints(points.GetPointer());
+  this->SetPoints(points);
 
   vtkNew<vtkIntArray> controlPointCodes;
   controlPointCodes->SetNumberOfComponents(1);
-  this->PointData->SetScalars(controlPointCodes.GetPointer());
+  this->PointData->SetScalars(controlPointCodes);
 }
 
 //----------------------------------------------------------------------------
-vtkPath::~vtkPath()
-{
-}
+vtkPath::~vtkPath() = default;
 
 //----------------------------------------------------------------------------
 void vtkPath::Allocate(vtkIdType size, int extSize)
@@ -79,7 +77,7 @@ void vtkPath::Reset()
 //----------------------------------------------------------------------------
 vtkPath* vtkPath::GetData(vtkInformation* info)
 {
-  return info ? vtkPath::SafeDownCast(info->Get(DATA_OBJECT())) : 0;
+  return info ? vtkPath::SafeDownCast(info->Get(DATA_OBJECT())) : nullptr;
 }
 
 //----------------------------------------------------------------------------

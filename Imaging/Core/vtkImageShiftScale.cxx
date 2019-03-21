@@ -33,9 +33,7 @@ vtkImageShiftScale::vtkImageShiftScale()
 }
 
 //----------------------------------------------------------------------------
-vtkImageShiftScale::~vtkImageShiftScale()
-{
-}
+vtkImageShiftScale::~vtkImageShiftScale() = default;
 
 //----------------------------------------------------------------------------
 void vtkImageShiftScale::PrintSelf(ostream& os, vtkIndent indent)
@@ -143,8 +141,8 @@ void vtkImageShiftScaleExecute1(vtkImageShiftScale* self,
     vtkTemplateMacro(
       vtkImageShiftScaleExecute(self, inData,
                                 outData, outExt, id,
-                                static_cast<T*>(0),
-                                static_cast<VTK_TT*>(0)));
+                                static_cast<T*>(nullptr),
+                                static_cast<VTK_TT*>(nullptr)));
     default:
       vtkErrorWithObjectMacro(
         self, "ThreadedRequestData: Unknown output ScalarType");
@@ -171,7 +169,7 @@ void vtkImageShiftScale::ThreadedRequestData(vtkInformation*,
   {
     vtkTemplateMacro(
       vtkImageShiftScaleExecute1(this, input, output, outExt, threadId,
-                                 static_cast<VTK_TT*>(0)));
+                                 static_cast<VTK_TT*>(nullptr)));
     default:
       vtkErrorMacro("ThreadedRequestData: Unknown input ScalarType");
       return;

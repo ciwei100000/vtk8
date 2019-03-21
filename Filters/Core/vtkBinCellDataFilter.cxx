@@ -17,7 +17,8 @@
 #include "vtkCell.h"
 #include "vtkCellData.h"
 #include "vtkCellIterator.h"
-#include "vtkCellLocator.h"
+#include "vtkAbstractCellLocator.h"
+#include "vtkStaticCellLocator.h"
 #include "vtkDataSet.h"
 #include "vtkGenericCell.h"
 #include "vtkIdTypeArray.h"
@@ -34,8 +35,14 @@
 
 vtkStandardNewMacro(vtkBinCellDataFilter);
 
+//---------------------------------------------------------------------------
+// Specify a spatial locator for speeding the search process. By
+// default an instance of vtkStaticCellLocator is used.
+vtkCxxSetObjectMacro(vtkBinCellDataFilter, CellLocator, vtkAbstractCellLocator);
+
 #define CELL_TOLERANCE_FACTOR_SQR  1e-6
 
+//----------------------------------------------------------------------------
 namespace
 {
 typedef std::map<vtkIdType, vtkIdType> IdMap;
@@ -68,12 +75,7 @@ int GetBinId(double value, double* binValues, int nBins)
   double* lb = std::lower_bound(binValues, binValues + nBins, value);
   return (lb - binValues);
 }
-}
-
-//---------------------------------------------------------------------------
-// Specify a spatial locator for speeding the search process. By
-// default an instance of vtkCellLocator is used.
-vtkCxxSetObjectMacro(vtkBinCellDataFilter, CellLocator, vtkCellLocator);
+}//namespace
 
 //----------------------------------------------------------------------------
 vtkBinCellDataFilter::vtkBinCellDataFilter()
@@ -81,10 +83,10 @@ vtkBinCellDataFilter::vtkBinCellDataFilter()
   this->BinValues = vtkBinValues::New();
   this->BinValues->GenerateValues(2, VTK_DOUBLE_MIN, VTK_DOUBLE_MAX);
 
-  this->CellLocator = NULL;
+  this->CellLocator = nullptr;
 
   this->StoreNumberOfNonzeroBins = true;
-  this->NumberOfNonzeroBinsArrayName = 0;
+  this->NumberOfNonzeroBinsArrayName = nullptr;
   this->SetNumberOfNonzeroBinsArrayName("NumberOfNonzeroBins");
 
   this->SpatialMatch = 0;
@@ -104,8 +106,8 @@ vtkBinCellDataFilter::vtkBinCellDataFilter()
 vtkBinCellDataFilter::~vtkBinCellDataFilter()
 {
   this->BinValues->Delete();
-  this->SetCellLocator(NULL);
-  this->SetNumberOfNonzeroBinsArrayName(0);
+  this->SetCellLocator(nullptr);
+  this->SetNumberOfNonzeroBinsArrayName(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -125,7 +127,7 @@ vtkDataObject *vtkBinCellDataFilter::GetSource()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return NULL;
+    return nullptr;
   }
 
   return this->GetExecutive()->GetInputData(1, 0);
@@ -192,7 +194,7 @@ int vtkBinCellDataFilter::RequestData(
   double weights[VTK_CELL_SIZE];
   vtkIdType inputIds[VTK_CELL_SIZE];
 
-  if (!this->CellLocator)
+  if ( !this->CellLocator )
   {
     this->CreateDefaultLocator();
   }
@@ -201,7 +203,7 @@ int vtkBinCellDataFilter::RequestData(
 
   vtkNew<vtkGenericCell> sourceCell, inputCell;
   vtkIdType cellId = 0;
-  input->GetCell(cellId, inputCell.GetPointer());
+  input->GetCell(cellId, inputCell);
   vtkCellIterator *srcIt = source->NewCellIterator();
   double pcoords[3], coords[3];
   int subId;
@@ -212,12 +214,12 @@ int vtkBinCellDataFilter::RequestData(
     if (this->CellOverlapMethod == vtkBinCellDataFilter::CELL_CENTROID)
     {
       // identify the centroid of the source cell
-      srcIt->GetCell(sourceCell.GetPointer());
+      srcIt->GetCell(sourceCell);
       sourceCell->GetParametricCenter(pcoords);
       sourceCell->EvaluateLocation(subId, pcoords, coords, weights);
 
       // find the cell that contains xyz and get it
-      cellId = this->CellLocator->FindCell(coords, tol2, inputCell.GetPointer(),
+      cellId = this->CellLocator->FindCell(coords, tol2, inputCell,
                                            pcoords, weights);
 
       if (this->ComputeTolerance && cellId >= 0)
@@ -240,7 +242,7 @@ int vtkBinCellDataFilter::RequestData(
       {
         points->GetPoint(i, coords);
         inputIds[i] = this->CellLocator->FindCell(coords, tol2,
-                                                  inputCell.GetPointer(),
+                                                  inputCell,
                                                   pcoords, weights);
       }
       cellId = MostFrequentId(inputIds, points->GetNumberOfPoints());
@@ -260,7 +262,7 @@ int vtkBinCellDataFilter::RequestData(
   srcIt->Delete();
 
   // add binned data to the output mesh
-  output->GetCellData()->AddArray(binnedData.GetPointer());
+  output->GetCellData()->AddArray(binnedData);
 
   if (this->StoreNumberOfNonzeroBins)
   {
@@ -284,7 +286,7 @@ int vtkBinCellDataFilter::RequestData(
           numNonzeroBins->SetTypedComponent(i, 0, nBins);
         }
     }
-    output->GetCellData()->AddArray(numNonzeroBins.GetPointer());
+    output->GetCellData()->AddArray(numNonzeroBins);
   }
 
   return 1;
@@ -438,10 +440,8 @@ int vtkBinCellDataFilter::RequestUpdateExtent(
 // Method manages creation of locators.
 void vtkBinCellDataFilter::CreateDefaultLocator()
 {
-  this->SetCellLocator(NULL);
-  this->CellLocator = vtkCellLocator::New();
-  this->CellLocator->Register(this);
-  this->CellLocator->Delete();
+  this->SetCellLocator(nullptr);
+  this->CellLocator = vtkStaticCellLocator::New();
 }
 
 //----------------------------------------------------------------------------
@@ -451,6 +451,21 @@ void vtkBinCellDataFilter::PrintSelf(ostream& os, vtkIndent indent)
 
   this->Superclass::PrintSelf(os,indent);
   os << indent << "Source: " << source << "\n";
-  os << indent << "SpatialMatch: " << ( this->SpatialMatch ? "On" : "Off" )
+
+  os << indent << "Spatial Match: " << ( this->SpatialMatch ? "On" : "Off" )
      << "\n";
+
+  os << indent << "Store Number Of Nonzero Bins: "
+     << ( this->StoreNumberOfNonzeroBins ? "On" : "Off" ) << "\n";
+
+  os << indent << "Tolerance: " << this->Tolerance << "\n";
+  os << indent << "Compute Tolerance: "
+     << ( this->ComputeTolerance ? "On" : "Off" ) << "\n";
+
+  os << indent << "Array Component: " << this->ArrayComponent << "\n";
+
+  os << indent << "Cell Overlap Method: " << this->CellOverlapMethod << "\n";
+
+  os << indent << "Cell Locator: " << this->CellLocator << "\n";
+
 }

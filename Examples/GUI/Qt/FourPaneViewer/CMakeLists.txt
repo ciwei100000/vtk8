@@ -1,4 +1,11 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+foreach(p
+    CMP0071 # 3.10: Let AUTOMOC and AUTOUIC process GENERATED files
+    )
+  if(POLICY ${p})
+    cmake_policy(SET ${p} NEW)
+  endif()
+endforeach()
 
 project(QtVTKRenderWindows)
 
@@ -33,23 +40,10 @@ include_directories(
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 
-if(VTK_QT_VERSION VERSION_GREATER "4")
-  find_package(Qt5 COMPONENTS Widgets REQUIRED QUIET)
-  qt5_wrap_ui(UI_Srcs ${UIs})
+find_package(Qt5 COMPONENTS Widgets REQUIRED QUIET)
+qt5_wrap_ui(UI_Srcs ${UIs})
 
-  # CMAKE_AUTOMOC in ON so the MocHdrs will be automatically wrapped.
-  add_executable(QtVTKRenderWindows ${Srcs} ${Hdrs} ${UI_Srcs} ${MOC_Hdrs})
-  qt5_use_modules(QtVTKRenderWindows Core Gui Widgets)
-  target_link_libraries(QtVTKRenderWindows ${VTK_LIBRARIES})
-else()
-  find_package(Qt4 REQUIRED)
-  include(${QT_USE_FILE})
-  # Use what VTK built with
-  set(QT_QMAKE_EXECUTABLE ${VTK_QT_QMAKE_EXECUTABLE} CACHE FILEPATH "")
-  set(QT_MOC_EXECUTABLE ${VTK_QT_MOC_EXECUTABLE} CACHE FILEPATH "")
-  set(QT_UIC_EXECUTABLE ${VTK_QT_UIC_EXECUTABLE} CACHE FILEPATH "")
-  qt4_wrap_ui(UI_Srcs ${UIs})
-
-  add_executable(QtVTKRenderWindows ${Srcs} ${Hdrs} ${UI_Srcs} ${MOC_Hdrs})
-  target_link_libraries(QtVTKRenderWindows ${QT_LIBRARIES} ${VTK_LIBRARIES})
-endif()
+# CMAKE_AUTOMOC in ON so the MocHdrs will be automatically wrapped.
+add_executable(QtVTKRenderWindows ${Srcs} ${Hdrs} ${UI_Srcs} ${MOC_Hdrs})
+target_link_libraries(QtVTKRenderWindows Qt5::Core Qt5::Gui Qt5::Widgets)
+target_link_libraries(QtVTKRenderWindows ${VTK_LIBRARIES})

@@ -20,6 +20,18 @@
  * compression.  Subclasses provide one compression method and one
  * decompression method.  The public interface to all compressors
  * remains the same, and is defined by this class.
+ *
+ * @par Note:
+ * vtkDataCompressor CompressionLevel maye take on values 1 to 9. With
+ * values of 1 giving best compression write performance, and a value of 9
+ * giving best compression ratio. Subclasses of vtkDataCompressor objects
+ * should be implemented with this in mind to provide a predictable
+ * compressor interface for vtkDataCompressor users.
+ *
+ * @pat Thanks:
+ * Homogeneous CompressionLevel behavior contributed by Quincy Wofford
+ * (qwofford@lanl.gov) and John Patchett (patchett@lanl.gov)
+ *
 */
 
 #ifndef vtkDataCompressor_h
@@ -34,7 +46,7 @@ class VTKIOCORE_EXPORT vtkDataCompressor : public vtkObject
 {
 public:
   vtkTypeMacro(vtkDataCompressor,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get the maximum space that may be needed to store data of the
@@ -84,9 +96,18 @@ public:
                                    size_t compressedSize,
                                    size_t uncompressedSize);
 
+  /** Compression performance varies greatly with compression level
+   *  Require level setting from any vtkDataCompressor
+   *  Different compressors handle performance parameters differently
+   *  vtkDataCompressors should take a value between 1 and 9
+   *  where 1 is fastest compression, and 9 is best compression.
+   */
+  virtual void SetCompressionLevel(int compressionLevel) = 0;
+  virtual int GetCompressionLevel() = 0;
+
 protected:
   vtkDataCompressor();
-  ~vtkDataCompressor() VTK_OVERRIDE;
+  ~vtkDataCompressor() override;
 
   // Actual compression method.  This must be provided by a subclass.
   // Must return the size of the compressed data, or zero on error.
@@ -100,9 +121,11 @@ protected:
                                   size_t compressedSize,
                                   unsigned char* uncompressedData,
                                   size_t uncompressedSize)=0;
+
+
 private:
-  vtkDataCompressor(const vtkDataCompressor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataCompressor&) VTK_DELETE_FUNCTION;
+  vtkDataCompressor(const vtkDataCompressor&) = delete;
+  void operator=(const vtkDataCompressor&) = delete;
 };
 
 #endif

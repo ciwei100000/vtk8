@@ -36,13 +36,13 @@ public:
   static vtkVoidArray *New();
 
   vtkTypeMacro(vtkVoidArray,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Allocate memory for this array. Delete old storage only if necessary.
    * Note that the parameter ext is no longer used.
    */
-  int Allocate(vtkIdType sz, vtkIdType ext=1000);
+  vtkTypeBool Allocate(vtkIdType sz, vtkIdType ext=1000);
 
   /**
    * Release storage and reset array to initial state.
@@ -128,7 +128,7 @@ public:
 
 protected:
   vtkVoidArray();
-  ~vtkVoidArray() VTK_OVERRIDE;
+  ~vtkVoidArray() override;
 
   vtkIdType NumberOfPointers;
   vtkIdType Size;
@@ -137,8 +137,8 @@ protected:
   void** ResizeAndExtend(vtkIdType sz);  // function to resize data
 
 private:
-  vtkVoidArray(const vtkVoidArray&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkVoidArray&) VTK_DELETE_FUNCTION;
+  vtkVoidArray(const vtkVoidArray&) = delete;
+  void operator=(const vtkVoidArray&) = delete;
 };
 
 

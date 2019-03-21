@@ -24,7 +24,8 @@
  * This filter is specialized to 2D images.
  *
  * @sa
- * vtkContourFilter vtkSynchronizedTemplates3D
+ * vtkContourFilter vtkFlyingEdges2D vtkMarchingSquares
+ * vtkSynchronizedTemplates3D vtkDiscreteFlyingEdges2D
 */
 
 #ifndef vtkSynchronizedTemplates2D_h
@@ -42,12 +43,12 @@ class VTKFILTERSCORE_EXPORT vtkSynchronizedTemplates2D : public vtkPolyDataAlgor
 public:
   static vtkSynchronizedTemplates2D *New();
   vtkTypeMacro(vtkSynchronizedTemplates2D,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Because we delegate to vtkContourValues
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   /**
    * Set a particular contour value at contour number i. The index i ranges
@@ -107,9 +108,9 @@ public:
    * Option to set the point scalars of the output.  The scalars will be the
    * iso value of course.  By default this flag is on.
    */
-  vtkSetMacro(ComputeScalars,int);
-  vtkGetMacro(ComputeScalars,int);
-  vtkBooleanMacro(ComputeScalars,int);
+  vtkSetMacro(ComputeScalars,vtkTypeBool);
+  vtkGetMacro(ComputeScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeScalars,vtkTypeBool);
   //@}
 
   //@{
@@ -122,20 +123,19 @@ public:
 
 protected:
   vtkSynchronizedTemplates2D();
-  ~vtkSynchronizedTemplates2D() VTK_OVERRIDE;
+  ~vtkSynchronizedTemplates2D() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
   vtkContourValues *ContourValues;
 
-  int ComputeScalars;
+  vtkTypeBool ComputeScalars;
   int ArrayComponent;
 
 private:
-  vtkSynchronizedTemplates2D(const vtkSynchronizedTemplates2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSynchronizedTemplates2D&) VTK_DELETE_FUNCTION;
+  vtkSynchronizedTemplates2D(const vtkSynchronizedTemplates2D&) = delete;
+  void operator=(const vtkSynchronizedTemplates2D&) = delete;
 };
 
 
 #endif
-

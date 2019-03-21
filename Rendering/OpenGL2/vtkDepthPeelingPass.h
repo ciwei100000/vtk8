@@ -14,7 +14,7 @@
 =========================================================================*/
 /**
  * @class   vtkDepthPeelingPass
- * @brief   Implement Depth Peeling for use within a frambuffer pass
+ * @brief   Implement Depth Peeling for use within a framebuffer pass
  *
  * Note that this implementation is used as a fallback for drivers that
  * don't support floating point textures. Most renderings will use the subclass
@@ -38,7 +38,7 @@
  * This implementation makes use of textures and is suitable for ES3
  * For ES3 it must be embedded within a pass that makes use of framebuffers
  * so that the required OpaqueZTexture and OpaqueRGBATexture can be
- * passed from the outer frambuffer pass. For OpenGL ES3 be aware the
+ * passed from the outer framebuffer pass. For OpenGL ES3 be aware the
  * occlusion ratio test is not supported. The maximum number of peels
  * is used instead so set it to a reasonable value. For many scenes
  * a value of 4 or 5 will work well.
@@ -57,7 +57,8 @@
 class vtkOpenGLFramebufferObject;
 class vtkTextureObject;
 class vtkOpenGLRenderWindow;
-class vtkOpenGLHelper;
+class vtkOpenGLState;
+class vtkOpenGLQuadHelper;
 
 class VTKRENDERINGOPENGL2_EXPORT vtkDepthPeelingPass
     : public vtkOpenGLRenderPass
@@ -65,20 +66,20 @@ class VTKRENDERINGOPENGL2_EXPORT vtkDepthPeelingPass
 public:
   static vtkDepthPeelingPass *New();
   vtkTypeMacro(vtkDepthPeelingPass,vtkOpenGLRenderPass);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Perform rendering according to a render state \p s.
    * \pre s_exists: s!=0
    */
-  void Render(const vtkRenderState *s) VTK_OVERRIDE;
+  void Render(const vtkRenderState *s) override;
 
   /**
    * Release graphics resources and ask components to release their own
    * resources.
    * \pre w_exists: w!=0
    */
-  void ReleaseGraphicsResources(vtkWindow *w) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *w) override;
 
   //@{
   /**
@@ -120,10 +121,10 @@ public:
                                    std::string &geometryShader,
                                    std::string &fragmentShader,
                                    vtkAbstractMapper *mapper,
-                                   vtkProp *prop) VTK_OVERRIDE;
+                                   vtkProp *prop) override;
   bool SetShaderParameters(vtkShaderProgram *program,
                            vtkAbstractMapper *mapper, vtkProp *prop,
-                           vtkOpenGLVertexArrayObject* VAO = nullptr) VTK_OVERRIDE;
+                           vtkOpenGLVertexArrayObject* VAO = nullptr) override;
 
   // Set Opaque Z texture, this must be set from the outer FO
   void SetOpaqueZTexture(vtkTextureObject *);
@@ -146,7 +147,7 @@ public:
   /**
    * Destructor.
    */
-  ~vtkDepthPeelingPass() VTK_OVERRIDE;
+  ~vtkDepthPeelingPass() override;
 
   vtkRenderPass *TranslucentPass;
   vtkTimeStamp CheckTime;
@@ -181,8 +182,8 @@ public:
 
   vtkOpenGLFramebufferObject *Framebuffer;
 
-  vtkOpenGLHelper *FinalBlendProgram;
-  vtkOpenGLHelper *IntermediateBlendProgram;
+  vtkOpenGLQuadHelper *FinalBlend;
+  vtkOpenGLQuadHelper *IntermediateBlend;
 
   // obtained from the outer FO, we read from them
   vtkTextureObject *OpaqueZTexture;
@@ -202,9 +203,12 @@ public:
   void BlendIntermediatePeels(vtkOpenGLRenderWindow *renWin, bool);
   void BlendFinalPeel(vtkOpenGLRenderWindow *renWin);
 
+  // useful to store
+  vtkOpenGLState *State;
+
  private:
-  vtkDepthPeelingPass(const vtkDepthPeelingPass&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDepthPeelingPass&) VTK_DELETE_FUNCTION;
+  vtkDepthPeelingPass(const vtkDepthPeelingPass&) = delete;
+  void operator=(const vtkDepthPeelingPass&) = delete;
 };
 
 #endif

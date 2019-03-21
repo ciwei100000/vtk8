@@ -47,7 +47,7 @@ class VTKFILTERSTEXTURE_EXPORT vtkTextureMapToPlane : public vtkDataSetAlgorithm
 {
 public:
   vtkTypeMacro(vtkTextureMapToPlane,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with s,t range=(0,1) and automatic plane generation turned on.
@@ -109,16 +109,16 @@ public:
   /**
    * Turn on/off automatic plane generation.
    */
-  vtkSetMacro(AutomaticPlaneGeneration,int);
-  vtkGetMacro(AutomaticPlaneGeneration,int);
-  vtkBooleanMacro(AutomaticPlaneGeneration,int);
+  vtkSetMacro(AutomaticPlaneGeneration,vtkTypeBool);
+  vtkGetMacro(AutomaticPlaneGeneration,vtkTypeBool);
+  vtkBooleanMacro(AutomaticPlaneGeneration,vtkTypeBool);
   //@}
 
 protected:
   vtkTextureMapToPlane();
-  ~vtkTextureMapToPlane() VTK_OVERRIDE {}
+  ~vtkTextureMapToPlane() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   void ComputeNormal(vtkDataSet *output);
 
   double Origin[3];
@@ -127,11 +127,11 @@ protected:
   double Normal[3];
   double SRange[2];
   double TRange[2];
-  int AutomaticPlaneGeneration;
+  vtkTypeBool AutomaticPlaneGeneration;
 
 private:
-  vtkTextureMapToPlane(const vtkTextureMapToPlane&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTextureMapToPlane&) VTK_DELETE_FUNCTION;
+  vtkTextureMapToPlane(const vtkTextureMapToPlane&) = delete;
+  void operator=(const vtkTextureMapToPlane&) = delete;
 };
 
 #endif

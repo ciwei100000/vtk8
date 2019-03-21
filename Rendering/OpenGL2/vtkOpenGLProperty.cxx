@@ -18,6 +18,7 @@
 #include "vtkOpenGLHelper.h"
 
 #include "vtkObjectFactory.h"
+#include "vtkOpenGLState.h"
 #include "vtkOpenGLTexture.h"
 #include "vtkTexture.h"
 
@@ -27,51 +28,31 @@
 
 vtkStandardNewMacro(vtkOpenGLProperty);
 
-vtkOpenGLProperty::vtkOpenGLProperty()
-{
-}
+vtkOpenGLProperty::vtkOpenGLProperty() = default;
 
-vtkOpenGLProperty::~vtkOpenGLProperty()
-{
-}
+vtkOpenGLProperty::~vtkOpenGLProperty() = default;
 
 
 // ----------------------------------------------------------------------------
 // Implement base class method.
 void vtkOpenGLProperty::Render(vtkActor *anActor, vtkRenderer *ren)
 {
-  // Set the LineStipple
-  if (this->LineStipplePattern != 0xFFFF)
-  {
-    // glEnable(GL_LINE_STIPPLE);
-    // glLineStipple(this->LineStippleRepeatFactor,
-    //               static_cast<GLushort>(this->LineStipplePattern));
-    //vtkOpenGLGL2PSHelper::EnableStipple(); // must be called after glLineStipple
-  }
-  else
-  {
-    // still need to set this although we are disabling.  else the ATI X1600
-    // (for example) still manages to stipple under certain conditions.
-    // glLineStipple(this->LineStippleRepeatFactor,
-    //               static_cast<GLushort>(this->LineStipplePattern));
-    // glDisable(GL_LINE_STIPPLE);
-    //vtkOpenGLGL2PSHelper::DisableStipple();
-  }
-
   // turn on/off backface culling
+  vtkOpenGLState *ostate =
+    static_cast<vtkOpenGLRenderer *>(ren)->GetState();
   if (! this->BackfaceCulling && ! this->FrontfaceCulling)
   {
-    glDisable (GL_CULL_FACE);
+    ostate->vtkglDisable (GL_CULL_FACE);
   }
   else if (this->BackfaceCulling)
   {
-    glCullFace (GL_BACK);
-    glEnable (GL_CULL_FACE);
+    ostate->vtkglCullFace (GL_BACK);
+    ostate->vtkglEnable (GL_CULL_FACE);
   }
   else //if both front & back culling on, will fall into backface culling
   { //if you really want both front and back, use the Actor's visibility flag
-    glCullFace (GL_FRONT);
-    glEnable (GL_CULL_FACE);
+    ostate->vtkglCullFace (GL_FRONT);
+    ostate->vtkglEnable (GL_CULL_FACE);
   }
 
   this->RenderTextures(anActor, ren);
@@ -82,15 +63,15 @@ void vtkOpenGLProperty::Render(vtkActor *anActor, vtkRenderer *ren)
 bool vtkOpenGLProperty::RenderTextures(vtkActor*, vtkRenderer* ren)
 {
   // render any textures.
-  int numTextures = this->GetNumberOfTextures();
-  for (int t = 0; t < numTextures; t++)
+  auto textures = this->GetAllTextures();
+  for (auto ti : textures)
   {
-    this->GetTextureAtIndex(t)->Render(ren);
+    ti.second->Render(ren);
   }
 
   vtkOpenGLCheckErrorMacro("failed after Render");
 
-  return (numTextures > 0);
+  return (!textures.empty());
 }
 
 //-----------------------------------------------------------------------------
@@ -101,7 +82,15 @@ void vtkOpenGLProperty::PostRender(vtkActor *actor, vtkRenderer *renderer)
   // Reset the face culling now we are done, leaking into text actor etc.
   if (this->BackfaceCulling || this->FrontfaceCulling)
   {
-    glDisable(GL_CULL_FACE);
+    static_cast<vtkOpenGLRenderer *>(renderer)
+      ->GetState()->vtkglDisable(GL_CULL_FACE);
+  }
+
+  // deactivate any textures.
+  auto textures = this->GetAllTextures();
+  for (auto ti : textures)
+  {
+    ti.second->PostRender(renderer);
   }
 
   this->Superclass::PostRender(actor, renderer);
@@ -119,13 +108,10 @@ void vtkOpenGLProperty::BackfaceRender(vtkActor *vtkNotUsed(anActor), vtkRendere
 void vtkOpenGLProperty::ReleaseGraphicsResources(vtkWindow *win)
 {
   // release any textures.
-  int numTextures = this->GetNumberOfTextures();
-  if (numTextures > 0)
+  auto textures = this->GetAllTextures();
+  for (auto ti : textures)
   {
-    for (int i = 0; i < numTextures; i++)
-    {
-      this->GetTextureAtIndex(i)->ReleaseGraphicsResources(win);
-    }
+    ti.second->ReleaseGraphicsResources(win);
   }
 
   this->Superclass::ReleaseGraphicsResources(win);

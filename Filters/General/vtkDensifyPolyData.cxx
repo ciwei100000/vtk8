@@ -72,7 +72,7 @@ public:
     //               polygon this is intended to represent a subdivision of.
     //
     Polygon( double *p, vtkIdType nPts, vtkIdType *ptIds,
-             vtkIdType nParentPoints = 0, vtkIdType *parentPtIds = NULL)
+             vtkIdType nParentPoints = 0, vtkIdType *parentPtIds = nullptr)
     {
       this->Verts   = new double[3*nPts];
       this->VertIds = new vtkIdType[nPts];
@@ -97,7 +97,7 @@ public:
       else
       {
         this->NumParentVerts = 0;
-        this->ParentVertIds  = NULL;
+        this->ParentVertIds  = nullptr;
       }
     }
 
@@ -105,8 +105,8 @@ public:
     Polygon()
     {
       this->NumVerts = this->NumParentVerts = 0;
-      this->VertIds = this->ParentVertIds = NULL;
-      this->Verts = NULL;
+      this->VertIds = this->ParentVertIds = nullptr;
+      this->Verts = nullptr;
     }
 
     ~Polygon()
@@ -117,11 +117,11 @@ public:
     void Clear()
     {
       delete [] this->Verts;
-      this->Verts=0;
+      this->Verts=nullptr;
       delete [] this->VertIds;
-      this->VertIds=0;
+      this->VertIds=nullptr;
       delete [] this->ParentVertIds;
-      this->ParentVertIds=0;
+      this->ParentVertIds=nullptr;
     }
 
     void DeepCopy( const Polygon & p )
@@ -140,7 +140,7 @@ public:
       }
       else
       {
-          this->Verts=0; // can happen if called from the copy constructor.
+          this->Verts=nullptr; // can happen if called from the copy constructor.
       }
 
       // Copy the vertex ids.
@@ -154,7 +154,7 @@ public:
       }
       else
       {
-          this->VertIds=0; // can happen if called from the copy constructor.
+          this->VertIds=nullptr; // can happen if called from the copy constructor.
       }
 
       // Copy the parent vertex ids, if any.
@@ -169,7 +169,7 @@ public:
       }
       else
       {
-        this->ParentVertIds = NULL;
+        this->ParentVertIds = nullptr;
         this->NumParentVerts = 0;
       }
     }
@@ -234,7 +234,7 @@ public:
 
   // After subdivision, use this method to get the next point.
   // Returns the pointId of the point. Returns -1 if no more points.
-  vtkIdType GetNextPoint( double p[3], vtkIdList * parentPointIds = NULL )
+  vtkIdType GetNextPoint( double p[3], vtkIdList * parentPointIds = nullptr )
   {
     vtkIdType id = -1;
     if (this->CurrentPointId < this->NumPoints)
@@ -265,7 +265,7 @@ public:
   vtkIdType * GetNextCell(
       vtkIdType & numVerts /* number of verts in the returned ids */ )
   {
-    vtkIdType *vertIds = NULL;
+    vtkIdType *vertIds = nullptr;
     numVerts = 0;
     if (this->PolygonsIterator != this->Polygons.end())
     {
@@ -349,9 +349,7 @@ vtkDensifyPolyData::vtkDensifyPolyData()
 }
 
 //----------------------------------------------------------------------------
-vtkDensifyPolyData::~vtkDensifyPolyData()
-{
-}
+vtkDensifyPolyData::~vtkDensifyPolyData() = default;
 
 //----------------------------------------------------------------------------
 int vtkDensifyPolyData::RequestData(
@@ -363,7 +361,7 @@ int vtkDensifyPolyData::RequestData(
   vtkInformation *inInfo = inputVector[0]->GetInformationObject(0);
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the input and ouptut
+  // get the input and output
   vtkPolyData *input = vtkPolyData::SafeDownCast(
     inInfo->Get(vtkDataObject::DATA_OBJECT()));
   vtkPolyData *output = vtkPolyData::SafeDownCast(
@@ -379,7 +377,7 @@ int vtkDensifyPolyData::RequestData(
     return 0;
   }
 
-  vtkIdType npts = 0, *ptIds = 0;
+  vtkIdType npts = 0, *ptIds = nullptr;
 
   input->BuildLinks();
 

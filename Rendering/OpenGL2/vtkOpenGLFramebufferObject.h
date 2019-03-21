@@ -85,7 +85,7 @@
  *\endcode
  *
  * If you will be using a FO repeatedly then it is best to create it
- * attach the bufffers and then use as needed for example
+ * attach the buffers and then use as needed for example
  *
  * Typical use case:
  *\code{.cpp}
@@ -122,7 +122,7 @@
  * a conversion but generally it should still be easy. Use the code
  * samples above (or any of the classes in OpenGL2 that currently use FBOs)
  * to guide you. They have all been converted to this class. Where previously
- * a DepthBuffer was autmatically created for you, you now need to do it
+ * a DepthBuffer was automatically created for you, you now need to do it
  * explicitly using AddDepthAttachment().
  *
  * This class should be named vtkOpenGLFramebufferObject (FO)
@@ -184,7 +184,7 @@ class VTKRENDERINGOPENGL2_EXPORT vtkOpenGLFramebufferObject : public vtkFrameBuf
 public:
   static vtkOpenGLFramebufferObject* New();
   vtkTypeMacro(vtkOpenGLFramebufferObject, vtkFrameBufferObjectBase);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -266,11 +266,8 @@ public:
 
   /**
    * Set up ortho viewport with scissor, lighting, blend, and depth
-   * disabled. The method affects the current bound FBO. The method is
-   * static so that it may be used on the default FBO without an instance.
-   * Low level api.
+   * disabled. The method affects the current bound FBO.
    */
-  static
   void InitializeViewport(int width, int height);
 
   //@{
@@ -309,7 +306,9 @@ public:
         unsigned int mode,
         unsigned int attId,
         vtkTextureObject* tex,
-        unsigned int zslice = 0);
+        unsigned int zslice = 0,
+        unsigned int format = 0,
+        unsigned int mipmapLevel = 0);
   void AddColorAttachment(
         unsigned int mode,
         unsigned int attId,
@@ -339,7 +338,7 @@ public:
   /**
    * Convenience method to populate a framebuffer with
    * attachments created as well. Returns true if a
-   * complete valid Frambuffer was created
+   * complete valid Framebuffer was created
    */
   bool PopulateFramebuffer(int width, int height);
   bool PopulateFramebuffer(
@@ -362,7 +361,7 @@ public:
 
   /**
    * Returns the maximum number of render targets available. This limits the
-   * available attachement points for SetColorAttachment().
+   * available attachment points for SetColorAttachment().
    * The return value is valid only if GetContext is non-null.
    */
   unsigned int GetMaximumNumberOfRenderTargets();
@@ -371,18 +370,18 @@ public:
   /**
    * Dimensions in pixels of the framebuffer.
    */
-  int *GetLastSize() VTK_OVERRIDE
+  int *GetLastSize() override
   {
     vtkDebugMacro(<< this->GetClassName() << " (" << this << "): returning LastSize pointer " << this->LastSize);
     return this->LastSize;
   }
-  void GetLastSize(int &_arg1, int &_arg2) VTK_OVERRIDE
+  void GetLastSize(int &_arg1, int &_arg2) override
   {
       _arg1 = this->LastSize[0];
       _arg2 = this->LastSize[1];
     vtkDebugMacro(<< this->GetClassName() << " (" << this << "): returning LastSize (" << _arg1 << "," << _arg2 << ")");
   }
-  void GetLastSize (int _arg[2]) VTK_OVERRIDE
+  void GetLastSize (int _arg[2]) override
   {
     this->GetLastSize (_arg[0], _arg[1]);
   }
@@ -390,7 +389,7 @@ public:
 
   /**
    * Returns if the context supports the required extensions.
-   * Extension will be loaded when the conetxt is set.
+   * Extension will be loaded when the context is set.
    */
   static bool IsSupported(vtkOpenGLRenderWindow *) {
       return true; }
@@ -428,7 +427,7 @@ public:
 
   /**
    * Download data from the read color attachment of the currently
-   * bound FBO into the retruned PBO. The PBO must be free'd when
+   * bound FBO into the returned PBO. The PBO must be free'd when
    * you are finished with it. The number of components in the
    * PBO is the same as in the name of the specific download function.
    * When downloading a single color channel, the channel must be
@@ -450,7 +449,7 @@ public:
   /**
    * Download data from the depth attachment of the currently
    * bound FBO. The returned PBO must be Delete'd by the caller.
-   * The retruned PBO has one component.
+   * The returned PBO has one component.
    */
   vtkPixelBufferObject *DownloadDepth(
         int extent[4],
@@ -504,7 +503,7 @@ public:
 protected:
   void SetColorBuffer(unsigned int mode,
     unsigned int index, vtkTextureObject *texture,
-    unsigned int zslice=0);
+    unsigned int zslice=0, unsigned int format=0, unsigned int mipmapLevel=0);
   void SetColorBuffer(unsigned int mode,
     unsigned int index, vtkRenderbuffer *rb);
   void SetDepthBuffer(unsigned int mode, vtkTextureObject *depthTexture);
@@ -577,7 +576,7 @@ protected:
   int GetOpenGLType(int vtkType);
 
   vtkOpenGLFramebufferObject();
-  ~vtkOpenGLFramebufferObject() VTK_OVERRIDE;
+  ~vtkOpenGLFramebufferObject() override;
 
   vtkWeakPointer<vtkOpenGLRenderWindow> Context;
 
@@ -601,8 +600,8 @@ protected:
   std::map<unsigned int, vtkFOInfo *> ReadColorBuffers;
 
 private:
-  vtkOpenGLFramebufferObject(const vtkOpenGLFramebufferObject&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLFramebufferObject&) VTK_DELETE_FUNCTION;
+  vtkOpenGLFramebufferObject(const vtkOpenGLFramebufferObject&) = delete;
+  void operator=(const vtkOpenGLFramebufferObject&) = delete;
 };
 
 #endif

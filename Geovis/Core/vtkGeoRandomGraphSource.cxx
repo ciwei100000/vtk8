@@ -34,13 +34,12 @@ vtkStandardNewMacro(vtkGeoRandomGraphSource);
 
 vtkGeoRandomGraphSource::vtkGeoRandomGraphSource()
 {
+  VTK_LEGACY_BODY(vtkGeoRandomGraphSource::vtkGeoRandomGraphSource, "VTK 8.2");
 }
 
 // ----------------------------------------------------------------------
 
-vtkGeoRandomGraphSource::~vtkGeoRandomGraphSource()
-{
-}
+vtkGeoRandomGraphSource::~vtkGeoRandomGraphSource() = default;
 
 // ----------------------------------------------------------------------
 
@@ -80,4 +79,3 @@ int vtkGeoRandomGraphSource::RequestData(
 
   return 1;
 }
-

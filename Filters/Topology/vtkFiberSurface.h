@@ -324,17 +324,17 @@ class VTKFILTERSTOPOLOGY_EXPORT vtkFiberSurface : public vtkPolyDataAlgorithm
 public:
   static vtkFiberSurface* New();
   vtkTypeMacro(vtkFiberSurface, vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
   * Specify the first field name to be used in this filter.
   */
-  void SetField1(char* fieldName);
+  void SetField1(const char* fieldName);
 
   /**
   * Specify the second field name to be used in the filter.
   */
-  void SetField2(char* fieldName);
+  void SetField2(const char* fieldName);
 
   /**
   * This structure lists the vertices to use for the marching tetrahedra,
@@ -387,14 +387,14 @@ public:
 
 protected:
   vtkFiberSurface();
-  virtual int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
-  virtual int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
+  int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
 
   // name of the input array names.
-  char* Fields[2];
+  const char* Fields[2];
 
 private:
-  vtkFiberSurface(const vtkFiberSurface&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFiberSurface&) VTK_DELETE_FUNCTION;
+  vtkFiberSurface(const vtkFiberSurface&) = delete;
+  void operator=(const vtkFiberSurface&) = delete;
 };
 #endif

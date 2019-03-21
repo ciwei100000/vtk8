@@ -55,14 +55,14 @@ public:
   vtkTypeMacro(vtkUnstructuredGridPreIntegration,
                        vtkUnstructuredGridVolumeRayIntegrator);
   static vtkUnstructuredGridPreIntegration *New();
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
-  void Initialize(vtkVolume *volume, vtkDataArray *scalars) VTK_OVERRIDE;
+  void Initialize(vtkVolume *volume, vtkDataArray *scalars) override;
 
   void Integrate(vtkDoubleArray *intersectionLengths,
                          vtkDataArray *nearIntersections,
                          vtkDataArray *farIntersections,
-                         float color[4]) VTK_OVERRIDE;
+                         float color[4]) override;
 
   //@{
   /**
@@ -99,9 +99,9 @@ public:
    * error due to numerical imprecision.  Under most circumstances, the
    * error is not noticeable.
    */
-  vtkGetMacro(IncrementalPreIntegration, int);
-  vtkSetMacro(IncrementalPreIntegration, int);
-  vtkBooleanMacro(IncrementalPreIntegration, int);
+  vtkGetMacro(IncrementalPreIntegration, vtkTypeBool);
+  vtkSetMacro(IncrementalPreIntegration, vtkTypeBool);
+  vtkBooleanMacro(IncrementalPreIntegration, vtkTypeBool);
   //@}
 
   /**
@@ -121,7 +121,7 @@ public:
    * Get an entry (RGBA) in one of the pre-integration tables.  The tables
    * are built when Initialize is called.
    */
-  float *GetTableEntry(double scalar_front, double scalar_back, double lenth,
+  float *GetTableEntry(double scalar_front, double scalar_back, double length,
                        int component = 0);
 
   /**
@@ -134,7 +134,7 @@ public:
 
 protected:
   vtkUnstructuredGridPreIntegration();
-  ~vtkUnstructuredGridPreIntegration() VTK_OVERRIDE;
+  ~vtkUnstructuredGridPreIntegration() override;
 
   vtkUnstructuredGridVolumeRayIntegrator *Integrator;
 
@@ -152,13 +152,13 @@ protected:
   int IntegrationTableScalarResolution;
   int IntegrationTableLengthResolution;
 
-  int IncrementalPreIntegration;
+  vtkTypeBool IncrementalPreIntegration;
 
   virtual void BuildPreIntegrationTables(vtkDataArray *scalars);
 
 private:
-  vtkUnstructuredGridPreIntegration(const vtkUnstructuredGridPreIntegration&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkUnstructuredGridPreIntegration&) VTK_DELETE_FUNCTION;
+  vtkUnstructuredGridPreIntegration(const vtkUnstructuredGridPreIntegration&) = delete;
+  void operator=(const vtkUnstructuredGridPreIntegration&) = delete;
 };
 
 inline float *vtkUnstructuredGridPreIntegration::GetIndexedTableEntry(

@@ -14,7 +14,7 @@
 =========================================================================*/
 /**
  * @class   vtkFlyingEdges2D
- * @brief   generate isoline(s) from a structured points set
+ * @brief   generate isoline(s) from a structured points (image) dataset
  *
  * vtkFlyingEdges2D is a reference implementation of the 2D version of the
  * flying edges algorithm. It is designed to be highly scalable (i.e.,
@@ -47,13 +47,17 @@
  * degenerate line segments (i.e., zero-length line segments).
  *
  * @warning
+ * If you are interested in extracting segmented regions from a label mask,
+ * consider using vtkDiscreteFlyingEdges2D.
+ *
+ * @warning
  * This class has been threaded with vtkSMPTools. Using TBB or other
  * non-sequential type (set in the CMake variable
  * VTK_SMP_IMPLEMENTATION_TYPE) may improve performance significantly.
  *
  * @sa
- * vtkContourFilter vtkFlyingEdges3D vtkSynchronizedTemplates2D
- * vtkMarchingSquares
+ * vtkFlyingEdges3D vtkContourFilter vtkSynchronizedTemplates2D
+ * vtkMarchingSquares vtkDiscreteFlyingEdges2D
 */
 
 #ifndef vtkFlyingEdges2D_h
@@ -70,12 +74,12 @@ class VTKFILTERSCORE_EXPORT vtkFlyingEdges2D : public vtkPolyDataAlgorithm
 public:
   static vtkFlyingEdges2D *New();
   vtkTypeMacro(vtkFlyingEdges2D,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Because we delegate to vtkContourValues.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   /**
    * Set a particular contour value at contour number i. The index i ranges
@@ -138,9 +142,9 @@ public:
    * Option to set the point scalars of the output.  The scalars will be the
    * iso value of course.  By default this flag is on.
    */
-  vtkSetMacro(ComputeScalars,int);
-  vtkGetMacro(ComputeScalars,int);
-  vtkBooleanMacro(ComputeScalars,int);
+  vtkSetMacro(ComputeScalars,vtkTypeBool);
+  vtkGetMacro(ComputeScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeScalars,vtkTypeBool);
   //@}
 
   //@{
@@ -153,19 +157,19 @@ public:
 
 protected:
   vtkFlyingEdges2D();
-  ~vtkFlyingEdges2D() VTK_OVERRIDE;
+  ~vtkFlyingEdges2D() override;
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-                  vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+                  vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
   vtkContourValues *ContourValues;
 
-  int ComputeScalars;
+  vtkTypeBool ComputeScalars;
   int ArrayComponent;
 
 private:
-  vtkFlyingEdges2D(const vtkFlyingEdges2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFlyingEdges2D&) VTK_DELETE_FUNCTION;
+  vtkFlyingEdges2D(const vtkFlyingEdges2D&) = delete;
+  void operator=(const vtkFlyingEdges2D&) = delete;
 };
 
 

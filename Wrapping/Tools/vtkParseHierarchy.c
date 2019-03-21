@@ -112,47 +112,133 @@ HierarchyEntry *vtkParseHierarchy_FindEntry(
 {
   HierarchyEntry key;
   HierarchyEntry *entry;
-  size_t i, n;
+  size_t i, n, m, l;
   char name[32];
-  char *cp;
+  char *cp = NULL;
 
   /* use classname as-is for the search if possible */
-  cp = (char *)classname;
+  key.Name = classname;
 
   /* get portion of name before final template parameters */
   n = vtkParse_UnscopedNameLength(classname);
-  i = 0;
-  while (classname[i+n] == ':' && classname[i+n+1] == ':')
+  m = vtkParse_IdentifierLength(classname);
+  while (classname[n] == ':' && classname[n+1] == ':')
   {
-    i += n + 2;
-    n = vtkParse_UnscopedNameLength(&classname[i]);
+    i = n + 2;
+    n += 2 + vtkParse_UnscopedNameLength(&classname[i]);
+    m += 2 + vtkParse_IdentifierLength(&classname[i]);
   }
-  i += vtkParse_IdentifierLength(&classname[i]);
 
-  /* create a new (shorter) search string if necessary */
-  if (classname[i] != '\0')
+  /* if n == m, no template args were found */
+  if (n != m)
   {
-    /* use stack space if possible */
+    /* need to remove template args: use stack space if possible */
     cp = name;
     /* otherwise, use malloc */
-    if (i > 31)
+    if (m > 31)
     {
-      cp = (char *)malloc(i+1);
+      cp = (char *)malloc(m+1);
     }
-    strncpy(cp, classname, i);
-    cp[i] = '\0';
+    n = vtkParse_UnscopedNameLength(classname);
+    m = vtkParse_IdentifierLength(classname);
+    strncpy(cp, classname, m);
+    while (classname[n] == ':' && classname[n+1] == ':')
+    {
+      i = n + 2;
+      n += 2 + vtkParse_UnscopedNameLength(&classname[i]);
+      l = 2 + vtkParse_IdentifierLength(&classname[i]);
+      strncpy(&cp[m], &classname[i-2], l);
+      m += l;
+    }
+    cp[m] = '\0';
+    key.Name = cp;
   }
-
-  key.Name = cp;
 
   entry = (HierarchyEntry *)bsearch(&key, info->Entries,
     info->NumberOfEntries, sizeof(HierarchyEntry),
     &compare_hierarchy_entries);
 
-  if (cp != classname && cp != name)
+  if (cp && cp != name)
   {
     free(cp);
   }
+
+  return entry;
+}
+
+/* Find an entry, beginning the search in class or namespace */
+HierarchyEntry *vtkParseHierarchy_FindEntryEx(
+  const HierarchyInfo *info, const char *classname, const char *scope)
+{
+  char text[128];
+  char *cp;
+  size_t n, m;
+  int i;
+  HierarchyEntry *entry = 0;
+  HierarchyEntry *scope_entry = 0;
+  int scope_needs_free = 0;
+
+  /* search for the type in the provided scope */
+  while (entry == 0 && scope != 0)
+  {
+    cp = text;
+    n = strlen(scope);
+    m = strlen(classname);
+    /* only malloc if more than 128 chars needed */
+    if (n + m + 2 >= 128)
+    {
+      cp = (char *)malloc(n+m+3);
+    }
+
+    /* scope the name */
+    memmove(cp, scope, n);
+    cp[n++] = ':';
+    cp[n++] = ':';
+    strcpy(&cp[n], classname);
+
+    entry = vtkParseHierarchy_FindEntry(info, cp);
+
+    if (cp != text) { free(cp); }
+
+    /* if not found, try inherited scopes */
+    if (entry == 0)
+    {
+      scope_entry = vtkParseHierarchy_FindEntry(info, scope);
+      scope = 0;
+      scope_needs_free = 0;
+      if (scope_entry && scope_entry->NumberOfSuperClasses)
+      {
+        for (i = 0; i+1 < scope_entry->NumberOfSuperClasses; i++)
+        {
+          if (scope_needs_free) { free((char *)scope); }
+          scope = vtkParseHierarchy_ExpandTypedefsInName(
+            info, scope_entry->SuperClasses[i], NULL);
+          scope_needs_free = (scope != scope_entry->SuperClasses[i]);
+
+          /* recurse if more than one superclass */
+          entry = vtkParseHierarchy_FindEntryEx(info, classname, scope);
+          if (entry)
+          {
+            if (scope_needs_free) { free((char *)scope); }
+            return entry;
+          }
+        }
+        if (scope_needs_free) { free((char *)scope); }
+        scope = vtkParseHierarchy_ExpandTypedefsInName(
+          info, scope_entry->SuperClasses[i], NULL);
+        scope_needs_free = (scope != scope_entry->SuperClasses[i]);
+      }
+      entry = 0;
+    }
+  }
+
+  /* if not found, try again with no scope */
+  if (entry == 0)
+  {
+    entry = vtkParseHierarchy_FindEntry(info, classname);
+  }
+
+  if (scope_needs_free) { free((char *)scope); }
 
   return entry;
 }
@@ -185,8 +271,7 @@ HierarchyInfo *vtkParseHierarchy_ReadFiles(int n, char **filenames)
     if (!vtkParseHierarchy_ReadFileIntoInfo(info, filenames[currentFile]))
     {
       vtkParseHierarchy_Free(info);
-      info = NULL;
-      break;
+      exit(1);
     }
   }
 
@@ -213,17 +298,19 @@ static int vtkParseHierarchy_ReadFileIntoInfo(
   unsigned int bits, pointers;
   static const char *delims = ">,=";
   int success = 1;
+  int lineno;
 
   fp = fopen(filename, "r");
 
   if (fp == NULL)
   {
+    fprintf(stderr, "Error opening hierarchy file %s\n", filename);
     return 0;
   }
 
   line = (char *)malloc(maxlen);
 
-  while (fgets(line, (int)maxlen, fp))
+  for (lineno = 1; fgets(line, (int)maxlen, fp); lineno++)
   {
     n = strlen(line);
 
@@ -562,6 +649,7 @@ static int vtkParseHierarchy_ReadFileIntoInfo(
 
   if (!feof(fp))
   {
+    fprintf(stderr, "%s:%d: error: <unspecified>.\n", filename, lineno);
     success = 0;
   }
 
@@ -877,17 +965,75 @@ const char *vtkParseHierarchy_GetProperty(
   return NULL;
 }
 
+/* Expand all unrecognized types in the template args of a type
+ * using the typedefs in the HierarchyInfo struct.
+ * Return a cached string (or the original string if no change). */
+const char *vtkParseHierarchy_ExpandTypedefsInTemplateArgs(
+  const HierarchyInfo *info, const char *name, StringCache *cache,
+  const char *scope)
+{
+  size_t i, l, n;
+  ValueInfo val;
+  char text[256];
+  size_t m = 256;
+
+  /* is the class templated? */
+  for (i = 0; name[i] != '<'; i++)
+  {
+    if (name[i] == '\0')
+    {
+      return name;
+    }
+  }
+
+  l = i;
+  memcpy(text, name, l);
+  text[l] = '<';
+
+  do
+  {
+    vtkParse_InitValue(&val);
+    i++;
+    i += vtkParse_ValueInfoFromString(&val, cache, &name[i]);
+    vtkParseHierarchy_ExpandTypedefsInValue(info, &val, cache, scope);
+    l++;
+    n = vtkParse_ValueInfoToString(&val, NULL, VTK_PARSE_EVERYTHING);
+    if (l + n >= m)
+    {
+      fprintf(stderr,
+              "In %s:%i expansion of templated type is too long: \"%s\"\n",
+              __FILE__, __LINE__, name);
+      exit(1);
+    }
+    l += vtkParse_ValueInfoToString(&val, &text[l], VTK_PARSE_EVERYTHING);
+    text[l] = ',';
+  }
+  while (name[i] == ',');
+
+  if (name[i] != '>')
+  {
+    return name;
+  }
+
+  while (text[l-1] == ' ')
+  {
+    l--;
+  }
+  text[l] = '>';
+  l++;
+
+  return vtkParse_CacheString(cache, text, l);
+}
+
 /* Expand all unrecognized types in a ValueInfo struct by
  * using the typedefs in the HierarchyInfo struct. */
 int vtkParseHierarchy_ExpandTypedefsInValue(
   const HierarchyInfo *info, ValueInfo *val, StringCache *cache,
   const char *scope)
 {
-  char text[128];
   char *cp;
   const char *newclass;
-  size_t n, m;
-  int i;
+  size_t n, m, l;
   HierarchyEntry *entry;
   int scope_needs_free = 0;
   int result = 1;
@@ -896,71 +1042,66 @@ int vtkParseHierarchy_ExpandTypedefsInValue(
           (val->Type & VTK_PARSE_BASE_TYPE) == VTK_PARSE_UNKNOWN) &&
          val->Class != 0)
   {
-    entry = 0;
-
-    /* search for the type in the provided scope */
-    while (entry == 0 && scope != 0)
+    if (strncmp(val->Class, "std::", 5) == 0)
     {
-      cp = text;
-      n = strlen(scope);
-      m = strlen(val->Class);
-      /* only malloc if more than 128 chars needed */
-      if (n + m + 2 >= 128)
-      {
-        cp = (char *)malloc(n+m+3);
-      }
-
-      /* scope the name */
-      strncpy(cp, scope, n);
-      cp[n++] = ':';
-      cp[n++] = ':';
-      strncpy(&cp[n], val->Class, m);
-      cp[n+m] = '\0';
-
-      entry = vtkParseHierarchy_FindEntry(info, cp);
-
-      if (cp != text) { free(cp); }
-
-      /* if not found, try inherited scopes */
-      if (entry == 0)
-      {
-        entry = vtkParseHierarchy_FindEntry(info, scope);
-        scope = 0;
-        scope_needs_free = 0;
-        if (entry && entry->NumberOfSuperClasses)
-        {
-          for (i = 0; i+1 < entry->NumberOfSuperClasses; i++)
-          {
-            if (scope_needs_free) { free((char *)scope); }
-            scope = vtkParseHierarchy_ExpandTypedefsInName(
-              info, entry->SuperClasses[i], NULL);
-            scope_needs_free = (scope != entry->SuperClasses[i]);
-            /* recurse if more than one superclass */
-            if (vtkParseHierarchy_ExpandTypedefsInValue(
-                  info, val, cache, scope))
-            {
-              if (scope_needs_free) { free((char *)scope); }
-              return 1;
-            }
-          }
-          if (scope_needs_free) { free((char *)scope); }
-          scope = vtkParseHierarchy_ExpandTypedefsInName(
-            info, entry->SuperClasses[i], NULL);
-          scope_needs_free = (scope != entry->SuperClasses[i]);
-        }
-        entry = 0;
-      }
+      /* check for template args, expand if necessary */
+      val->Class = vtkParseHierarchy_ExpandTypedefsInTemplateArgs(
+        info, val->Class, cache, scope);
+      result = 1;
+      break;
     }
 
-    /* if not found, try again with no scope */
-    if (entry == 0)
-    {
-      entry = vtkParseHierarchy_FindEntry(info, val->Class);
-    }
+    entry = vtkParseHierarchy_FindEntryEx(info, val->Class, scope);
 
     if (entry && entry->IsTypedef)
     {
       vtkParse_ExpandTypedef(val, entry->Typedef);
+
+      /* switch to the scope in which the typedef was defined */
+      if (scope_needs_free) { free((char *)scope); }
+      scope = 0;
+      l = vtkParse_UnscopedNameLength(entry->Name);
+      if (entry->Name[l] == ':' && entry->Name[l+1] == ':')
+      {
+        do
+        {
+           n = l;
+           l = n + 2 + vtkParse_UnscopedNameLength(&entry->Name[n+2]);
+        }
+        while (entry->Name[l] == ':' && entry->Name[l+1] == ':');
+
+        cp = (char *)malloc(n+1);
+        memcpy(cp, entry->Name, n);
+        cp[n] = '\0';
+        scope = cp;
+        scope_needs_free = 1;
+      }
+
+      /* check if the typedef includes a scope operator */
+      n = vtkParse_UnscopedNameLength(val->Class);
+      if (val->Class[n] == ':' && val->Class[n+1] == ':')
+      {
+        /* try to expand the scope, since it might itself be a typedef */
+        ValueInfo prefix;
+        vtkParse_InitValue(&prefix);
+        prefix.Type = VTK_PARSE_UNKNOWN;
+        prefix.Class = vtkParse_CacheString(cache, val->Class, n);
+        vtkParseHierarchy_ExpandTypedefsInValue(
+            info, &prefix, cache, scope);
+        l = strlen(prefix.Class);
+        if (l != n || strncmp(prefix.Class, val->Class, l) != 0)
+        {
+          /* use the expanded scope */
+          m = strlen(val->Class);
+          m += (l - n);
+          cp = (char *)malloc(m + 1);
+          /* memmove as we do not want the /0 here */
+          memmove(cp, prefix.Class, l);
+          strncpy(cp + l, &val->Class[n], m - l + 1);
+          val->Class = vtkParse_CacheString(cache, cp, m);
+          free(cp);
+        }
+      }
     }
     else if (entry)
     {
@@ -1020,10 +1161,11 @@ const char *vtkParseHierarchy_ExpandTypedefsInName(
     }
 
     /* scope the name */
-    strncpy(cp, scope, n);
+    /* memmove as we do not want the /0 here */
+    memmove(cp, scope, n);
     cp[n++] = ':';
     cp[n++] = ':';
-    strncpy(&cp[n], name, m);
+    memmove(&cp[n], name, m);
     cp[n+m] = '\0';
 
     entry = vtkParseHierarchy_FindEntry(info, cp);

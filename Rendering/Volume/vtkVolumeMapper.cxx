@@ -27,8 +27,8 @@ vtkVolumeMapper::vtkVolumeMapper()
   int i;
 
   this->BlendMode = vtkVolumeMapper::COMPOSITE_BLEND;
-  this->AverageIPScalarRange[0] = VTK_DOUBLE_MIN;
-  this->AverageIPScalarRange[1] = VTK_DOUBLE_MAX;
+  this->AverageIPScalarRange[0] = VTK_FLOAT_MIN;
+  this->AverageIPScalarRange[1] = VTK_FLOAT_MAX;
 
   this->Cropping = 0;
   for ( i = 0; i < 3; i++ )
@@ -41,9 +41,7 @@ vtkVolumeMapper::vtkVolumeMapper()
   this->CroppingRegionFlags = VTK_CROP_SUBVOLUME;
 }
 
-vtkVolumeMapper::~vtkVolumeMapper()
-{
-}
+vtkVolumeMapper::~vtkVolumeMapper() = default;
 
 void vtkVolumeMapper::ConvertCroppingRegionPlanesToVoxels()
 {
@@ -95,10 +93,21 @@ vtkImageData *vtkVolumeMapper::GetInput()
 {
   if (this->GetNumberOfInputConnections(0) < 1)
   {
-    return 0;
+    return nullptr;
   }
   return vtkImageData::SafeDownCast(
     this->GetExecutive()->GetInputData(0, 0));
+}
+
+vtkImageData* vtkVolumeMapper::GetInput(const int port)
+{
+  if (this->GetNumberOfInputConnections(0) < 1)
+  {
+    return nullptr;
+  }
+
+  return vtkImageData::SafeDownCast(
+    this->GetExecutive()->GetInputData(port, 0));
 }
 
 

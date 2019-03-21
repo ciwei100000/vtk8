@@ -43,8 +43,10 @@ Ph.D. thesis of Christian BOUCHENY.
 #include "vtkMath.h"
 #include "vtkObjectFactory.h"
 #include "vtkOpenGLError.h"
+#include "vtkOpenGLRenderUtilities.h"
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtkPropCollection.h"
 #include "vtkRenderState.h"
 #include "vtkRenderer.h"
@@ -63,25 +65,13 @@ Ph.D. thesis of Christian BOUCHENY.
 
 //#define VTK_EDL_SHADING_DEBUG
 
-// Define to print debug statements to the OpenGL CS stream (useful for e.g.
-// apitrace debugging):
-// #define ANNOTATE_STREAM
 namespace
 {
 void annotate(const std::string &str)
 {
-#ifdef ANNOTATE_STREAM
-  vtkOpenGLStaticCheckErrorMacro("Error before glDebug.")
-  glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER,
-                       GL_DEBUG_SEVERITY_NOTIFICATION,
-                       0, str.size(), str.c_str());
-  vtkOpenGLClearErrorMacro();
-#else // ANNOTATE_STREAM
-  (void)str;
-#endif // ANNOTATE_STREAM
+  vtkOpenGLRenderUtilities::MarkDebugEvent(str);
 }
 }
-
 
 vtkStandardNewMacro(vtkEDLShading);
 
@@ -89,23 +79,23 @@ vtkStandardNewMacro(vtkEDLShading);
 vtkEDLShading::vtkEDLShading()
 {
 
-  this->ProjectionFBO = 0;
-  this->ProjectionColorTexture = 0;
-  this->ProjectionDepthTexture = 0;
+  this->ProjectionFBO = nullptr;
+  this->ProjectionColorTexture = nullptr;
+  this->ProjectionDepthTexture = nullptr;
 
-  this->EDLHighFBO = 0;
-  this->EDLHighShadeTexture = 0;
-  this->EDLLowFBO = 0;
-  this->EDLLowShadeTexture = 0;
-  this->EDLLowBlurTexture = 0;
+  this->EDLHighFBO = nullptr;
+  this->EDLHighShadeTexture = nullptr;
+  this->EDLLowFBO = nullptr;
+  this->EDLLowShadeTexture = nullptr;
+  this->EDLLowBlurTexture = nullptr;
 
   this->EDLIsFiltered = true;
   // init neighbours in image space
   for (int c = 0; c < 8; c++)
   {
     float x, y;
-    x = cos(2* 3.14159 * float (c)/8.);
-    y = sin(2*3.14159*float(c)/8.);
+    x = cos(2*vtkMath::Pi()*float(c)/8.);
+    y = sin(2*vtkMath::Pi()*float(c)/8.);
     this->EDLNeighbours[c][0] = x / sqrt(x*x+y*y);
     this->EDLNeighbours[c][1] = y / sqrt(x*x+y*y);
     this->EDLNeighbours[c][2] = 0.;
@@ -119,42 +109,42 @@ vtkEDLShading::vtkEDLShading()
 // ----------------------------------------------------------------------------
 vtkEDLShading::~vtkEDLShading()
 {
-  if (this->ProjectionFBO != 0)
+  if (this->ProjectionFBO != nullptr)
   {
     vtkErrorMacro(<<"FrameBufferObject should have been deleted in "
       <<"ReleaseGraphicsResources().");
   }
-  if (this->ProjectionColorTexture != 0)
+  if (this->ProjectionColorTexture != nullptr)
   {
     vtkErrorMacro(<<"ColorTexture should have been deleted in "
       <<"ReleaseGraphicsResources().");
   }
-  if (this->ProjectionDepthTexture != 0)
+  if (this->ProjectionDepthTexture != nullptr)
   {
     vtkErrorMacro(<<"DepthTexture should have been deleted in "
       <<"ReleaseGraphicsResources().");
   }
-  if (this->EDLHighFBO != 0)
+  if (this->EDLHighFBO != nullptr)
   {
     vtkErrorMacro(<<"FrameBufferObject should have been deleted in "
       <<"ReleaseGraphicsResources().");
   }
-  if (this->EDLHighShadeTexture != 0)
+  if (this->EDLHighShadeTexture != nullptr)
   {
     vtkErrorMacro(<<"ColorTexture should have been deleted in "
       <<"ReleaseGraphicsResources().");
   }
-  if (this->EDLLowFBO != 0)
+  if (this->EDLLowFBO != nullptr)
   {
     vtkErrorMacro(<<"FrameBufferObject should have been deleted in "
       <<"ReleaseGraphicsResources().");
   }
-  if (this->EDLLowShadeTexture != 0)
+  if (this->EDLLowShadeTexture != nullptr)
   {
     vtkErrorMacro(<<"ColorTexture should have been deleted in "
       <<"ReleaseGraphicsResources().");
   }
-  if (this->EDLLowBlurTexture != 0)
+  if (this->EDLLowBlurTexture != nullptr)
   {
     vtkErrorMacro(<<"ColorTexture should have been deleted in "
       <<"ReleaseGraphicsResources().");
@@ -167,7 +157,7 @@ void vtkEDLShading::PrintSelf(ostream& os, vtkIndent indent)
   this->Superclass::PrintSelf(os, indent);
 
   os << indent << "DelegatePass:";
-  if (this->DelegatePass != 0)
+  if (this->DelegatePass != nullptr)
   {
     this->DelegatePass->PrintSelf(os, indent);
   }
@@ -192,7 +182,7 @@ void vtkEDLShading::EDLInitializeFramebuffers(vtkRenderState &s)
 
   //  PROJECTION FBO and TEXTURES
   //
-  if (this->ProjectionFBO == 0)
+  if (this->ProjectionFBO == nullptr)
   {
     this->ProjectionFBO = vtkOpenGLFramebufferObject::New();
     this->ProjectionFBO->SetContext(renWin);
@@ -201,7 +191,7 @@ void vtkEDLShading::EDLInitializeFramebuffers(vtkRenderState &s)
   this->ProjectionFBO->SaveCurrentBindingsAndBuffers();
   this->ProjectionFBO->Bind();
   // Color texture
-  if (this->ProjectionColorTexture == 0)
+  if (this->ProjectionColorTexture == nullptr)
   {
     this->ProjectionColorTexture = vtkTextureObject::New();
     this->ProjectionColorTexture->SetContext(this->ProjectionFBO->GetContext());
@@ -214,7 +204,7 @@ void vtkEDLShading::EDLInitializeFramebuffers(vtkRenderState &s)
     this->ProjectionColorTexture->Create2D(this->W, this->H, 4, VTK_FLOAT, false);
   }
   // Depth texture
-  if (this->ProjectionDepthTexture == 0)
+  if (this->ProjectionDepthTexture == nullptr)
   {
     this->ProjectionDepthTexture = vtkTextureObject::New();
     this->ProjectionDepthTexture->SetContext(this->ProjectionFBO->GetContext());
@@ -247,14 +237,14 @@ void vtkEDLShading::EDLInitializeFramebuffers(vtkRenderState &s)
 
   //  EDL-RES1 FBO and TEXTURE
   //
-  if (this->EDLHighFBO == 0)
+  if (this->EDLHighFBO == nullptr)
   {
     this->EDLHighFBO = vtkOpenGLFramebufferObject::New();
     this->EDLHighFBO->SetContext(renWin);
   }
   s.SetFrameBuffer(EDLHighFBO);
   // Color texture
-  if (this->EDLHighShadeTexture == 0)
+  if (this->EDLHighShadeTexture == nullptr)
   {
     this->EDLHighShadeTexture = vtkTextureObject::New();
     this->EDLHighShadeTexture->SetContext(this->EDLHighFBO->GetContext());
@@ -276,14 +266,14 @@ void vtkEDLShading::EDLInitializeFramebuffers(vtkRenderState &s)
 
   //  EDL-RES2 FBO and TEXTURE
   //
-  if (this->EDLLowFBO == 0)
+  if (this->EDLLowFBO == nullptr)
   {
     this->EDLLowFBO = vtkOpenGLFramebufferObject::New();
     this->EDLLowFBO->SetContext(renWin);
   }
   s.SetFrameBuffer(EDLLowFBO);
   // Color texture
-  if (this->EDLLowShadeTexture == 0)
+  if (this->EDLLowShadeTexture == nullptr)
   {
     this->EDLLowShadeTexture = vtkTextureObject::New();
     this->EDLLowShadeTexture->SetContext(this->EDLLowFBO->GetContext());
@@ -296,7 +286,7 @@ void vtkEDLShading::EDLInitializeFramebuffers(vtkRenderState &s)
         this->H / EDLLowResFactor, 4, VTK_FLOAT, false);
   }
   // Blur texture
-  if (this->EDLLowBlurTexture == 0)
+  if (this->EDLLowBlurTexture == nullptr)
   {
     this->EDLLowBlurTexture = vtkTextureObject::New();
     this->EDLLowBlurTexture->SetContext(this->EDLLowFBO->GetContext());
@@ -346,7 +336,7 @@ void vtkEDLShading::EDLInitializeShaders(vtkOpenGLRenderWindow *renWin)
 
   //  EDL SHADE
   //
-  if (this->EDLShadeProgram.Program == 0)
+  if (this->EDLShadeProgram.Program == nullptr)
   {
     this->EDLShadeProgram.Program =
       renWin->GetShaderCache()->ReadyShaderProgram(
@@ -357,7 +347,7 @@ void vtkEDLShading::EDLInitializeShaders(vtkOpenGLRenderWindow *renWin)
 
   //  EDL COMPOSE
   //
-  if (this->EDLComposeProgram.Program == 0)
+  if (this->EDLComposeProgram.Program == nullptr)
   {
     this->EDLComposeProgram.Program =
       renWin->GetShaderCache()->ReadyShaderProgram(
@@ -368,7 +358,7 @@ void vtkEDLShading::EDLInitializeShaders(vtkOpenGLRenderWindow *renWin)
 
   //  BILATERAL FILTER
   //
-  if (this->BilateralProgram.Program == 0)
+  if (this->BilateralProgram.Program == nullptr)
   {
     this->BilateralProgram.Program =
       renWin->GetShaderCache()->ReadyShaderProgram(
@@ -606,6 +596,8 @@ bool vtkEDLShading::EDLCompose(const vtkRenderState *,
   // ACTIVATE SHADER
   //
   renWin->GetShaderCache()->ReadyShaderProgram(this->EDLComposeProgram.Program);
+  vtkOpenGLState *ostate = renWin->GetState();
+
   // DEPTH TEXTURE PARAMETERS
   vtkShaderProgram *prog = this->EDLComposeProgram.Program;
 
@@ -631,31 +623,27 @@ bool vtkEDLShading::EDLCompose(const vtkRenderState *,
   this->ProjectionColorTexture->Activate();
   prog->SetUniformi("s2_C", this->ProjectionColorTexture->GetTextureUnit());
 
-  //  initial depth texture
-  this->ProjectionDepthTexture->Activate();
-  prog->SetUniformi("s2_Z", this->ProjectionDepthTexture->GetTextureUnit());
-
   //  DRAW CONTEXT - prepare blitting
   //
   // Prepare blitting
-  glClearColor(1., 1., 1., 1.);
-#if GL_ES_VERSION_3_0 == 1
-  glClearDepthf(static_cast<GLclampf>(1.0));
-#else
-  glClearDepth(static_cast<GLclampf>(1.0));
-#endif
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  ostate->vtkglClearColor(1., 1., 1., 1.);
+  ostate->vtkglClearDepth(1.0);
+  ostate->vtkglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   // IMPORTANT since we enable depth writing hereafter
-  glDisable(GL_BLEND);
-  glEnable(GL_DEPTH_TEST);
+  ostate->vtkglDisable(GL_BLEND);
+  ostate->vtkglEnable(GL_DEPTH_TEST);
   // IMPORTANT : so that depth information is propagated
-  glDisable(GL_SCISSOR_TEST);
+  ostate->vtkglDisable(GL_SCISSOR_TEST);
 
-  this->EDLHighShadeTexture->CopyToFrameBuffer( 0,  0,
-      this->W - 1 - 2 * this->ExtraPixels,
-      this->H - 1 - 2 * this->ExtraPixels, 0, 0,
-      this->Width, this->Height,
-      prog, this->EDLComposeProgram.VAO );
+  int blitSize[2] = { this->W - 1 - 2 * this->ExtraPixels,
+                      this->H - 1 - 2 * this->ExtraPixels };
+
+  this->EDLHighShadeTexture->CopyToFrameBuffer(
+      this->ExtraPixels,  this->ExtraPixels,
+      blitSize[0], blitSize[1],
+      this->Origin[0], this->Origin[1],
+      this->Origin[0] + blitSize[0], this->Origin[1] + blitSize[1],
+      prog, this->EDLComposeProgram.VAO);
 
   //  FREE ALL
   //
@@ -669,7 +657,6 @@ bool vtkEDLShading::EDLCompose(const vtkRenderState *,
   }
   this->EDLHighShadeTexture->Deactivate();
   this->ProjectionColorTexture->Deactivate();
-  this->ProjectionDepthTexture->Deactivate();
 
   return true;
 }
@@ -680,7 +667,7 @@ bool vtkEDLShading::EDLCompose(const vtkRenderState *,
 // \pre s_exists: s!=0
 void vtkEDLShading::Render(const vtkRenderState *s)
 {
-  assert("pre: s_exists" && s!=0);
+  assert("pre: s_exists" && s!=nullptr);
   annotate("Start vtkEDLShading::Render");
 
   this->NumberOfRenderedProps = 0;
@@ -688,7 +675,7 @@ void vtkEDLShading::Render(const vtkRenderState *s)
   vtkOpenGLRenderWindow *renWin =
     vtkOpenGLRenderWindow::SafeDownCast(r->GetRenderWindow());
 
-  if (this->DelegatePass != 0)
+  if (this->DelegatePass != nullptr)
   {
 
     //////////////////////////////////////////////////////
@@ -709,14 +696,16 @@ void vtkEDLShading::Render(const vtkRenderState *s)
     //
     //  FBOs
     //
+    annotate("Start vtkEDLShading Initialization");
     this->EDLInitializeFramebuffers(s2);
     //  Shaders
     //
     this->EDLInitializeShaders(renWin);
+    annotate("End vtkEDLShading Initialization");
 
-    if (this->EDLShadeProgram.Program == 0 ||
-        this->EDLComposeProgram.Program == 0 ||
-        this->BilateralProgram.Program == 0)
+    if (this->EDLShadeProgram.Program == nullptr ||
+        this->EDLComposeProgram.Program == nullptr ||
+        this->BilateralProgram.Program == nullptr)
     {
       return;
     }
@@ -748,10 +737,12 @@ void vtkEDLShading::Render(const vtkRenderState *s)
     // 5. EDL SHADING PASS - FULL RESOLUTION
     //
 #if EDL_HIGH_RESOLUTION_ON
+    annotate("Start vtkEDLShading::ShadeHigh");
     if(! this->EDLShadeHigh(s2,renWin) )
     {
       this->ProjectionFBO->RestorePreviousBindingsAndBuffers();
     }
+    annotate("End vtkEDLShading::ShadeHigh");
 #endif // EDL_HIGH_RESOLUTION_ON
 
     //////////////////////////////////////////////////////
@@ -759,13 +750,17 @@ void vtkEDLShading::Render(const vtkRenderState *s)
     // 6. EDL SHADING PASS - LOW RESOLUTION + blur pass
     //
 #if EDL_LOW_RESOLUTION_ON
+    annotate("Start vtkEDLShading::ShadeLow");
     if(! this->EDLShadeLow(s2, renWin) )
     {
       this->ProjectionFBO->RestorePreviousBindingsAndBuffers();
     }
+    annotate("End vtkEDLShading::ShadeLow");
     if (this->EDLIsFiltered)
     {
+      annotate("Start vtkEDLShading::BlurLow");
       this->EDLBlurLow(s2, renWin);
+      annotate("End vtkEDLShading::BlurLow");
     }
 #endif // EDL_LOW_RESOLUTION_ON
 
@@ -773,16 +768,18 @@ void vtkEDLShading::Render(const vtkRenderState *s)
     //
     // 7. COMPOSITING PASS (in original framebuffer)
     //
-    if(s->GetFrameBuffer() != NULL)
+    if(s->GetFrameBuffer() != nullptr)
     {
       vtkOpenGLFramebufferObject::SafeDownCast(s->GetFrameBuffer())->Bind();
     }
     this->ProjectionFBO->RestorePreviousBindingsAndBuffers();
 
+    annotate("Start vtkEDLShading::Compose");
     if( ! this->EDLCompose(s, renWin))
     {
       return;
     }
+    annotate("End vtkEDLShading::Compose");
   }
   else
   {
@@ -799,7 +796,7 @@ void vtkEDLShading::Render(const vtkRenderState *s)
 // \pre w_exists: w!=0
 void vtkEDLShading::ReleaseGraphicsResources(vtkWindow *w)
 {
-  assert("pre: w_exists" && w!=0);
+  assert("pre: w_exists" && w!=nullptr);
 
   //  SHADERS
   this->EDLShadeProgram.ReleaseGraphicsResources(w);
@@ -808,45 +805,45 @@ void vtkEDLShading::ReleaseGraphicsResources(vtkWindow *w)
 
   // FBOs and TOs
   //
-  if (this->ProjectionFBO != 0)
+  if (this->ProjectionFBO != nullptr)
   {
     this->ProjectionFBO->Delete();
-    this->ProjectionFBO = 0;
+    this->ProjectionFBO = nullptr;
   }
-  if (this->ProjectionColorTexture != 0)
+  if (this->ProjectionColorTexture != nullptr)
   {
     this->ProjectionColorTexture->Delete();
-    this->ProjectionColorTexture = 0;
+    this->ProjectionColorTexture = nullptr;
   }
-  if (this->ProjectionDepthTexture != 0)
+  if (this->ProjectionDepthTexture != nullptr)
   {
     this->ProjectionDepthTexture->Delete();
-    this->ProjectionDepthTexture = 0;
+    this->ProjectionDepthTexture = nullptr;
   }
-  if (this->EDLHighFBO != 0)
+  if (this->EDLHighFBO != nullptr)
   {
     this->EDLHighFBO->Delete();
-    this->EDLHighFBO = 0;
+    this->EDLHighFBO = nullptr;
   }
-  if (this->EDLHighShadeTexture != 0)
+  if (this->EDLHighShadeTexture != nullptr)
   {
     this->EDLHighShadeTexture->Delete();
-    this->EDLHighShadeTexture = 0;
+    this->EDLHighShadeTexture = nullptr;
   }
-  if (this->EDLLowFBO != 0)
+  if (this->EDLLowFBO != nullptr)
   {
     this->EDLLowFBO->Delete();
-    this->EDLLowFBO = 0;
+    this->EDLLowFBO = nullptr;
   }
-  if (this->EDLLowShadeTexture != 0)
+  if (this->EDLLowShadeTexture != nullptr)
   {
     this->EDLLowShadeTexture->Delete();
-    this->EDLLowShadeTexture = 0;
+    this->EDLLowShadeTexture = nullptr;
   }
-  if (this->EDLLowBlurTexture != 0)
+  if (this->EDLLowBlurTexture != nullptr)
   {
     this->EDLLowBlurTexture->Delete();
-    this->EDLLowBlurTexture = 0;
+    this->EDLLowBlurTexture = nullptr;
   }
 
   this->Superclass::ReleaseGraphicsResources(w);

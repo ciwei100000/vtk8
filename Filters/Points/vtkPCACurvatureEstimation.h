@@ -25,7 +25,7 @@
  * introductory reference is Hoppe's "Surface reconstruction from
  * unorganized points."
  *
- * To use this filter, sepcify a neighborhood size. This may have to be set
+ * To use this filter, specify a neighborhood size. This may have to be set
  * via experimentation. Optionally a point locator can be specified (instead
  * of the default locator), which is used to accelerate searches around a
  * sample point. Finally, the user should specify how to generate
@@ -67,7 +67,7 @@ public:
    */
   static vtkPCACurvatureEstimation *New();
   vtkTypeMacro(vtkPCACurvatureEstimation,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -93,19 +93,19 @@ public:
 
 protected:
   vtkPCACurvatureEstimation();
-  ~vtkPCACurvatureEstimation() VTK_OVERRIDE;
+  ~vtkPCACurvatureEstimation() override;
 
   // IVars
   int SampleSize;
   vtkAbstractPointLocator *Locator;
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+    vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
 private:
-  vtkPCACurvatureEstimation(const vtkPCACurvatureEstimation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPCACurvatureEstimation&) VTK_DELETE_FUNCTION;
+  vtkPCACurvatureEstimation(const vtkPCACurvatureEstimation&) = delete;
+  void operator=(const vtkPCACurvatureEstimation&) = delete;
 
 };
 

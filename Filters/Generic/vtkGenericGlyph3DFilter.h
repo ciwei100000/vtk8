@@ -103,7 +103,7 @@ class VTKFILTERSGENERIC_EXPORT vtkGenericGlyph3DFilter : public vtkPolyDataAlgor
 {
 public:
   vtkTypeMacro(vtkGenericGlyph3DFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with scaling on, scaling mode is by scalar value,
@@ -132,9 +132,9 @@ public:
   /**
    * Turn on/off scaling of source geometry.
    */
-  vtkSetMacro(Scaling,int);
-  vtkBooleanMacro(Scaling,int);
-  vtkGetMacro(Scaling,int);
+  vtkSetMacro(Scaling,vtkTypeBool);
+  vtkBooleanMacro(Scaling,vtkTypeBool);
+  vtkGetMacro(Scaling,vtkTypeBool);
   //@}
 
   //@{
@@ -189,9 +189,9 @@ public:
   /**
    * Turn on/off orienting of input geometry along vector/normal.
    */
-  vtkSetMacro(Orient,int);
-  vtkBooleanMacro(Orient,int);
-  vtkGetMacro(Orient,int);
+  vtkSetMacro(Orient,vtkTypeBool);
+  vtkBooleanMacro(Orient,vtkTypeBool);
+  vtkGetMacro(Orient,vtkTypeBool);
   //@}
 
   //@{
@@ -199,9 +199,9 @@ public:
    * Turn on/off clamping of "scalar" values to range. (Scalar value may be
    * vector magnitude if ScaleByVector() is enabled.)
    */
-  vtkSetMacro(Clamping,int);
-  vtkBooleanMacro(Clamping,int);
-  vtkGetMacro(Clamping,int);
+  vtkSetMacro(Clamping,vtkTypeBool);
+  vtkBooleanMacro(Clamping,vtkTypeBool);
+  vtkGetMacro(Clamping,vtkTypeBool);
   //@}
 
   //@{
@@ -238,9 +238,9 @@ public:
    * stored in the output point field data and named "InputPointIds". Point
    * generation is useful for debugging and pick operations.
    */
-  vtkSetMacro(GeneratePointIds,int);
-  vtkGetMacro(GeneratePointIds,int);
-  vtkBooleanMacro(GeneratePointIds,int);
+  vtkSetMacro(GeneratePointIds,vtkTypeBool);
+  vtkGetMacro(GeneratePointIds,vtkTypeBool);
+  vtkBooleanMacro(GeneratePointIds,vtkTypeBool);
   //@}
 
   //@{
@@ -255,7 +255,7 @@ public:
   //@{
   /**
    * If you want to use an arbitrary scalars array, then set its name here.
-   * By default this in NULL and the filter will use the active scalar array.
+   * By default this in nullptr and the filter will use the active scalar array.
    */
   vtkGetStringMacro(InputScalarsSelection);
   void SelectInputScalars(const char *fieldName)
@@ -265,7 +265,7 @@ public:
   //@{
   /**
    * If you want to use an arbitrary vectors array, then set its name here.
-   * By default this in NULL and the filter will use the active vector array.
+   * By default this in nullptr and the filter will use the active vector array.
    */
   vtkGetStringMacro(InputVectorsSelection);
   void SelectInputVectors(const char *fieldName)
@@ -275,7 +275,7 @@ public:
   //@{
   /**
    * If you want to use an arbitrary normals array, then set its name here.
-   * By default this in NULL and the filter will use the active normal array.
+   * By default this in nullptr and the filter will use the active normal array.
    */
   vtkGetStringMacro(InputNormalsSelection);
   void SelectInputNormals(const char *fieldName)
@@ -284,24 +284,24 @@ public:
 
 protected:
   vtkGenericGlyph3DFilter();
-  ~vtkGenericGlyph3DFilter() VTK_OVERRIDE;
+  ~vtkGenericGlyph3DFilter() override;
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   vtkPolyData **Source; // Geometry to copy to each point
-  int Scaling; // Determine whether scaling of geometry is performed
+  vtkTypeBool Scaling; // Determine whether scaling of geometry is performed
   int ScaleMode; // Scale by scalar value or vector magnitude
   int ColorMode; // new scalars based on scale, scalar or vector
   double ScaleFactor; // Scale factor to use to scale geometry
   double Range[2]; // Range to use to perform scalar scaling
-  int Orient; // boolean controls whether to "orient" data
+  vtkTypeBool Orient; // boolean controls whether to "orient" data
   int VectorMode; // Orient/scale via normal or via vector data
-  int Clamping; // whether to clamp scale factor
+  vtkTypeBool Clamping; // whether to clamp scale factor
   int IndexMode; // what to use to index into glyph table
-  int GeneratePointIds; // produce input points ids for each output point
+  vtkTypeBool GeneratePointIds; // produce input points ids for each output point
   char *PointIdsName;
 
   char *InputScalarsSelection;
@@ -312,8 +312,8 @@ protected:
   vtkSetStringMacro(InputNormalsSelection);
 
 private:
-  vtkGenericGlyph3DFilter(const vtkGenericGlyph3DFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGenericGlyph3DFilter&) VTK_DELETE_FUNCTION;
+  vtkGenericGlyph3DFilter(const vtkGenericGlyph3DFilter&) = delete;
+  void operator=(const vtkGenericGlyph3DFilter&) = delete;
 };
 
 //@{

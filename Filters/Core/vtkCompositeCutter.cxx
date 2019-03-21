@@ -82,10 +82,7 @@ vtkCompositeCutter::vtkCompositeCutter(vtkImplicitFunction *cf):vtkCutter(cf)
 }
 
 //----------------------------------------------------------------------------
-vtkCompositeCutter::~vtkCompositeCutter()
-{
-
-}
+vtkCompositeCutter::~vtkCompositeCutter() = default;
 
 int vtkCompositeCutter::FillInputPortInformation(int, vtkInformation *info)
 {
@@ -157,9 +154,9 @@ int vtkCompositeCutter::RequestData(vtkInformation *request,
     assert(data);
     inInfo->Set(vtkDataObject::DATA_OBJECT(),data);
     vtkNew<vtkPolyData> out;
-    outInfo->Set(vtkDataObject::DATA_OBJECT(),out.GetPointer());
+    outInfo->Set(vtkDataObject::DATA_OBJECT(),out);
     this->Superclass::RequestData(request,inputVector,outputVector);
-    append->AddInputData(out.GetPointer());
+    append->AddInputData(out);
     numObjects++;
     itr->GoToNextItem();
   }

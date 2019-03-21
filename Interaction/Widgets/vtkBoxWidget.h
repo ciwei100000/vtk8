@@ -98,18 +98,18 @@ public:
   static vtkBoxWidget *New();
 
   vtkTypeMacro(vtkBoxWidget,vtk3DWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Methods that satisfy the superclass' API.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void PlaceWidget() VTK_OVERRIDE
+  void SetEnabled(int) override;
+  void PlaceWidget(double bounds[6]) override;
+  void PlaceWidget() override
     {this->Superclass::PlaceWidget();}
   void PlaceWidget(double xmin, double xmax, double ymin, double ymax,
-                   double zmin, double zmax) VTK_OVERRIDE
+                   double zmin, double zmax) override
     {this->Superclass::PlaceWidget(xmin,xmax,ymin,ymax,zmin,zmax);}
   //@}
 
@@ -129,9 +129,9 @@ public:
    * box. When on, the normals point into the hexahedron.  InsideOut
    * is off by default.
    */
-  vtkSetMacro(InsideOut,int);
-  vtkGetMacro(InsideOut,int);
-  vtkBooleanMacro(InsideOut,int);
+  vtkSetMacro(InsideOut,vtkTypeBool);
+  vtkGetMacro(InsideOut,vtkTypeBool);
+  vtkBooleanMacro(InsideOut,vtkTypeBool);
   //@}
 
   /**
@@ -139,7 +139,7 @@ public:
    * box. Note that the transformation is relative to where PlaceWidget
    * was initially called. This method modifies the transform provided. The
    * transform can be used to control the position of vtkProp3D's, as well as
-   * other transformation operations (e.g., vtkTranformPolyData).
+   * other transformation operations (e.g., vtkTransformPolyData).
    */
   virtual void GetTransform(vtkTransform *t);
 
@@ -230,20 +230,20 @@ public:
    * Control the behavior of the widget. Translation, rotation, and
    * scaling can all be enabled and disabled.
    */
-  vtkSetMacro(TranslationEnabled,int);
-  vtkGetMacro(TranslationEnabled,int);
-  vtkBooleanMacro(TranslationEnabled,int);
-  vtkSetMacro(ScalingEnabled,int);
-  vtkGetMacro(ScalingEnabled,int);
-  vtkBooleanMacro(ScalingEnabled,int);
-  vtkSetMacro(RotationEnabled,int);
-  vtkGetMacro(RotationEnabled,int);
-  vtkBooleanMacro(RotationEnabled,int);
+  vtkSetMacro(TranslationEnabled,vtkTypeBool);
+  vtkGetMacro(TranslationEnabled,vtkTypeBool);
+  vtkBooleanMacro(TranslationEnabled,vtkTypeBool);
+  vtkSetMacro(ScalingEnabled,vtkTypeBool);
+  vtkGetMacro(ScalingEnabled,vtkTypeBool);
+  vtkBooleanMacro(ScalingEnabled,vtkTypeBool);
+  vtkSetMacro(RotationEnabled,vtkTypeBool);
+  vtkGetMacro(RotationEnabled,vtkTypeBool);
+  vtkBooleanMacro(RotationEnabled,vtkTypeBool);
   //@}
 
 protected:
   vtkBoxWidget();
-  ~vtkBoxWidget() VTK_OVERRIDE;
+  ~vtkBoxWidget() override;
 
   // Manage the state of the widget
   int State;
@@ -291,7 +291,7 @@ protected:
   void HighlightFace(int cellId);
   void HighlightOutline(int highlight);
   void ComputeNormals();
-  void SizeHandles() VTK_OVERRIDE;
+  void SizeHandles() override;
 
   // wireframe outline
   vtkActor          *HexOutline;
@@ -305,7 +305,7 @@ protected:
   int      CurrentHexFace;
 
   // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  void RegisterPickers() override;
 
   // Methods to manipulate the hexahedron.
   virtual void Translate(double *p1, double *p2);
@@ -342,19 +342,19 @@ protected:
   void CreateDefaultProperties();
 
   // Control the orientation of the normals
-  int InsideOut;
+  vtkTypeBool InsideOut;
   int OutlineFaceWires;
   int OutlineCursorWires;
   void GenerateOutline();
 
   // Control whether scaling, rotation, and translation are supported
-  int TranslationEnabled;
-  int ScalingEnabled;
-  int RotationEnabled;
+  vtkTypeBool TranslationEnabled;
+  vtkTypeBool ScalingEnabled;
+  vtkTypeBool RotationEnabled;
 
 private:
-  vtkBoxWidget(const vtkBoxWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoxWidget&) VTK_DELETE_FUNCTION;
+  vtkBoxWidget(const vtkBoxWidget&) = delete;
+  void operator=(const vtkBoxWidget&) = delete;
 };
 
 #endif

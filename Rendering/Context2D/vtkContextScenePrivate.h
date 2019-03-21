@@ -44,7 +44,7 @@ public:
    * Default constructor.
    */
   vtkContextScenePrivate(vtkAbstractContextItem* item)
-    : std::vector<vtkAbstractContextItem*>(), Scene(0), Item(item)
+    : std::vector<vtkAbstractContextItem*>(), Scene(nullptr), Item(item)
   {
   }
 
@@ -63,16 +63,8 @@ public:
   typedef std::vector<vtkAbstractContextItem*>::const_iterator
     const_iterator;
   typedef std::vector<vtkAbstractContextItem*>::iterator iterator;
-  // Older versions of GCC did not implement comparison operators for the
-  // const_reverse_operator, the simplest thing to do is not use the const
-  // form of the operator.
-#ifdef VTK_CONST_REVERSE_ITERATOR_COMPARISON
   typedef std::vector<vtkAbstractContextItem*>::const_reverse_iterator
     const_reverse_iterator;
-#else
-  typedef std::vector<vtkAbstractContextItem*>::reverse_iterator
-    const_reverse_iterator;
-#endif
   typedef std::vector<vtkAbstractContextItem*>::reverse_iterator
     reverse_iterator;
   //@}
@@ -116,8 +108,8 @@ public:
     {
       if (item == *it)
       {
-        item->SetParent(NULL);
-        item->SetScene(NULL);
+        item->SetParent(nullptr);
+        item->SetScene(nullptr);
         (*it)->Delete();
         this->erase(it);
         return true;
@@ -149,8 +141,8 @@ public:
   {
     for(const_iterator it = this->begin(); it != this->end(); ++it)
     {
-      (*it)->SetParent(NULL);
-      (*it)->SetScene(NULL);
+      (*it)->SetParent(nullptr);
+      (*it)->SetScene(nullptr);
       (*it)->Delete();
     }
     this->clear();

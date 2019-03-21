@@ -74,6 +74,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTable.h"
 #include "vtkTextProperty.h"
+#include "vtkTexture.h"
 #include "vtkTexturedActor2D.h"
 #include "vtkTransformCoordinateSystems.h"
 #include "vtkTreeLayoutStrategy.h"
@@ -119,13 +120,13 @@ vtkRenderedGraphRepresentation::vtkRenderedGraphRepresentation()
   this->VertexIconMapper    = vtkSmartPointer<vtkPolyDataMapper2D>::New();
   this->VertexIconActor     = vtkSmartPointer<vtkTexturedActor2D>::New();
 
-  this->VertexHoverArrayName = 0;
-  this->EdgeHoverArrayName = 0;
-  this->VertexColorArrayNameInternal = 0;
-  this->EdgeColorArrayNameInternal = 0;
-  this->ScalingArrayNameInternal = 0;
-  this->LayoutStrategyName = 0;
-  this->EdgeLayoutStrategyName = 0;
+  this->VertexHoverArrayName = nullptr;
+  this->EdgeHoverArrayName = nullptr;
+  this->VertexColorArrayNameInternal = nullptr;
+  this->EdgeColorArrayNameInternal = nullptr;
+  this->ScalingArrayNameInternal = nullptr;
+  this->LayoutStrategyName = nullptr;
+  this->EdgeLayoutStrategyName = nullptr;
 
   this->HideVertexLabelsOnInteraction = false;
   this->HideEdgeLabelsOnInteraction = false;
@@ -237,13 +238,13 @@ vtkRenderedGraphRepresentation::vtkRenderedGraphRepresentation()
 
 vtkRenderedGraphRepresentation::~vtkRenderedGraphRepresentation()
 {
-  this->SetScalingArrayNameInternal(0);
-  this->SetVertexColorArrayNameInternal(0);
-  this->SetEdgeColorArrayNameInternal(0);
-  this->SetLayoutStrategyName(0);
-  this->SetEdgeLayoutStrategyName(0);
-  this->SetVertexHoverArrayName(0);
-  this->SetEdgeHoverArrayName(0);
+  this->SetScalingArrayNameInternal(nullptr);
+  this->SetVertexColorArrayNameInternal(nullptr);
+  this->SetEdgeColorArrayNameInternal(nullptr);
+  this->SetLayoutStrategyName(nullptr);
+  this->SetEdgeLayoutStrategyName(nullptr);
+  this->SetVertexHoverArrayName(nullptr);
+  this->SetEdgeHoverArrayName(nullptr);
 }
 
 void vtkRenderedGraphRepresentation::SetVertexLabelArrayName(const char* name)
@@ -375,13 +376,13 @@ void vtkRenderedGraphRepresentation::SetEdgeIconArrayName(const char*)
 const char* vtkRenderedGraphRepresentation::GetVertexIconArrayName()
 {
   // TODO: Implement.
-  return 0;
+  return nullptr;
 }
 
 const char* vtkRenderedGraphRepresentation::GetEdgeIconArrayName()
 {
   // TODO: Implement.
-  return 0;
+  return nullptr;
 }
 
 void vtkRenderedGraphRepresentation::SetVertexIconPriorityArrayName(const char*)
@@ -397,13 +398,13 @@ void vtkRenderedGraphRepresentation::SetEdgeIconPriorityArrayName(const char*)
 const char* vtkRenderedGraphRepresentation::GetVertexIconPriorityArrayName()
 {
   // TODO: Implement.
-  return 0;
+  return nullptr;
 }
 
 const char* vtkRenderedGraphRepresentation::GetEdgeIconPriorityArrayName()
 {
   // TODO: Implement.
-  return 0;
+  return nullptr;
 }
 
 void vtkRenderedGraphRepresentation::SetVertexIconVisibility(bool b)
@@ -585,7 +586,7 @@ void vtkRenderedGraphRepresentation::SetEnabledVerticesArrayName(const char* nam
 
 const char* vtkRenderedGraphRepresentation::GetEnabledVerticesArrayName()
 {
-  return 0;
+  return nullptr;
 }
 
 void vtkRenderedGraphRepresentation::SetEnableEdgesByArray(bool b)
@@ -605,7 +606,7 @@ void vtkRenderedGraphRepresentation::SetEnabledEdgesArrayName(const char* name)
 
 const char* vtkRenderedGraphRepresentation::GetEnabledEdgesArrayName()
 {
-  return 0;
+  return nullptr;
 }
 
 void vtkRenderedGraphRepresentation::SetGlyphType(int type)
@@ -677,12 +678,12 @@ bool vtkRenderedGraphRepresentation::GetEdgeScalarBarVisibility()
 
 vtkScalarBarWidget* vtkRenderedGraphRepresentation::GetVertexScalarBar()
 {
-  return this->VertexScalarBar.GetPointer();
+  return this->VertexScalarBar;
 }
 
 vtkScalarBarWidget* vtkRenderedGraphRepresentation::GetEdgeScalarBar()
 {
-  return this->EdgeScalarBar.GetPointer();
+  return this->EdgeScalarBar;
 }
 
 bool vtkRenderedGraphRepresentation::IsLayoutComplete()
@@ -703,7 +704,7 @@ void vtkRenderedGraphRepresentation::SetLayoutStrategy(vtkGraphLayoutStrategy* s
 {
   if (!s)
   {
-    vtkErrorMacro("Layout strategy must not be NULL.");
+    vtkErrorMacro("Layout strategy must not be nullptr.");
     return;
   }
   if (vtkRandomLayoutStrategy::SafeDownCast(s))
@@ -891,7 +892,7 @@ void vtkRenderedGraphRepresentation::SetEdgeLayoutStrategy(vtkEdgeLayoutStrategy
 {
   if (!s)
   {
-    vtkErrorMacro("Layout strategy must not be NULL.");
+    vtkErrorMacro("Layout strategy must not be nullptr.");
     return;
   }
   if (vtkArcParallelEdgeStrategy::SafeDownCast(s))
@@ -1003,8 +1004,8 @@ bool vtkRenderedGraphRepresentation::RemoveFromView(vtkView* view)
   vtkRenderView* rv = vtkRenderView::SafeDownCast(view);
   if (rv)
   {
-    this->VertexGlyph->SetRenderer(0);
-    this->OutlineGlyph->SetRenderer(0);
+    this->VertexGlyph->SetRenderer(nullptr);
+    this->OutlineGlyph->SetRenderer(nullptr);
     rv->GetRenderer()->RemoveActor(this->VertexActor);
     rv->GetRenderer()->RemoveActor(this->OutlineActor);
     rv->GetRenderer()->RemoveActor(this->EdgeActor);
@@ -1044,7 +1045,7 @@ void vtkRenderedGraphRepresentation::PrepareForRendering(vtkRenderView* view)
     this->VertexIconGlyph->SetIconSize(view->GetIconSize());
     this->VertexIconGlyph->SetDisplaySize(view->GetDisplaySize());
     this->VertexIconGlyph->SetUseIconSize(false);
-    this->VertexIconActor->GetTexture()->MapColorScalarsThroughLookupTableOff();
+    this->VertexIconActor->GetTexture()->SetColorMode(VTK_COLOR_MODE_DEFAULT);
     this->VertexIconActor->GetTexture()->GetInputAlgorithm()->Update();
     int* dim = this->VertexIconActor->GetTexture()->GetInput()->GetDimensions();
     this->VertexIconGlyph->SetIconSheetSize(dim);
@@ -1124,7 +1125,7 @@ vtkSelection* vtkRenderedGraphRepresentation::ConvertSelection(
     vtkSmartPointer<vtkTable> temp =
       vtkSmartPointer<vtkTable>::New();
     temp->SetRowData(vtkPolyData::SafeDownCast(poly)->GetCellData());
-    vtkSelection* polyConverted = 0;
+    vtkSelection* polyConverted = nullptr;
     if (poly->GetCellData()->GetPedigreeIds())
     {
       polyConverted = vtkConvertSelection::ToSelectionType(
@@ -1208,7 +1209,7 @@ vtkSelection* vtkRenderedGraphRepresentation::ConvertSelection(
     edgeSel->AddNode(edgeNode);
     vtkPolyData* poly = vtkPolyData::SafeDownCast(
       this->GraphToPoly->GetOutput());
-    vtkSelection* polyConverted = 0;
+    vtkSelection* polyConverted = nullptr;
     if (poly->GetCellData()->GetPedigreeIds())
     {
       polyConverted = vtkConvertSelection::ToSelectionType(
@@ -1330,7 +1331,7 @@ void vtkRenderedGraphRepresentation::ComputeSelectedGraphBounds(double bounds[6]
   for( unsigned int m = 0; m < converted->GetNumberOfNodes(); ++m)
   {
     vtkSelectionNode* node = converted->GetNode(m);
-    vtkIdTypeArray* list = 0;
+    vtkIdTypeArray* list = nullptr;
     if (node->GetFieldType() == vtkSelectionNode::VERTEX)
     {
       list = vertexList;

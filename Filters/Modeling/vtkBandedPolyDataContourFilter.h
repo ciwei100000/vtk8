@@ -60,7 +60,7 @@ class VTKFILTERSMODELING_EXPORT vtkBandedPolyDataContourFilter : public vtkPolyD
 {
 public:
   vtkTypeMacro(vtkBandedPolyDataContourFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with no contours defined.
@@ -91,9 +91,9 @@ public:
    * Clipping means all cells outside of the range specified are not
    * sent to the output.
    */
-  vtkSetMacro(Clipping,int);
-  vtkGetMacro(Clipping,int);
-  vtkBooleanMacro(Clipping,int);
+  vtkSetMacro(Clipping,vtkTypeBool);
+  vtkGetMacro(Clipping,vtkTypeBool);
+  vtkBooleanMacro(Clipping,vtkTypeBool);
   //@}
 
   //@{
@@ -118,9 +118,9 @@ public:
    * generated from polygons/triangle strips and placed into the second
    * output (the ContourEdgesOutput).
    */
-  vtkSetMacro(GenerateContourEdges,int);
-  vtkGetMacro(GenerateContourEdges,int);
-  vtkBooleanMacro(GenerateContourEdges,int);
+  vtkSetMacro(GenerateContourEdges,vtkTypeBool);
+  vtkGetMacro(GenerateContourEdges,vtkTypeBool);
+  vtkBooleanMacro(GenerateContourEdges,vtkTypeBool);
   //@}
 
   //@{
@@ -153,13 +153,13 @@ public:
    * Overload GetMTime because we delegate to vtkContourValues so its
    * modified time must be taken into account.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkBandedPolyDataContourFilter();
-  ~vtkBandedPolyDataContourFilter() VTK_OVERRIDE;
+  ~vtkBandedPolyDataContourFilter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   int ComputeScalarIndex(double);
   int IsContourValue(double val);
@@ -175,7 +175,7 @@ protected:
   // data members
   vtkContourValues *ContourValues;
 
-  int Clipping;
+  vtkTypeBool Clipping;
   int ScalarMode;
   int Component;
 
@@ -187,11 +187,11 @@ protected:
   double InternalClipTolerance; //used to clean up numerical problems
 
   //the second output
-  int GenerateContourEdges;
+  vtkTypeBool GenerateContourEdges;
 
 private:
-  vtkBandedPolyDataContourFilter(const vtkBandedPolyDataContourFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBandedPolyDataContourFilter&) VTK_DELETE_FUNCTION;
+  vtkBandedPolyDataContourFilter(const vtkBandedPolyDataContourFilter&) = delete;
+  void operator=(const vtkBandedPolyDataContourFilter&) = delete;
 };
 
 /**

@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    TestTecPlotReader.cxx
+  Module:    TestOBJReaderRelative.cxx
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -12,7 +12,7 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// .NAME Test of vtkTecplotReader
+// .NAME Test of vtkOBJReader
 // .SECTION Description
 //
 
@@ -83,7 +83,7 @@ int TestOBJReaderRelative( int argc, char *argv[] )
   }
 
 #define CHECK_ARRAY_EXISTS(array)          \
-  if (!array)                              \
+  if (!(array))                            \
   {                                        \
   cerr << "Array does not exist." << endl; \
   retVal = 1;                              \

@@ -44,7 +44,7 @@ vtkImageToPolyDataFilter::vtkImageToPolyDataFilter()
   this->SubImageSize = 250;
 
   this->Table = vtkUnsignedCharArray::New();
-  this->LookupTable = NULL;
+  this->LookupTable = nullptr;
 }
 
 vtkImageToPolyDataFilter::~vtkImageToPolyDataFilter()
@@ -91,7 +91,7 @@ int vtkImageToPolyDataFilter::RequestData(
   // Check input and initialize
   vtkDebugMacro(<<"Vectorizing image...");
 
-  if ( inScalars == NULL || numPixels < 1 )
+  if ( inScalars == nullptr || numPixels < 1 )
   {
     vtkDebugMacro(<<"Not enough input to create output");
     return 1;
@@ -475,7 +475,7 @@ vtkUnsignedCharArray *vtkImageToPolyDataFilter::QuantizeImage(
     if ( type != VTK_UNSIGNED_CHAR || numComp != 3 )
     {
       vtkErrorMacro(<<"Wrong input scalar type");
-      return 0;
+      return nullptr;
     }
     else
     {
@@ -507,10 +507,10 @@ vtkUnsignedCharArray *vtkImageToPolyDataFilter::QuantizeImage(
 
   else //using provided lookup table
   {
-    if ( numComp != 1 || this->LookupTable == NULL )
+    if ( numComp != 1 || this->LookupTable == nullptr )
     {
       vtkErrorMacro(<<"LUT mode requires single component scalar and LUT");
-      return 0;
+      return nullptr;
     }
 
     double s;
@@ -780,7 +780,7 @@ int vtkImageToPolyDataFilter::ProcessImage(vtkUnsignedCharArray *scalars,
         wave = wave2;
         wave2 = tmpWave;
         wave2->Reset();
-      }//while still propogating
+      }//while still propagating
     }//if not, start wave
   }//for all pixels
 
@@ -798,7 +798,7 @@ void vtkImageToPolyDataFilter::GeneratePolygons(vtkPolyData *edges,
 {
   vtkCellArray *newPolys, *inPolys;
   int i, numPts;
-  vtkIdType *pts = 0;
+  vtkIdType *pts = nullptr;
   vtkIdType npts = 0;
 
   // Copy the points via reference counting
@@ -872,7 +872,7 @@ int vtkImageToPolyDataFilter::BuildEdges(vtkUnsignedCharArray *vtkNotUsed(pixels
   pointDescr->InsertValue(1, 1);
 
   x[0] = origin[0] + (dims[0]-1)*spacing[0];
-  x[1] = origin[1] + (dims[1]-1)*spacing[1];;
+  x[1] = origin[1] + (dims[1]-1)*spacing[1];
   x[2] = 0.0;
   points->InsertPoint(2, x);
   pointDescr->InsertValue(2, 1);

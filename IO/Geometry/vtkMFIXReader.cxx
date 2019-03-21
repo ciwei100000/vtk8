@@ -43,7 +43,7 @@ vtkStandardNewMacro(vtkMFIXReader);
 //----------------------------------------------------------------------------
 vtkMFIXReader::vtkMFIXReader()
 {
-  this->FileName = NULL;
+  this->FileName = nullptr;
   this->NumberOfCells = 0;
   this->NumberOfPoints = 0;
   this->NumberOfCellFields = 0;
@@ -52,7 +52,7 @@ vtkMFIXReader::vtkMFIXReader()
   this->Minimum = vtkFloatArray::New();
   this->Maximum = vtkFloatArray::New();
   this->VectorLength = vtkIntArray::New();
-  this->CellDataArray = NULL;
+  this->CellDataArray = nullptr;
   this->DimensionIc = 5;
   this->DimensionBc = 5;
   this->DimensionC = 5;
@@ -104,7 +104,7 @@ vtkMFIXReader::vtkMFIXReader()
   this->TimeStepRange[0] = 0;
   this->TimeStepRange[1] = 0;
   this->NumberOfTimeSteps = 1;
-  this->TimeSteps = 0;
+  this->TimeSteps = nullptr;
   this->CurrentTimeStep = 0;
   this->TimeStepWasReadOnce = 0;
 }
@@ -745,7 +745,8 @@ void vtkMFIXReader::GetCellDataRange(int cellComp, float *min, float *max)
 void vtkMFIXReader::SetProjectName (const char *infile)
 {
   int len = static_cast<int>(strlen(infile));
-  strncpy(this->RunName, infile, len-4);
+  strncpy(this->RunName, infile, sizeof(this->RunName));
+  this->RunName[len-4] = '\0';
 }
 
 //----------------------------------------------------------------------------
@@ -1400,7 +1401,7 @@ void vtkMFIXReader::ReadRestartFile()
   this->Flag->Resize(this->IJKMaximum2);
   this->GetBlockOfInts(in, this->Flag,this->IJKMaximum2);
 
-  // DimensionIs varibles (not needed by ani_mfix)
+  // DimensionIs variables (not needed by ani_mfix)
   this->TempI->Resize(this->DimensionIs);
   this->TempD->Resize(this->DimensionIs);
 
@@ -1612,7 +1613,12 @@ void vtkMFIXReader::CreateVariableNames()
     {
       fileName[k]=0;
     }
-    strncpy(fileName, this->FileName, strlen(this->FileName)-4);
+    strncpy(fileName, this->FileName, sizeof(fileName)-1);
+    size_t fileNameLength = strlen(fileName);
+    if (fileNameLength >= 4)
+    {
+      fileName[fileNameLength-4] = '\0';
+    }
 
     if (i==0)
     {
@@ -1928,7 +1934,12 @@ void vtkMFIXReader::GetTimeSteps()
     {
       fileName[k]=0;
     }
-    strncpy(fileName, this->FileName, strlen(this->FileName)-4);
+    strncpy(fileName, this->FileName, sizeof(fileName)-1);
+    size_t fileNameLength = strlen(fileName);
+    if (fileNameLength >= 4)
+    {
+      fileName[fileNameLength-4] = '\0';
+    }
     if (i==0)
     {
       strcat(fileName, ".SP1");
@@ -2108,7 +2119,7 @@ void vtkMFIXReader::GetVariableAtTimestep(int vari , int tstep,
   // This routine opens and closes the file for each request.
   // Maybe keep all SPX files open, and just perform relative
   // moves to get to the correct location in the file
-  // get filename that vaiable # vari is located in
+  // get filename that variable # vari is located in
   // assumptions : there are <10 solid phases,
   // <10 scalars and <10 ReactionRates (need to change this)
 
@@ -2122,7 +2133,12 @@ void vtkMFIXReader::GetVariableAtTimestep(int vari , int tstep,
     fileName[k]=0;
   }
 
-  strncpy(fileName, this->FileName, strlen(this->FileName)-4);
+  strncpy(fileName, this->FileName, sizeof(fileName)-1);
+  size_t fileNameLength = strlen(fileName);
+  if (fileNameLength >= 4)
+  {
+    fileName[fileNameLength-4] = '\0';
+  }
 
   if (spx==1)
   {
@@ -2316,7 +2332,13 @@ void vtkMFIXReader::GetAllTimes(vtkInformationVector *outputVector)
   {
     fileName[k]=0;
   }
-  strncpy(fileName, this->FileName, strlen(this->FileName)-4);
+
+  strncpy(fileName, this->FileName, sizeof(fileName)-1);
+  size_t fileNameLength = strlen(fileName);
+  if (fileNameLength >= 4)
+  {
+    fileName[fileNameLength-4] = '\0';
+  }
 
   if (maxVar==0)
   {

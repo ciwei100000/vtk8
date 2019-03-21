@@ -47,7 +47,8 @@ vtkCxxSetObjectMacro(vtkGeoView, Terrain, vtkGeoTerrain);
 //----------------------------------------------------------------------------
 vtkGeoView::vtkGeoView()
 {
-  this->Terrain = 0;
+  VTK_LEGACY_BODY(vtkGeoView::vtkGeoView, "VTK 8.2");
+  this->Terrain = nullptr;
 
   // Replace the interactor style
   vtkGeoInteractorStyle* style = vtkGeoInteractorStyle::New();
@@ -77,7 +78,7 @@ vtkGeoView::vtkGeoView()
 //  this->LowResEarthMapper->SetResolveCoincidentTopologyPolygonOffsetParameters(1.0, 1000.0);
 
   this->LowResEarthActor        = vtkActor::New();
-  this->LowResEarthSource       = NULL; // BuildLowResEarth tests if the source is null.
+  this->LowResEarthSource       = nullptr; // BuildLowResEarth tests if the source is null.
   this->BuildLowResEarth( cam->GetOrigin() ); // call once the mapper is set!
   this->LowResEarthActor->SetMapper(this->LowResEarthMapper);
   this->Renderer->AddActor(this->LowResEarthActor);
@@ -102,7 +103,7 @@ vtkGeoView::~vtkGeoView()
   this->LowResEarthMapper->Delete();
   this->LowResEarthActor->Delete();
   this->Assembly->Delete();
-  this->SetTerrain(0);
+  this->SetTerrain(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -290,4 +291,3 @@ void vtkGeoView::PrintSelf(ostream& os, vtkIndent indent)
     this->Terrain->PrintSelf(os, indent.GetNextIndent());
   }
 }
-

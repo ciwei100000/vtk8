@@ -61,13 +61,13 @@ class VTKCOMMONDATAMODEL_EXPORT vtkImplicitFunction : public vtkObject
 {
 public:
   vtkTypeMacro(vtkImplicitFunction,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Overload standard modified time function. If Transform is modified,
    * then this object is modified as well.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -86,10 +86,10 @@ public:
    * x[3] is transformed through transform (if provided).
    */
   void FunctionGradient(const double x[3], double g[3]);
-  double *FunctionGradient(const double x[3]) {
+  double *FunctionGradient(const double x[3]) VTK_SIZEHINT(3) {
     this->FunctionGradient(x,this->ReturnValue);
     return this->ReturnValue; };
-  double *FunctionGradient(double x, double y, double z) {
+  double *FunctionGradient(double x, double y, double z) VTK_SIZEHINT(3) {
     double xyz[3] = {x, y, z}; return this->FunctionGradient(xyz); };
   //@}
 
@@ -126,13 +126,13 @@ public:
 
 protected:
   vtkImplicitFunction();
-  ~vtkImplicitFunction() VTK_OVERRIDE;
+  ~vtkImplicitFunction() override;
 
   vtkAbstractTransform *Transform;
   double ReturnValue[3];
 private:
-  vtkImplicitFunction(const vtkImplicitFunction&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImplicitFunction&) VTK_DELETE_FUNCTION;
+  vtkImplicitFunction(const vtkImplicitFunction&) = delete;
+  void operator=(const vtkImplicitFunction&) = delete;
 };
 
 #endif

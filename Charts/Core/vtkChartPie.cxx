@@ -33,9 +33,7 @@
 class vtkChartPiePrivate
 {
   public:
-    vtkChartPiePrivate()
-    {
-    }
+    vtkChartPiePrivate() = default;
 
   vtkSmartPointer<vtkPlotPie> Plot;
 };
@@ -159,7 +157,7 @@ vtkPlot* vtkChartPie::GetPlot(vtkIdType index)
     return this->Private->Plot;
   }
 
-  return 0;
+  return nullptr;
 }
 
 //-----------------------------------------------------------------------------

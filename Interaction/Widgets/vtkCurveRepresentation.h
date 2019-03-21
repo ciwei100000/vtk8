@@ -50,7 +50,7 @@ class VTKINTERACTIONWIDGETS_EXPORT vtkCurveRepresentation : public vtkWidgetRepr
 {
 public:
   vtkTypeMacro(vtkCurveRepresentation, vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   // Used to manage the InteractionState of the widget
   enum _InteractionState {
@@ -61,7 +61,8 @@ public:
     Scaling,
     Spinning,
     Inserting,
-    Erasing
+    Erasing,
+    Pushing
   };
 
   //@{
@@ -81,9 +82,9 @@ public:
    * 3 for arbitrary oblique planes when the widget is tied to a
    * vtkPlaneSource.
    */
-  vtkSetMacro(ProjectToPlane,int);
-  vtkGetMacro(ProjectToPlane,int);
-  vtkBooleanMacro(ProjectToPlane,int);
+  vtkSetMacro(ProjectToPlane,vtkTypeBool);
+  vtkGetMacro(ProjectToPlane,vtkTypeBool);
+  vtkBooleanMacro(ProjectToPlane,vtkTypeBool);
   //@}
 
   /**
@@ -109,7 +110,7 @@ public:
    * position. i.e., if ProjectionNormal is 0, all of the x-coordinate
    * values of the points are set to position. Any value can be passed (and is
    * ignored) to update the poly line points when Projection normal is set to 3
-   * for arbritrary plane orientations.
+   * for arbitrary plane orientations.
    */
   void SetProjectionPosition(double position);
   vtkGetMacro(ProjectionPosition, double);
@@ -168,9 +169,9 @@ public:
    * continuous loop: the first and last points are the same.  A
    * minimum of 3 handles are required to form a closed loop.
    */
-  void SetClosed(int closed);
-  vtkGetMacro(Closed,int);
-  vtkBooleanMacro(Closed,int);
+  void SetClosed(vtkTypeBool closed);
+  vtkGetMacro(Closed,vtkTypeBool);
+  vtkBooleanMacro(Closed,vtkTypeBool);
   //@}
 
   /**
@@ -178,7 +179,7 @@ public:
    * closed in a geometric sense.  The widget may be set "closed" but still
    * be geometrically open (e.g., a straight line).
    */
-  int IsClosed();
+  vtkTypeBool IsClosed();
 
   /**
    * Get the approximate vs. the true arc length of the curve. Calculated as
@@ -201,23 +202,23 @@ public:
    * API. Note that a version of place widget is available where the
    * center and handle position are specified.
    */
-  void BuildRepresentation() VTK_OVERRIDE = 0;
-  int ComputeInteractionState(int X, int Y, int modify=0) VTK_OVERRIDE;
-  void StartWidgetInteraction(double e[2]) VTK_OVERRIDE;
-  void WidgetInteraction(double e[2]) VTK_OVERRIDE;
-  void EndWidgetInteraction(double e[2]) VTK_OVERRIDE;
-  double *GetBounds() VTK_OVERRIDE;
+  void BuildRepresentation() override = 0;
+  int ComputeInteractionState(int X, int Y, int modify=0) override;
+  void StartWidgetInteraction(double e[2]) override;
+  void WidgetInteraction(double e[2]) override;
+  void EndWidgetInteraction(double e[2]) override;
+  double *GetBounds() override;
   //@}
 
   //@{
   /**
    * Methods supporting, and required by, the rendering process.
    */
-  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderOverlay(vtkViewport*) VTK_OVERRIDE;
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow*) override;
+  int RenderOpaqueGeometry(vtkViewport*) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport*) override;
+  int RenderOverlay(vtkViewport*) override;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
   //@}
 
   /**
@@ -226,9 +227,14 @@ public:
    */
   void SetLineColor(double r, double g, double b);
 
+  /*
+  * Register internal Pickers within PickingManager
+  */
+  void RegisterPickers() override;
+
 protected:
   vtkCurveRepresentation();
-  ~vtkCurveRepresentation() VTK_OVERRIDE;
+  ~vtkCurveRepresentation() override;
 
   double LastEventPosition[3];
   double Bounds[6];
@@ -236,7 +242,7 @@ protected:
   // Controlling vars
   int             ProjectionNormal;
   double          ProjectionPosition;
-  int             ProjectToPlane;
+  vtkTypeBool             ProjectToPlane;
   vtkPlaneSource* PlaneSource;
 
   // Projection capabilities
@@ -245,7 +251,7 @@ protected:
   void ProjectPointsToObliquePlane();
 
   int NumberOfHandles;
-  int Closed;
+  vtkTypeBool Closed;
 
   // The line segments
   vtkActor           *LineActor;
@@ -258,6 +264,7 @@ protected:
   int  HighlightHandle(vtkProp *prop); //returns handle index or -1 on fail
   virtual void SizeHandles();
   virtual void InsertHandleOnLine(double* pos) = 0;
+  virtual void PushHandle(double* pos);
   void EraseHandle(const int&);
 
   // Do the picking
@@ -266,9 +273,7 @@ protected:
   double LastPickPosition[3];
   vtkActor *CurrentHandle;
   int CurrentHandleIndex;
-
-  // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  bool FirstSelected;
 
   // Methods to manipulate the curve.
   void MovePoint(double *p1, double *p2);
@@ -292,8 +297,8 @@ protected:
   void CalculateCentroid();
 
 private:
-  vtkCurveRepresentation(const vtkCurveRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCurveRepresentation&) VTK_DELETE_FUNCTION;
+  vtkCurveRepresentation(const vtkCurveRepresentation&) = delete;
+  void operator=(const vtkCurveRepresentation&) = delete;
 
 };
 

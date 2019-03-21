@@ -50,14 +50,14 @@ bool vtkContext3D::Begin(vtkContextDevice3D *device)
 
 vtkContextDevice3D * vtkContext3D::GetDevice()
 {
-  return this->Device.GetPointer();
+  return this->Device;
 }
 
 bool vtkContext3D::End()
 {
   if (this->Device)
   {
-    this->Device = NULL;
+    this->Device = nullptr;
   }
   return true;
 }
@@ -128,7 +128,7 @@ vtkTransform * vtkContext3D::GetTransform()
     this->Device->GetMatrix(this->Transform->GetMatrix());
     return this->Transform;
   }
-  return NULL;
+  return nullptr;
 }
 
 void vtkContext3D::AppendTransform(vtkTransform *transform)
@@ -161,10 +161,6 @@ void vtkContext3D::DisableClippingPlane(int i)
   this->Device->DisableClippingPlane(i);
 }
 
-vtkContext3D::vtkContext3D()
-{
-}
+vtkContext3D::vtkContext3D() = default;
 
-vtkContext3D::~vtkContext3D()
-{
-}
+vtkContext3D::~vtkContext3D() = default;

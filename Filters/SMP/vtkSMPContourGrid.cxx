@@ -53,9 +53,7 @@ vtkSMPContourGrid::vtkSMPContourGrid()
 }
 
 //-----------------------------------------------------------------------------
-vtkSMPContourGrid::~vtkSMPContourGrid()
-{
-}
+vtkSMPContourGrid::~vtkSMPContourGrid() = default;
 
 //-----------------------------------------------------------------------------
 // This is to support parallel processing and potential polydata merging.
@@ -70,7 +68,7 @@ struct vtkLocalDataType
   vtkIdList* LineOffsets;
   vtkIdList* PolyOffsets;
 
-  vtkLocalDataType() : Output(0)
+  vtkLocalDataType() : Output(nullptr)
   {
   }
 };
@@ -277,9 +275,9 @@ public:
       // to invoking contour.
       for ( cellid=begin; cellid < end; cellid++)
       {
-        this->Input->GetCellPoints(cellid, pids.GetPointer());
+        this->Input->GetCellPoints(cellid, pids);
         cs->SetNumberOfTuples(pids->GetNumberOfIds());
-        this->InScalars->GetTuples(pids.GetPointer(), cs);
+        this->InScalars->GetTuples(pids, cs);
         int numCellScalars = cs->GetNumberOfComponents() *
           cs->GetNumberOfTuples();
         T* cellScalarPtr = static_cast<T*>(cs->GetVoidPointer(0));
@@ -370,9 +368,9 @@ public:
         for (vtkIdType idx=0; idx < numCells; ++idx)
         {
           cellid = cellIds[idx];
-          this->Input->GetCellPoints(cellid, pids.GetPointer());
+          this->Input->GetCellPoints(cellid, pids);
           cs->SetNumberOfTuples(pids->GetNumberOfIds());
-          this->InScalars->GetTuples(pids.GetPointer(), cs);
+          this->InScalars->GetTuples(pids, cs);
 
           //Okay let's grab the cell and contour it
           numCellsContoured++;
@@ -431,17 +429,17 @@ public:
 
       if (output->GetVerts()->GetNumberOfCells() == 0)
       {
-        output->SetVerts(0);
+        output->SetVerts(nullptr);
       }
 
       if (output->GetLines()->GetNumberOfCells() == 0)
       {
-        output->SetLines(0);
+        output->SetLines(nullptr);
       }
 
       if (output->GetPolys()->GetNumberOfCells() == 0)
       {
-        output->SetPolys(0);
+        output->SetPolys(nullptr);
       }
 
       output->Squeeze();
@@ -456,7 +454,7 @@ public:
     // dataset.
     if (output)
     {
-      output->SetBlock(0, mp.GetPointer());
+      output->SetBlock(0, mp);
     }
   }
 };
@@ -591,7 +589,7 @@ int vtkSMPContourGrid::RequestData(
   int useScalarTree = this->GetUseScalarTree();
   if ( useScalarTree )
   {
-    if ( this->ScalarTree == NULL )
+    if ( this->ScalarTree == nullptr )
     {
       this->ScalarTree = vtkSpanSpace::New();
     }

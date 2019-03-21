@@ -6,12 +6,11 @@
 #
 # Your package can require certain interfaces to be FOUND by setting these
 #
-#  NETCDF_CXX         - require the C++ interface and link the C++ library
 #  NETCDF_F77         - require the F77 interface and link the fortran library
 #  NETCDF_F90         - require the F90 interface and link the fortran library
 #
 # Or equivalently by calling FindNetCDF with a COMPONENTS argument containing one or
-# more of "CXX;F77;F90".
+# more of "F77;F90".
 #
 # When interfaces are requested the user has access to interface specific hints:
 #
@@ -44,12 +43,13 @@ if(NETCDF_USE_DEFAULT_PATHS)
 endif()
 
 find_path (NETCDF_INCLUDE_DIR netcdf.h
-  HINTS "${NETCDF_DIR}/include")
+  PATHS "${NETCDF_DIR}/include")
 mark_as_advanced (NETCDF_INCLUDE_DIR)
 set (NETCDF_C_INCLUDE_DIRS ${NETCDF_INCLUDE_DIR})
 
 find_library (NETCDF_LIBRARY NAMES netcdf
-  HINTS "${NETCDF_DIR}/lib")
+  PATHS "${NETCDF_DIR}/lib"
+  HINTS "${NETCDF_INCLUDE_DIR}/../lib")
 mark_as_advanced (NETCDF_LIBRARY)
 
 set (NETCDF_C_LIBRARIES ${NETCDF_LIBRARY})
@@ -90,10 +90,6 @@ macro (NetCDF_check_interface lang header libs)
   endif ()
 endmacro ()
 
-list (FIND NetCDF_FIND_COMPONENTS "CXX" _nextcomp)
-if (_nextcomp GREATER -1)
-  set (NETCDF_CXX 1)
-endif ()
 list (FIND NetCDF_FIND_COMPONENTS "F77" _nextcomp)
 if (_nextcomp GREATER -1)
   set (NETCDF_F77 1)
@@ -102,7 +98,6 @@ list (FIND NetCDF_FIND_COMPONENTS "F90" _nextcomp)
 if (_nextcomp GREATER -1)
   set (NETCDF_F90 1)
 endif ()
-NetCDF_check_interface (CXX netcdfcpp.h netcdf_c++)
 NetCDF_check_interface (F77 netcdf.inc  netcdff)
 NetCDF_check_interface (F90 netcdf.mod  netcdff)
 

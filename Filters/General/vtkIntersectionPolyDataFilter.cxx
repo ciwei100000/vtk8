@@ -115,9 +115,9 @@ protected:
 
   //Get individual polygon loop of splitting cell
   int GetSingleLoop(vtkPolyData *pd,simPolygon *loop, vtkIdType nextCell,
-                    bool *interPtBool, bool *lineBool);
+                    std::vector<bool> &interPtBool, std::vector<bool> &lineBool);
 
-  //Follow a loop orienation to iterate around a split polygon
+  //Follow a loop orientation to iterate around a split polygon
   int FollowLoopOrientation(vtkPolyData *pd, simPolygon *loop,
                             vtkIdType *nextCell,
                             vtkIdType nextPt, vtkIdType prevPt,
@@ -128,7 +128,7 @@ protected:
                           vtkIdType *nextCell, vtkIdType nextPt,
                           vtkIdType prevPt, vtkIdList *pointCells);
 
-  //Get the loop orienation is already given
+  //Get the loop orientation is already given
   int GetLoopOrientation(vtkPolyData *pd, vtkIdType cell, vtkIdType ptId1,
                          vtkIdType ptId2);
 
@@ -161,7 +161,7 @@ public:
 
   // Map from points to the cells that contain them. Used for point
   // data interpolation. For points on the edge between two cells, it
-  // does not matter which cell is recorded bcause the interpolation
+  // does not matter which cell is recorded because the interpolation
   // will be the same.  One array for each output surface.
   vtkIdTypeArray      *PointCellIds[2];
   vtkIntArray         *BoundaryPoints[2];
@@ -184,24 +184,25 @@ public:
   vtkPolyData *SplittingPD;
   int         TransformSign;
   double      Tolerance;
+  double      RelativeSubtriangleArea;
 
   // Pointer to overarching filter
   vtkIntersectionPolyDataFilter *ParentFilter;
 
 protected:
-  Impl(const Impl&) VTK_DELETE_FUNCTION;
-  void operator=(const Impl&) VTK_DELETE_FUNCTION;
+  Impl(const Impl&) = delete;
+  void operator=(const Impl&) = delete;
 
 };
 
 //----------------------------------------------------------------------------
 vtkIntersectionPolyDataFilter::Impl::Impl() :
-  OBBTree1(0), IntersectionLines(0), SurfaceId(0), PointMerger(0)
+  OBBTree1(nullptr), IntersectionLines(nullptr), SurfaceId(nullptr), PointMerger(nullptr)
 {
   for (int i = 0; i < 2; i++)
   {
-    this->Mesh[i]                 = NULL;
-    this->CellIds[i]              = NULL;
+    this->Mesh[i]                 = nullptr;
+    this->CellIds[i]              = nullptr;
     this->IntersectionMap[i]      = new IntersectionMapType();
     this->IntersectionPtsMap[i]   = new IntersectionMapType();
     this->PointEdgeMap[i]         = new PointEdgeMapType();
@@ -210,6 +211,7 @@ vtkIntersectionPolyDataFilter::Impl::Impl() :
   this->SplittingPD               = vtkPolyData::New();
   this->TransformSign = 0;
   this->Tolerance = 1e-6;
+  this->RelativeSubtriangleArea = 1e-4;
 }
 
 //----------------------------------------------------------------------------
@@ -362,7 +364,7 @@ int vtkIntersectionPolyDataFilter::Impl
 
               //Check to see if duplicate line. Line can only be a duplicate
               //line if both points are not unique and they don't
-              //equal eachother
+              //equal each other
               if (!unique[0] && !unique[1] && ptId0 != ptId1)
               {
                 vtkSmartPointer<vtkPolyData> lineTest =
@@ -569,7 +571,7 @@ int vtkIntersectionPolyDataFilter::Impl
     vtkSmartPointer< vtkIdList > edgeNeighbors =
       vtkSmartPointer< vtkIdList >::New();
     vtkIdType nptsX = 0;
-    vtkIdType *pts = 0;
+    vtkIdType *pts = nullptr;
     vtkSmartPointer< vtkIdList > cellsToCheck =
       vtkSmartPointer< vtkIdList >::New();
     for (cells->InitTraversal(); cells->GetNextCell(nptsX, pts); cellIdX++)
@@ -625,7 +627,7 @@ int vtkIntersectionPolyDataFilter::Impl
         vtkCellArray *splitCells = this->SplitCell
           (input, cellIdX, pts, intersectionMap, splitLines,
            inputIndex,numCurrCells);
-        if (splitCells == NULL)
+        if (splitCells == nullptr)
         {
           vtkDebugWithObjectMacro(this->ParentFilter, <<"Error in splitting cell!");
           return 0;
@@ -1060,7 +1062,7 @@ vtkCellArray* vtkIntersectionPolyDataFilter::Impl
     if (this->GetLoops(transformedpd, &loops) != 1)
     {
       splitCells->Delete();
-      splitCells = NULL;
+      splitCells = nullptr;
       delete [] interPtBool;
       return splitCells;
     }
@@ -1105,62 +1107,84 @@ vtkCellArray* vtkIntersectionPolyDataFilter::Impl
         vtkSmartPointer<vtkPolygon>::New();
       this->Orient(newpd, transform, boundary, boundaryPoly);
 
-      //Triangulate with delaunay2D
+      boundaryPoly->GetPoints()->DeepCopy(boundary->GetPoints());
+
+      vtkSmartPointer<vtkIdList> idList = vtkSmartPointer<vtkIdList>::New();
+      int success =
+        boundaryPoly->BoundedTriangulate(idList, this->RelativeSubtriangleArea);
+
       vtkSmartPointer< vtkDelaunay2D > del2D =
         vtkSmartPointer< vtkDelaunay2D >::New();
-      del2D->SetInputData(newpd);
-      del2D->SetSourceData(boundary);
-      del2D->SetTolerance(0.0);
-      del2D->SetAlpha(0.0);
-      del2D->SetOffset(0);
-      del2D->SetProjectionPlaneMode(VTK_SET_TRANSFORM_PLANE);
-      del2D->SetTransform(transform);
-      del2D->BoundingTriangulationOff();
-      del2D->Update();
-      polys = del2D->GetOutput()->GetPolys();
       vtkSmartPointer<vtkTriangleFilter> triangulator =
         vtkSmartPointer<vtkTriangleFilter>::New();
-      //If the number of cells output is not two minus the number of
-      //points, the triangulation failed with 0 offset! Try again with
-      //a higher offset. This typically resolves triangulation issues
-      if (polys->GetNumberOfCells() != newpd->GetNumberOfPoints() - 2)
+
+      vtkSmartPointer<vtkCellArray> triangulatedPolyCells
+        = vtkSmartPointer<vtkCellArray>::New();
+      if (success)
       {
-        int numoffsets = 1;
-        while ((polys->GetNumberOfCells() != newpd->GetNumberOfPoints()-2)
-            && numoffsets < 20)
+        for (vtkIdType i = 0; i < idList->GetNumberOfIds(); i+=3)
         {
-          vtkSmartPointer< vtkDelaunay2D > del2Doffset =
-            vtkSmartPointer< vtkDelaunay2D >::New();
-          del2Doffset->SetInputData(newpd);
-          del2Doffset->SetSourceData(boundary);
-          del2Doffset->SetTolerance(0.0);
-          del2Doffset->SetAlpha(0.0);
-          del2Doffset->SetOffset(numoffsets);
-          del2Doffset->SetProjectionPlaneMode(VTK_SET_TRANSFORM_PLANE);
-          del2Doffset->SetTransform(transform);
-          del2Doffset->BoundingTriangulationOff();
-          del2Doffset->Update();
-
-          polys->DeepCopy(del2Doffset->GetOutput()->GetPolys());
-          numoffsets++;
+          vtkIdType t[3] = { idList->GetId(i), idList->GetId(i+1),
+                             idList->GetId(i+2) };
+          triangulatedPolyCells->InsertNextCell(3, t);
         }
-        if (polys->GetNumberOfCells() != newpd->GetNumberOfPoints() - 2)
-        {
-          //If the offsets all failed, try last attempt with ear splitting
-          triangulator->SetInputData(boundary);
-          triangulator->Update();
-          polys = triangulator->GetOutput()->GetPolys();
-
-          splitCells->Delete();
-          splitCells = NULL;
-          delete [] pointMapper;
-          delete [] interPtBool;
-          return splitCells;
-        }
+        polys = triangulatedPolyCells.Get();
       }
       else
       {
+        //Triangulate with delaunay2D
+        del2D->SetInputData(newpd);
+        del2D->SetSourceData(boundary);
+        del2D->SetTolerance(0.0);
+        del2D->SetAlpha(0.0);
+        del2D->SetOffset(0);
+        del2D->SetProjectionPlaneMode(VTK_SET_TRANSFORM_PLANE);
+        del2D->SetTransform(transform);
+        del2D->BoundingTriangulationOff();
+        del2D->Update();
         polys = del2D->GetOutput()->GetPolys();
+        //If the number of cells output is not two minus the number of
+        //points, the triangulation failed with 0 offset! Try again with
+        //a higher offset. This typically resolves triangulation issues
+        if (polys->GetNumberOfCells() != newpd->GetNumberOfPoints() - 2)
+        {
+          int numoffsets = 1;
+          while ((polys->GetNumberOfCells() != newpd->GetNumberOfPoints()-2)
+                 && numoffsets < 20)
+          {
+            vtkSmartPointer< vtkDelaunay2D > del2Doffset =
+              vtkSmartPointer< vtkDelaunay2D >::New();
+            del2Doffset->SetInputData(newpd);
+            del2Doffset->SetSourceData(boundary);
+            del2Doffset->SetTolerance(0.0);
+            del2Doffset->SetAlpha(0.0);
+            del2Doffset->SetOffset(numoffsets);
+            del2Doffset->SetProjectionPlaneMode(VTK_SET_TRANSFORM_PLANE);
+            del2Doffset->SetTransform(transform);
+            del2Doffset->BoundingTriangulationOff();
+            del2Doffset->Update();
+
+            polys->DeepCopy(del2Doffset->GetOutput()->GetPolys());
+            numoffsets++;
+          }
+          if (polys->GetNumberOfCells() != newpd->GetNumberOfPoints() - 2)
+          {
+            //If the offsets all failed, try last attempt with ear splitting
+            triangulator->SetInputData(boundary);
+            triangulator->Update();
+            polys = triangulator->GetOutput()->GetPolys();
+
+            splitCells->Delete();
+            splitCells = nullptr;
+            delete [] pointMapper;
+            delete [] interPtBool;
+            return splitCells;
+          }
+        }
+        else
+        {
+          polys = del2D->GetOutput()->GetPolys();
+        }
       }
 
       // Renumber the point IDs.
@@ -1394,23 +1418,13 @@ int vtkIntersectionPolyDataFilter::Impl
   vtkSmartPointer<vtkIdList> cellPoints = vtkSmartPointer<vtkIdList>::New();
   simPoint nextPt;
   vtkIdType nextCell;
-  bool *ptBool;
-  ptBool = new bool[pd->GetNumberOfPoints()];
-  bool *lineBool;
-  lineBool = new bool[pd->GetNumberOfCells()];
 
   int numPoints = pd->GetNumberOfPoints();
   int numCells = pd->GetNumberOfCells();
 
-  for (vtkIdType ptId = 0; ptId < numPoints; ptId++)
-  {
-    ptBool[ptId] = false;
-  }
-    vtkDebugWithObjectMacro(this->ParentFilter, <<"Number Of Cells: "<<numCells);
-  for (vtkIdType lineId = 0; lineId < numCells; lineId++)
-  {
-    lineBool[lineId] = false;
-  }
+  std::vector<bool> ptBool(numPoints, false);
+  // Add one for the cell that could be added in GetSingleLoop
+  std::vector<bool> lineBool(numCells+1, false);
 
   //For each point in triangle and additional lines
   for (vtkIdType ptId = 0; ptId < numPoints; ptId++)
@@ -1431,8 +1445,6 @@ int vtkIntersectionPolyDataFilter::Impl
       //Get one loop for untouched point
       if (this->GetSingleLoop(pd, &interloop, nextCell, ptBool, lineBool) != 1)
       {
-        delete [] ptBool;
-        delete [] lineBool;
         return 0;
       }
       //Add new loop
@@ -1457,17 +1469,12 @@ int vtkIntersectionPolyDataFilter::Impl
       //Get single loop if the line is still untouched
       if (this->GetSingleLoop(pd, &interloop, nextCell, ptBool, lineBool) != 1)
       {
-        delete [] ptBool;
-        delete [] lineBool;
         return 0;
       }
       //Add new loop to loops
       loops->push_back(interloop);
     }
   }
-
-  delete [] ptBool;
-  delete [] lineBool;
 
   return 1;
 }
@@ -1476,7 +1483,7 @@ int vtkIntersectionPolyDataFilter::Impl
 
 int vtkIntersectionPolyDataFilter::Impl
 ::GetSingleLoop(vtkPolyData *pd, simPolygon *loop, vtkIdType nextCell,
-    bool *interPtBool, bool *lineBool)
+    std::vector<bool> &interPtBool, std::vector<bool> &lineBool)
 {
   int intertype = 0;
   vtkSmartPointer<vtkIdList> pointCells = vtkSmartPointer<vtkIdList>::New();
@@ -1984,12 +1991,11 @@ vtkIntersectionPolyDataFilter::vtkIntersectionPolyDataFilter()
   this->Status = 1;
   this->ComputeIntersectionPointArray = 0;
   this->Tolerance = 1e-6;
+  this->RelativeSubtriangleArea = 1e-4;
 }
 
 //----------------------------------------------------------------------------
-vtkIntersectionPolyDataFilter::~vtkIntersectionPolyDataFilter()
-{
-}
+vtkIntersectionPolyDataFilter::~vtkIntersectionPolyDataFilter() = default;
 
 //----------------------------------------------------------------------------
 void vtkIntersectionPolyDataFilter::PrintSelf(ostream &os, vtkIndent indent)
@@ -2009,6 +2015,8 @@ void vtkIntersectionPolyDataFilter::PrintSelf(ostream &os, vtkIndent indent)
           this->ComputeIntersectionPointArray << "\n";
   os << indent << "Tolerance: " <<
           this->Tolerance << "\n";
+  os << indent << "RelativeSubtriangleArea: " <<
+          this->RelativeSubtriangleArea << "\n";
 }
 
 //----------------------------------------------------------------------------
@@ -2241,7 +2249,7 @@ void vtkIntersectionPolyDataFilter::CleanAndCheckSurface(vtkPolyData *pd,
   //indicates a bad cell with possible intersecting facets!
   for (int i = 0; i < pd->GetNumberOfCells(); i++)
   {
-    vtkIdType *pts = 0;
+    vtkIdType *pts = nullptr;
     vtkIdType npts = 0;
     pd->GetCellPoints(i, npts, pts);
     int badcell = 0;
@@ -2400,6 +2408,7 @@ int vtkIntersectionPolyDataFilter::RequestData(
   impl->Mesh[1]  = mesh1;
   impl->OBBTree1 = obbTree1;
   impl->Tolerance = this->Tolerance;
+  impl->RelativeSubtriangleArea = this->RelativeSubtriangleArea;
 
   vtkSmartPointer< vtkCellArray > lines =
     vtkSmartPointer< vtkCellArray >::New();
@@ -2458,7 +2467,7 @@ int vtkIntersectionPolyDataFilter::RequestData(
 
   // This performs the triangle intersection search
   obbTree0->IntersectWithOBBTree
-    (obbTree1, 0, vtkIntersectionPolyDataFilter::
+    (obbTree1, nullptr, vtkIntersectionPolyDataFilter::
      Impl::FindTriangleIntersections, impl);
 
   int rawLines = outputIntersection->GetNumberOfLines();

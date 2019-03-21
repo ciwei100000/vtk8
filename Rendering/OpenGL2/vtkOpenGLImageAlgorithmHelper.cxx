@@ -22,6 +22,7 @@
 #include "vtkNew.h"
 #include "vtkOpenGLFramebufferObject.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtk_glew.h"
 #include "vtkPixelTransfer.h"
 #include "vtkPointData.h"
@@ -34,23 +35,23 @@ vtkStandardNewMacro(vtkOpenGLImageAlgorithmHelper);
 // ----------------------------------------------------------------------------
 vtkOpenGLImageAlgorithmHelper::vtkOpenGLImageAlgorithmHelper()
 {
-  this->RenderWindow = 0;
+  this->RenderWindow = nullptr;
 }
 
 // ----------------------------------------------------------------------------
 vtkOpenGLImageAlgorithmHelper::~vtkOpenGLImageAlgorithmHelper()
 {
-  this->SetRenderWindow(0);
+  this->SetRenderWindow(nullptr);
 }
 
 void vtkOpenGLImageAlgorithmHelper::SetRenderWindow(vtkRenderWindow *renWin)
 {
-  if (renWin == this->RenderWindow.Get())
+  if (renWin == this->RenderWindow.GetPointer())
   {
     return;
   }
 
-  vtkOpenGLRenderWindow *orw  = NULL;
+  vtkOpenGLRenderWindow *orw  = nullptr;
   if (renWin)
   {
     orw = vtkOpenGLRenderWindow::SafeDownCast(renWin);
@@ -90,7 +91,7 @@ void vtkOpenGLImageAlgorithmHelper::Execute(
     }
   }
 
-  // no 1d or 2D supprt yet
+  // no 1D or 2D support yet
   if (dimensions < 3)
   {
     vtkErrorMacro("no 1D or 2D processing support yet");
@@ -130,9 +131,10 @@ void vtkOpenGLImageAlgorithmHelper::Execute(
 
   vtkNew<vtkOpenGLFramebufferObject> fbo;
   fbo->SetContext(this->RenderWindow);
+  vtkOpenGLState *ostate = this->RenderWindow->GetState();
 
   outputTex->Create2D(outDims[0], outDims[1], 4, VTK_FLOAT, false);
-  fbo->AddColorAttachment(fbo->GetDrawMode(), 0, outputTex.Get());
+  fbo->AddColorAttachment(fbo->GetDrawMode(), 0, outputTex);
 
   // because the same FBO can be used in another pass but with several color
   // buffers, force this pass to use 1, to avoid side effects from the
@@ -140,9 +142,9 @@ void vtkOpenGLImageAlgorithmHelper::Execute(
   fbo->ActivateDrawBuffer(0);
 
   fbo->StartNonOrtho(outDims[0], outDims[1]);
-  glViewport(0, 0, outDims[0], outDims[1]);
-  glScissor(0, 0, outDims[0], outDims[1]);
-  glDisable(GL_DEPTH_TEST);
+  ostate->vtkglViewport(0, 0, outDims[0], outDims[1]);
+  ostate->vtkglScissor(0, 0, outDims[0], outDims[1]);
+  ostate->vtkglDisable(GL_DEPTH_TEST);
 
   vtkShaderProgram *prog =
     this->RenderWindow->GetShaderCache()->ReadyShaderProgram(
@@ -198,7 +200,7 @@ void vtkOpenGLImageAlgorithmHelper::PrintSelf(ostream& os, vtkIndent indent)
   this->Superclass::PrintSelf(os,indent);
 
   os << indent << "RenderWindow:";
-  if(this->RenderWindow != 0)
+  if(this->RenderWindow != nullptr)
   {
     this->RenderWindow->PrintSelf(os,indent);
   }

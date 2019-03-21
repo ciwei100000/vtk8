@@ -38,7 +38,6 @@ vtkAOSDataArrayTemplate<ValueTypeT>::vtkAOSDataArrayTemplate()
 template <class ValueTypeT>
 vtkAOSDataArrayTemplate<ValueTypeT>::~vtkAOSDataArrayTemplate()
 {
-  this->SetArray(NULL, 0, 0);
   this->Buffer->Delete();
 }
 
@@ -47,21 +46,25 @@ template <class ValueTypeT>
 void vtkAOSDataArrayTemplate<ValueTypeT>
 ::SetArray(ValueType* array, vtkIdType size, int save, int deleteMethod)
 {
+
+  this->Buffer->SetBuffer(array, size);
+
   if(deleteMethod == VTK_DATA_ARRAY_DELETE)
   {
-    this->Buffer->SetBuffer(array, size, save != 0, ::operator delete[] );
+    this->Buffer->SetFreeFunction(save != 0, ::operator delete[] );
   }
   else if(deleteMethod == VTK_DATA_ARRAY_ALIGNED_FREE)
   {
 #ifdef _WIN32
-    this->Buffer->SetBuffer(array, size, save != 0, _aligned_free);
+    this->Buffer->SetFreeFunction(save != 0, _aligned_free);
 #else
-    this->Buffer->SetBuffer(array, size, save != 0, free);
+    this->Buffer->SetFreeFunction(save != 0, free);
 #endif
   }
-  else
+  else if(deleteMethod == VTK_DATA_ARRAY_USER_DEFINED ||
+          deleteMethod == VTK_DATA_ARRAY_FREE)
   {
-    this->Buffer->SetBuffer(array, size, save != 0, free);
+    this->Buffer->SetFreeFunction(save != 0, free);
   }
 
   this->Size = size;
@@ -91,6 +94,13 @@ void vtkAOSDataArrayTemplate<ValueTypeT>
 ::SetVoidArray(void *array, vtkIdType size, int save, int deleteMethod)
 {
   this->SetArray(static_cast<ValueType*>(array), size, save, deleteMethod);
+}
+
+//-----------------------------------------------------------------------------
+template<class ValueType>
+void vtkAOSDataArrayTemplate<ValueType>::SetArrayFreeFunction(void (*callback)(void *))
+{
+  this->Buffer->SetFreeFunction(false, callback);
 }
 
 //-----------------------------------------------------------------------------
@@ -283,7 +293,7 @@ void vtkAOSDataArrayTemplate<ValueTypeT>::ShallowCopy(vtkDataArray *other)
     {
       this->Buffer->Delete();
       this->Buffer = o->Buffer;
-      this->Buffer->Register(NULL);
+      this->Buffer->Register(nullptr);
     }
     this->DataChanged();
   }
@@ -373,8 +383,9 @@ void vtkAOSDataArrayTemplate<ValueTypeT>::FillTypedComponent(int compIdx,
 template <class ValueTypeT>
 void vtkAOSDataArrayTemplate<ValueTypeT>::FillValue(ValueType value)
 {
+  ptrdiff_t offset = this->MaxId + 1;
   std::fill(this->Buffer->GetBuffer(),
-            this->Buffer->GetBuffer() + this->MaxId + 1,
+            this->Buffer->GetBuffer() + offset,
             value);
 }
 
@@ -396,7 +407,7 @@ vtkAOSDataArrayTemplate<ValueTypeT>
   {
     if (!this->Resize(newSize / this->NumberOfComponents + 1))
     {
-      return NULL;
+      return nullptr;
     }
     this->MaxId = (newSize - 1);
   }
@@ -430,52 +441,6 @@ void* vtkAOSDataArrayTemplate<ValueTypeT>::GetVoidPointer(vtkIdType valueIdx)
 {
   return this->GetPointer(valueIdx);
 }
-
-// Deprecated API:
-#ifndef VTK_LEGACY_REMOVE
-
-//------------------------------------------------------------------------------
-template <typename ValueTypeT>
-void vtkAOSDataArrayTemplate<ValueTypeT>::GetTupleValue(vtkIdType tupleIdx,
-                                                        ValueType *tuple)
-{
-  VTK_LEGACY_REPLACED_BODY(vtkAOSDataArrayTemplate::GetTupleValue, "VTK 7.1",
-                           vtkGenericDataArray::GetTypedTuple);
-  this->GetTypedTuple(tupleIdx, tuple);
-}
-
-//------------------------------------------------------------------------------
-template <typename ValueTypeT>
-void vtkAOSDataArrayTemplate<ValueTypeT>::SetTupleValue(vtkIdType tupleIdx,
-                                                        const ValueType *tuple)
-{
-  VTK_LEGACY_REPLACED_BODY(vtkAOSDataArrayTemplate::SetTupleValue, "VTK 7.1",
-                           vtkGenericDataArray::SetTypedTuple);
-  this->SetTypedTuple(tupleIdx, tuple);
-}
-
-//------------------------------------------------------------------------------
-template <typename ValueTypeT>
-void vtkAOSDataArrayTemplate<ValueTypeT>::
-InsertTupleValue(vtkIdType tupleIdx, const ValueType *tuple)
-{
-  VTK_LEGACY_REPLACED_BODY(vtkAOSDataArrayTemplate::InsertTupleValue, "VTK 7.1",
-                           vtkGenericDataArray::InsertTypedTuple);
-  this->InsertTypedTuple(tupleIdx, tuple);
-}
-
-//------------------------------------------------------------------------------
-template <typename ValueTypeT>
-vtkIdType vtkAOSDataArrayTemplate<ValueTypeT>::
-InsertNextTupleValue(const ValueType *tuple)
-{
-  VTK_LEGACY_REPLACED_BODY(vtkAOSDataArrayTemplate::InsertNextTupleValue,
-                           "VTK 7.1",
-                           vtkGenericDataArray::InsertNextTypedTuple);
-  return this->InsertNextTypedTuple(tuple);
-}
-
-#endif // VTK_LEGACY_REMOVE
 
 //-----------------------------------------------------------------------------
 template <class ValueTypeT>

@@ -30,9 +30,11 @@
 
 #include "vtkRenderingCoreModule.h" // For export macro
 #include "vtkObject.h"
+#include <vector> // for method args
 
 class vtkAssemblyPath;
 class vtkAssemblyPaths;
+class vtkHardwareSelector;
 class vtkMatrix4x4;
 class vtkPropCollection;
 class vtkViewport;
@@ -45,7 +47,7 @@ class VTKRENDERINGCORE_EXPORT vtkProp : public vtkObject
 {
 public:
   vtkTypeMacro(vtkProp, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * For some exporters and other other operations we must be
@@ -60,9 +62,9 @@ public:
   /**
    * Set/Get visibility of this vtkProp. Initial value is true.
    */
-  vtkSetMacro(Visibility, int);
-  vtkGetMacro(Visibility, int);
-  vtkBooleanMacro(Visibility, int);
+  vtkSetMacro(Visibility, vtkTypeBool);
+  vtkGetMacro(Visibility, vtkTypeBool);
+  vtkBooleanMacro(Visibility, vtkTypeBool);
   //@}
 
   //@{
@@ -71,9 +73,9 @@ public:
    * can be picked (typically using the mouse). Also see dragable.
    * Initial value is true.
    */
-  vtkSetMacro(Pickable, int);
-  vtkGetMacro(Pickable, int);
-  vtkBooleanMacro(Pickable, int);
+  vtkSetMacro(Pickable, vtkTypeBool);
+  vtkGetMacro(Pickable, vtkTypeBool);
+  vtkBooleanMacro(Pickable, vtkTypeBool);
   //@}
 
   /**
@@ -91,9 +93,9 @@ public:
    * dragged from within a user interface.
    * Initial value is true.
    */
-  vtkSetMacro(Dragable, int);
-  vtkGetMacro(Dragable, int);
-  vtkBooleanMacro(Dragable, int);
+  vtkSetMacro(Dragable, vtkTypeBool);
+  vtkGetMacro(Dragable, vtkTypeBool);
+  vtkBooleanMacro(Dragable, vtkTypeBool);
   //@}
 
   /**
@@ -121,8 +123,8 @@ public:
    * Get the bounds for this Prop as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
    * in world coordinates. NULL means that the bounds are not defined.
    */
-  virtual double *GetBounds()
-    { return NULL; }
+  virtual double *GetBounds() VTK_SIZEHINT(6)
+    { return nullptr; }
 
   /**
    * Shallow copy of this vtkProp.
@@ -155,7 +157,7 @@ public:
    */
   virtual void PokeMatrix(vtkMatrix4x4 *vtkNotUsed(matrix)) {}
   virtual vtkMatrix4x4 *GetMatrix()
-    { return NULL; }
+    { return nullptr; }
 
   //@{
   /**
@@ -180,7 +182,7 @@ public:
    * Old OpenGL was a state machine where you would push or pop
    * items. The new OpenGL design is more mapper centric. Some
    * classes push a texture and then assume a mapper will use it.
-   * The new design wants explicit comunication of when a texture
+   * The new design wants explicit communication of when a texture
    * is being used.  This key can be used to pass that information
    * down to a mapper.
    */
@@ -191,7 +193,7 @@ public:
    * Old OpenGL was a state machine where you would push or pop
    * items. The new OpenGL design is more mapper centric. Some
    * classes push a texture and then assume a mapper will use it.
-   * The new design wants explicit comunication of when a texture
+   * The new design wants explicit communication of when a texture
    * is being used.  This key can be used to pass that information
    * down to a mapper.
    */
@@ -285,7 +287,7 @@ public:
    * polygonal geometry will return true.
    * Default implementation return false.
    */
-  virtual int HasTranslucentPolygonalGeometry()
+  virtual vtkTypeBool HasTranslucentPolygonalGeometry()
     { return 0; }
 
   /**
@@ -405,6 +407,14 @@ public:
   virtual bool GetSupportsSelection()
     { return false; }
 
+  /**
+   * allows a prop to update a selections color buffers
+   *
+   */
+  virtual void ProcessSelectorPixelBuffers(
+    vtkHardwareSelector * /* sel */,
+    std::vector<unsigned int> & /* pixeloffsets */) { };
+
   //@{
   /**
    * Get the number of consumers
@@ -424,11 +434,11 @@ public:
 
 protected:
   vtkProp();
-  ~vtkProp() VTK_OVERRIDE;
+  ~vtkProp() override;
 
-  int Visibility;
-  int Pickable;
-  int Dragable;
+  vtkTypeBool Visibility;
+  vtkTypeBool Pickable;
+  vtkTypeBool Dragable;
   bool UseBounds;
 
   double AllocatedRenderTime;
@@ -447,8 +457,8 @@ protected:
   vtkInformation *PropertyKeys;
 
 private:
-  vtkProp(const vtkProp&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkProp&) VTK_DELETE_FUNCTION;
+  vtkProp(const vtkProp&) = delete;
+  void operator=(const vtkProp&) = delete;
 };
 
 #endif

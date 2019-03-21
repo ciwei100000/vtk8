@@ -36,10 +36,10 @@ class VTKRENDERINGSCENEGRAPH_EXPORT vtkViewNodeFactory :
 public:
   static vtkViewNodeFactory* New();
   vtkTypeMacro(vtkViewNodeFactory, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
-   * Give a functin pointer to a class that will manufacture a
+   * Give a function pointer to a class that will manufacture a
    * vtkViewNode when given a class name string.
    */
   void RegisterOverride(const char *name, vtkViewNode *(*func)());
@@ -59,8 +59,8 @@ protected:
   ~vtkViewNodeFactory();
 
 private:
-  vtkViewNodeFactory(const vtkViewNodeFactory&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkViewNodeFactory&) VTK_DELETE_FUNCTION;
+  vtkViewNodeFactory(const vtkViewNodeFactory&) = delete;
+  void operator=(const vtkViewNodeFactory&) = delete;
 
   class vtkInternals;
   vtkInternals *Internals;

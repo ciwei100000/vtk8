@@ -28,6 +28,7 @@
 #include "vtkRenderWindowInteractor.h"
 #include "vtkSmartPointer.h"
 #include "vtkSphereSource.h"
+#include "vtkMath.h"
 
 // Test for multiblock data sets with field data arrays defined on
 // only a subset of the blocks. The expected behavior is to have
@@ -61,7 +62,7 @@ int TestMultiBlockPartialArrayFieldData(int argc, char* argv[])
   data->SetNumberOfBlocks(numBlocks);
 
   double radius = 10.0;
-  double deltaTheta = 2.0*3.1415926 / numBlocks;
+  double deltaTheta = 2.0*vtkMath::Pi() / numBlocks;
   for (int i = 0; i < numBlocks; ++i)
   {
     double theta = i * deltaTheta;
@@ -106,7 +107,7 @@ int TestMultiBlockPartialArrayFieldData(int argc, char* argv[])
   mapper->SetInputDataObject(data);
 
   // Tell mapper to use field data for rendering
-  mapper->SetLookupTable(lookupTable.GetPointer());
+  mapper->SetLookupTable(lookupTable);
   mapper->SetFieldDataTupleId(0);
   mapper->SelectColorArray("mydata");
   mapper->SetScalarModeToUseFieldData();
@@ -125,7 +126,7 @@ int TestMultiBlockPartialArrayFieldData(int argc, char* argv[])
 
   win->Render();
 
-  int retVal = vtkRegressionTestImageThreshold( win.GetPointer(),15);
+  int retVal = vtkRegressionTestImageThreshold( win,15);
   if ( retVal == vtkRegressionTester::DO_INTERACTOR)
   {
     iren->Start();

@@ -24,12 +24,13 @@
 vtkStandardNewMacro(vtkPlanes);
 vtkCxxSetObjectMacro(vtkPlanes,Points,vtkPoints);
 
+//----------------------------------------------------------------------------
 vtkPlanes::vtkPlanes()
 {
   int i;
 
-  this->Points = NULL;
-  this->Normals = NULL;
+  this->Points = nullptr;
+  this->Normals = nullptr;
   this->Plane = vtkPlane::New();
 
   for (i=0; i<24; i++)
@@ -42,6 +43,7 @@ vtkPlanes::vtkPlanes()
   }
 }
 
+//----------------------------------------------------------------------------
 vtkPlanes::~vtkPlanes()
 {
   if ( this->Points )
@@ -55,6 +57,7 @@ vtkPlanes::~vtkPlanes()
   this->Plane->Delete();
 }
 
+//----------------------------------------------------------------------------
 void vtkPlanes::SetNormals(vtkDataArray* normals)
 {
   vtkDebugMacro(<< this->GetClassName() << " (" << this
@@ -68,14 +71,15 @@ void vtkPlanes::SetNormals(vtkDataArray* normals)
 
   if (this->Normals != normals)
   {
-    if (this->Normals != NULL) { this->Normals->UnRegister(this); }
+    if (this->Normals != nullptr) { this->Normals->UnRegister(this); }
     this->Normals = normals;
-    if (this->Normals != NULL) { this->Normals->Register(this); }
+    if (this->Normals != nullptr) { this->Normals->Register(this); }
     this->Modified();
   }
 }
 
-// Evaluate plane equations. Return smallest absolute value.
+//----------------------------------------------------------------------------
+// Evaluate plane equations. Return the largest value.
 double vtkPlanes::EvaluateFunction(double x[3])
 {
   int numPlanes, i;
@@ -108,6 +112,7 @@ double vtkPlanes::EvaluateFunction(double x[3])
   return maxVal;
 }
 
+//----------------------------------------------------------------------------
 // Evaluate planes gradient.
 void vtkPlanes::EvaluateGradient(double x[3], double n[3])
 {
@@ -144,6 +149,7 @@ void vtkPlanes::EvaluateGradient(double x[3], double n[3])
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkPlanes::SetFrustumPlanes(double planes[24])
 {
   int i;
@@ -199,6 +205,7 @@ void vtkPlanes::SetFrustumPlanes(double planes[24])
   normals->Delete();
 }
 
+//----------------------------------------------------------------------------
 void vtkPlanes::SetBounds(const double bounds[6])
 {
   int i;
@@ -277,6 +284,7 @@ void vtkPlanes::SetBounds(const double bounds[6])
   normals->Delete();
 }
 
+//----------------------------------------------------------------------------
 void vtkPlanes::SetBounds(double xmin, double xmax, double ymin, double ymax,
                           double zmin, double zmax)
 {
@@ -291,6 +299,7 @@ void vtkPlanes::SetBounds(double xmin, double xmax, double ymin, double ymax,
   this->SetBounds(bounds);
 }
 
+//----------------------------------------------------------------------------
 int vtkPlanes::GetNumberOfPlanes()
 {
   if ( this->Points && this->Normals )
@@ -305,6 +314,7 @@ int vtkPlanes::GetNumberOfPlanes()
   }
 }
 
+//----------------------------------------------------------------------------
 vtkPlane *vtkPlanes::GetPlane(int i)
 {
   double normal[3];
@@ -320,10 +330,11 @@ vtkPlane *vtkPlanes::GetPlane(int i)
   }
   else
   {
-    return NULL;
+    return nullptr;
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkPlanes::GetPlane(int i, vtkPlane *plane)
 {
   if ( i >= 0 && i < this->GetNumberOfPlanes() )
@@ -337,6 +348,7 @@ void vtkPlanes::GetPlane(int i, vtkPlane *plane)
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkPlanes::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);

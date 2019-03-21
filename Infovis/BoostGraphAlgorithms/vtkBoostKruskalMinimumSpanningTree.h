@@ -19,7 +19,7 @@ PURPOSE.  See the above copyright notice for more information.
   -------------------------------------------------------------------------*/
 /**
  * @class   vtkBoostKruskalMinimumSpanningTree
- * @brief   Contructs a minimum spanning
+ * @brief   Constructs a minimum spanning
  *    tree from a graph and the weighting array
  *
  *
@@ -46,7 +46,7 @@ class VTKINFOVISBOOSTGRAPHALGORITHMS_EXPORT vtkBoostKruskalMinimumSpanningTree :
 public:
   static vtkBoostKruskalMinimumSpanningTree *New();
   vtkTypeMacro(vtkBoostKruskalMinimumSpanningTree, vtkSelectionAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -88,13 +88,13 @@ protected:
   int RequestData(
     vtkInformation *,
     vtkInformationVector **,
-    vtkInformationVector *);
+    vtkInformationVector *) override;
 
   int FillInputPortInformation(
-    int port, vtkInformation* info);
+    int port, vtkInformation* info) override;
 
   int FillOutputPortInformation(
-    int port, vtkInformation* info);
+    int port, vtkInformation* info) override;
 
 private:
   char* EdgeWeightArrayName;
@@ -102,8 +102,8 @@ private:
   bool NegateEdgeWeights;
   float EdgeWeightMultiplier;
 
-  vtkBoostKruskalMinimumSpanningTree(const vtkBoostKruskalMinimumSpanningTree&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoostKruskalMinimumSpanningTree&) VTK_DELETE_FUNCTION;
+  vtkBoostKruskalMinimumSpanningTree(const vtkBoostKruskalMinimumSpanningTree&) = delete;
+  void operator=(const vtkBoostKruskalMinimumSpanningTree&) = delete;
 };
 
 #endif

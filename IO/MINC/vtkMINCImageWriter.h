@@ -85,7 +85,7 @@ public:
   vtkTypeMacro(vtkMINCImageWriter,vtkImageWriter);
 
   static vtkMINCImageWriter *New();
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get the entension for this file format.
@@ -102,7 +102,7 @@ public:
   /**
    * Set the file name.
    */
-  void SetFileName(const char *name) VTK_OVERRIDE;
+  void SetFileName(const char *name) override;
 
   /**
    * Write the data.  This will attempt to stream the data
@@ -110,7 +110,7 @@ public:
    * unless the whole extent of the input has already been
    * updated.
    */
-  void Write() VTK_OVERRIDE;
+  void Write() override;
 
   //@{
   /**
@@ -155,9 +155,9 @@ public:
    * Set whether to validate that all variable attributes that
    * have been set are ones that are listed in the MINC standard.
    */
-  vtkSetMacro(StrictValidation, int);
-  vtkBooleanMacro(StrictValidation, int);
-  vtkGetMacro(StrictValidation, int);
+  vtkSetMacro(StrictValidation, vtkTypeBool);
+  vtkBooleanMacro(StrictValidation, vtkTypeBool);
+  vtkGetMacro(StrictValidation, vtkTypeBool);
   //@}
 
   //@{
@@ -171,7 +171,7 @@ public:
 
 protected:
   vtkMINCImageWriter();
-  ~vtkMINCImageWriter() VTK_OVERRIDE;
+  ~vtkMINCImageWriter() override;
 
   int MINCImageType;
   int MINCImageTypeSigned;
@@ -180,7 +180,7 @@ protected:
   vtkMatrix4x4 *DirectionCosines;
   double RescaleSlope;
   double RescaleIntercept;
-  int StrictValidation;
+  vtkTypeBool StrictValidation;
   int DataUpdateExtent[6];
 
   int FileDataType;
@@ -220,23 +220,23 @@ protected:
   virtual void FindRescale(double &rescaleSlope, double &rescaleIntercept);
   virtual void FindMINCValidRange(double range[2]);
 
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   int RequestInformation(vtkInformation *request,
                                  vtkInformationVector **inputVector,
-                                 vtkInformationVector *outputVector) VTK_OVERRIDE;
+                                 vtkInformationVector *outputVector) override;
 
   int RequestUpdateExtent(vtkInformation *request,
                                   vtkInformationVector **inputVector,
-                                  vtkInformationVector *outputVector) VTK_OVERRIDE;
+                                  vtkInformationVector *outputVector) override;
 
   int RequestData(vtkInformation* request,
                           vtkInformationVector** inputVector,
-                          vtkInformationVector* outputVector) VTK_OVERRIDE;
+                          vtkInformationVector* outputVector) override;
 
 private:
-  vtkMINCImageWriter(const vtkMINCImageWriter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMINCImageWriter&) VTK_DELETE_FUNCTION;
+  vtkMINCImageWriter(const vtkMINCImageWriter&) = delete;
+  void operator=(const vtkMINCImageWriter&) = delete;
 
 };
 

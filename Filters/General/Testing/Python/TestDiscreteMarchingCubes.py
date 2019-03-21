@@ -87,5 +87,4 @@ actor.SetMapper(mapper)
 ren1.AddActor(actor)
 
 renWin.Render()
-
-#iren.Start()
+iren.Start()

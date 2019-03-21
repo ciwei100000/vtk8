@@ -65,7 +65,7 @@ class VTKRENDERINGCORE_EXPORT vtkCellPicker : public vtkPicker
 public:
   static vtkCellPicker *New();
   vtkTypeMacro(vtkCellPicker, vtkPicker);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Perform pick operation with selection point provided. Normally the
@@ -74,7 +74,14 @@ public:
    * something was successfully picked.
    */
   int Pick(double selectionX, double selectionY, double selectionZ,
-                   vtkRenderer *renderer) VTK_OVERRIDE;
+                   vtkRenderer *renderer) override;
+
+  /**
+   * Perform pick operation with selection point provided. The
+   * selectionPt is in world coordinates.
+   * Return non-zero if something was successfully picked.
+   */
+  int Pick3DRay(double selectionPt[3], double orient[4], vtkRenderer *ren) override;
 
   /**
    * Add a locator for one of the data sets that will be included in the
@@ -119,9 +126,9 @@ public:
    * opacity. This parameter is only relevant to volume picking and
    * is off by default.
    */
-  vtkSetMacro(UseVolumeGradientOpacity, int);
-  vtkBooleanMacro(UseVolumeGradientOpacity, int);
-  vtkGetMacro(UseVolumeGradientOpacity, int);
+  vtkSetMacro(UseVolumeGradientOpacity, vtkTypeBool);
+  vtkBooleanMacro(UseVolumeGradientOpacity, vtkTypeBool);
+  vtkGetMacro(UseVolumeGradientOpacity, vtkTypeBool);
   //@}
 
   //@{
@@ -137,9 +144,9 @@ public:
    * plane so that you can retrieve it from the mapper, or -1 if no
    * clipping plane was picked.
    */
-  vtkSetMacro(PickClippingPlanes, int);
-  vtkBooleanMacro(PickClippingPlanes, int);
-  vtkGetMacro(PickClippingPlanes, int);
+  vtkSetMacro(PickClippingPlanes, vtkTypeBool);
+  vtkBooleanMacro(PickClippingPlanes, vtkTypeBool);
+  vtkGetMacro(PickClippingPlanes, vtkTypeBool);
   //@}
 
   //@{
@@ -237,22 +244,22 @@ public:
    * related to the mapper's data.  The default value of PickTextureData
    * is "Off".
    */
-  vtkSetMacro(PickTextureData, int);
-  vtkBooleanMacro(PickTextureData, int);
-  vtkGetMacro(PickTextureData, int);
+  vtkSetMacro(PickTextureData, vtkTypeBool);
+  vtkBooleanMacro(PickTextureData, vtkTypeBool);
+  vtkGetMacro(PickTextureData, vtkTypeBool);
   //@}
 
 protected:
   vtkCellPicker();
-  ~vtkCellPicker() VTK_OVERRIDE;
+  ~vtkCellPicker() override;
 
-  void Initialize() VTK_OVERRIDE;
+  void Initialize() override;
 
   virtual void ResetPickInfo();
 
-  double IntersectWithLine(double p1[3], double p2[3], double tol,
+  double IntersectWithLine(const double p1[3], const double p2[3], double tol,
                                   vtkAssemblyPath *path, vtkProp3D *p,
-                                  vtkAbstractMapper3D *m) VTK_OVERRIDE;
+                                  vtkAbstractMapper3D *m) override;
 
   virtual double IntersectActorWithLine(const double p1[3], const double p2[3],
                                         double t1, double t2, double tol,
@@ -318,8 +325,8 @@ protected:
   vtkCollection *Locators;
 
   double VolumeOpacityIsovalue;
-  int UseVolumeGradientOpacity;
-  int PickClippingPlanes;
+  vtkTypeBool UseVolumeGradientOpacity;
+  vtkTypeBool PickClippingPlanes;
   int ClippingPlaneId;
 
   vtkIdType PointId;
@@ -334,7 +341,7 @@ protected:
   double MapperNormal[3];
 
   vtkTexture *Texture;
-  int PickTextureData;
+  vtkTypeBool PickTextureData;
 
 private:
   void ResetCellPickerInfo();
@@ -344,8 +351,8 @@ private:
   vtkDoubleArray *Gradients; //used in volume picking
 
 private:
-  vtkCellPicker(const vtkCellPicker&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCellPicker&) VTK_DELETE_FUNCTION;
+  vtkCellPicker(const vtkCellPicker&) = delete;
+  void operator=(const vtkCellPicker&) = delete;
 };
 
 #endif

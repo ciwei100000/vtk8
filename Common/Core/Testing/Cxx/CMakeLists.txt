@@ -9,9 +9,10 @@ function(add_data_array_test test_name array_header array_valuetype array_type)
   set(VTK_TESTDATAARRAYAPI_TESTNAME "TestDataArrayAPI_${test_name}")
   set(test_source "${VTK_TESTDATAARRAYAPI_TESTNAME}.cxx")
 
-  configure_file(TestDataArrayAPI.cxx.in "${test_source}")
+  configure_file(TestDataArrayAPI.cxx.in "${CMAKE_CURRENT_BINARY_DIR}/${test_source}")
 
-  set(data_array_tests ${data_array_tests} "${test_source}.cxx" PARENT_SCOPE)
+  #specify a custom test name as these files exist in the build directory
+  list(APPEND data_array_tests "${VTK_TESTDATAARRAYAPI_TESTNAME},${CMAKE_CURRENT_BINARY_DIR}/${test_source}" PARENT_SCOPE)
 endfunction()
 
 # Legacy -- test that the vtkDataArrayTemplate interface still works:
@@ -77,10 +78,9 @@ set(TestSystemInformation_ARGS ${CMAKE_BINARY_DIR})
 # Tell TestXMLFileOutputWindow where to write test file
 set(TestXMLFileOutputWindow_ARGS ${CMAKE_BINARY_DIR}/Testing/Temporary/XMLFileOutputWindow.txt)
 
-vtk_add_test_cxx(${vtk-module}CxxTests tests
+vtk_add_test_cxx(vtkCommonCoreCxxTests tests
   NO_DATA NO_VALID NO_OUTPUT
   UnitTestMath.cxx
-  TestAngularPeriodicDataArray.cxx
   TestArrayAPI.cxx
   TestArrayAPIConvenience.cxx
   TestArrayAPIDense.cxx
@@ -91,6 +91,7 @@ vtk_add_test_cxx(${vtk-module}CxxTests tests
   TestScalarsToColors.cxx
   # TestArrayCasting.cxx # Uses Boost in its own separate test.
   TestArrayExtents.cxx
+  TestArrayFreeFunctions.cxx
   TestArrayInterpolationDense.cxx
   TestArrayLookup.cxx
   TestArrayNullValues.cxx
@@ -104,10 +105,10 @@ vtk_add_test_cxx(${vtk-module}CxxTests tests
   TestDataArray.cxx
   TestDataArrayComponentNames.cxx
   TestDataArrayIterators.cxx
+  TestDataArraySelection.cxx
   TestGarbageCollector.cxx
   TestGenericDataArrayAPI.cxx
   TestInformationKeyLookup.cxx
-  # TestInstantiator.cxx # Have not enabled instantiators.
   TestLookupTable.cxx
   TestLookupTableThreaded.cxx
   TestMath.cxx
@@ -143,6 +144,6 @@ vtk_add_test_cxx(${vtk-module}CxxTests tests
   ${data_array_tests}
   )
 
-vtk_test_cxx_executable(${vtk-module}CxxTests tests
+vtk_test_cxx_executable(vtkCommonCoreCxxTests tests
   vtkTestNewVar.cxx
   )

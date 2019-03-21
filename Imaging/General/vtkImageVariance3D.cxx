@@ -42,7 +42,7 @@ vtkImageVariance3D::~vtkImageVariance3D()
   if (this->Ellipse)
   {
     this->Ellipse->Delete();
-    this->Ellipse = NULL;
+    this->Ellipse = nullptr;
   }
 }
 
@@ -170,7 +170,7 @@ void vtkImageVariance3DExecute(vtkImageVariance3D *self,
   numComps = outData->GetNumberOfScalarComponents();
 
   // Get ivars of this object (easier than making friends)
-  kernelSize = self->GetKernelSize();;
+  kernelSize = self->GetKernelSize();
   kernelMiddle = self->GetKernelMiddle();
   hoodMin0 = - kernelMiddle[0];
   hoodMin1 = - kernelMiddle[1];

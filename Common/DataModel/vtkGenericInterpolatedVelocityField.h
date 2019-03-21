@@ -55,7 +55,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkGenericInterpolatedVelocityField : public vtk
 {
 public:
   vtkTypeMacro(vtkGenericInterpolatedVelocityField,vtkFunctionSet);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct a vtkGenericInterpolatedVelocityField with no initial data set.
@@ -67,7 +67,7 @@ public:
    * Evaluate the velocity field, f, at (x, y, z, t).
    * For now, t is ignored.
    */
-  int FunctionValues(double* x, double* f) VTK_OVERRIDE;
+  int FunctionValues(double* x, double* f) override;
 
   /**
    * Add a dataset used for the implicit function evaluation.
@@ -100,9 +100,9 @@ public:
   /**
    * Turn caching on/off.
    */
-  vtkGetMacro(Caching, int);
-  vtkSetMacro(Caching, int);
-  vtkBooleanMacro(Caching, int);
+  vtkGetMacro(Caching, vtkTypeBool);
+  vtkSetMacro(Caching, vtkTypeBool);
+  vtkBooleanMacro(Caching, vtkTypeBool);
   //@}
 
   //@{
@@ -116,7 +116,7 @@ public:
   //@{
   /**
    * If you want to work with an arbitrary vector array, then set its name
-   * here. By default this in NULL and the filter will use the active vector
+   * here. By default this in nullptr and the filter will use the active vector
    * array.
    */
   vtkGetStringMacro(VectorsSelection);
@@ -143,14 +143,14 @@ public:
 
 protected:
   vtkGenericInterpolatedVelocityField();
-  ~vtkGenericInterpolatedVelocityField() VTK_OVERRIDE;
+  ~vtkGenericInterpolatedVelocityField() override;
 
   vtkGenericCellIterator *GenCell; // last cell
 
   double LastPCoords[3]; // last local coordinates
   int CacheHit;
   int CacheMiss;
-  int Caching;
+  vtkTypeBool Caching;
 
   vtkGenericDataSet* LastDataSet;
 
@@ -164,8 +164,8 @@ protected:
   static const double TOLERANCE_SCALE;
 
 private:
-  vtkGenericInterpolatedVelocityField(const vtkGenericInterpolatedVelocityField&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGenericInterpolatedVelocityField&) VTK_DELETE_FUNCTION;
+  vtkGenericInterpolatedVelocityField(const vtkGenericInterpolatedVelocityField&) = delete;
+  void operator=(const vtkGenericInterpolatedVelocityField&) = delete;
 };
 
 #endif

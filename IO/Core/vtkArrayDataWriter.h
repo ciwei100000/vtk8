@@ -63,7 +63,7 @@ class VTKIOCORE_EXPORT vtkArrayDataWriter :
 public:
   static vtkArrayDataWriter *New();
   vtkTypeMacro(vtkArrayDataWriter, vtkWriter);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -77,9 +77,9 @@ public:
   /**
    * Get / set whether data will be written in binary format (when used as a filter).
    */
-  vtkSetMacro(Binary, int);
-  vtkGetMacro(Binary, int);
-  vtkBooleanMacro(Binary, int);
+  vtkSetMacro(Binary, vtkTypeBool);
+  vtkGetMacro(Binary, vtkTypeBool);
+  vtkBooleanMacro(Binary, vtkTypeBool);
   //@}
 
   /**
@@ -97,7 +97,7 @@ public:
   vtkBooleanMacro(WriteToOutputString, bool);
   //@}
 
-  int Write() VTK_OVERRIDE; // This is necessary to get Write() wrapped for scripting languages.
+  int Write() override; // This is necessary to get Write() wrapped for scripting languages.
 
   /**
    * Writes input port 0 data to a file, using an arbitrary filename and binary flag.
@@ -134,19 +134,19 @@ public:
 
 protected:
   vtkArrayDataWriter();
-  ~vtkArrayDataWriter() VTK_OVERRIDE;
+  ~vtkArrayDataWriter() override;
 
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
-  void WriteData() VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
+  void WriteData() override;
 
   char* FileName;
-  int Binary;
+  vtkTypeBool Binary;
   bool WriteToOutputString;
   vtkStdString OutputString;
 
 private:
-  vtkArrayDataWriter(const vtkArrayDataWriter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkArrayDataWriter&) VTK_DELETE_FUNCTION;
+  vtkArrayDataWriter(const vtkArrayDataWriter&) = delete;
+  void operator=(const vtkArrayDataWriter&) = delete;
 };
 
 #endif

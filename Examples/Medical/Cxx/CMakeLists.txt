@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
 
 
 PROJECT (Medical)
@@ -10,7 +10,7 @@ find_package(VTK COMPONENTS
   vtkIOXML
   vtkImagingStatistics
   vtkInteractionStyle
-  vtkRenderingVolume${VTK_RENDERING_BACKEND}
+  vtkRenderingVolumeOpenGL2
   vtkTestingRendering
   vtksys
 )

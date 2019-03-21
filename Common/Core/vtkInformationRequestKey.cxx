@@ -25,9 +25,7 @@ vtkInformationRequestKey::vtkInformationRequestKey(const char* name, const char*
 }
 
 //----------------------------------------------------------------------------
-vtkInformationRequestKey::~vtkInformationRequestKey()
-{
-}
+vtkInformationRequestKey::~vtkInformationRequestKey() = default;
 
 //----------------------------------------------------------------------------
 void vtkInformationRequestKey::PrintSelf(ostream& os, vtkIndent indent)
@@ -58,7 +56,7 @@ int vtkInformationRequestKey::Has(vtkInformation* info)
 //----------------------------------------------------------------------------
 void vtkInformationRequestKey::Remove(vtkInformation* info)
 {
-  info->SetRequest(0);
+  info->SetRequest(nullptr);
 }
 
 //----------------------------------------------------------------------------

@@ -25,6 +25,8 @@
 #include "vtkPeriodicTable.h"
 #include "vtkXMLParser.h"
 
+#include "vtksys/SystemTools.hxx"
+
 #include <string>
 #include <vector>
 
@@ -40,9 +42,9 @@ public:
 
 protected:
   vtkCMLParser();
-  ~vtkCMLParser() VTK_OVERRIDE;
-  void StartElement(const char *name, const char **attr) VTK_OVERRIDE;
-  void EndElement(const char *name) VTK_OVERRIDE;
+  ~vtkCMLParser() override;
+  void StartElement(const char *name, const char **attr) override;
+  void EndElement(const char *name) override;
 
   std::vector<std::string> AtomNames;
 
@@ -55,15 +57,15 @@ protected:
   vtkNew<vtkPeriodicTable> pTab;
 
 private:
-  vtkCMLParser(const vtkCMLParser&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCMLParser&) VTK_DELETE_FUNCTION;
+  vtkCMLParser(const vtkCMLParser&) = delete;
+  void operator=(const vtkCMLParser&) = delete;
 };
 
 vtkStandardNewMacro(vtkCMLMoleculeReader);
 
 //----------------------------------------------------------------------------
 vtkCMLMoleculeReader::vtkCMLMoleculeReader()
-  : FileName(NULL)
+  : FileName(nullptr)
 {
   this->SetNumberOfInputPorts(0);
 }
@@ -71,13 +73,13 @@ vtkCMLMoleculeReader::vtkCMLMoleculeReader()
 //----------------------------------------------------------------------------
 vtkCMLMoleculeReader::~vtkCMLMoleculeReader()
 {
-  this->SetFileName(NULL);
+  this->SetFileName(nullptr);
 }
 
 //----------------------------------------------------------------------------
 vtkMolecule *vtkCMLMoleculeReader::GetOutput()
 {
-  return vtkMolecule::SafeDownCast(this->GetOutputDataObject(0));;
+  return vtkMolecule::SafeDownCast(this->GetOutputDataObject(0));
 }
 
 //----------------------------------------------------------------------------
@@ -138,13 +140,13 @@ vtkStandardNewMacro(vtkCMLParser);
 
 vtkCMLParser::vtkCMLParser()
   : vtkXMLParser(),
-    Target(0)
+    Target(nullptr)
 {
 }
 
 vtkCMLParser::~vtkCMLParser()
 {
-  this->SetTarget(NULL);
+  this->SetTarget(nullptr);
 }
 
 void vtkCMLParser::StartElement(const char *name, const char **attr)
@@ -179,8 +181,6 @@ void vtkCMLParser::StartElement(const char *name, const char **attr)
     }
     vtkDebugMacro(<<desc);
   }
-
-  return;
 }
 
 void vtkCMLParser::EndElement(const char *)
@@ -198,7 +198,7 @@ void vtkCMLParser::NewAtom(const char **attr)
   int attrInd = 0;
   unsigned short atomicNum = 0;
   float pos[3];
-  const char * id = NULL;
+  const char * id = nullptr;
   while (const char * cur = attr[attrInd])
   {
     // Get atomic number
@@ -256,11 +256,12 @@ void vtkCMLParser::NewBond(const char **attr)
     // Get names of bonded atoms
     if (strcmp(cur, "atomRefs2") == 0)
     {
-      char atomRefs[128];
-      strncpy(atomRefs, attr[++attrInd], 128);
+      std::string atomRefs = attr[++attrInd];
+      std::vector<std::string> words;
       // Parse out atom names:
-      const char *nameChar = strtok(atomRefs, " ");
-      while (nameChar != NULL)
+      vtksys::SystemTools::Split(atomRefs, words, ' ');
+      std::vector<std::string>::const_iterator words_iter = words.begin();
+      while (words_iter != words.end())
       {
         vtkIdType currentAtomId;
         bool found = false;
@@ -268,7 +269,7 @@ void vtkCMLParser::NewBond(const char **attr)
              currentAtomId < static_cast<vtkIdType>(this->AtomNames.size());
              ++currentAtomId)
         {
-          if (this->AtomNames[currentAtomId].compare(nameChar) == 0)
+          if (this->AtomNames[currentAtomId].compare(*words_iter) == 0)
           {
             found = true;
             break;
@@ -277,17 +278,17 @@ void vtkCMLParser::NewBond(const char **attr)
         if (!found)
         {
           // Create list of known atom names:
-          std::string allAtomNames ("");
+          std::string allAtomNames;
           for (size_t i = 0; i < this->AtomNames.size(); ++i)
           {
             allAtomNames += this->AtomNames[i];
             allAtomNames.push_back(' ');
           }
           vtkWarningMacro(<< "NewBond(): unknown atom name '"
-                          << nameChar << "'. Known atoms:\n"
-                          << allAtomNames.c_str());
+                          << *words_iter << "'. Known atoms:\n"
+                          << allAtomNames);
 
-          nameChar = strtok(NULL, " ");
+          ++words_iter;
           continue;
         }
         else if (atomId1 == -1)
@@ -304,7 +305,7 @@ void vtkCMLParser::NewBond(const char **attr)
                           << atomRefs);
         }
 
-        nameChar = strtok(NULL, " ");
+        ++words_iter;
       }
     }
 

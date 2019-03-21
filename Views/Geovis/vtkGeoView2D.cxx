@@ -36,7 +36,8 @@ vtkCxxSetObjectMacro(vtkGeoView2D, Surface, vtkGeoTerrain2D);
 
 vtkGeoView2D::vtkGeoView2D()
 {
-  this->Surface = 0;
+  VTK_LEGACY_BODY(vtkGeoView2D::vtkGeoView2D, "VTK 8.2");
+  this->Surface = nullptr;
   this->SetInteractionModeTo2D();
   this->Assembly = vtkAssembly::New();
   this->Renderer->AddActor(this->Assembly);
@@ -45,7 +46,7 @@ vtkGeoView2D::vtkGeoView2D()
 
 vtkGeoView2D::~vtkGeoView2D()
 {
-  this->SetSurface(0);
+  this->SetSurface(nullptr);
   if (this->Assembly)
   {
     this->Assembly->Delete();
@@ -58,7 +59,7 @@ vtkAbstractTransform* vtkGeoView2D::GetTransform()
   {
     return this->Surface->GetTransform();
   }
-  return 0;
+  return nullptr;
 }
 
 void vtkGeoView2D::PrintSelf( ostream& os, vtkIndent indent )

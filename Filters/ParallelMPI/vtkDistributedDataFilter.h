@@ -40,41 +40,41 @@
  * the decomposition computed for another dataset.  Obtain a description
  * of the k-d tree cuts this way:
  *
+ * @code{cpp}
  *    vtkBSPCuts *cuts = D3Object1->GetCuts()
+ * @endcode
  *
  * And set it this way:
  *
- *    D3Object2->SetCuts(cuts)
+ * @code{cpp}
+ *     D3Object2->SetCuts(cuts)
+ * @endcode
  *
- *    It is desirable to have a field array of global node IDs
- *    for two reasons:
  *
- *    1. When merging together sub grids that were distributed
+ * It is desirable to have a field array of global node IDs
+ * for two reasons:
+ *
+ * 1. When merging together sub grids that were distributed
  *    across processors, global node IDs can be used to remove
  *    duplicate points and significantly reduce the size of the
  *    resulting output grid.  If no such array is available,
  *    D3 will use a tolerance to merge points, which is much
  *    slower.
  *
- *    2. If ghost cells have been requested, D3 requires a
+ * 2. If ghost cells have been requested, D3 requires a
  *    global node ID array in order to request and transfer
  *    ghost cells in parallel among the processors.  If there
  *    is no global node ID array, D3 will in parallel create
  *    a global node ID array, and the time to do this can be
  *    significant.
  *
- *    If you know the name of a global node ID array in the input
- *    dataset, set that name with this method.  If you leave
- *    it unset, D3 will search the input data set for certain
- *    common names of global node ID arrays.  If none is found,
- *    and ghost cells have been requested, D3 will create a
- *    temporary global node ID array before acquiring ghost cells.
- *   It is also desirable to have global element IDs.  However,
- *   if they don't exist D3 can create them relatively quickly.
- *   Set the name of the global element ID array if you have it.
- *   If it is not set, D3 will search for it using common names.
- *   If still not found, D3 will create a temporary array of
- *   global element IDs.
+ * D3 uses `vtkPointData::GetGlobalIds` to access global
+ * node ids from the input. If none is found,
+ * and ghost cells have been requested, D3 will create a
+ * temporary global node ID array before acquiring ghost cells.
+ *
+ * It is also desirable to have global element IDs (vtkCellData::GetGlobalIds).
+ * However, if they don't exist D3 can create them relatively quickly.
  *
  * @warning
  * The Execute() method must be called by all processes in the
@@ -109,7 +109,7 @@ class VTKFILTERSPARALLELMPI_EXPORT vtkDistributedDataFilter: public vtkDataObjec
     vtkDataObjectAlgorithm);
 
 public:
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkDistributedDataFilter *New();
 
@@ -204,7 +204,7 @@ public:
   /**
    * Ensure previous filters don't send up ghost cells
    */
-  virtual int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  virtual int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   /**
    * This class does a great deal of all-to-all communication
@@ -220,6 +220,12 @@ public:
   vtkGetMacro(UseMinimalMemory, int);
   vtkSetMacro(UseMinimalMemory, int);
 
+  /**
+   * The minimum number of ghost levels to add to each processor's output. If
+   * the pipeline also requests ghost levels, the larger value will be used.
+   */
+  vtkGetMacro(MinimumGhostLevel, int)
+  vtkSetMacro(MinimumGhostLevel, int)
 
   /**
    * Turn on collection of timing data
@@ -250,7 +256,7 @@ public:
    * that may not always work, sometimes the processes have be pre-assigned and
    * we want to preserve that partitioning. In that case, one sets the region
    * assignments explicitly. Look at vtkPKdTree::AssignRegions for details about
-   * the arguments. Calling SetUserRegionAssignments(NULL, 0) will revert to
+   * the arguments. Calling SetUserRegionAssignments(nullptr, 0) will revert to
    * default behavior i.e. letting the KdTree come up with the assignments.
    */
   void SetUserRegionAssignments(const int *map, int numRegions);
@@ -302,11 +308,11 @@ protected:
    */
 
   virtual int RequestData(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
   void SingleProcessExecute(vtkDataSet *input, vtkUnstructuredGrid *output);
   virtual int RequestInformation(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
-  virtual int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+    vtkInformationVector *) override;
+  virtual int FillInputPortInformation(int port, vtkInformation *info) override;
 
   /**
    * Overridden to create the correct type of data output. If input is dataset,
@@ -315,7 +321,7 @@ protected:
    */
   virtual int RequestDataObject(vtkInformation*,
                                 vtkInformationVector**,
-                                vtkInformationVector*) VTK_OVERRIDE;
+                                vtkInformationVector*) override;
 
   /**
    * Implementation for request data.
@@ -466,8 +472,8 @@ private:
   /**
    * ?
    */
-  char *MarshallDataSet(vtkUnstructuredGrid *extractedGrid, int &size);
-  vtkUnstructuredGrid *UnMarshallDataSet(char *buf, int size);
+  char* MarshallDataSet(vtkUnstructuredGrid* extractedGrid, vtkIdType& size);
+  vtkUnstructuredGrid* UnMarshallDataSet(char* buf, vtkIdType size);
   //@}
 
   //@{
@@ -610,6 +616,10 @@ private:
   int NumConvexSubRegions;
   double *ConvexSubRegionBounds;
 
+  // User-adjustable minimum number of ghost levels.
+  int MinimumGhostLevel;
+
+  // Actual number of ghost levels used during execution.
   int GhostLevel;
 
   int RetainKdtree;
@@ -628,8 +638,8 @@ private:
 
   vtkBSPCuts* UserCuts;
 
-  vtkDistributedDataFilter(const vtkDistributedDataFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDistributedDataFilter&) VTK_DELETE_FUNCTION;
+  vtkDistributedDataFilter(const vtkDistributedDataFilter&) = delete;
+  void operator=(const vtkDistributedDataFilter&) = delete;
 
   class vtkInternals;
   vtkInternals* Internals;

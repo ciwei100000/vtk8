@@ -64,7 +64,7 @@ int vtkmCleanGrid::FillInputPortInformation(int, vtkInformation* info)
 }
 
 //------------------------------------------------------------------------------
-int vtkmCleanGrid::RequestData(vtkInformation* request,
+int vtkmCleanGrid::RequestData(vtkInformation* vtkNotUsed(request),
                                vtkInformationVector** inputVector,
                                vtkInformationVector* outputVector)
 {
@@ -76,57 +76,38 @@ int vtkmCleanGrid::RequestData(vtkInformation* request,
   vtkUnstructuredGrid* output =
     vtkUnstructuredGrid::SafeDownCast(outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
-  // convert the input dataset to a vtkm::cont::DataSet
-  vtkm::cont::DataSet in = tovtkm::Convert(input);
-  if (in.GetNumberOfCoordinateSystems() <= 0 || in.GetNumberOfCellSets() <= 0)
+  try
   {
-    vtkErrorMacro(<< "Could not convert vtk dataset to vtkm dataset");
+    // convert the input dataset to a vtkm::cont::DataSet
+    auto fieldsFlag = this->CompactPoints ?
+                      tovtkm::FieldsFlag::Points :
+                      tovtkm::FieldsFlag::None;
+    vtkm::cont::DataSet in = tovtkm::Convert(input, fieldsFlag);
+
+    // apply the filter
+    vtkmInputFilterPolicy policy;
+    vtkm::filter::CleanGrid filter;
+    filter.SetCompactPointFields(this->CompactPoints);
+    auto result = filter.Execute(in, policy);
+
+    // convert back to vtkDataSet (vtkUnstructuredGrid)
+    if (!fromvtkm::Convert(result, output, input))
+    {
+      vtkErrorMacro(<< "Unable to convert VTKm DataSet back to VTK");
+      return 0;
+    }
+  }
+  catch (const vtkm::cont::Error& e)
+  {
+    vtkErrorMacro(<< "VTK-m error: " << e.GetMessage());
     return 0;
   }
 
-
-  // apply the filter
-  vtkmInputFilterPolicy policy;
-
-  vtkm::filter::CleanGrid filter;
-  filter.SetCompactPointFields(this->CompactPoints);
-  vtkm::filter::ResultDataSet result = filter.Execute(in, policy);
-  if (!result.IsValid())
-  {
-    vtkErrorMacro(<< "VTKm CleanGrid algorithm failed to run");
-    return 0;
-  }
-
-  // map each point array
-  vtkPointData* pd = input->GetPointData();
-  for (vtkIdType i = 0; i < pd->GetNumberOfArrays(); i++)
-  {
-    vtkDataArray* array = pd->GetArray(i);
-    if (array == NULL)
-    {
-      continue;
-    }
-
-    vtkm::cont::Field pfield =
-      tovtkm::Convert(array, vtkDataObject::FIELD_ASSOCIATION_POINTS);
-    try
-    {
-      filter.MapFieldOntoOutput(result, pfield, policy);
-    }
-    catch (vtkm::cont::Error&)
-    {
-      vtkWarningMacro(<< "Unable to use VTKm to convert field ("
-      << array->GetName() << ") to the output");
-    }
-  }
-
-  // convert back to vtkDataSet (vtkUnstructuredGrid)
-  if (!fromvtkm::Convert(result.GetDataSet(), output, input))
-  {
-    vtkErrorMacro(<< "Unable to convert VTKm DataSet back to VTK");
-    return 0;
-  }
   // pass cell data
+  if (!this->CompactPoints)
+  {
+    output->GetPointData()->PassData(input->GetPointData());
+  }
   output->GetCellData()->PassData(input->GetCellData());
 
   return 1;

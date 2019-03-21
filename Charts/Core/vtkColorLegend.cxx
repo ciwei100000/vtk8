@@ -46,7 +46,7 @@ vtkColorLegend::vtkColorLegend()
   this->Callback->SetClientData(this);
   this->Callback->SetCallback(vtkColorLegend::OnScalarsToColorsModified);
 
-  this->TransferFunction = NULL;
+  this->TransferFunction = nullptr;
 
   this->Orientation = vtkColorLegend::VERTICAL;
 
@@ -56,9 +56,7 @@ vtkColorLegend::vtkColorLegend()
 }
 
 //-----------------------------------------------------------------------------
-vtkColorLegend::~vtkColorLegend()
-{
-}
+vtkColorLegend::~vtkColorLegend() = default;
 
 //-----------------------------------------------------------------------------
 void vtkColorLegend::PrintSelf(ostream &os, vtkIndent indent)
@@ -87,7 +85,7 @@ void vtkColorLegend::GetBounds(double bounds[4])
 //-----------------------------------------------------------------------------
 void vtkColorLegend::Update()
 {
-  if (this->ImageData == 0 ||
+  if (this->ImageData == nullptr ||
       this->ImageData->GetMTime() < this->GetMTime())
   {
     this->ComputeTexture();
@@ -116,7 +114,7 @@ void vtkColorLegend::Update()
 //-----------------------------------------------------------------------------
 bool vtkColorLegend::Paint(vtkContext2D* painter)
 {
-  if (this->TransferFunction == NULL)
+  if (this->TransferFunction == nullptr)
   {
     return true;
   }
@@ -126,8 +124,8 @@ bool vtkColorLegend::Paint(vtkContext2D* painter)
   if (this->DrawBorder)
   {
     // Draw a box around the legend.
-    painter->ApplyPen(this->Pen.GetPointer());
-    painter->ApplyBrush(this->Brush.GetPointer());
+    painter->ApplyPen(this->Pen);
+    painter->ApplyBrush(this->Brush);
     painter->DrawRect(this->Rect.GetX(), this->Rect.GetY(),
                       this->Rect.GetWidth(), this->Rect.GetHeight());
   }
@@ -264,7 +262,7 @@ vtkRectf vtkColorLegend::GetBoundingRect(vtkContext2D *painter)
 //-----------------------------------------------------------------------------
 void vtkColorLegend::ComputeTexture()
 {
-  if (this->TransferFunction == NULL)
+  if (this->TransferFunction == nullptr)
   {
     return;
   }

@@ -24,14 +24,10 @@
 #include "vtkMultiProcessController.h"
 
 //----------------------------------------------------------------------------
-vtkXMLPStructuredDataWriter::vtkXMLPStructuredDataWriter()
-{
-}
+vtkXMLPStructuredDataWriter::vtkXMLPStructuredDataWriter() = default;
 
 //----------------------------------------------------------------------------
-vtkXMLPStructuredDataWriter::~vtkXMLPStructuredDataWriter()
-{
-}
+vtkXMLPStructuredDataWriter::~vtkXMLPStructuredDataWriter() = default;
 
 //----------------------------------------------------------------------------
 void vtkXMLPStructuredDataWriter::PrintSelf(ostream& os, vtkIndent indent)
@@ -104,9 +100,9 @@ void vtkXMLPStructuredDataWriter::PrepareSummaryFile()
     int nPiecesTotal = 0;
     vtkIdType nPieces = static_cast<vtkIdType>(this->Extents.size());
 
-    vtkIdType* offsets = 0;
-    vtkIdType* nPiecesAll = 0;
-    vtkIdType* recvLengths = 0;
+    vtkIdType* offsets = nullptr;
+    vtkIdType* nPiecesAll = nullptr;
+    vtkIdType* recvLengths = nullptr;
     if (rank == 0)
     {
       nPiecesAll = new vtkIdType[nRanks];
@@ -123,7 +119,7 @@ void vtkXMLPStructuredDataWriter::PrepareSummaryFile()
         recvLengths[i] = nPiecesAll[i]*7;
       }
     }
-    int* sendBuffer = 0;
+    int* sendBuffer = nullptr;
     int sendSize = nPieces*7;
     if (nPieces > 0)
     {
@@ -135,7 +131,7 @@ void vtkXMLPStructuredDataWriter::PrepareSummaryFile()
         memcpy(&sendBuffer[count*7+1], &iter->second[0], 6*sizeof(int));
       }
     }
-    int* recvBuffer = 0;
+    int* recvBuffer = nullptr;
     if (rank == 0)
     {
       recvBuffer = new int[nPiecesTotal*7];

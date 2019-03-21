@@ -14,7 +14,7 @@
 =========================================================================*/
 /**
  * @class   vtkTupleInterpolator
- * @brief   interpolate a tuple of arbitray size
+ * @brief   interpolate a tuple of arbitrary size
  *
  * This class is used to interpolate a tuple which may have an arbitrary
  * number of components (but at least one component). The interpolation may
@@ -55,7 +55,7 @@ class VTKRENDERINGCORE_EXPORT vtkTupleInterpolator : public vtkObject
 {
 public:
   vtkTypeMacro(vtkTupleInterpolator, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate the class.
@@ -156,7 +156,7 @@ public:
 
 protected:
   vtkTupleInterpolator();
-  ~vtkTupleInterpolator() VTK_OVERRIDE;
+  ~vtkTupleInterpolator() override;
 
   // The number of components being interpolated
   int NumberOfComponents;
@@ -174,8 +174,8 @@ protected:
 
 
 private:
-  vtkTupleInterpolator(const vtkTupleInterpolator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTupleInterpolator&) VTK_DELETE_FUNCTION;
+  vtkTupleInterpolator(const vtkTupleInterpolator&) = delete;
+  void operator=(const vtkTupleInterpolator&) = delete;
 
 };
 

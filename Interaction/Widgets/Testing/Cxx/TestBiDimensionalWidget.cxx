@@ -1089,11 +1089,11 @@ class vtkBiDimensionalCallback : public vtkCommand
 public:
   static vtkBiDimensionalCallback *New()
   { return new vtkBiDimensionalCallback; }
-  void Execute(vtkObject *, unsigned long, void*) VTK_OVERRIDE
+  void Execute(vtkObject *, unsigned long, void*) override
   {
     std::cout << "End interaction event\n" << std::flush;
   }
-  vtkBiDimensionalCallback() {}
+  vtkBiDimensionalCallback() = default;
 };
 
 int TestBiDimensionalWidget( int argc, char *argv[] )

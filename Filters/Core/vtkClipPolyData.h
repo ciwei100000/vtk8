@@ -69,7 +69,7 @@ class VTKFILTERSCORE_EXPORT vtkClipPolyData : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkClipPolyData,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with user-specified implicit function; InsideOut turned off;
@@ -97,9 +97,9 @@ public:
    * value is less than or equal to the Value ivar.  InsideOut is off
    * by default.
    */
-  vtkSetMacro(InsideOut,int);
-  vtkGetMacro(InsideOut,int);
-  vtkBooleanMacro(InsideOut,int);
+  vtkSetMacro(InsideOut,vtkTypeBool);
+  vtkGetMacro(InsideOut,vtkTypeBool);
+  vtkBooleanMacro(InsideOut,vtkTypeBool);
   //@}
 
   //@{
@@ -120,9 +120,9 @@ public:
    * implicit function an error will be reported.
    * GenerateClipScalars is off by default.
    */
-  vtkSetMacro(GenerateClipScalars,int);
-  vtkGetMacro(GenerateClipScalars,int);
-  vtkBooleanMacro(GenerateClipScalars,int);
+  vtkSetMacro(GenerateClipScalars,vtkTypeBool);
+  vtkGetMacro(GenerateClipScalars,vtkTypeBool);
+  vtkBooleanMacro(GenerateClipScalars,vtkTypeBool);
   //@}
 
   //@{
@@ -131,9 +131,9 @@ public:
    * contains the polygonal data that's been clipped away.
    * GenerateClippedOutput is off by default.
    */
-  vtkSetMacro(GenerateClippedOutput,int);
-  vtkGetMacro(GenerateClippedOutput,int);
-  vtkBooleanMacro(GenerateClippedOutput,int);
+  vtkSetMacro(GenerateClippedOutput,vtkTypeBool);
+  vtkGetMacro(GenerateClippedOutput,vtkTypeBool);
+  vtkBooleanMacro(GenerateClippedOutput,vtkTypeBool);
   //@}
 
   /**
@@ -167,7 +167,7 @@ public:
   /**
    * Return the mtime also considering the locator and clip function.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -181,22 +181,22 @@ public:
   //@}
 
 protected:
-  vtkClipPolyData(vtkImplicitFunction *cf=NULL);
-  ~vtkClipPolyData() VTK_OVERRIDE;
+  vtkClipPolyData(vtkImplicitFunction *cf=nullptr);
+  ~vtkClipPolyData() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   vtkImplicitFunction *ClipFunction;
 
   vtkIncrementalPointLocator *Locator;
-  int InsideOut;
+  vtkTypeBool InsideOut;
   double Value;
-  int GenerateClipScalars;
-  int GenerateClippedOutput;
+  vtkTypeBool GenerateClipScalars;
+  vtkTypeBool GenerateClippedOutput;
   int OutputPointsPrecision;
 
 private:
-  vtkClipPolyData(const vtkClipPolyData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkClipPolyData&) VTK_DELETE_FUNCTION;
+  vtkClipPolyData(const vtkClipPolyData&) = delete;
+  void operator=(const vtkClipPolyData&) = delete;
 };
 
 #endif

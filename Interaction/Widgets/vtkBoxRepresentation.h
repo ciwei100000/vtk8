@@ -50,6 +50,7 @@ class vtkPoints;
 class vtkPolyDataAlgorithm;
 class vtkPointHandleRepresentation3D;
 class vtkTransform;
+class vtkPlane;
 class vtkPlanes;
 class vtkBox;
 class vtkDoubleArray;
@@ -69,7 +70,7 @@ public:
    * Standard methods for the class.
    */
   vtkTypeMacro(vtkBoxRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -82,6 +83,11 @@ public:
    */
   void GetPlanes(vtkPlanes *planes);
 
+  // Get the underlying planes used by this rep
+  // this can be used as a cropping planes in vtkMapper
+  vtkPlane *GetUnderlyingPlane(int i) {
+    return this->Planes[i]; }
+
   //@{
   /**
    * Set/Get the InsideOut flag. This data member is used in conjunction
@@ -89,9 +95,9 @@ public:
    * box. When on, the normals point into the hexahedron.  InsideOut is off
    * by default.
    */
-  vtkSetMacro(InsideOut,int);
-  vtkGetMacro(InsideOut,int);
-  vtkBooleanMacro(InsideOut,int);
+  vtkSetMacro(InsideOut,vtkTypeBool);
+  vtkGetMacro(InsideOut,vtkTypeBool);
+  vtkBooleanMacro(InsideOut,vtkTypeBool);
   //@}
 
   /**
@@ -99,7 +105,7 @@ public:
    * box. Note that the transformation is relative to where PlaceWidget()
    * was initially called. This method modifies the transform provided. The
    * transform can be used to control the position of vtkProp3D's, as well as
-   * other transformation operations (e.g., vtkTranformPolyData).
+   * other transformation operations (e.g., vtkTransformPolyData).
    */
   virtual void GetTransform(vtkTransform *t);
 
@@ -189,22 +195,38 @@ public:
   /**
    * These are methods that satisfy vtkWidgetRepresentation's API.
    */
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void BuildRepresentation() VTK_OVERRIDE;
-  int  ComputeInteractionState(int X, int Y, int modify=0) VTK_OVERRIDE;
-  void StartWidgetInteraction(double e[2]) VTK_OVERRIDE;
-  void WidgetInteraction(double e[2]) VTK_OVERRIDE;
-  double *GetBounds() VTK_OVERRIDE;
+  void PlaceWidget(double bounds[6]) override;
+  void BuildRepresentation() override;
+  int  ComputeInteractionState(int X, int Y, int modify=0) override;
+  void StartWidgetInteraction(double e[2]) override;
+  void WidgetInteraction(double e[2]) override;
+  double *GetBounds() VTK_SIZEHINT(6) override;
+  void StartComplexInteraction(
+    vtkRenderWindowInteractor *iren,
+    vtkAbstractWidget *widget,
+    unsigned long event, void *calldata) override;
+  void ComplexInteraction(
+    vtkRenderWindowInteractor *iren,
+    vtkAbstractWidget *widget,
+    unsigned long event, void *calldata) override;
+  int ComputeComplexInteractionState(
+    vtkRenderWindowInteractor *iren,
+    vtkAbstractWidget *widget,
+    unsigned long event, void *calldata, int modify = 0) override;
+  void EndComplexInteraction(
+    vtkRenderWindowInteractor *iren,
+    vtkAbstractWidget *widget,
+    unsigned long event, void *calldata) override;
   //@}
 
   //@{
   /**
    * Methods supporting, and required by, the rendering process.
    */
-  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
-  int  RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int  RenderTranslucentPolygonalGeometry(vtkViewport*) VTK_OVERRIDE;
-  int  HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow*) override;
+  int  RenderOpaqueGeometry(vtkViewport*) override;
+  int  RenderTranslucentPolygonalGeometry(vtkViewport*) override;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
   //@}
 
   // Used to manage the state of the widget
@@ -221,12 +243,51 @@ public:
    */
   void SetInteractionState(int state);
 
+  //@{
+  /**
+   * In two plane mode only the X planes are shown
+   * this is useful for defining thick slabs
+   */
+  vtkGetMacro(TwoPlaneMode, bool);
+  void SetTwoPlaneMode(bool);
+  //@}
+
+  //@{
+  /**
+   * For complex events should we snap orientations to
+   * be aligned with the x y z axes
+   */
+  vtkGetMacro(SnapToAxes, bool);
+  vtkSetMacro(SnapToAxes, bool);
+  //@}
+
+  //@{
+  /**
+   * For complex events should we snap orientations to
+   * be aligned with the x y z axes
+   */
+  void StepForward();
+  void StepBackward();
+  //@}
+
+  /*
+  * Register internal Pickers within PickingManager
+  */
+  void RegisterPickers() override;
+
 protected:
   vtkBoxRepresentation();
-  ~vtkBoxRepresentation() VTK_OVERRIDE;
+  ~vtkBoxRepresentation() override;
 
   // Manage how the representation appears
   double LastEventPosition[3];
+  double LastEventOrientation[4];
+  double StartEventOrientation[4];
+  double SnappedEventOrientations[3][4];
+  bool SnappedOrientation[3];
+  bool SnapToAxes;
+
+  bool TwoPlaneMode;
 
   // the hexahedron (6 faces)
   vtkActor          *HexActor;
@@ -263,9 +324,6 @@ protected:
   int      CurrentHexFace;
   vtkCellPicker *LastPicker;
 
-  // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
-
   // Transform the hexahedral points (used for rotations)
   vtkTransform *Transform;
 
@@ -283,7 +341,7 @@ protected:
   virtual void CreateDefaultProperties();
 
   // Control the orientation of the normals
-  int InsideOut;
+  vtkTypeBool InsideOut;
   int OutlineFaceWires;
   int OutlineCursorWires;
   void GenerateOutline();
@@ -298,11 +356,15 @@ protected:
   void MoveMinusYFace(double *p1, double *p2);
   void MovePlusZFace(double *p1, double *p2);
   void MoveMinusZFace(double *p1, double *p2);
+  void UpdatePose(double *p1, double *d1, double *p2, double *d2);
 
   // Internal ivars for performance
   vtkPoints      *PlanePoints;
   vtkDoubleArray *PlaneNormals;
   vtkMatrix4x4   *Matrix;
+
+  // The actual planes which are being manipulated
+  vtkPlane *Planes[6];
 
   //"dir" is the direction in which the face can be moved i.e. the axis passing
   //through the center
@@ -316,8 +378,8 @@ protected:
 
 
 private:
-  vtkBoxRepresentation(const vtkBoxRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoxRepresentation&) VTK_DELETE_FUNCTION;
+  vtkBoxRepresentation(const vtkBoxRepresentation&) = delete;
+  void operator=(const vtkBoxRepresentation&) = delete;
 };
 
 #endif

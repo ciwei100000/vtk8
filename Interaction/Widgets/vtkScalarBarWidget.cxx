@@ -40,9 +40,7 @@ vtkScalarBarWidget::vtkScalarBarWidget()
 }
 
 //-------------------------------------------------------------------------
-vtkScalarBarWidget::~vtkScalarBarWidget()
-{
-}
+vtkScalarBarWidget::~vtkScalarBarWidget() = default;
 
 //-----------------------------------------------------------------------------
 void vtkScalarBarWidget::SetRepresentation(vtkScalarBarRepresentation *rep)
@@ -109,7 +107,7 @@ void vtkScalarBarWidget::SetCursor(int cState)
 //-------------------------------------------------------------------------
 void vtkScalarBarWidget::MoveAction(vtkAbstractWidget *w)
 {
-  // The the superclass handle most stuff.
+  // The superclass handle most stuff.
   vtkScalarBarWidget::Superclass::MoveAction(w);
 
   vtkScalarBarWidget *self = reinterpret_cast<vtkScalarBarWidget*>(w);

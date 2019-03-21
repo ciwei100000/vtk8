@@ -46,7 +46,7 @@ class VTKRENDERINGOPENGL2_EXPORT vtkShaderProgram : public vtkObject
 public:
   static vtkShaderProgram *New();
   vtkTypeMacro(vtkShaderProgram, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -187,6 +187,7 @@ public:
   bool SetUniform2i(const char *name, const int v[2]);
   bool SetUniform2f(const char *name, const float v[2]);
   bool SetUniform3f(const char *name, const float v[3]);
+  bool SetUniform3f(const char *name, const double v[3]);
   bool SetUniform4f(const char *name, const float v[4]);
   bool SetUniform3uc(const char *name, const unsigned char v[3]); // maybe remove
   bool SetUniform4uc(const char *name, const unsigned char v[4]); // maybe remove
@@ -210,10 +211,33 @@ public:
   /**
    * perform in place string substitutions, indicate if a substitution was done
    * this is useful for building up shader strings which typically involve
-   * lots of string substitutions. Return true if a substitution was done.
+   * lots of string substitutions.
+   *
+   * \param[in] shader  The source shader object to perform substitutions on
+   * \param[in] search  The string to search for
+   * \param[in] replace The string replacement
+   * \param[in] all     Whether to replace all matches or just the first one
+   * \return    A boolean indicating whether the replacement was successful
    */
   static bool Substitute(
     std::string &source,
+    const std::string &search,
+    const std::string &replace,
+    bool all = true);
+
+  /**
+   * Perform in-place string substitutions on the shader source string and
+   * indicate if one or all substitutions were done. This is useful for building
+   * up shader strings which typically involve a lot of string substitutions.
+   *
+   * \param[in] shader  The source shader object to perform substitutions on
+   * \param[in] search  The string to search for
+   * \param[in] replace The string replacement
+   * \param[in] all     Whether to replace all matches or just the first one
+   * \return    A boolean indicating whether the replacement was successful
+   */
+  static bool Substitute(
+    vtkShader* shader,
     const std::string &search,
     const std::string &replace,
     bool all = true);
@@ -234,7 +258,7 @@ public:
   // maps of std::string are super slow when calling find
   // with a string literal or const char * as find
   // forces construction/copy/destruction of a
-  // std::sting copy of the const char *
+  // std::string copy of the const char *
   // In spite of the doubters this can really be a
   // huge CPU hog.
   struct cmp_str
@@ -258,7 +282,7 @@ public:
    * If the file exists, then the shader is recompiled to use the contents of that file.
    * Thus, after the files have been dumped in the first render, you can open the files
    * in a text editor and update as needed. On following render, the modified
-   * contexts from  the file will be used.
+   * contexts from the file will be used.
    *
    * This is only intended for debugging during development and should not be
    * used in production.
@@ -267,9 +291,29 @@ public:
   vtkGetStringMacro(FileNamePrefixForDebugging);
   //@}
 
+  //@{
+  /**
+   * Set/Get times that can be used to track when a set of
+   * uniforms was last updated. This can be used to reduce
+   * redundent SetUniformCalls
+   */
+  enum UniformGroups {
+    CameraGroup,
+    LightingGroup,
+    UserGroup, // always will be last
+  };
+  void SetUniformGroupUpdateTime(int, vtkMTimeType tm);
+  vtkMTimeType GetUniformGroupUpdateTime(int);
+  //@}
+
+  // returns the location for a uniform or attribute in
+  // this program. Is cached for performance.
+  int FindUniform(const char *name);
+  int FindAttributeArray(const char *name);
+
 protected:
   vtkShaderProgram();
-  ~vtkShaderProgram() VTK_OVERRIDE;
+  ~vtkShaderProgram() override;
 
   /***************************************************************
    * The following functions are only for use by the shader cache
@@ -351,14 +395,13 @@ protected:
   std::map<const char *, int, cmp_str> AttributeLocs;
   std::map<const char *, int, cmp_str> UniformLocs;
 
+  std::map<int, vtkMTimeType> UniformGroupMTimes;
+
   friend class VertexArrayObject;
 
 private:
-  int FindAttributeArray(const char *name);
-  int FindUniform(const char *name);
-
-  vtkShaderProgram(const vtkShaderProgram&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkShaderProgram&) VTK_DELETE_FUNCTION;
+  vtkShaderProgram(const vtkShaderProgram&) = delete;
+  void operator=(const vtkShaderProgram&) = delete;
 
   char* FileNamePrefixForDebugging;
 };

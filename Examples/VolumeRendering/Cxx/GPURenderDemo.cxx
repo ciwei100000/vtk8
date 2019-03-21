@@ -41,7 +41,7 @@ class vtkBoxWidgetCallback : public vtkCommand
 public:
   static vtkBoxWidgetCallback *New()
     { return new vtkBoxWidgetCallback; }
-  void Execute(vtkObject *caller, unsigned long, void*) VTK_OVERRIDE
+  void Execute(vtkObject *caller, unsigned long, void*) override
   {
       vtkBoxWidget *widget = reinterpret_cast<vtkBoxWidget*>(caller);
       if (this->Mapper)
@@ -57,7 +57,7 @@ public:
 
 protected:
   vtkBoxWidgetCallback()
-    { this->Mapper = 0; }
+    { this->Mapper = nullptr; }
 
   vtkSmartVolumeMapper *Mapper;
 };
@@ -114,14 +114,14 @@ int main(int argc, char *argv[])
   // Parse the parameters
 
   int count = 1;
-  char *dirname = NULL;
+  char *dirname = nullptr;
   double opacityWindow = 4096;
   double opacityLevel = 2048;
   int blendType = 0;
   int clip = 0;
   double reductionFactor = 1.0;
   double frameRate = 10.0;
-  char *fileName=0;
+  char *fileName=nullptr;
   int fileType=0;
 
   bool independentComponents=true;
@@ -135,22 +135,25 @@ int main(int argc, char *argv[])
     }
     else if ( !strcmp( argv[count], "-DICOM" ) )
     {
-      dirname = new char[strlen(argv[count+1])+1];
-      sprintf( dirname, "%s", argv[count+1] );
+      size_t size = strlen(argv[count+1])+1;
+      dirname = new char[size];
+      snprintf( dirname, size, "%s", argv[count+1] );
       count += 2;
     }
     else if ( !strcmp( argv[count], "-VTI" ) )
     {
-      fileName = new char[strlen(argv[count+1])+1];
+      size_t size = strlen(argv[count+1])+1;
+      fileName = new char[size];
       fileType = VTI_FILETYPE;
-      sprintf( fileName, "%s", argv[count+1] );
+      snprintf( fileName, size, "%s", argv[count+1] );
       count += 2;
     }
     else if ( !strcmp( argv[count], "-MHA" ) )
     {
-      fileName = new char[strlen(argv[count+1])+1];
+      size_t size = strlen(argv[count+1])+1;
+      fileName = new char[size];
       fileType = MHA_FILETYPE;
-      sprintf( fileName, "%s", argv[count+1] );
+      snprintf( fileName, size, "%s", argv[count+1] );
       count += 2;
     }
     else if ( !strcmp( argv[count], "-Clip") )
@@ -260,8 +263,8 @@ int main(int argc, char *argv[])
   iren->GetInteractorStyle()->SetDefaultRenderer(renderer);
 
   // Read the data
-  vtkAlgorithm *reader=0;
-  vtkImageData *input=0;
+  vtkAlgorithm *reader=nullptr;
+  vtkImageData *input=nullptr;
   if(dirname)
   {
     vtkDICOMImageReader *dicomReader = vtkDICOMImageReader::New();

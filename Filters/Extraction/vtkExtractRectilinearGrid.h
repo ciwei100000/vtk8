@@ -40,7 +40,7 @@ class VTKFILTERSEXTRACTION_EXPORT vtkExtractRectilinearGrid : public vtkRectilin
 public:
   static vtkExtractRectilinearGrid *New();
   vtkTypeMacro(vtkExtractRectilinearGrid,vtkRectilinearGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -73,18 +73,18 @@ public:
    * though the sample rate is not an even multiple of the grid
    * dimensions. (By default IncludeBoundary is off.)
    */
-  vtkSetMacro(IncludeBoundary,int);
-  vtkGetMacro(IncludeBoundary,int);
-  vtkBooleanMacro(IncludeBoundary,int);
+  vtkSetMacro(IncludeBoundary,vtkTypeBool);
+  vtkGetMacro(IncludeBoundary,vtkTypeBool);
+  vtkBooleanMacro(IncludeBoundary,vtkTypeBool);
   //@}
 
 protected:
   vtkExtractRectilinearGrid();
-  ~vtkExtractRectilinearGrid() VTK_OVERRIDE;
+  ~vtkExtractRectilinearGrid() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   /**
    * Implementation for RequestData using a specified VOI. This is because the
@@ -97,12 +97,12 @@ protected:
 
   int VOI[6];
   int SampleRate[3];
-  int IncludeBoundary;
+  vtkTypeBool IncludeBoundary;
 
   vtkExtractStructuredGridHelper* Internal;
 private:
-  vtkExtractRectilinearGrid(const vtkExtractRectilinearGrid&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtractRectilinearGrid&) VTK_DELETE_FUNCTION;
+  vtkExtractRectilinearGrid(const vtkExtractRectilinearGrid&) = delete;
+  void operator=(const vtkExtractRectilinearGrid&) = delete;
 };
 
 #endif

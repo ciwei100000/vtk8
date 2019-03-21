@@ -41,8 +41,8 @@ vtkStandardNewMacro(vtkVRMLExporter);
 vtkVRMLExporter::vtkVRMLExporter()
 {
   this->Speed = 4.0;
-  this->FileName = NULL;
-  this->FilePointer = NULL;
+  this->FileName = nullptr;
+  this->FilePointer = nullptr;
 }
 
 vtkVRMLExporter::~vtkVRMLExporter()
@@ -62,7 +62,6 @@ void vtkVRMLExporter::SetFilePointer(FILE *fp)
 
 void vtkVRMLExporter::WriteData()
 {
-  vtkRenderer *ren;
   vtkActorCollection *ac;
   vtkActor *anActor, *aPart;
   vtkLightCollection *lc;
@@ -72,22 +71,18 @@ void vtkVRMLExporter::WriteData()
   FILE *fp;
 
   // make sure the user specified a FileName or FilePointer
-  if (!this->FilePointer && (this->FileName == NULL))
+  if (!this->FilePointer && (this->FileName == nullptr))
   {
     vtkErrorMacro(<< "Please specify FileName to use");
     return;
   }
 
-  // Always pick the first renderer
-  // first make sure there is only one renderer in this rendering window
-  //if (this->RenderWindow->GetRenderers()->GetNumberOfItems() > 1)
-  //  {
-  //  vtkErrorMacro(<< "VRML files only support one renderer per window.");
-  //  return;
-  //  }
-
   // get the renderer
-  ren = this->RenderWindow->GetRenderers()->GetFirstRenderer();
+  vtkRenderer *ren = this->ActiveRenderer;
+  if (!ren)
+  {
+    ren = this->RenderWindow->GetRenderers()->GetFirstRenderer();
+  }
 
   // make sure it has at least one actor
   if (ren->GetActors()->GetNumberOfItems() < 1)
@@ -237,13 +232,13 @@ void vtkVRMLExporter::WriteAnActor(vtkActor *anActor, FILE *fp)
   vtkSmartPointer<vtkPolyData> pd;
   vtkPointData *pntData;
   vtkPoints *points;
-  vtkDataArray *normals = NULL;
-  vtkDataArray *tcoords = NULL;
+  vtkDataArray *normals = nullptr;
+  vtkDataArray *tcoords = nullptr;
   int i, i1, i2;
   double *tempd;
   vtkCellArray *cells;
   vtkIdType npts = 0;
-  vtkIdType *indx = 0;
+  vtkIdType *indx = nullptr;
   int pointDataWritten = 0;
   vtkPolyDataMapper *pm;
   vtkUnsignedCharArray *colors;
@@ -252,7 +247,7 @@ void vtkVRMLExporter::WriteAnActor(vtkActor *anActor, FILE *fp)
   vtkTransform *trans;
 
   // see if the actor has a mapper. it could be an assembly
-  if (anActor->GetMapper() == NULL)
+  if (anActor->GetMapper() == nullptr)
   {
     return;
   }
@@ -264,7 +259,7 @@ void vtkVRMLExporter::WriteAnActor(vtkActor *anActor, FILE *fp)
   // Before putting out anything in the file, ensure that we have an exportable
   // dataset being rendered by the actor.
   vtkDataObject* inputDO = anActor->GetMapper()->GetInputDataObject(0, 0);
-  if (inputDO == NULL)
+  if (inputDO == nullptr)
   {
     return;
   }
@@ -294,7 +289,7 @@ void vtkVRMLExporter::WriteAnActor(vtkActor *anActor, FILE *fp)
     pd = static_cast<vtkPolyData *>(inputDO);
   }
 
-  if (pd == NULL || pd->GetNumberOfPoints() == 0)
+  if (pd == nullptr || pd->GetNumberOfPoints() == 0)
   {
     return;
   }
@@ -449,7 +444,7 @@ void vtkVRMLExporter::WriteAnActor(vtkActor *anActor, FILE *fp)
     fprintf(fp,"          geometry IndexedLineSet {\n");
     if (!pointDataWritten)
     {
-      this->WritePointData(points, NULL, NULL, colors, fp);
+      this->WritePointData(points, nullptr, nullptr, colors, fp);
       pointDataWritten = 1;
     }
     else
@@ -534,11 +529,10 @@ void vtkVRMLExporter::WriteShapeBegin( vtkActor* actor, FILE *fileP,
   double tempf2;
 
   fprintf(fileP,"        Shape {\n");
-  vtkProperty* props = 0;
+  vtkProperty* props = actor->GetProperty();
   // write out the material properties to the mat file
   fprintf(fileP,"          appearance Appearance {\n");
   fprintf(fileP,"            material Material {\n");
-  props = actor->GetProperty();
   fprintf(fileP,"              ambientIntensity %g\n", props->GetAmbient());
   // if we don't have colors and we have only lines & points
   // use emissive to color them
@@ -572,7 +566,7 @@ void vtkVRMLExporter::WriteShapeBegin( vtkActor* actor, FILE *fileP,
     unsigned char *txtrData;
 
     // make sure it is updated and then get some info
-    if (aTexture->GetInput() == NULL)
+    if (aTexture->GetInput() == nullptr)
     {
       vtkErrorMacro(<< "texture has no input!\n");
       return;
@@ -589,7 +583,7 @@ void vtkVRMLExporter::WriteShapeBegin( vtkActor* actor, FILE *fileP,
     }
 
     // make sure using unsigned char data of color scalars type
-    if (aTexture->GetMapColorScalarsThroughLookupTable () ||
+    if (aTexture->GetColorMode() == VTK_COLOR_MODE_MAP_SCALARS ||
         (scalars->GetDataType() != VTK_UNSIGNED_CHAR) )
     {
       mappedScalars = aTexture->GetMappedScalars ();

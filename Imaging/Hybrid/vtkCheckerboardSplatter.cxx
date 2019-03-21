@@ -94,7 +94,7 @@ public:
   vtkIdType Offsets[9];
 
   // Construct the algorithm; initialize key data members.
-  vtkCheckerboardSplatterAlgorithm() {}
+  vtkCheckerboardSplatterAlgorithm() = default;
 
   // Integration between VTK and templated algorithm
   static void SplatPoints(vtkCheckerboardSplatter *self, vtkIdType npts,
@@ -249,7 +249,7 @@ public:
     }
   };
 
-  // Accumlate scalar values as appropriate
+  // Accumulate scalar values as appropriate
   void SetScalar(vtkIdType ptId, double pd[3], double x[3], TScalars *sPtr)
   {
     double dist2 = (this->*Sample)(ptId,x,pd);
@@ -446,7 +446,7 @@ SplatPoints(vtkCheckerboardSplatter *self, vtkIdType npts, TPoints *pts,
   algo.ParallelSplatCrossover = self->GetParallelSplatCrossover();
 
   //  Set up function pointers to sample functions
-  if ( self->GetNormalWarping() && (algo.InNormals != NULL) )
+  if ( self->GetNormalWarping() && (algo.InNormals != nullptr) )
   {
     algo.Sample = &vtkCheckerboardSplatterAlgorithm::EccentricGaussian;
   }
@@ -455,7 +455,7 @@ SplatPoints(vtkCheckerboardSplatter *self, vtkIdType npts, TPoints *pts,
     algo.Sample = &vtkCheckerboardSplatterAlgorithm::Gaussian;
   }
 
-  if ( self->GetScalarWarping() && algo.InScalars != NULL )
+  if ( self->GetScalarWarping() && algo.InScalars != nullptr )
   {
     algo.SampleFactor = &vtkCheckerboardSplatterAlgorithm::ScalarSampling;
   }
@@ -496,7 +496,7 @@ SplatPoints(vtkCheckerboardSplatter *self, vtkIdType npts, TPoints *pts,
   // total colors / groups). Because the checkerboard dimensions are a
   // multiple of two, the total number of all colors of squares is divisible
   // by 8. Also set up offsets for each color / group which is used in
-  // determing addresses and later processing.
+  // determining addresses and later processing.
   algo.NSquares = algo.BDims[0]*algo.BDims[1]*algo.BDims[2];
   for (i=0; i<9; ++i)
   {
@@ -705,7 +705,7 @@ int vtkCheckerboardSplatter::RequestData(
   vtkDataArray *inNormals = input->GetPointData()->GetNormals();
 
   // Okay actually execute the algorithm. Manage all the crazy template
-  // stuff. Note that the output types are currently limitied to
+  // stuff. Note that the output types are currently limited to
   // (float,double) to manage precision. The point type is also limited
   // to real types but could be easily extended to other types.
   void *ptsPtr = points->GetVoidPointer(0);

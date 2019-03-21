@@ -57,14 +57,14 @@ int vtkCursor2D::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
   int i;
   int numPts=0;
   vtkPoints *newPts;
-  vtkCellArray *newLines=NULL, *newVerts=NULL;
+  vtkCellArray *newLines=nullptr, *newVerts=nullptr;
   double x[3];
   vtkIdType ptIds[5];
 

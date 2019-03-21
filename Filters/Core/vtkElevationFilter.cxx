@@ -43,7 +43,7 @@ public:
   const double *V;
   double L2;
 
-  // Contructor
+  // Constructor
   vtkElevationAlgorithm();
 
   // Interface between VTK and templated functions
@@ -88,7 +88,7 @@ public:
 //----------------------------------------------------------------------------
 // Initialized mainly to eliminate compiler warnings.
 template <class TP> vtkElevationAlgorithm<TP>::
-vtkElevationAlgorithm():Points(NULL),Scalars(NULL)
+vtkElevationAlgorithm():Points(nullptr),Scalars(nullptr)
 {
   this->LowPoint[0] = this->LowPoint[1] = this->LowPoint[2] = 0.0;
   this->HighPoint[0] = this->HighPoint[1] = 0.0;
@@ -136,9 +136,7 @@ vtkElevationFilter::vtkElevationFilter()
 }
 
 //----------------------------------------------------------------------------
-vtkElevationFilter::~vtkElevationFilter()
-{
-}
+vtkElevationFilter::~vtkElevationFilter() = default;
 
 //----------------------------------------------------------------------------
 void vtkElevationFilter::PrintSelf(ostream& os, vtkIndent indent)
@@ -208,8 +206,12 @@ int vtkElevationFilter::RequestData(vtkInformation*,
     switch ( points->GetDataType() )
     {
       vtkTemplateMacro(
-        vtkElevationAlgorithm<VTK_TT>::Elevate(this,numPts,diffVector,length2,
-                                               (VTK_TT *)pts,scalars));
+        vtkElevationAlgorithm<VTK_TT>::Elevate(this,
+                                               numPts,
+                                               diffVector,
+                                               length2,
+                                               static_cast<VTK_TT *>(pts),
+                                               scalars));
     }
   }//fast path
 

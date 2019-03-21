@@ -38,9 +38,7 @@ vtkRotationFilter::vtkRotationFilter()
 }
 
 //---------------------------------------------------------------------------
-vtkRotationFilter::~vtkRotationFilter()
-{
-}
+vtkRotationFilter::~vtkRotationFilter() = default;
 
 //---------------------------------------------------------------------------
 void vtkRotationFilter::PrintSelf(ostream &os, vtkIndent indent)
@@ -71,7 +69,6 @@ int vtkRotationFilter::RequestData(
   vtkUnstructuredGrid *output = vtkUnstructuredGrid::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
-  vtkIdType i;
   vtkPointData *inPD = input->GetPointData();
   vtkPointData *outPD = output->GetPointData();
   vtkCellData *inCD = input->GetCellData();
@@ -86,7 +83,7 @@ int vtkRotationFilter::RequestData(
   double tuple[3];
   vtkPoints *outPoints;
   double point[3], center[3], negativCenter[3];
-  int ptId, cellId, j, k;
+  vtkIdType ptId, cellId;
   vtkGenericCell *cell = vtkGenericCell::New();
   vtkIdList *ptIds = vtkIdList::New();
 
@@ -122,7 +119,7 @@ int vtkRotationFilter::RequestData(
   // Copy first points.
   if (this->CopyInput)
   {
-    for (i = 0; i < numPts; i++)
+    for (vtkIdType i = 0; i < numPts; ++i)
     {
       input->GetPoint(i, point);
       ptId = outPoints->InsertNextPoint(point);
@@ -137,7 +134,7 @@ int vtkRotationFilter::RequestData(
   negativCenter[1] = -center[1];
   negativCenter[2] = -center[2];
 
-  for (k = 0; k < this->GetNumberOfCopies(); k++)
+  for (int k = 0; k < this->GetNumberOfCopies(); ++k)
   {
    localTransform->Identity();
    localTransform->Translate(center);
@@ -156,7 +153,7 @@ int vtkRotationFilter::RequestData(
      break;
    }
    localTransform->Translate(negativCenter);
-   for (i = 0; i < numPts; i++)
+   for (vtkIdType i = 0; i < numPts; ++i)
    {
     input->GetPoint(i, point);
     localTransform->TransformPoint(point, point);
@@ -177,14 +174,13 @@ int vtkRotationFilter::RequestData(
 
   localTransform->Delete();
 
-  int numCellPts,  cellType;
   vtkIdType *newCellPts;
   vtkIdList *cellPts;
 
   // Copy original cells.
   if (this->CopyInput)
   {
-    for (i = 0; i < numCells; i++)
+    for (vtkIdType i = 0; i < numCells; ++i)
     {
       input->GetCellPoints(i, ptIds);
       output->InsertNextCell(input->GetCellType(i), ptIds);
@@ -193,14 +189,14 @@ int vtkRotationFilter::RequestData(
   }
 
   // Generate rotated cells.
-  for (k = 0; k < this->GetNumberOfCopies(); k++)
+  for (int k = 0; k < this->GetNumberOfCopies(); ++k)
   {
-    for (i = 0; i < numCells; i++)
+    for (vtkIdType i = 0; i < numCells; ++i)
     {
        input->GetCellPoints(i, ptIds);
        input->GetCell(i, cell);
-       numCellPts = cell->GetNumberOfPoints();
-       cellType = cell->GetCellType();
+       vtkIdType numCellPts = cell->GetNumberOfPoints();
+       int cellType = cell->GetCellType();
        cellPts = cell->GetPointIds();
       // Triangle strips with even number of triangles have
       // to be handled specially. A degenerate triangle is
@@ -215,15 +211,15 @@ int vtkRotationFilter::RequestData(
         vtkDebugMacro(<< "celltype " << cellType << " numCellPts " << numCellPts);
         newCellPts = new vtkIdType[numCellPts];
         //for (j = numCellPts-1; j >= 0; j--)
-        for (j = 0; j < numCellPts; j++)
+        for (vtkIdType j = 0; j < numCellPts; ++j)
         {
           //newCellPts[numCellPts-1-j] = cellPts->GetId(j) + numPts*k;
           newCellPts[j] = cellPts->GetId(j) + numPts*k;
-           if (this->CopyInput)
-           {
-             //newCellPts[numCellPts-1-j] += numPts;
-             newCellPts[j] += numPts;
-           }
+          if (this->CopyInput)
+          {
+            //newCellPts[numCellPts-1-j] += numPts;
+            newCellPts[j] += numPts;
+          }
         }
       }
       cellId = output->InsertNextCell(cellType, numCellPts, newCellPts);

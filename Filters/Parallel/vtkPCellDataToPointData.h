@@ -33,7 +33,7 @@ class VTKFILTERSPARALLEL_EXPORT vtkPCellDataToPointData : public vtkCellDataToPo
 {
 public:
   vtkTypeMacro(vtkPCellDataToPointData,vtkCellDataToPointData);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkPCellDataToPointData *New();
 
@@ -42,27 +42,27 @@ public:
    * To get piece invariance, this filter has to request an
    * extra ghost level.  By default piece invariance is on.
    */
-  vtkSetMacro(PieceInvariant, int);
-  vtkGetMacro(PieceInvariant, int);
-  vtkBooleanMacro(PieceInvariant, int);
+  vtkSetMacro(PieceInvariant, vtkTypeBool);
+  vtkGetMacro(PieceInvariant, vtkTypeBool);
+  vtkBooleanMacro(PieceInvariant, vtkTypeBool);
   //@}
 
 protected:
   vtkPCellDataToPointData();
-  ~vtkPCellDataToPointData() VTK_OVERRIDE {}
+  ~vtkPCellDataToPointData() override {}
 
   // Usual data generation method
   int RequestData(vtkInformation* request,
                           vtkInformationVector** inputVector,
-                          vtkInformationVector* outputVector) VTK_OVERRIDE;
+                          vtkInformationVector* outputVector) override;
   int RequestUpdateExtent(vtkInformation*,
                                   vtkInformationVector**,
-                                  vtkInformationVector*) VTK_OVERRIDE;
+                                  vtkInformationVector*) override;
 
-  int PieceInvariant;
+  vtkTypeBool PieceInvariant;
 private:
-  vtkPCellDataToPointData(const vtkPCellDataToPointData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPCellDataToPointData&) VTK_DELETE_FUNCTION;
+  vtkPCellDataToPointData(const vtkPCellDataToPointData&) = delete;
+  void operator=(const vtkPCellDataToPointData&) = delete;
 };
 
 #endif

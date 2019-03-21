@@ -31,6 +31,7 @@
 
 #include "vtkCommonCoreModule.h" // For export macro
 #include "vtkGenericDataArray.h"
+#include "vtkObjectFactory.h" // For VTK_STANDARD_NEW_BODY
 
 template <class ArrayT>
 class vtkTestDataArray : public vtkGenericDataArray<vtkTestDataArray<ArrayT>,
@@ -50,7 +51,7 @@ public:
   static vtkTestDataArray<ArrayType>* New()
   { VTK_STANDARD_NEW_BODY(vtkTestDataArray<ArrayType>); }
 
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE
+  void PrintSelf(ostream &os, vtkIndent indent) override
   { GenericDataArrayType::PrintSelf(os,indent); }
 
   ValueType GetValue(vtkIdType valueIdx) const
@@ -68,12 +69,12 @@ public:
   void SetTypedComponent(vtkIdType tupleIdx, int compIdx, ValueType value)
   { this->Array->SetTypedComponent(tupleIdx,compIdx,value); }
 
-  void *GetVoidPointer(vtkIdType valueIdx) VTK_OVERRIDE
+  void *GetVoidPointer(vtkIdType valueIdx) override
   { return this->Array->GetVoidPointer(valueIdx); }
 
 protected:
   vtkTestDataArray() { this->Array = ArrayType::New(); }
-  ~vtkTestDataArray() { this->Array->Delete(); }
+  ~vtkTestDataArray() override { this->Array->Delete(); }
 
   bool AllocateTuples(vtkIdType numTuples)
   { return this->Array->Allocate(numTuples) != 0; }
@@ -83,8 +84,8 @@ protected:
 private:
   ArrayType* Array;
 
-  vtkTestDataArray(const vtkTestDataArray &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTestDataArray &) VTK_DELETE_FUNCTION;
+  vtkTestDataArray(const vtkTestDataArray &) = delete;
+  void operator=(const vtkTestDataArray &) = delete;
 };
 
 #endif

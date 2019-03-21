@@ -5,6 +5,8 @@ vtk_module(vtkCommonCore
     vtkTestingCore
     vtkCommonSystem
     vtkCommonTransforms
+    vtkFiltersProgrammable
+    vtkFiltersVerdict
     vtksys
   KIT
     vtkCommon
@@ -12,4 +14,5 @@ vtk_module(vtkCommonCore
     vtkkwiml
   PRIVATE_DEPENDS
     vtksys
+    vtkutf8
   )

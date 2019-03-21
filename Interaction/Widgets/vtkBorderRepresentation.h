@@ -65,7 +65,7 @@ public:
    * Define standard methods.
    */
   vtkTypeMacro(vtkBorderRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -138,9 +138,9 @@ public:
    * representation will be placed in the rectangle in such a way as to
    * preserve the aspect ratio of the representation.
    */
-  vtkSetMacro(ProportionalResize,int);
-  vtkGetMacro(ProportionalResize,int);
-  vtkBooleanMacro(ProportionalResize,int);
+  vtkSetMacro(ProportionalResize,vtkTypeBool);
+  vtkGetMacro(ProportionalResize,vtkTypeBool);
+  vtkBooleanMacro(ProportionalResize,vtkTypeBool);
   //@}
 
   //@{
@@ -179,9 +179,9 @@ public:
    * allows the border (and stuff inside of it) to be translated with mouse
    * motion.
    */
-  vtkSetMacro(Moving,int);
-  vtkGetMacro(Moving,int);
-  vtkBooleanMacro(Moving,int);
+  vtkSetMacro(Moving,vtkTypeBool);
+  vtkGetMacro(Moving,vtkTypeBool);
+  vtkBooleanMacro(Moving,vtkTypeBool);
   //@}
 
   /**
@@ -205,19 +205,19 @@ public:
    * Return the MTime of this object. It takes into account MTimes
    * of position coordinates and border's property.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
    * Subclasses should implement these methods. See the superclasses'
    * documentation for more information.
    */
-  void BuildRepresentation() VTK_OVERRIDE;
-  void StartWidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
-  void WidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
+  void BuildRepresentation() override;
+  void StartWidgetInteraction(double eventPos[2]) override;
+  void WidgetInteraction(double eventPos[2]) override;
   virtual void GetSize(double size[2])
     {size[0]=1.0; size[1]=1.0;}
-  int ComputeInteractionState(int X, int Y, int modify=0) VTK_OVERRIDE;
+  int ComputeInteractionState(int X, int Y, int modify=0) override;
   //@}
 
   //@{
@@ -225,25 +225,25 @@ public:
    * These methods are necessary to make this representation behave as
    * a vtkProp.
    */
-  void GetActors2D(vtkPropCollection*) VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
-  int RenderOverlay(vtkViewport*) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport*) VTK_OVERRIDE;
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  void GetActors2D(vtkPropCollection*) override;
+  void ReleaseGraphicsResources(vtkWindow*) override;
+  int RenderOverlay(vtkViewport*) override;
+  int RenderOpaqueGeometry(vtkViewport*) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport*) override;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
   //@}
 
 protected:
   vtkBorderRepresentation();
-  ~vtkBorderRepresentation() VTK_OVERRIDE;
+  ~vtkBorderRepresentation() override;
 
   // Ivars
   int           ShowVerticalBorder;
   int           ShowHorizontalBorder;
   vtkProperty2D *BorderProperty;
-  int           ProportionalResize;
+  vtkTypeBool           ProportionalResize;
   int           Tolerance;
-  int           Moving;
+  vtkTypeBool           Moving;
   double        SelectionPoint[2];
 
   // Layout (position of lower left and upper right corners of border)
@@ -277,8 +277,8 @@ protected:
   int MaximumSize[2];
 
 private:
-  vtkBorderRepresentation(const vtkBorderRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBorderRepresentation&) VTK_DELETE_FUNCTION;
+  vtkBorderRepresentation(const vtkBorderRepresentation&) = delete;
+  void operator=(const vtkBorderRepresentation&) = delete;
 };
 
 #endif

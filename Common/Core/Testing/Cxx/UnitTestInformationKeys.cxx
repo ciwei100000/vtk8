@@ -8,6 +8,7 @@
 #include "vtkNew.h"
 #include "vtkStdString.h"
 #include "vtkVariant.h"
+#include "vtkMath.h"
 
 template<typename T, typename V>
 int UnitTestScalarValueKey(vtkInformation* info, T* key, const V& val)
@@ -20,8 +21,8 @@ int UnitTestScalarValueKey(vtkInformation* info, T* key, const V& val)
   }
 
   vtkNew<vtkInformation> shinyNew;
-  key->ShallowCopy(info, shinyNew.GetPointer());
-  int ok_copyget = (val == key->Get(shinyNew.GetPointer()));
+  key->ShallowCopy(info, shinyNew);
+  int ok_copyget = (val == key->Get(shinyNew));
   if (!ok_copyget)
   {
     cerr << "Copy + Get not reflexive.\n";
@@ -46,8 +47,8 @@ int UnitTestVectorValueKey(vtkInformation* info, T* key, const V& val)
   }
 
   vtkNew<vtkInformation> shinyNew;
-  key->ShallowCopy(info, shinyNew.GetPointer());
-  int ok_copyget = (val == *key->Get(shinyNew.GetPointer()));
+  key->ShallowCopy(info, shinyNew);
+  int ok_copyget = (val == *key->Get(shinyNew));
   if (!ok_copyget)
   {
     cerr << "Copy + get not reflexive.\n";
@@ -85,8 +86,8 @@ int UnitTestScalarValueKey(
   }
 
   vtkNew<vtkInformation> shinyNew;
-  key->ShallowCopy(info, shinyNew.GetPointer());
-  int ok_copyget = (val == key->Get(shinyNew.GetPointer()));
+  key->ShallowCopy(info, shinyNew);
+  int ok_copyget = (val == key->Get(shinyNew));
   if (!ok_copyget)
   {
     cerr << "Copy + Get not reflexive.\n";
@@ -107,8 +108,8 @@ int UnitTestVectorValueKey(
   }
 
   vtkNew<vtkInformation> shinyNew;
-  key->ShallowCopy(info, shinyNew.GetPointer());
-  int ok_copyget = (val == key->Get(shinyNew.GetPointer(), 0));
+  key->ShallowCopy(info, shinyNew);
+  int ok_copyget = (val == key->Get(shinyNew, 0));
   if (!ok_copyget)
   {
     cerr << "Copy + get not reflexive.\n";
@@ -134,32 +135,32 @@ int UnitTestInformationKeys(int vtkNotUsed(argc), char* vtkNotUsed(argv)[])
   int ok = 1;
   vtkNew<vtkInformation> info;
   vtkVariant tvval("foo");
-  double tdval = 3.14159;
+  double tdval = vtkMath::Pi();
   vtkStdString tsval = "bar";
 
   vtkInformationVariantKey* tvskey =
     new vtkInformationVariantKey("Test", "vtkTest");
-  ok &= UnitTestScalarValueKey(info.GetPointer(), tvskey, tvval);
+  ok &= UnitTestScalarValueKey(info, tvskey, tvval);
 
   vtkInformationVariantVectorKey* tvvkey =
     new vtkInformationVariantVectorKey("Test", "vtkTest");
-  ok &= UnitTestVectorValueKey(info.GetPointer(), tvvkey, tvval);
+  ok &= UnitTestVectorValueKey(info, tvvkey, tvval);
 
   vtkInformationDoubleKey* tdskey =
     new vtkInformationDoubleKey("Test", "vtkTest");
-  ok &= UnitTestScalarValueKey(info.GetPointer(), tdskey, tdval);
+  ok &= UnitTestScalarValueKey(info, tdskey, tdval);
 
   vtkInformationDoubleVectorKey* tdvkey =
     new vtkInformationDoubleVectorKey("Test", "vtkTest");
-  ok &= UnitTestVectorValueKey(info.GetPointer(), tdvkey, tdval);
+  ok &= UnitTestVectorValueKey(info, tdvkey, tdval);
 
   vtkInformationStringKey* tsskey =
     new vtkInformationStringKey("Test", "vtkTest");
-  ok &= UnitTestScalarValueKey(info.GetPointer(), tsskey, tsval);
+  ok &= UnitTestScalarValueKey(info, tsskey, tsval);
 
   vtkInformationStringVectorKey* tsvkey =
     new vtkInformationStringVectorKey("Test", "vtkTest");
-  ok &= UnitTestVectorValueKey(info.GetPointer(), tsvkey, tsval);
+  ok &= UnitTestVectorValueKey(info, tsvkey, tsval);
 
   return ! ok;
 }

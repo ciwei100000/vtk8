@@ -54,7 +54,7 @@ class VTKFILTERSEXTRACTION_EXPORT vtkExtractTensorComponents : public vtkDataSet
 {
 public:
   vtkTypeMacro(vtkExtractTensorComponents,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object to extract nothing and to not pass tensor data
@@ -66,18 +66,18 @@ public:
   /**
    * Boolean controls whether tensor data is passed through to output.
    */
-  vtkSetMacro(PassTensorsToOutput,int);
-  vtkGetMacro(PassTensorsToOutput,int);
-  vtkBooleanMacro(PassTensorsToOutput,int);
+  vtkSetMacro(PassTensorsToOutput,vtkTypeBool);
+  vtkGetMacro(PassTensorsToOutput,vtkTypeBool);
+  vtkBooleanMacro(PassTensorsToOutput,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Boolean controls whether scalar data is extracted from tensor.
    */
-  vtkSetMacro(ExtractScalars,int);
-  vtkGetMacro(ExtractScalars,int);
-  vtkBooleanMacro(ExtractScalars,int);
+  vtkSetMacro(ExtractScalars,vtkTypeBool);
+  vtkGetMacro(ExtractScalars,vtkTypeBool);
+  vtkBooleanMacro(ExtractScalars,vtkTypeBool);
   //@}
 
   //@{
@@ -115,9 +115,9 @@ public:
   /**
    * Boolean controls whether vector data is extracted from tensor.
    */
-  vtkSetMacro(ExtractVectors,int);
-  vtkGetMacro(ExtractVectors,int);
-  vtkBooleanMacro(ExtractVectors,int);
+  vtkSetMacro(ExtractVectors,vtkTypeBool);
+  vtkGetMacro(ExtractVectors,vtkTypeBool);
+  vtkBooleanMacro(ExtractVectors,vtkTypeBool);
   //@}
 
   //@{
@@ -134,9 +134,9 @@ public:
   /**
    * Boolean controls whether normal data is extracted from tensor.
    */
-  vtkSetMacro(ExtractNormals,int);
-  vtkGetMacro(ExtractNormals,int);
-  vtkBooleanMacro(ExtractNormals,int);
+  vtkSetMacro(ExtractNormals,vtkTypeBool);
+  vtkGetMacro(ExtractNormals,vtkTypeBool);
+  vtkBooleanMacro(ExtractNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -144,9 +144,9 @@ public:
    * Boolean controls whether normal vector is converted to unit normal
    * after extraction.
    */
-  vtkSetMacro(NormalizeNormals,int);
-  vtkGetMacro(NormalizeNormals,int);
-  vtkBooleanMacro(NormalizeNormals,int);
+  vtkSetMacro(NormalizeNormals,vtkTypeBool);
+  vtkGetMacro(NormalizeNormals,vtkTypeBool);
+  vtkBooleanMacro(NormalizeNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -162,9 +162,9 @@ public:
   /**
    * Boolean controls whether texture coordinates are extracted from tensor.
    */
-  vtkSetMacro(ExtractTCoords,int);
-  vtkGetMacro(ExtractTCoords,int);
-  vtkBooleanMacro(ExtractTCoords,int);
+  vtkSetMacro(ExtractTCoords,vtkTypeBool);
+  vtkGetMacro(ExtractTCoords,vtkTypeBool);
+  vtkBooleanMacro(ExtractTCoords,vtkTypeBool);
   //@}
 
   //@{
@@ -187,31 +187,31 @@ public:
 
 protected:
   vtkExtractTensorComponents();
-  ~vtkExtractTensorComponents()VTK_OVERRIDE {}
+  ~vtkExtractTensorComponents() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-  int PassTensorsToOutput;
+  vtkTypeBool PassTensorsToOutput;
 
-  int ExtractScalars;
-  int ExtractVectors;
-  int ExtractNormals;
-  int ExtractTCoords;
+  vtkTypeBool ExtractScalars;
+  vtkTypeBool ExtractVectors;
+  vtkTypeBool ExtractNormals;
+  vtkTypeBool ExtractTCoords;
 
   int ScalarMode;
   int ScalarComponents[2];
 
   int VectorComponents[6];
 
-  int NormalizeNormals;
+  vtkTypeBool NormalizeNormals;
   int NormalComponents[6];
 
   int NumberOfTCoords;
   int TCoordComponents[6];
 
 private:
-  vtkExtractTensorComponents(const vtkExtractTensorComponents&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtractTensorComponents&) VTK_DELETE_FUNCTION;
+  vtkExtractTensorComponents(const vtkExtractTensorComponents&) = delete;
+  void operator=(const vtkExtractTensorComponents&) = delete;
 };
 
 #endif

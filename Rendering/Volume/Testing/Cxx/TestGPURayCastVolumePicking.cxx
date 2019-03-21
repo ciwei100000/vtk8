@@ -52,24 +52,17 @@
 #include "vtkInformationObjectBaseKey.h"
 
 
+namespace {
 class VolumePickingCommand : public vtkCommand
 {
 public:
 
-  VolumePickingCommand()
-  : Renderer(NULL)
-  , OutlineFilter(NULL)
-  {
-  };
-
-  ~VolumePickingCommand() VTK_OVERRIDE
-  {
-  };
+  static VolumePickingCommand* New() { return new VolumePickingCommand; };
 
   void Execute(vtkObject* vtkNotUsed(caller), unsigned long vtkNotUsed(eventId),
-    void* vtkNotUsed(callData)) VTK_OVERRIDE
+    void* vtkNotUsed(callData)) override
   {
-    assert(this->Renderer != NULL);
+    assert(this->Renderer != nullptr);
 
     vtkNew<vtkHardwareSelector> selector;
     selector->SetRenderer(this->Renderer);
@@ -109,7 +102,7 @@ public:
         if (!keyObj)
           continue;
 
-        vtkAbstractMapper3D* mapper = NULL;
+        vtkAbstractMapper3D* mapper = nullptr;
         vtkActor* actor = vtkActor::SafeDownCast(keyObj);
         vtkVolume* vol = vtkVolume::SafeDownCast(keyObj);
         if (actor)
@@ -131,12 +124,13 @@ public:
 
     result->Delete();
   };
-
   //////////////////////////////////////////////////////////////////////////////
 
   vtkSmartPointer<vtkRenderer> Renderer;
   vtkSmartPointer<vtkOutlineFilter> OutlineFilter;
 };
+}
+
 
 // =============================================================================
 int TestGPURayCastVolumePicking(int argc, char *argv[])
@@ -145,6 +139,8 @@ int TestGPURayCastVolumePicking(int argc, char *argv[])
   vtkNew<vtkXMLImageDataReader> reader;
   const char* volumeFile = vtkTestUtilities::ExpandDataFileName(argc, argv, "Data/vase_1comp.vti");
   reader->SetFileName(volumeFile);
+
+  delete [] volumeFile;
 
   vtkNew<vtkImageChangeInformation> changeInformation;
   changeInformation->SetInputConnection(reader->GetOutputPort());
@@ -165,7 +161,7 @@ int TestGPURayCastVolumePicking(int argc, char *argv[])
   vtkNew<vtkVolumeProperty> volumeProperty;
   volumeProperty->ShadeOff();
   volumeProperty->SetInterpolationType(VTK_LINEAR_INTERPOLATION);
-  volumeProperty->SetScalarOpacity(scalarOpacity.GetPointer());
+  volumeProperty->SetScalarOpacity(scalarOpacity);
 
   vtkSmartPointer<vtkColorTransferFunction> colorTransferFunction =
     volumeProperty->GetRGBTransferFunction(0);
@@ -175,8 +171,8 @@ int TestGPURayCastVolumePicking(int argc, char *argv[])
 
   vtkNew<vtkVolume> volume;
   volume->PickableOn();
-  volume->SetMapper(volumeMapper.GetPointer());
-  volume->SetProperty(volumeProperty.GetPointer());
+  volume->SetMapper(volumeMapper);
+  volume->SetProperty(volumeProperty);
 
   // polygonal sources and mappers
   vtkNew<vtkConeSource> cone;
@@ -190,7 +186,7 @@ int TestGPURayCastVolumePicking(int argc, char *argv[])
   coneMapper->SetInputConnection(cone->GetOutputPort());
 
   vtkNew<vtkActor> coneActor;
-  coneActor->SetMapper(coneMapper.GetPointer());
+  coneActor->SetMapper(coneMapper);
   coneActor->PickableOn();
 
   vtkNew<vtkSphereSource> sphere;
@@ -204,7 +200,7 @@ int TestGPURayCastVolumePicking(int argc, char *argv[])
   sphereMapper->AddInputConnection(sphere->GetOutputPort());
 
   vtkNew<vtkActor> sphereActor;
-  sphereActor->SetMapper(sphereMapper.GetPointer());
+  sphereActor->SetMapper(sphereMapper);
   sphereActor->PickableOn();
 
   // Add outline filter
@@ -213,24 +209,24 @@ int TestGPURayCastVolumePicking(int argc, char *argv[])
   vtkNew<vtkOutlineFilter> outlineFilter;
   outlineFilter->SetInputConnection(cone->GetOutputPort());
   outlineMapper->SetInputConnection(outlineFilter->GetOutputPort());
-  outlineActor->SetMapper(outlineMapper.GetPointer());
+  outlineActor->SetMapper(outlineMapper);
   outlineActor->PickableOff();
 
   // rendering setup
   vtkNew<vtkRenderer> ren;
   ren->SetBackground(0.2, 0.2, 0.5);
-  ren->AddActor(coneActor.GetPointer());
-  ren->AddActor(sphereActor.GetPointer());
-  ren->AddActor(outlineActor.GetPointer());
-  ren->AddViewProp(volume.GetPointer());
+  ren->AddActor(coneActor);
+  ren->AddActor(sphereActor);
+  ren->AddActor(outlineActor);
+  ren->AddViewProp(volume);
 
   vtkNew<vtkRenderWindow> renWin;
   //renWin->SetMultiSamples(0);
-  renWin->AddRenderer(ren.GetPointer());
+  renWin->AddRenderer(ren);
   renWin->SetSize(400, 400);
 
   vtkNew<vtkRenderWindowInteractor> iren;
-  iren->SetRenderWindow(renWin.GetPointer());
+  iren->SetRenderWindow(renWin);
 
   renWin->Render();
   ren->ResetCamera();
@@ -243,18 +239,18 @@ int TestGPURayCastVolumePicking(int argc, char *argv[])
   rwi->SetPicker(areaPicker);
 
   // Add selection observer
-  VolumePickingCommand* vpc = new VolumePickingCommand;
-  vpc->Renderer = ren.GetPointer();
-  vpc->OutlineFilter = outlineFilter.GetPointer();
+  vtkNew<VolumePickingCommand> vpc;
+  vpc->Renderer = ren;
+  vpc->OutlineFilter = outlineFilter;
   rwi->AddObserver(vtkCommand::EndPickEvent, vpc);
 
   // run the actual test
-  areaPicker->AreaPick(177, 125, 199, 206, ren.GetPointer());
-  vpc->Execute(NULL, 0, NULL);
+  areaPicker->AreaPick(177, 125, 199, 206, ren);
+  vpc->Execute(nullptr, 0, nullptr);
   renWin->Render();
 
   // initialize render loop
-  int retVal = vtkRegressionTestImage(renWin.GetPointer());
+  int retVal = vtkRegressionTestImage(renWin);
   if( retVal == vtkRegressionTester::DO_INTERACTOR)
   {
     iren->Initialize();
@@ -263,7 +259,6 @@ int TestGPURayCastVolumePicking(int argc, char *argv[])
 
   areaPicker->Delete();
   rbp->Delete();
-  vpc->Delete();
 
   return !retVal;
 }

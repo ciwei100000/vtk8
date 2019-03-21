@@ -24,6 +24,7 @@
 #include "vtkOpenGLError.h"
 #include "vtkShaderProgram.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLVertexArrayObject.h"
 
@@ -39,33 +40,37 @@ vtkCxxSetObjectMacro(vtkSSAAPass,DelegatePass,vtkRenderPass);
 // ----------------------------------------------------------------------------
 vtkSSAAPass::vtkSSAAPass()
 {
-  this->FrameBufferObject = 0;
-  this->Pass1 = 0;
-  this->Pass2 = 0;
-  this->SSAAProgram = NULL;
-  this->DelegatePass = 0;
+  this->FrameBufferObject = nullptr;
+  this->Pass1 = nullptr;
+  this->Pass2 = nullptr;
+  this->SSAAProgram = nullptr;
+  this->DelegatePass = nullptr;
 }
 
 // ----------------------------------------------------------------------------
 vtkSSAAPass::~vtkSSAAPass()
 {
-  if(this->DelegatePass!=0)
+  if(this->DelegatePass!=nullptr)
   {
-      this->DelegatePass->Delete();
+    this->DelegatePass->Delete();
   }
 
-  if(this->FrameBufferObject!=0)
+  if(this->FrameBufferObject!=nullptr)
   {
-    vtkErrorMacro(<<"FrameBufferObject should have been deleted in ReleaseGraphicsResources().");
+    this->FrameBufferObject->Delete();
   }
-   if(this->Pass1!=0)
-   {
-    vtkErrorMacro(<<"Pass1 should have been deleted in ReleaseGraphicsResources().");
-   }
-   if(this->Pass2!=0)
-   {
-    vtkErrorMacro(<<"Pass2 should have been deleted in ReleaseGraphicsResources().");
-   }
+
+  if(this->Pass1!=nullptr)
+  {
+    this->Pass1->Delete();
+  }
+
+  if(this->Pass2!=nullptr)
+  {
+    this->Pass2->Delete();
+  }
+
+  delete this->SSAAProgram;
 }
 
 // ----------------------------------------------------------------------------
@@ -74,7 +79,7 @@ void vtkSSAAPass::PrintSelf(ostream& os, vtkIndent indent)
   this->Superclass::PrintSelf(os,indent);
 
   os << indent << "DelegatePass:";
-  if(this->DelegatePass!=0)
+  if(this->DelegatePass!=nullptr)
   {
     this->DelegatePass->PrintSelf(os,indent);
   }
@@ -90,7 +95,7 @@ void vtkSSAAPass::PrintSelf(ostream& os, vtkIndent indent)
 // \pre s_exists: s!=0
 void vtkSSAAPass::Render(const vtkRenderState *s)
 {
-  assert("pre: s_exists" && s!=0);
+  assert("pre: s_exists" && s!=nullptr);
 
   vtkOpenGLClearErrorMacro();
 
@@ -98,12 +103,17 @@ void vtkSSAAPass::Render(const vtkRenderState *s)
 
   vtkRenderer *r=s->GetRenderer();
   vtkOpenGLRenderWindow *renWin = static_cast<vtkOpenGLRenderWindow *>(r->GetRenderWindow());
+  vtkOpenGLState *ostate = renWin->GetState();
 
-  if(this->DelegatePass == 0)
+  if(this->DelegatePass == nullptr)
   {
     vtkWarningMacro(<<" no delegate.");
     return;
   }
+
+  // backup GL state
+  vtkOpenGLState::ScopedglEnableDisable dsaver(ostate, GL_DEPTH_TEST);
+  vtkOpenGLState::ScopedglEnableDisable bsaver(ostate, GL_BLEND);
 
   // 1. Create a new render state with an FBO.
   int width;
@@ -116,13 +126,13 @@ void vtkSSAAPass::Render(const vtkRenderState *s)
   int w = width*sqrt(5.0);
   int h = height*sqrt(5.0);
 
-  if(this->Pass1==0)
+  if(this->Pass1==nullptr)
   {
     this->Pass1=vtkTextureObject::New();
     this->Pass1->SetContext(renWin);
   }
 
-  if(this->FrameBufferObject==0)
+  if(this->FrameBufferObject==nullptr)
   {
     this->FrameBufferObject=vtkOpenGLFramebufferObject::New();
     this->FrameBufferObject->SetContext(renWin);
@@ -145,19 +155,19 @@ void vtkSSAAPass::Render(const vtkRenderState *s)
     this->FrameBufferObject->GetBothMode(), 0,this->Pass1);
   this->FrameBufferObject->ActivateDrawBuffer(0);
 
-  // this->FrameBufferObject->AddDepthAttachment(
-  //   this->FrameBufferObject->GetBothMode());
+  this->FrameBufferObject->AddDepthAttachment(
+    this->FrameBufferObject->GetBothMode());
   this->FrameBufferObject->StartNonOrtho(w,h);
-  glViewport(0, 0, w, h);
-  glScissor(0, 0, w, h);
+  ostate->vtkglViewport(0, 0, w, h);
+  ostate->vtkglScissor(0, 0, w, h);
 
-  glEnable(GL_DEPTH_TEST);
+  ostate->vtkglEnable(GL_DEPTH_TEST);
   this->DelegatePass->Render(&s2);
   this->NumberOfRenderedProps +=
     this->DelegatePass->GetNumberOfRenderedProps();
 
   // 3. Same FBO, but new color attachment (new TO).
-  if(this->Pass2==0)
+  if(this->Pass2==nullptr)
   {
     this->Pass2=vtkTextureObject::New();
     this->Pass2->SetContext(this->FrameBufferObject->GetContext());
@@ -228,8 +238,8 @@ void vtkSSAAPass::Render(const vtkRenderState *s)
   this->SSAAProgram->Program->SetUniformf("texelWidthOffset", 0.375/width);
   this->SSAAProgram->Program->SetUniformf("texelHeightOffset", 0.0);
 
-  glDisable(GL_BLEND);
-  glDisable(GL_DEPTH_TEST);
+  ostate->vtkglDisable(GL_BLEND);
+  ostate->vtkglDisable(GL_DEPTH_TEST);
 
   this->FrameBufferObject->RenderQuad(0,width-1,0,h-1,
     this->SSAAProgram->Program, this->SSAAProgram->VAO);
@@ -271,32 +281,27 @@ void vtkSSAAPass::Render(const vtkRenderState *s)
 // \pre w_exists: w!=0
 void vtkSSAAPass::ReleaseGraphicsResources(vtkWindow *w)
 {
-  assert("pre: w_exists" && w!=0);
+  assert("pre: w_exists" && w!=nullptr);
 
   this->Superclass::ReleaseGraphicsResources(w);
 
-  if (this->SSAAProgram !=0)
+  if (this->SSAAProgram !=nullptr)
   {
     this->SSAAProgram->ReleaseGraphicsResources(w);
-    delete this->SSAAProgram;
-    this->SSAAProgram = 0;
   }
-  if(this->FrameBufferObject!=0)
+  if(this->FrameBufferObject!=nullptr)
   {
-    this->FrameBufferObject->Delete();
-    this->FrameBufferObject=0;
+    this->FrameBufferObject->ReleaseGraphicsResources(w);
   }
-   if(this->Pass1!=0)
-   {
-    this->Pass1->Delete();
-    this->Pass1=0;
-   }
-   if(this->Pass2!=0)
-   {
-    this->Pass2->Delete();
-    this->Pass2=0;
-   }
-  if(this->DelegatePass!=0)
+  if(this->Pass1!=nullptr)
+  {
+    this->Pass1->ReleaseGraphicsResources(w);
+  }
+  if(this->Pass2!=nullptr)
+  {
+    this->Pass2->ReleaseGraphicsResources(w);
+  }
+  if(this->DelegatePass!=nullptr)
   {
     this->DelegatePass->ReleaseGraphicsResources(w);
   }

@@ -118,7 +118,7 @@ namespace
 void vtkDataSetCellIterator::PrintSelf(ostream &os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
-  os << indent << "DataSet: " << this->DataSet.GetPointer() << endl;
+  os << indent << "DataSet: " << this->DataSet << endl;
 
 }
 
@@ -136,9 +136,9 @@ void vtkDataSetCellIterator::SetDataSet(vtkDataSet *ds)
   {
     SetArrayType(htg, this->Points);
   }
-  else if (ds->IsA("vtkImageData") || ds->IsA("vtkHyperOctree"))
+  else if (ds->IsA("vtkImageData"))
   {
-    // ImageData and HyperOctree Origin and Spacing are doubles so
+    // ImageData Origin and Spacing are doubles so
     // the data type for this should also be double
     this->Points->SetDataType(VTK_DOUBLE);
   }
@@ -147,7 +147,7 @@ void vtkDataSetCellIterator::SetDataSet(vtkDataSet *ds)
 //------------------------------------------------------------------------------
 bool vtkDataSetCellIterator::IsDoneWithTraversal()
 {
-  return this->DataSet.GetPointer() == NULL
+  return this->DataSet == nullptr
       || this->CellId >= this->DataSet->GetNumberOfCells();
 }
 
@@ -166,15 +166,13 @@ void vtkDataSetCellIterator::IncrementToNextCell()
 //------------------------------------------------------------------------------
 vtkDataSetCellIterator::vtkDataSetCellIterator()
   : vtkCellIterator(),
-    DataSet(NULL),
+    DataSet(nullptr),
     CellId(0)
 {
 }
 
 //------------------------------------------------------------------------------
-vtkDataSetCellIterator::~vtkDataSetCellIterator()
-{
-}
+vtkDataSetCellIterator::~vtkDataSetCellIterator() = default;
 
 //------------------------------------------------------------------------------
 void vtkDataSetCellIterator::ResetToFirstCell()

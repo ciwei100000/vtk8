@@ -15,6 +15,7 @@ SET(Module_SRCS
   vtkMFIXReader.cxx
   vtkMoleculeReaderBase.cxx
   vtkOBJReader.cxx
+  vtkOBJWriter.cxx
   vtkOpenFOAMReader.cxx
   vtkParticleReader.cxx
   vtkPDBReader.cxx
@@ -23,14 +24,8 @@ SET(Module_SRCS
   vtkSTLReader.cxx
   vtkSTLWriter.cxx
   vtkTecplotReader.cxx
-  vtkUGFacetReader.cxx
   vtkWindBladeReader.cxx
   vtkXYZMolReader.cxx
-  )
-
-set_source_files_properties(
-  vtkMoleculeReaderBase
-  ABSTRACT
   )
 
 vtk_module_library(vtkIOGeometry ${Module_SRCS})

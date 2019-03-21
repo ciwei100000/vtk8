@@ -40,8 +40,9 @@
  * normals.
  *
  * @sa
- * vtkMarchingContourFilter vtkMarchingCubes vtkSliceCubes
- * vtkMarchingSquares vtkImageMarchingCubes
+ * vtkFlyingEdges3D vtkFlyingEdges2D vtkDiscreteFlyingEdges3D
+ * vtkDiscreteFlyingEdges2D vtkMarchingContourFilter vtkMarchingCubes
+ * vtkSliceCubes vtkMarchingSquares vtkImageMarchingCubes
 */
 
 #ifndef vtkContourFilter_h
@@ -64,7 +65,7 @@ class VTKFILTERSCORE_EXPORT vtkContourFilter : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkContourFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with initial range (0,1) and single contour value
@@ -89,7 +90,7 @@ public:
   /**
    * Modified GetMTime Because we delegate to vtkContourValues
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -102,9 +103,9 @@ public:
    * This default behavior is to preserve the behavior of an older version of
    * this filter, which would ignore this setting for certain inputs.
    */
-  vtkSetMacro(ComputeNormals,int);
-  vtkGetMacro(ComputeNormals,int);
-  vtkBooleanMacro(ComputeNormals,int);
+  vtkSetMacro(ComputeNormals,vtkTypeBool);
+  vtkGetMacro(ComputeNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputeNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -116,27 +117,27 @@ public:
    * will be processed by filters that modify topology or geometry, it
    * may be wise to turn Normals and Gradients off.
    */
-  vtkSetMacro(ComputeGradients,int);
-  vtkGetMacro(ComputeGradients,int);
-  vtkBooleanMacro(ComputeGradients,int);
+  vtkSetMacro(ComputeGradients,vtkTypeBool);
+  vtkGetMacro(ComputeGradients,vtkTypeBool);
+  vtkBooleanMacro(ComputeGradients,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get the computation of scalars.
    */
-  vtkSetMacro(ComputeScalars,int);
-  vtkGetMacro(ComputeScalars,int);
-  vtkBooleanMacro(ComputeScalars,int);
+  vtkSetMacro(ComputeScalars,vtkTypeBool);
+  vtkGetMacro(ComputeScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeScalars,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Enable the use of a scalar tree to accelerate contour extraction.
    */
-  vtkSetMacro(UseScalarTree,int);
-  vtkGetMacro(UseScalarTree,int);
-  vtkBooleanMacro(UseScalarTree,int);
+  vtkSetMacro(UseScalarTree,vtkTypeBool);
+  vtkGetMacro(UseScalarTree,vtkTypeBool);
+  vtkBooleanMacro(UseScalarTree,vtkTypeBool);
   //@}
 
   //@{
@@ -180,9 +181,9 @@ public:
    * polygon will not be planar, which might be nice to look at but hard
    * to compute with downstream.
    */
-  vtkSetMacro(GenerateTriangles,int);
-  vtkGetMacro(GenerateTriangles,int);
-  vtkBooleanMacro(GenerateTriangles,int);
+  vtkSetMacro(GenerateTriangles,vtkTypeBool);
+  vtkGetMacro(GenerateTriangles,vtkTypeBool);
+  vtkBooleanMacro(GenerateTriangles,vtkTypeBool);
   //@}
 
   //@{
@@ -197,27 +198,27 @@ public:
 
 protected:
   vtkContourFilter();
-  ~vtkContourFilter() VTK_OVERRIDE;
+  ~vtkContourFilter() override;
 
-  void ReportReferences(vtkGarbageCollector*) VTK_OVERRIDE;
+  void ReportReferences(vtkGarbageCollector*) override;
 
   int RequestData(vtkInformation* request,
                   vtkInformationVector** inputVector,
-                  vtkInformationVector* outputVector) VTK_OVERRIDE;
+                  vtkInformationVector* outputVector) override;
   int RequestUpdateExtent(vtkInformation*,
                           vtkInformationVector**,
-                          vtkInformationVector*) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+                          vtkInformationVector*) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   vtkContourValues *ContourValues;
-  int ComputeNormals;
-  int ComputeGradients;
-  int ComputeScalars;
+  vtkTypeBool ComputeNormals;
+  vtkTypeBool ComputeGradients;
+  vtkTypeBool ComputeScalars;
   vtkIncrementalPointLocator *Locator;
-  int UseScalarTree;
+  vtkTypeBool UseScalarTree;
   vtkScalarTree *ScalarTree;
   int OutputPointsPrecision;
-  int GenerateTriangles;
+  vtkTypeBool GenerateTriangles;
 
   vtkSynchronizedTemplates2D *SynchronizedTemplates2D;
   vtkSynchronizedTemplates3D *SynchronizedTemplates3D;
@@ -231,8 +232,8 @@ protected:
                                                void *callData);
 
 private:
-  vtkContourFilter(const vtkContourFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkContourFilter&) VTK_DELETE_FUNCTION;
+  vtkContourFilter(const vtkContourFilter&) = delete;
+  void operator=(const vtkContourFilter&) = delete;
 };
 
 /**
@@ -294,5 +295,3 @@ inline void vtkContourFilter::GenerateValues(int numContours, double
 
 
 #endif
-
-

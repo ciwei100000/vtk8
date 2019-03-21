@@ -14,11 +14,12 @@
 =========================================================================*/
 #include "vtkWindow.h"
 
+#include "vtkCommand.h"
 #include "vtkToolkits.h"
 
 
 //-----------------------------------------------------------------------------
-// Construct an instance of  vtkRenderWindow with its screen size
+// Construct an instance of vtkRenderWindow with its screen size
 // set to 300x300, borders turned on, positioned at (0,0), double
 // buffering turned on.
 vtkWindow::vtkWindow()
@@ -47,7 +48,7 @@ vtkWindow::vtkWindow()
 // Destructor for the vtkWindow object.
 vtkWindow::~vtkWindow()
 {
-  this->SetWindowName( NULL );
+  this->SetWindowName( nullptr );
 }
 
 //-----------------------------------------------------------------------------
@@ -82,6 +83,7 @@ void vtkWindow::SetSize(int x, int y)
     this->Size[0] = x;
     this->Size[1] = y;
     this->Modified();
+    this->InvokeEvent(vtkCommand::WindowResizeEvent, nullptr);
   }
 }
 

@@ -47,11 +47,10 @@ vtkThreshold::vtkThreshold()
                                vtkDataSetAttributes::SCALARS);
 
   this->UseContinuousCellRange = 0;
+  this->Invert = false;
 }
 
-vtkThreshold::~vtkThreshold()
-{
-}
+vtkThreshold::~vtkThreshold() = default;
 
 // Criterion is cells whose scalars are less or equal to lower threshold.
 void vtkThreshold::ThresholdByLower(double lower)
@@ -110,7 +109,7 @@ int vtkThreshold::RequestData(
   vtkIdList *newCellPts;
   vtkCell *cell;
   vtkPoints *newPoints;
-  int i, ptId, newId, numPts;
+  vtkIdType i, ptId, newId, numPts;
   int numCellPts;
   double x[3];
   vtkPointData *pd=input->GetPointData(), *outPD=output->GetPointData();
@@ -220,7 +219,10 @@ int vtkThreshold::RequestData(
       keepCell = this->EvaluateComponents( inScalars, cellId );
     }
 
-    if (  numCellPts > 0 && keepCell )
+    // Invert the keep flag if the Invert option is enabled.
+    keepCell = this->Invert ? (1 - keepCell) : keepCell;
+
+    if (  numCellPts > 0 && keepCell)
     {
       // satisfied thresholding (also non-empty cell, i.e. not VTK_EMPTY_CELL)
       for (i=0; i < numCellPts; i++)
@@ -300,7 +302,7 @@ int vtkThreshold::EvaluateCell( vtkDataArray *scalars, int c, vtkIdList* cellPts
   double minScalar=DBL_MAX, maxScalar=DBL_MIN;
   for (int i=0; i < numCellPts; i++)
   {
-    int ptId = cellPts->GetId(i);
+    vtkIdType ptId = cellPts->GetId(i);
     double s = scalars->GetComponent(ptId,c);
     minScalar = std::min(s,minScalar);
     maxScalar = std::max(s,maxScalar);
@@ -406,8 +408,11 @@ int vtkThreshold::GetPointsDataType()
 
 void vtkThreshold::SetOutputPointsPrecision(int precision)
 {
-  this->OutputPointsPrecision = precision;
-  this->Modified();
+  if (this->OutputPointsPrecision != precision)
+  {
+    this->OutputPointsPrecision = precision;
+    this->Modified();
+  }
 }
 
 int vtkThreshold::GetOutputPointsPrecision() const

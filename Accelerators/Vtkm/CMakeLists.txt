@@ -17,64 +17,98 @@
 #ensure we link against our dependencies
 include(module.cmake)
 
-find_package(VTKm REQUIRED
-  OPTIONAL_COMPONENTS Serial CUDA TBB
-  )
+vtk_module_dep_includes(vtkVTKm)
+list(APPEND CMAKE_MODULE_PATH "${VTK_SOURCE_DIR}/ThirdParty/vtkm/vtk-m/CMake")
 
 set(lib_srcs
   vtkmlib/PolyDataConverter.cxx
   vtkmlib/UnstructuredGridConverter.cxx
   vtkmlib/ArrayConverters.cxx
   vtkmlib/CellSetConverters.cxx
-  vtkmlib/DataSetConverters.cxx
+  vtkmlib/ImageDataConverter.cxx
   vtkmlib/Storage.cxx
   )
 
 #needed to properly setup language wrappers
 set(headers
+  vtkmAverageToCells.h
   vtkmAverageToPoints.h
   vtkmCleanGrid.h
   vtkmClip.h
   vtkmContour.h
+  vtkmCoordinateSystemTransform.h
   vtkmExternalFaces.h
-  vtkmThreshold.h
-  vtkmLevelOfDetail.h
-  vtkmAverageToCells.h
+  vtkmExtractVOI.h
   vtkmGradient.h
+  vtkmHistogram.h
+  vtkmLevelOfDetail.h
+  vtkmNDHistogram.h
+  vtkmPointElevation.h
+  vtkmPointTransform.h
+  vtkmPolyDataNormals.h
+  vtkmProbe.h
+  vtkmThreshold.h
+  vtkmTriangleMeshPointNormals.h
+  vtkmWarpScalar.h
+  vtkmWarpVector.h
   )
 
 #implementation of the algorithms for cpu accelerators
 set(cpu_accelerator_srcs
-  vtkmAverageToPoints.cxx
-  vtkmCleanGrid.cxx
-  vtkmClip.cxx
-  vtkmContour.cxx
-  vtkmExternalFaces.cxx
-  vtkmThreshold.cxx
-  vtkmLevelOfDetail.cxx
   vtkmAverageToCells.cxx
+  vtkmAverageToPoints.cxx
   vtkmCellSetExplicit.cxx
   vtkmCellSetSingleType.cxx
+  vtkmCleanGrid.cxx
+  vtkmClip.cxx
   vtkmConnectivityExec.cxx
+  vtkmContour.cxx
+  vtkmCoordinateSystemTransform.cxx
+  vtkmExternalFaces.cxx
+  vtkmExtractVOI.cxx
   vtkmGradient.cxx
+  vtkmHistogram.cxx
+  vtkmLevelOfDetail.cxx
+  vtkmNDHistogram.cxx
+  vtkmPointElevation.cxx
+  vtkmPointTransform.cxx
+  vtkmPolyDataNormals.cxx
+  vtkmProbe.cxx
+  vtkmThreshold.cxx
+  vtkmTriangleMeshPointNormals.cxx
+  vtkmWarpScalar.cxx
+  vtkmWarpVector.cxx
+  vtkmlib/DataSetConverters.cxx
   vtkmlib/Portals.cxx
   vtkmlib/ImplicitFunctionConverter.cxx
   )
 
 #implementation of the algorithms for gpu accelerators
 set(cuda_accelerator_srcs
-  vtkmAverageToPoints.cu
-  vtkmCleanGrid.cu
-  vtkmClip.cu
-  vtkmContour.cu
-  vtkmExternalFaces.cu
-  vtkmThreshold.cu
-  vtkmLevelOfDetail.cu
   vtkmAverageToCells.cu
+  vtkmAverageToPoints.cu
   vtkmCellSetExplicit.cu
   vtkmCellSetSingleType.cu
+  vtkmCleanGrid.cu
+  vtkmClip.cu
   vtkmConnectivityExec.cu
+  vtkmContour.cu
+  vtkmCoordinateSystemTransform.cu
+  vtkmExternalFaces.cu
+  vtkmExtractVOI.cu
   vtkmGradient.cu
+  vtkmHistogram.cu
+  vtkmLevelOfDetail.cu
+  vtkmNDHistogram.cu
+  vtkmPointElevation.cu
+  vtkmPointTransform.cu
+  vtkmPolyDataNormals.cu
+  vtkmProbe.cu
+  vtkmThreshold.cu
+  vtkmTriangleMeshPointNormals.cu
+  vtkmWarpScalar.cu
+  vtkmWarpVector.cu
+  vtkmlib/DataSetConverters.cu
   vtkmlib/Portals.cu
   vtkmlib/ImplicitFunctionConverter.cu
   )
@@ -84,22 +118,24 @@ set(VTKM_FILTER_INCLUDE_SOA ${VTK_DISPATCH_SOA_ARRAYS})
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/vtkmConfig.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/vtkmConfig.h" @ONLY)
 
-#mark all the helper classes as being excluded from wrappers
+# ====================
+# Important for wrapping and install rules for vtkmlib
+#  - SKIP_HEADER_INSTALL is enabled as we need to install these headers
+#    to the vtkmlib directory and not the root include directory as vtk
+#    normally does
+# ====================
 set_source_files_properties(
   vtkmlib/PolyDataConverter
   vtkmlib/UnstructuredGridConverter
   vtkmlib/ArrayConverters
   vtkmlib/CellSetConverters
   vtkmlib/DataSetConverters
+  vtkmlib/ImageDataConverter
   vtkmlib/Storage
   vtkmlib/Portals
   vtkmlib/ImplicitFunctionConverter
-  vtkmCellSetExplicit
-  vtkmCellSetSingleType
-  vtkmConnectivityExec
   PROPERTIES
-    WRAP_EXCLUDE 1
-    WRAP_EXCLUDE_PYTHON 1
+    SKIP_HEADER_INSTALL 1
   )
 
 set(${vtk-module}_HDRS
@@ -108,85 +144,50 @@ set(${vtk-module}_HDRS
   ${CMAKE_CURRENT_BINARY_DIR}/vtkmConfig.h
   )
 
-#we are building with CUDA support
-if(VTKm_CUDA_FOUND)
 
-  #need to find cudadevrt
-  find_library(CUDA_cudadevrt_LIBRARY cudadevrt
-               PATHS ${CUDA_TOOLKIT_TARGET_DIR}
-               PATH_SUFFIXES "x64" "lib64" "libx64"
-               )
+# The VTK-m project uses large amounts of memory to compile as it does lots
+# of template expansion. To reduce the amount of tension on the machine when
+# using generators such as ninja we restrict the number of VTK-m enabled
+# compilation units to be built at the same time.
+# The logic we use is that no more than half the system memory should be used
+# on VTK-m compilation units, where we expect each compilation unit to use
+# 2GB of memory.
+cmake_host_system_information(RESULT vtkm_mem_ QUERY TOTAL_PHYSICAL_MEMORY)
+math(EXPR vtkm_pool_size "(${vtkm_mem_}/2)/2048")
+if(vtkm_pool_size EQUAL 0)
+  set(vtkm_pool_size 1)
+endif()
+set_property(GLOBAL APPEND PROPERTY JOB_POOLS vtkm_pool=${vtkm_pool_size})
 
-  ########
-  ## cache and clear the CUDA_NVCC_FLAGS so that they aren't passed to
-  ## the linker. FINDCUDA has some problems properly unquoting CUDA_NVCC_FLAGS
-  ## when "generate-code arch..." is used, so we instead patch the options
-  ##
-  ########
-  set(compile_options)
-  foreach(f ${CUDA_NVCC_FLAGS})
-    if(f MATCHES "generate-code ")
-      string(REPLACE "generate-code " "generate-code=" f "${f}")
-    endif()
-    list(APPEND compile_options ${f})
-  endforeach()
+if(TARGET vtkm::cuda)
+  #we are building with CUDA support
+  cmake_minimum_required(VERSION 3.9...3.12 FATAL_ERROR)
+  enable_language(CUDA)
 
-  if(BUILD_SHARED_LIBS AND NOT WIN32)
-    list(APPEND compile_options -Xcompiler=${CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY}hidden)
-    list(APPEND compile_options -Xcompiler=-fPIC)
-    #nvcc doesn't like the macros in VTK and generates hundreds of warnings
-    #that are false positives
-    list(APPEND compile_options --disable-warnings)
+  # Workaround cmake issue #7519 which causes the c++11 flag set for VTK-m using
+  # target_compile_features to not work.
+  if (CMAKE_VERSION VERSION_LESS 3.11)
+    set(CMAKE_CUDA_STANDARD 11)
+    set(CMAKE_CUDA_STANDARD_REQUIRED True)
   endif()
 
-  set(seperable_state ${CUDA_SEPARABLE_COMPILATION})
-  set(cache_flag_state ${CUDA_NVCC_FLAGS})
+  get_target_property(arch_flags vtkm::cuda VTKm_CUDA_Architecture_Flags)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
 
-
-  set(CUDA_NVCC_FLAGS "")
-  set(CUDA_SEPARABLE_COMPILATION ON)
-
-  #Some versions of VTK-m overload the CUDA_LIBRARIES to contain private
-  if(PRIVATE IN_LIST CUDA_LIBRARIES)
-    set(cache_cuda_libs ${CUDA_LIBRARIES})
-    set(cache_devrt_libs ${CUDA_cudadevrt_LIBRARY})
-    set(CUDA_LIBRARIES ${CUDA_LIBRARIES} vtkFiltersGeneral)
-    set(CUDA_cudadevrt_LIBRARY PRIVATE ${CUDA_cudadevrt_LIBRARY})
-  endif()
-
-  # CUDA doesn't obey usage requirements so we have to use
-  # CUDA_INCLUDE_DIRECTORIES, but do get the proper list of
-  # include dirs I need to query the module system, which
-  # doesnt exist currently, so we manually call vtk_module_impl
-  vtk_module_impl()
-  cuda_include_directories(${CMAKE_CURRENT_BINARY_DIR}
-                           ${CMAKE_CURRENT_SOURCE_DIR}
-                           ${VTKm_INCLUDE_DIRS}
-                           ${vtkAcceleratorsVTKm_DEPENDS_INCLUDE_DIRS})
-
-  cuda_add_library(vtkAcceleratorsVTKmCuda STATIC
-                   ${cuda_accelerator_srcs}
-                   OPTIONS "${compile_options}"
-                   )
-
-  set_target_properties(vtkAcceleratorsVTKmCuda
-                        PROPERTIES POSITION_INDEPENDENT_CODE True)
+  # Temporarily suppress "has address taken but no possible call to it" warnings,
+  # until we figure out its implications.
+  # We are disabling all warnings as nvlink has no known way to suppress
+  # individual warning types.
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xnvlink -w")
 
   vtk_module_library(vtkAcceleratorsVTKm
                      ${headers}
                      ${lib_srcs}
+                     ${cuda_accelerator_srcs}
                      )
-
-  target_link_libraries(vtkAcceleratorsVTKm
-                        PRIVATE vtkAcceleratorsVTKmCuda ${cache_devrt_libs})
-
-  set(CUDA_SEPARABLE_COMPILATION ${seperable_state})
-  set(CUDA_NVCC_FLAGS_CACHE  ${cache_flag_state})
-
-  if(cache_cuda_libs)
-    set(CUDA_LIBRARIES  ${cache_cuda_libs})
-    set(CUDA_cudadevrt_LIBRARY  ${CUDA_cudadevrt_LIBRARY})
-  endif()
+  set_target_properties(vtkAcceleratorsVTKm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  target_compile_options(vtkAcceleratorsVTKm
+    PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcudafe --diag_suppress=extra_semicolon>)
 else()
   vtk_module_library(vtkAcceleratorsVTKm
                      ${headers}
@@ -195,18 +196,27 @@ else()
                      )
 endif()
 
-#We need to system up VTK-m as a system include dir so that modules
-#such as wrapping that depend on vtkAcceleratorsVTKm properly find
-#the headers
-target_include_directories(vtkAcceleratorsVTKm PUBLIC ${VTKm_INCLUDE_DIRS})
+set_property(TARGET vtkAcceleratorsVTKm PROPERTY JOB_POOL_COMPILE vtkm_pool)
+target_link_libraries(vtkAcceleratorsVTKm PRIVATE vtkVTKm)
 
-vtk_module_link_libraries(vtkAcceleratorsVTKm LINK_PRIVATE ${VTKm_LIBRARIES})
-target_compile_options(vtkAcceleratorsVTKm PRIVATE ${VTKm_COMPILE_OPTIONS})
+if (MSVC)
+  #C4702 Generates numerous false positives with template code about
+  #      unreachable code
+  #C4512 Generates numerous warning that implicit assignment operators can't
+  #      be constructed. This is understood and we don't care.
+  #C4510 Generates numerous warning that implicit constructors can't
+  #      be constructed. This is understood and we don't care.
+  target_compile_options(vtkAcceleratorsVTKm PRIVATE -wd4702 -wd4512 -wd4510)
+endif()
+
+
 
 #install the required headers to make your own vtkm-vtk filter
 if(NOT VTK_INSTALL_NO_DEVELOPMENT)
   install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/vtkmlib
     DESTINATION ${VTK_INSTALL_INCLUDE_DIR}
-    COMPONENT Development)
+    COMPONENT Development
+    FILES_MATCHING PATTERN "*.h*"
+    )
 endif()

@@ -39,6 +39,7 @@
 
 class vtkDataSet;
 class vtkMolecule;
+class vtkPeriodicTable;
 
 class VTKDOMAINSCHEMISTRY_EXPORT vtkSimpleBondPerceiver :
     public vtkMoleculeAlgorithm
@@ -46,7 +47,7 @@ class VTKDOMAINSCHEMISTRY_EXPORT vtkSimpleBondPerceiver :
 public:
   static vtkSimpleBondPerceiver *New();
   vtkTypeMacro(vtkSimpleBondPerceiver,vtkMoleculeAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -56,23 +57,41 @@ public:
   vtkGetMacro(Tolerance, float);
   //@}
 
+  //@{
+  /**
+   * Set/Get if the tolerance is absolute (i.e. added to radius)
+   * or not (i.e. multiplied with radius). Default is true.
+   */
+  vtkGetMacro(IsToleranceAbsolute, bool);
+  vtkSetMacro(IsToleranceAbsolute, bool);
+  //@}
+
 protected:
   vtkSimpleBondPerceiver();
-  ~vtkSimpleBondPerceiver() VTK_OVERRIDE;
+  ~vtkSimpleBondPerceiver() override;
 
-  /**
-   * This is called by the superclass.
-   * This is the method you should override.
-   */
   int RequestData(vtkInformation* request,
                           vtkInformationVector** inputVector,
-                          vtkInformationVector* outputVector) VTK_OVERRIDE;
+                          vtkInformationVector* outputVector) override;
+
+  /**
+   * Compute the bonds of input molecule.
+   */
+  virtual void ComputeBonds(vtkMolecule* molecule);
+
+  /**
+   * Get the covalent radius corresponding to atomic number, modulated by Tolerance.
+   * Tolerance is multiplied if IsToleranceAbsolute is false.
+   * Half Tolerance is added if IsToleranceAbsolute is true (for backward compatibility)
+   */
+  double GetCovalentRadiusWithTolerance(vtkPeriodicTable* table, vtkIdType atomicNumber);
 
   float Tolerance;
+  bool IsToleranceAbsolute;
 
 private:
-  vtkSimpleBondPerceiver(const vtkSimpleBondPerceiver&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSimpleBondPerceiver&) VTK_DELETE_FUNCTION;
+  vtkSimpleBondPerceiver(const vtkSimpleBondPerceiver&) = delete;
+  void operator=(const vtkSimpleBondPerceiver&) = delete;
 };
 
 #endif

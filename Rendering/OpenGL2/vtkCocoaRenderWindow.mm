@@ -21,6 +21,7 @@ PURPOSE.  See the above copyright notice for more information.
 
 #import "vtkOpenGL.h"
 #import "vtkCocoaRenderWindow.h"
+#import "vtkOpenGLVertexBufferObjectCache.h"
 #import "vtkRenderWindowInteractor.h"
 #import "vtkCommand.h"
 #import "vtkIdList.h"
@@ -151,7 +152,7 @@ vtkStandardNewMacro(vtkCocoaRenderWindow);
   [self stopObservations];
 
   // The NSWindow is closing, so prevent anyone from accidentally using it.
-  _renWin->SetRootWindow(NULL);
+  _renWin->SetRootWindow(nullptr);
 
   // Tell interactor to stop the NSApplication's run loop
   vtkRenderWindowInteractor *interactor = _renWin->GetInteractor();
@@ -198,7 +199,7 @@ vtkStandardNewMacro(vtkCocoaRenderWindow);
   {
     // Send ConfigureEvent from the Interactor.
     interactor->UpdateSize(newWidth, newHeight);
-    interactor->InvokeEvent(vtkCommand::ConfigureEvent, NULL);
+    interactor->InvokeEvent(vtkCommand::ConfigureEvent, nullptr);
   }
 }
 
@@ -213,7 +214,7 @@ vtkCocoaRenderWindow::vtkCocoaRenderWindow()
 
   // SetCocoaManager works like an Obj-C setter, so do like Obj-C and
   // init the ivar to null first.
-  this->CocoaManager = NULL;
+  this->CocoaManager = nullptr;
   this->SetCocoaManager(reinterpret_cast<void *>(cocoaManager));
   [cocoaManager self]; // prevent premature collection under GC.
 
@@ -241,18 +242,18 @@ vtkCocoaRenderWindow::~vtkCocoaRenderWindow()
   this->Renderers->InitTraversal(rit);
   while ( (ren = this->Renderers->GetNextRenderer(rit)) )
   {
-    ren->SetRenderWindow(NULL);
+    ren->SetRenderWindow(nullptr);
   }
 
-  this->SetContextId(NULL);
-  this->SetPixelFormat(NULL);
-  this->SetCocoaServer(NULL);
-  this->SetRootWindow(NULL);
-  this->SetWindowId(NULL);
-  this->SetParentId(NULL);
+  this->SetContextId(nullptr);
+  this->SetPixelFormat(nullptr);
+  this->SetCocoaServer(nullptr);
+  this->SetRootWindow(nullptr);
+  this->SetWindowId(nullptr);
+  this->SetParentId(nullptr);
 
   // Release the cocoa object manager.
-  this->SetCocoaManager(NULL);
+  this->SetCocoaManager(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -279,12 +280,12 @@ void vtkCocoaRenderWindow::DestroyWindow()
     this->MakeCurrent();
     this->ReleaseGraphicsResources(this);
   }
-  this->SetContextId(NULL);
-  this->SetPixelFormat(NULL);
+  this->SetContextId(nullptr);
+  this->SetPixelFormat(nullptr);
 
   vtkCocoaServer *server = (vtkCocoaServer *)this->GetCocoaServer();
   [server stopObservations];
-  this->SetCocoaServer(NULL);
+  this->SetCocoaServer(nullptr);
 
   // If we created it, close the NSWindow.
   if (this->WindowCreated)
@@ -293,9 +294,9 @@ void vtkCocoaRenderWindow::DestroyWindow()
     [window close];
   }
 
-  this->SetWindowId(NULL);
-  this->SetParentId(NULL);
-  this->SetRootWindow(NULL);
+  this->SetWindowId(nullptr);
+  this->SetParentId(nullptr);
+  this->SetRootWindow(nullptr);
   this->WindowCreated = 0;
   this->ViewCreated = 0;
 }
@@ -316,10 +317,10 @@ void vtkCocoaRenderWindow::SetWindowName( const char * _arg )
 bool vtkCocoaRenderWindow::InitializeFromCurrentContext()
 {
   NSOpenGLContext *currentContext = [NSOpenGLContext currentContext];
-  if (currentContext != NULL)
+  if (currentContext != nullptr)
   {
     NSView *currentView = [currentContext view];
-    if (currentView != NULL)
+    if (currentView != nullptr)
     {
       NSWindow *window = [currentView window];
       this->SetWindowId(currentView);
@@ -385,7 +386,7 @@ void vtkCocoaRenderWindow::PopContext()
 bool vtkCocoaRenderWindow::IsCurrent()
 {
   bool result=false;
-  if(this->GetContextId()!=0)
+  if(this->GetContextId()!=nullptr)
   {
     result=static_cast<NSOpenGLContext *>(this->GetContextId())==
       [NSOpenGLContext currentContext];
@@ -482,7 +483,10 @@ const char* vtkCocoaRenderWindow::ReportCapabilities()
   strm  << "  stencil:  " << pfd << endl;
 
   [pixelFormat getValues: &pfd forAttribute: NSOpenGLPFAAccelerated forVirtualScreen: currentScreen];
-  strm  << "  hardware acceleration::  " << (pfd == 0 ? "No" : "Yes") << endl;
+  strm  << "  hardware acceleration:  " << (pfd == 0 ? "No" : "Yes") << endl;
+
+  [pixelFormat getValues: &pfd forAttribute: NSOpenGLPFAOpenGLProfile forVirtualScreen: currentScreen];
+  strm  << "  profile version:  0x" << std::hex << pfd << endl;
 
   delete[] this->Capabilities;
 
@@ -559,6 +563,20 @@ void vtkCocoaRenderWindow::SetSize(int x, int y)
         [window setContentSize:newRect.size];
 
         resizing = false;
+      }
+    }
+
+    if (this->OffScreenInitialized)
+    {
+      if (!resizing)
+      {
+      resizing = true;
+      // we don't call DestroyOffScreenWindow/CreateOffScreenWindow here since
+      // those method destroy/release all graphics resources too which is not
+      // needed for a resize. All we want is to resize the FBO.
+      this->DestroyHardwareOffScreenWindow();
+      this->CreateHardwareOffScreenWindow(x, y);
+      resizing = false;
       }
     }
   }
@@ -647,67 +665,6 @@ void vtkCocoaRenderWindow::Frame()
   if (!this->AbortRender && this->DoubleBuffer && this->SwapBuffers)
   {
     [(NSOpenGLContext*)this->GetContextId() flushBuffer];
-  }
-}
-
-//----------------------------------------------------------------------------
-// Update system if needed due to stereo rendering.
-void vtkCocoaRenderWindow::StereoUpdate()
-{
-  // if stereo is on and it wasn't before
-  if (this->StereoRender && (!this->StereoStatus))
-  {
-    switch (this->StereoType)
-    {
-      case VTK_STEREO_CRYSTAL_EYES:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_RED_BLUE:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_ANAGLYPH:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_DRESDEN:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_INTERLACED:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_CHECKERBOARD:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_SPLITVIEWPORT_HORIZONTAL:
-        this->StereoStatus = 1;
-        break;
-    }
-  }
-  else if ((!this->StereoRender) && this->StereoStatus)
-  {
-    switch (this->StereoType)
-    {
-      case VTK_STEREO_CRYSTAL_EYES:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_RED_BLUE:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_ANAGLYPH:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_DRESDEN:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_INTERLACED:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_CHECKERBOARD:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_SPLITVIEWPORT_HORIZONTAL:
-        this->StereoStatus = 0;
-        break;
-    }
   }
 }
 
@@ -948,13 +905,13 @@ void vtkCocoaRenderWindow::CreateAWindow()
   this->MakeCurrent();
 
   // wipe out any existing display lists
-  vtkRenderer *renderer = NULL;
+  vtkRenderer *renderer = nullptr;
   vtkCollectionSimpleIterator rsit;
 
   for ( this->Renderers->InitTraversal(rsit);
         (renderer = this->Renderers->GetNextRenderer(rsit));)
   {
-    renderer->SetRenderWindow(0);
+    renderer->SetRenderWindow(nullptr);
     renderer->SetRenderWindow(this);
   }
   this->OpenGLInit();
@@ -972,6 +929,19 @@ void vtkCocoaRenderWindow::CreateAWindow()
 //----------------------------------------------------------------------------
 void vtkCocoaRenderWindow::CreateGLContext()
 {
+  // If the deployment target is at least 10.10, prefer the 'OpenGL 4.1 Core
+  // Implementation', otherwise we'll fall back to the 'OpenGL 3.2 Core
+  // Implementation' (available since 10.7).
+  NSOpenGLPixelFormatAttribute profileVersion;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+  profileVersion = NSOpenGLProfileVersion4_1Core;
+#else
+  profileVersion = NSOpenGLProfileVersion3_2Core;
+#endif
+
+  // Prefer hardware acceleration
+  NSOpenGLPixelFormatAttribute hardware = NSOpenGLPFAAccelerated;
+
   // keep trying to get different pixelFormats until successful
   NSOpenGLPixelFormat *pixelFormat = nil;
   while (pixelFormat == nil)
@@ -980,10 +950,8 @@ void vtkCocoaRenderWindow::CreateGLContext()
     NSOpenGLPixelFormatAttribute attribs[20];
 
     attribs[i++] = NSOpenGLPFAOpenGLProfile;
-    attribs[i++] = NSOpenGLProfileVersion3_2Core;
+    attribs[i++] = profileVersion;
 
-  //  OS X always prefers an accelerated context
-  //    attribs[i++] = NSOpenGLPFAAccelerated;
     attribs[i++] = NSOpenGLPFADepthSize;
     attribs[i++] = (NSOpenGLPixelFormatAttribute)32;
 
@@ -1007,6 +975,10 @@ void vtkCocoaRenderWindow::CreateGLContext()
       attribs[i++] = (NSOpenGLPixelFormatAttribute)8;
     }
 
+    // must be last in case it is 0
+    attribs[i++] = hardware;
+
+    // zero termination of list
     attribs[i++] = (NSOpenGLPixelFormatAttribute)0;
 
     // make sure that size of array was not exceeded
@@ -1016,9 +988,20 @@ void vtkCocoaRenderWindow::CreateGLContext()
 
     if (pixelFormat == nil)
     {
-      if (this->MultiSamples == 0)
+      if (profileVersion != NSOpenGLProfileVersion3_2Core)
+      {
+        // Try falling back to the 3.2 Core Profile
+        profileVersion = NSOpenGLProfileVersion3_2Core;
+      }
+      else if (hardware == NSOpenGLPFAAccelerated)
+      {
+        // Try falling back to the software renderer
+        hardware = 0;
+      }
+      else if (this->MultiSamples == 0)
       {
         // after trying with no multisamples, we are done
+        vtkWarningMacro(<< "No OpenGL context whatsoever could be created!");
         break;
       }
       else if (this->MultiSamples < 4)
@@ -1031,19 +1014,33 @@ void vtkCocoaRenderWindow::CreateGLContext()
         this->MultiSamples /= 2;
       }
     }
-    else
+  }
+
+  // do we have a shared render window?
+  NSOpenGLContext *sharedContext = nil;
+  if (this->SharedRenderWindow)
+  {
+    vtkCocoaRenderWindow *renWin =
+      vtkCocoaRenderWindow::SafeDownCast(this->SharedRenderWindow);
+    if (renWin && renWin->GetContextId())
     {
-      this->SetContextSupportsOpenGL32(true);
+      sharedContext = (NSOpenGLContext*)renWin->GetContextId();
+      this->VBOCache->Delete();
+      this->VBOCache = renWin->VBOCache;
+      this->VBOCache->Register(this);
     }
   }
 
-  NSOpenGLContext *context = [[NSOpenGLContext alloc]
-                              initWithFormat:pixelFormat
-                                shareContext:nil];
+  NSOpenGLContext *context = nil;
+  if (pixelFormat)
+  {
+    context = [[NSOpenGLContext alloc] initWithFormat:pixelFormat
+                                         shareContext:sharedContext];
 
-  // This syncs the OpenGL context to the VBL to prevent tearing
-  GLint one = 1;
-  [context setValues:&one forParameter:NSOpenGLCPSwapInterval];
+    // This syncs the OpenGL context to the VBL to prevent tearing
+    GLint one = 1;
+    [context setValues:&one forParameter:NSOpenGLCPSwapInterval];
+  }
 
   this->SetPixelFormat((void*)pixelFormat);
   this->SetContextId((void*)context);
@@ -1231,7 +1228,7 @@ int *vtkCocoaRenderWindow::GetPosition()
 
 //----------------------------------------------------------------------------
 // Change the window to fill the entire screen.
-void vtkCocoaRenderWindow::SetFullScreen(int arg)
+void vtkCocoaRenderWindow::SetFullScreen(vtkTypeBool arg)
 {
   if (this->FullScreen == arg)
   {
@@ -1279,9 +1276,9 @@ void vtkCocoaRenderWindow::SetFullScreen(int arg)
 // Set the variable that indicates that we want a stereo capable window
 // be created. This method can only be called before a window is realized.
 //
-void vtkCocoaRenderWindow::SetStereoCapableWindow(int capable)
+void vtkCocoaRenderWindow::SetStereoCapableWindow(vtkTypeBool capable)
 {
-  if (this->GetContextId() == 0)
+  if (this->GetContextId() == nullptr)
   {
     vtkRenderWindow::SetStereoCapableWindow(capable);
   }
@@ -1341,7 +1338,7 @@ void *vtkCocoaRenderWindow::GetRootWindow()
 // Sets the NSWindow* associated with this vtkRenderWindow.
 void vtkCocoaRenderWindow::SetRootWindow(void *arg)
 {
-  if (arg != NULL)
+  if (arg != nullptr)
   {
     NSMutableDictionary *manager =
       reinterpret_cast<NSMutableDictionary *>(this->GetCocoaManager());
@@ -1369,7 +1366,7 @@ void *vtkCocoaRenderWindow::GetWindowId()
 // Sets the NSView* associated with this vtkRenderWindow.
 void vtkCocoaRenderWindow::SetWindowId(void *arg)
 {
-  if (arg != NULL)
+  if (arg != nullptr)
   {
     NSMutableDictionary *manager =
       reinterpret_cast<NSMutableDictionary *>(this->GetCocoaManager());
@@ -1397,7 +1394,7 @@ void *vtkCocoaRenderWindow::GetParentId()
 // Sets the NSView* that this vtkRenderWindow should use as a parent.
 void vtkCocoaRenderWindow::SetParentId(void *arg)
 {
-  if (arg != NULL)
+  if (arg != nullptr)
   {
     NSMutableDictionary *manager =
       reinterpret_cast<NSMutableDictionary *>(this->GetCocoaManager());
@@ -1416,7 +1413,7 @@ void vtkCocoaRenderWindow::SetParentId(void *arg)
 // Sets the NSOpenGLContext* associated with this vtkRenderWindow.
 void vtkCocoaRenderWindow::SetContextId(void *contextId)
 {
-  if (contextId != NULL)
+  if (contextId != nullptr)
   {
     NSMutableDictionary *manager =
       reinterpret_cast<NSMutableDictionary *>(this->GetCocoaManager());
@@ -1444,7 +1441,7 @@ void *vtkCocoaRenderWindow::GetContextId()
 // Sets the NSOpenGLPixelFormat* associated with this vtkRenderWindow.
 void vtkCocoaRenderWindow::SetPixelFormat(void *pixelFormat)
 {
-  if (pixelFormat != NULL)
+  if (pixelFormat != nullptr)
   {
     NSMutableDictionary *manager =
       reinterpret_cast<NSMutableDictionary *>(this->GetCocoaManager());
@@ -1471,7 +1468,7 @@ void *vtkCocoaRenderWindow::GetPixelFormat()
 //----------------------------------------------------------------------------
 void vtkCocoaRenderWindow::SetCocoaServer(void *server)
 {
-  if (server != NULL)
+  if (server != nullptr)
   {
     NSMutableDictionary *manager =
       reinterpret_cast<NSMutableDictionary *>(this->GetCocoaManager());
@@ -1520,15 +1517,15 @@ void vtkCocoaRenderWindow::SetCocoaManager(void *manager)
     }
     else
     {
-      this->CocoaManager = NULL;
+      this->CocoaManager = nullptr;
     }
   }
 }
 
 //----------------------------------------------------------------------------
-void vtkCocoaRenderWindow::SetWindowInfo(char *info)
+void vtkCocoaRenderWindow::SetWindowInfo(const char *info)
 {
-  // The paramater is an ASCII string of a decimal number representing
+  // The parameter is an ASCII string of a decimal number representing
   // a pointer to the window. Convert it back to a pointer.
   ptrdiff_t tmp = 0;
   if (info)
@@ -1540,9 +1537,9 @@ void vtkCocoaRenderWindow::SetWindowInfo(char *info)
 }
 
 //----------------------------------------------------------------------------
-void vtkCocoaRenderWindow::SetParentInfo(char *info)
+void vtkCocoaRenderWindow::SetParentInfo(const char *info)
 {
-  // The paramater is an ASCII string of a decimal number representing
+  // The parameter is an ASCII string of a decimal number representing
   // a pointer to the window. Convert it back to a pointer.
   ptrdiff_t tmp = 0;
   if (info)
@@ -1621,6 +1618,12 @@ void vtkCocoaRenderWindow::SetCurrentCursor(int shape)
     return;
   }
   this->Superclass::SetCurrentCursor(shape);
+
+  if (!this->Mapped)
+  {
+    return;
+  }
+
   NSCursor* cursor = nil;
   switch (shape)
   {

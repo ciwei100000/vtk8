@@ -37,10 +37,10 @@ int TestUserShader(int argc, char *argv[])
   renderer->SetBackground(0.0, 0.0, 0.0);
   vtkNew<vtkRenderWindow> renderWindow;
   renderWindow->SetSize(400, 400);
-  renderWindow->AddRenderer(renderer.Get());
-  renderer->AddActor(actor.Get());
+  renderWindow->AddRenderer(renderer);
+  renderer->AddActor(actor);
   vtkNew<vtkRenderWindowInteractor>  iren;
-  iren->SetRenderWindow(renderWindow.Get());
+  iren->SetRenderWindow(renderWindow);
 
   const char* fileName = vtkTestUtilities::ExpandDataFileName(argc, argv,
                                                                "Data/dragon.ply");
@@ -48,12 +48,14 @@ int TestUserShader(int argc, char *argv[])
   reader->SetFileName(fileName);
   reader->Update();
 
+  delete [] fileName;
+
   vtkNew<vtkTriangleMeshPointNormals> norms;
   norms->SetInputConnection(reader->GetOutputPort());
   norms->Update();
 
   mapper->SetInputConnection(norms->GetOutputPort());
-  actor->SetMapper(mapper.Get());
+  actor->SetMapper(mapper);
   actor->GetProperty()->SetAmbientColor(0.2, 0.2, 1.0);
   actor->GetProperty()->SetDiffuseColor(1.0, 0.65, 0.7);
   actor->GetProperty()->SetSpecularColor(1.0, 1.0, 1.0);
@@ -77,7 +79,7 @@ int TestUserShader(int argc, char *argv[])
     "//VTK::Normal::Dec", // replace the normal block
     true, // before the standard replacements
     "//VTK::Normal::Dec\n" // we still want the default
-    "  varying vec3 myNormalMCVSOutput;\n", //but we add this
+    "  out vec3 myNormalMCVSOutput;\n", //but we add this
     false // only do it once
     );
   mapper->AddShaderReplacement(
@@ -88,6 +90,18 @@ int TestUserShader(int argc, char *argv[])
     "  myNormalMCVSOutput = normalMC;\n", //but we add this
     false // only do it once
     );
+  mapper->AddShaderReplacement(
+    vtkShader::Vertex,
+    "//VTK::Color::Impl", // dummy replacement for testing clear method
+    true,
+    "VTK::Color::Impl\n",
+    false
+    );
+  mapper->ClearShaderReplacement(
+    vtkShader::Vertex,     // clear our dummy replacement
+    "//VTK::Color::Impl",
+    true
+    );
 
   // now modify the fragment shader
   mapper->AddShaderReplacement(
@@ -95,7 +109,7 @@ int TestUserShader(int argc, char *argv[])
     "//VTK::Normal::Dec", // replace the normal block
     true, // before the standard replacements
     "//VTK::Normal::Dec\n" // we still want the default
-    "  varying vec3 myNormalMCVSOutput;\n", //but we add this
+    "  in vec3 myNormalMCVSOutput;\n", //but we add this
     false // only do it once
     );
   mapper->AddShaderReplacement(
@@ -115,7 +129,7 @@ int TestUserShader(int argc, char *argv[])
   renderer->GetActiveCamera()->Zoom(1.3);
   renderWindow->Render();
 
-  int retVal = vtkRegressionTestImage( renderWindow.Get() );
+  int retVal = vtkRegressionTestImage( renderWindow );
   if ( retVal == vtkRegressionTester::DO_INTERACTOR)
   {
     iren->Start();

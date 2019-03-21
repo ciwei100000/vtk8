@@ -95,9 +95,7 @@ public:
 
   void Initialize()
   {
-    if (!this->ForceEmulation &&
-        (GLEW_ARB_vertex_array_object ||
-            vtkOpenGLRenderWindow::GetContextSupportsOpenGL32()))
+    if (!this->ForceEmulation)
     {
       this->Supported = true;
       glGenVertexArrays(1, &this->HandleVAO);
@@ -135,7 +133,7 @@ public:
   AttributeMap Attributes;
 };
 
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+#define BUFFER_OFFSET(i) (reinterpret_cast<char *>(i))
 
 vtkOpenGLVertexArrayObject::vtkOpenGLVertexArrayObject()
 {
@@ -263,7 +261,9 @@ bool vtkOpenGLVertexArrayObject::AddAttributeArray(
 {
   return this->AddAttributeArrayWithDivisor(
     program, buffer, name, offset,
-    buffer->Stride, buffer->DataType, buffer->NumberOfComponents,
+    buffer->GetStride(),
+    buffer->GetDataType(),
+    buffer->GetNumberOfComponents(),
     normalize, 0, false);
 }
 
@@ -314,7 +314,7 @@ bool vtkOpenGLVertexArrayObject::AddAttributeArrayWithDivisor(vtkShaderProgram *
 
   const GLchar *namePtr = static_cast<const GLchar *>(name.c_str());
   VertexAttributes attribs;
-  attribs.Index = glGetAttribLocation(this->Internal->HandleProgram, namePtr);
+  attribs.Index = program->FindAttributeArray(namePtr);
   attribs.Offset = offset;
   attribs.Stride = static_cast<GLsizei>(stride);
   attribs.Type = convertTypeToGL(elementType);
@@ -389,7 +389,8 @@ bool vtkOpenGLVertexArrayObject::AddAttributeMatrixWithDivisor(
   int offset, size_t stride,
   int elementType, int elementTupleSize,
   bool normalize,
-  int divisor)
+  int divisor,
+  int tupleOffset)
 {
   // bind the first row of values
   bool result =
@@ -410,7 +411,7 @@ bool vtkOpenGLVertexArrayObject::AddAttributeMatrixWithDivisor(
     glEnableVertexAttribArray(attribs.Index+i);
     glVertexAttribPointer(attribs.Index + i, elementTupleSize, convertTypeToGL(elementType),
                           normalize, static_cast<GLsizei>(stride),
-                          BUFFER_OFFSET(offset + stride*i/elementTupleSize));
+                          BUFFER_OFFSET(offset + tupleOffset * i));
     if (divisor > 0)
     {
 #if GL_ES_VERSION_3_0 == 1

@@ -21,7 +21,7 @@
  * vtkReebGraph (port 1).
  * The filter samples each arc of the Reeb graph and embeds the samples on the
  * barycenter of the corresponding field contour.
- * The number of (evenly distributed) arc samples  can be defined with
+ * The number of (evenly distributed) arc samples can be defined with
  * SetNumberOfSamples() (default value: 10).
  * The skeleton can be optionally smoothed with SetNumberOfSmoothingIterations()
  * (default value: 10).
@@ -55,7 +55,7 @@ class VTKFILTERSREEBGRAPH_EXPORT vtkReebGraphSurfaceSkeletonFilter :
 public:
   static vtkReebGraphSurfaceSkeletonFilter* New();
   vtkTypeMacro(vtkReebGraphSurfaceSkeletonFilter, vtkDataObjectAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -93,15 +93,15 @@ protected:
   vtkIdType FieldId;
   int NumberOfSamples, NumberOfSmoothingIterations;
 
-  int FillInputPortInformation(int portNumber, vtkInformation *);
-  int FillOutputPortInformation(int portNumber, vtkInformation *info);
+  int FillInputPortInformation(int portNumber, vtkInformation *) override;
+  int FillOutputPortInformation(int portNumber, vtkInformation *info) override;
 
   int RequestData(vtkInformation *request,
-    vtkInformationVector **inputVector, vtkInformationVector *outputVector);
+    vtkInformationVector **inputVector, vtkInformationVector *outputVector) override;
 
 private:
-  vtkReebGraphSurfaceSkeletonFilter(const vtkReebGraphSurfaceSkeletonFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkReebGraphSurfaceSkeletonFilter&) VTK_DELETE_FUNCTION;
+  vtkReebGraphSurfaceSkeletonFilter(const vtkReebGraphSurfaceSkeletonFilter&) = delete;
+  void operator=(const vtkReebGraphSurfaceSkeletonFilter&) = delete;
 };
 
 #endif

@@ -34,13 +34,13 @@ vtkCxxSetObjectMacro(vtkPExtractHistogram2D, Controller, vtkMultiProcessControll
 //------------------------------------------------------------------------------
 vtkPExtractHistogram2D::vtkPExtractHistogram2D()
 {
-  this->Controller = 0;
+  this->Controller = nullptr;
   this->SetController(vtkMultiProcessController::GetGlobalController());
 }
 //------------------------------------------------------------------------------
 vtkPExtractHistogram2D::~vtkPExtractHistogram2D()
 {
-  this->SetController(0);
+  this->SetController(nullptr);
 }
 //------------------------------------------------------------------------------
 void vtkPExtractHistogram2D::PrintSelf(ostream& os, vtkIndent indent)
@@ -84,7 +84,7 @@ void vtkPExtractHistogram2D::Learn(vtkTable *inData,
   reducedOutImage->DeepCopy(outImage);
 
   vtkDataArray* myArray = outImage->GetPointData()->GetScalars();
-  vtkDataArray* recvArray = reducedOutImage->GetPointData()->GetScalars();;
+  vtkDataArray* recvArray = reducedOutImage->GetPointData()->GetScalars();
 
   // this sums up all of the images and distributes them to
   // every node

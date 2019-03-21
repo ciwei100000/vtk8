@@ -40,7 +40,7 @@
  *
  *
  * See Graphics/Testing/Cxx/TestReebGraph.cxx for an example of concrete
- * implemetnation.
+ * implementation.
 */
 
 #ifndef vtkReebGraphSimplificationMetric_h
@@ -59,7 +59,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkReebGraphSimplificationMetric :
 public:
   static vtkReebGraphSimplificationMetric* New();
   vtkTypeMacro(vtkReebGraphSimplificationMetric, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -96,13 +96,13 @@ public:
 
 protected:
   vtkReebGraphSimplificationMetric();
-  ~vtkReebGraphSimplificationMetric() VTK_OVERRIDE;
+  ~vtkReebGraphSimplificationMetric() override;
 
   double    LowerBound, UpperBound;
 
 private:
-  vtkReebGraphSimplificationMetric(const vtkReebGraphSimplificationMetric&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkReebGraphSimplificationMetric&) VTK_DELETE_FUNCTION;
+  vtkReebGraphSimplificationMetric(const vtkReebGraphSimplificationMetric&) = delete;
+  void operator=(const vtkReebGraphSimplificationMetric&) = delete;
 };
 
 #endif

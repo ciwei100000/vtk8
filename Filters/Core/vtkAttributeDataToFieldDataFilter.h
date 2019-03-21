@@ -48,7 +48,7 @@
 class VTKFILTERSCORE_EXPORT vtkAttributeDataToFieldDataFilter : public vtkDataSetAlgorithm
 {
 public:
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   vtkTypeMacro(vtkAttributeDataToFieldDataFilter,vtkDataSetAlgorithm);
 
   /**
@@ -61,21 +61,21 @@ public:
    * Turn on/off the passing of point and cell non-field attribute data to the
    * output of the filter.
    */
-  vtkSetMacro(PassAttributeData,int);
-  vtkGetMacro(PassAttributeData,int);
-  vtkBooleanMacro(PassAttributeData,int);
+  vtkSetMacro(PassAttributeData,vtkTypeBool);
+  vtkGetMacro(PassAttributeData,vtkTypeBool);
+  vtkBooleanMacro(PassAttributeData,vtkTypeBool);
   //@}
 
 protected:
   vtkAttributeDataToFieldDataFilter();
-  ~vtkAttributeDataToFieldDataFilter() VTK_OVERRIDE {}
+  ~vtkAttributeDataToFieldDataFilter() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE; //generate output data
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override; //generate output data
 
-  int PassAttributeData;
+  vtkTypeBool PassAttributeData;
 private:
-  vtkAttributeDataToFieldDataFilter(const vtkAttributeDataToFieldDataFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAttributeDataToFieldDataFilter&) VTK_DELETE_FUNCTION;
+  vtkAttributeDataToFieldDataFilter(const vtkAttributeDataToFieldDataFilter&) = delete;
+  void operator=(const vtkAttributeDataToFieldDataFilter&) = delete;
 };
 
 #endif

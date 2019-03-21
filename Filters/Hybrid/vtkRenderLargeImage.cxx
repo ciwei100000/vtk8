@@ -67,7 +67,7 @@ public:
 //----------------------------------------------------------------------------
 vtkRenderLargeImage::vtkRenderLargeImage()
 {
-  this->Input = NULL;
+  this->Input = nullptr;
   this->Magnification = 3;
   this->SetNumberOfInputPorts(0);
   this->SetNumberOfOutputPorts(1);
@@ -79,7 +79,7 @@ vtkRenderLargeImage::~vtkRenderLargeImage()
   if (this->Input)
   {
     this->Input->UnRegister(this);
-    this->Input = NULL;
+    this->Input = nullptr;
   }
   delete this->StoredData;
 }
@@ -142,7 +142,7 @@ void vtkRenderLargeImage::RequestInformation (
   // get the info objects
   vtkInformation* outInfo = outputVector->GetInformationObject(0);
 
-  if (this->Input == NULL )
+  if (this->Input == nullptr )
   {
     vtkErrorMacro(<<"Please specify a renderer as input!");
     return;
@@ -240,7 +240,7 @@ void vtkRenderLargeImage::RequestData(
   viewAngle = cam->GetViewAngle();
   parallelScale = cam->GetParallelScale();
 
-  cam->SetViewAngle(atan(tan(viewAngle*vtkMath::Pi()/360.0)/this->Magnification)
+  cam->SetViewAngle(2.0*atan(tan(0.5*viewAngle*vtkMath::Pi()/360.0)/this->Magnification)
                     * 360.0 / vtkMath::Pi());
   cam->SetParallelScale(parallelScale/this->Magnification);
 
@@ -299,7 +299,7 @@ void vtkRenderLargeImage::RequestData(
       }
       rowSize = colEnd - colStart + 1;
 
-      // get the output pointer and do arith on it if necc
+      // get the output pointer and do arith on it if necessary
       outPtr =
         (unsigned char *)data->GetScalarPointer(inExtent[0],inExtent[2],0);
       outPtr = outPtr + (x*size[0] - inExtent[0])*inIncr[0] +
@@ -412,8 +412,8 @@ void vtkRenderLargeImage::Rescale2DActors()
           // Make sure they have no dodgy offsets
           n1->SetCoordinateSystemToDisplay();
           n2->SetCoordinateSystemToDisplay();
-          n1->SetReferenceCoordinate(NULL);
-          n2->SetReferenceCoordinate(NULL);
+          n1->SetReferenceCoordinate(nullptr);
+          n2->SetReferenceCoordinate(nullptr);
           n1->SetValue(d1[0], d1[1]);
           n2->SetValue(d2[0], d2[1]);
           //

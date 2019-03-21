@@ -22,18 +22,13 @@
 #include "vtkPropCollection.h"
 #include "vtkRenderWindowInteractor.h"
 #include "vtkRendererCollection.h"
+#include "vtkRenderTimerLog.h"
 #include "vtkTimerLog.h"
 #include "vtkTransform.h"
 #include "vtkGraphicsFactory.h"
 #include "vtkObjectFactory.h"
 
 #include <cmath>
-
-#ifdef VTK_OPENGL2
-class vtkPainterDeviceAdapter : public vtkObject {};
-#else
-#include "vtkPainterDeviceAdapter.h"
-#endif
 
 //----------------------------------------------------------------------------
 // Use the vtkAbstractObjectFactoryNewMacro to allow the object factory overrides.
@@ -57,22 +52,14 @@ vtkRenderWindow::vtkRenderWindow()
   this->PolygonSmoothing = 0;
   this->StereoRender = 0;
   this->StereoType = VTK_STEREO_RED_BLUE;
-  this->StereoStatus = 0;
   this->StereoCapableWindow = 0;
   this->AlphaBitPlanes = 0;
   this->StencilCapable = 0;
-  this->Interactor = NULL;
-  this->AAFrames = 0;
-  this->FDFrames = 0;
-  this->UseConstantFDOffsets = 0;
-  this->ConstantFDOffsets[0] = NULL;
-  this->ConstantFDOffsets[1] = NULL;
-  this->SubFrames = 0;
-  this->AccumulationBuffer = NULL;
+  this->Interactor = nullptr;
+  this->AccumulationBuffer = nullptr;
   this->AccumulationBufferSize = 0;
-  this->CurrentSubFrame = 0;
   this->DesiredUpdateRate = 0.0001;
-  this->ResultFrame = NULL;
+  this->ResultFrame = nullptr;
   this->SwapBuffers = 1;
   this->AbortRender = 0;
   this->InAbortCheck = 0;
@@ -84,34 +71,31 @@ vtkRenderWindow::vtkRenderWindow()
   this->AnaglyphColorSaturation = 0.65f;
   this->AnaglyphColorMask[0] = 4;  // red
   this->AnaglyphColorMask[1] = 3;  // cyan
-  this->PainterDeviceAdapter = NULL;
+
   this->AbortCheckTime = 0.0;
   this->CapturingGL2PSSpecialProps = 0;
   this->MultiSamples = 0;
+  this->UseSRGBColorSpace = false;
 
-#ifdef VTK_USE_OFFSCREEN
+#ifdef VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN
   this->OffScreenRendering = 1;
 #endif
   this->DeviceIndex = 0;
+  this->SharedRenderWindow = nullptr;
 }
 
 //----------------------------------------------------------------------------
 vtkRenderWindow::~vtkRenderWindow()
 {
-  this->SetInteractor(NULL);
+  this->SetInteractor(nullptr);
+  this->SetSharedRenderWindow(nullptr);
 
   delete [] this->AccumulationBuffer;
-  this->AccumulationBuffer = NULL;
+  this->AccumulationBuffer = nullptr;
   this->AccumulationBufferSize = 0;
 
   delete [] this->ResultFrame;
-  this->ResultFrame = NULL;
-
-  for (int i = 0; i < 2; ++i)
-  {
-    delete [] this->ConstantFDOffsets[i];
-    this->ConstantFDOffsets[i] = NULL;
-  }
+  this->ResultFrame = nullptr;
 
   if (this->Renderers)
   {
@@ -128,11 +112,6 @@ vtkRenderWindow::~vtkRenderWindow()
 
     this->Renderers->Delete();
   }
-
-  if (this->PainterDeviceAdapter)
-  {
-    this->PainterDeviceAdapter->Delete();
-  }
 }
 
 //----------------------------------------------------------------------------
@@ -144,6 +123,25 @@ vtkRenderWindowInteractor *vtkRenderWindow::MakeRenderWindowInteractor()
   return this->Interactor;
 }
 
+void vtkRenderWindow::SetSharedRenderWindow(vtkRenderWindow *val)
+{
+  if (this->SharedRenderWindow == val)
+  {
+    return;
+  }
+
+  if (this->SharedRenderWindow)
+  {
+    // this->ReleaseGraphicsResources();
+    this->SharedRenderWindow->UnRegister(this);
+  }
+  this->SharedRenderWindow = val;
+  if (val)
+  {
+    val->Register(this);
+  }
+}
+
 //----------------------------------------------------------------------------
 // Set the interactor that will work with this renderer.
 void vtkRenderWindow::SetInteractor(vtkRenderWindowInteractor *rwi)
@@ -153,8 +151,8 @@ void vtkRenderWindow::SetInteractor(vtkRenderWindowInteractor *rwi)
     // to avoid destructor recursion
     vtkRenderWindowInteractor *temp = this->Interactor;
     this->Interactor = rwi;
-    if (temp != NULL) {temp->UnRegister(this);}
-    if (this->Interactor != NULL)
+    if (temp != nullptr) {temp->UnRegister(this);}
+    if (this->Interactor != nullptr)
     {
       this->Interactor->Register(this);
 
@@ -170,50 +168,6 @@ void vtkRenderWindow::SetInteractor(vtkRenderWindowInteractor *rwi)
         this->Interactor->SetRenderWindow(this);
       }
     }
-  }
-}
-
-//----------------------------------------------------------------------------
-void vtkRenderWindow::SetFDFrames(int fdFrames)
-{
-  if (this->FDFrames != fdFrames)
-  {
-    this->FDFrames = fdFrames;
-
-    for (int i = 0; i < 2; i++)
-    {
-      delete [] this->ConstantFDOffsets[i];
-      this->ConstantFDOffsets[i] = NULL;
-
-      if (this->FDFrames > 0)
-      {
-        this->ConstantFDOffsets[i] = new double[this->FDFrames];
-        for (int fi = 0; fi < this->FDFrames; fi++)
-        {
-          this->ConstantFDOffsets[i][fi] = vtkMath::Random();
-        }
-      }
-    }
-
-    vtkDebugMacro(<< this->GetClassName() << " (" << this
-      << "): setting FDFrames to " << fdFrames);
-    this->Modified();
-  }
-}
-
-//----------------------------------------------------------------------------
-void vtkRenderWindow::SetSubFrames(int subFrames)
-{
-  if (this->SubFrames != subFrames)
-  {
-    this->SubFrames = subFrames;
-    if (this->CurrentSubFrame >= this->SubFrames)
-    {
-      this->CurrentSubFrame = 0;
-    }
-    vtkDebugMacro(<< this->GetClassName() << " (" << this
-      << "): setting SubFrames to " << subFrames);
-    this->Modified();
   }
 }
 
@@ -236,13 +190,26 @@ void vtkRenderWindow::SetDesiredUpdateRate(double rate)
   }
 }
 
+//----------------------------------------------------------------------------
+void vtkRenderWindow::SetStereoType(int stereoType)
+{
+  if (this->StereoType == stereoType)
+  {
+    return;
+  }
+
+  this->StereoType = stereoType;
+  this->InvokeEvent(vtkCommand::WindowStereoTypeChangedEvent);
+
+  this->Modified();
+}
 
 //----------------------------------------------------------------------------
 //
 // Set the variable that indicates that we want a stereo capable window
 // be created. This method can only be called before a window is realized.
 //
-void vtkRenderWindow::SetStereoCapableWindow(int capable)
+void vtkRenderWindow::SetStereoCapableWindow(vtkTypeBool capable)
 {
   if (this->StereoCapableWindow != capable)
   {
@@ -253,7 +220,7 @@ void vtkRenderWindow::SetStereoCapableWindow(int capable)
 
 //----------------------------------------------------------------------------
 // Turn on stereo rendering
-void vtkRenderWindow::SetStereoRender(int stereo)
+void vtkRenderWindow::SetStereoRender(vtkTypeBool stereo)
 {
   if (stereo == this->StereoRender)
   {
@@ -279,10 +246,6 @@ void vtkRenderWindow::SetStereoRender(int stereo)
 // synchronize this process.
 void vtkRenderWindow::Render()
 {
-  int *size;
-  int x,y;
-  float *p1;
-
   // if we are in the middle of an abort check then return now
   if (this->InAbortCheck)
   {
@@ -308,7 +271,7 @@ void vtkRenderWindow::Render()
   this->InRender = 1;
 
   vtkDebugMacro(<< "Starting Render Method.\n");
-  this->InvokeEvent(vtkCommand::StartEvent,NULL);
+  this->InvokeEvent(vtkCommand::StartEvent,nullptr);
 
   this->NeverRendered = 0;
 
@@ -317,427 +280,26 @@ void vtkRenderWindow::Render()
     this->Interactor->Initialize();
   }
 
-  // CAUTION:
-  // This method uses this->GetSize() and allocates buffers using that size.
-  // Remember that GetSize() will returns a size scaled by the TileScale factor.
-  // We should use GetActualSize() when we don't want the size to be scaled.
-
-  // if there is a reason for an AccumulationBuffer
-  if ( this->SubFrames || this->AAFrames || this->FDFrames)
+  vtkRenderTimerLog::ScopedEventLogger event;
+  if (this->RenderTimer->GetLoggingEnabled())
   {
-    // check the current size
-    size = this->GetSize();
-    unsigned int bufferSize = 3*size[0]*size[1];
-    // If there is not a buffer or the size is too small
-    // re-allocate it
-    if( !this->AccumulationBuffer
-        || bufferSize > this->AccumulationBufferSize)
-    {
-      // it is OK to delete null, no sense in two if's
-      delete [] this->AccumulationBuffer;
-      // Save the size of the buffer
-      this->AccumulationBufferSize = 3*size[0]*size[1];
-      this->AccumulationBuffer = new float [this->AccumulationBufferSize];
-      memset(this->AccumulationBuffer,0,this->AccumulationBufferSize*sizeof(float));
-    }
+    this->Start(); // Ensure context exists
+    this->RenderTimer->MarkFrame();
+    event = this->RenderTimer->StartScopedEvent("vtkRenderWindow::Render");
   }
 
-  // handle any sub frames
-  if (this->SubFrames)
-  {
-    // get the size
-    size = this->GetSize();
-
-    // draw the images
-    this->DoAARender();
-
-    // now accumulate the images
-    if ((!this->AAFrames) && (!this->FDFrames))
-    {
-      p1 = this->AccumulationBuffer;
-      unsigned char *p2;
-      unsigned char *p3 = NULL;
-      if (this->ResultFrame)
-      {
-        p2 = this->ResultFrame;
-      }
-      else
-      {
-        p2 = this->GetPixelData(0,0,size[0]-1,size[1]-1,!this->DoubleBuffer);
-        p3 = p2;
-      }
-      for (y = 0; y < size[1]; y++)
-      {
-        for (x = 0; x < size[0]; x++)
-        {
-          *p1 += *p2; p1++; p2++;
-          *p1 += *p2; p1++; p2++;
-          *p1 += *p2; p1++; p2++;
-        }
-      }
-      if (p3)
-      {
-        delete [] p3;
-      }
-    }
-
-    // if this is the last sub frame then convert back into unsigned char
-    this->CurrentSubFrame++;
-    if (this->CurrentSubFrame >= this->SubFrames)
-    {
-      double num;
-      unsigned char *p2 = new unsigned char [3*size[0]*size[1]];
-
-      num = this->SubFrames;
-      if (this->AAFrames)
-      {
-        num *= this->AAFrames;
-      }
-      if (this->FDFrames)
-      {
-        num *= this->FDFrames;
-      }
-
-      this->ResultFrame = p2;
-      p1 = this->AccumulationBuffer;
-      for (y = 0; y < size[1]; y++)
-      {
-        for (x = 0; x < size[0]; x++)
-        {
-          *p2 = static_cast<unsigned char>(*p1/num);
-          p1++;
-          p2++;
-          *p2 = static_cast<unsigned char>(*p1/num);
-          p1++;
-          p2++;
-          *p2 = static_cast<unsigned char>(*p1/num);
-          p1++;
-          p2++;
-        }
-      }
-
-      this->CurrentSubFrame = 0;
-      this->CopyResultFrame();
-
-      // free any memory
-      delete [] this->AccumulationBuffer;
-      this->AccumulationBuffer = NULL;
-    }
-  }
-  else // no subframes
-  {
-    // get the size
-    size = this->GetSize();
-
-    this->DoAARender();
-    // if we had some accumulation occur
-    if (this->AccumulationBuffer)
-    {
-      double num;
-      unsigned char *p2 = new unsigned char [3*size[0]*size[1]];
-
-      if (this->AAFrames)
-      {
-        num = this->AAFrames;
-      }
-      else
-      {
-        num = 1;
-      }
-      if (this->FDFrames)
-      {
-        num *= this->FDFrames;
-      }
-
-      this->ResultFrame = p2;
-      p1 = this->AccumulationBuffer;
-      for (y = 0; y < size[1]; y++)
-      {
-        for (x = 0; x < size[0]; x++)
-        {
-          *p2 = static_cast<unsigned char>(*p1/num);
-          p1++;
-          p2++;
-          *p2 = static_cast<unsigned char>(*p1/num);
-          p1++;
-          p2++;
-          *p2 = static_cast<unsigned char>(*p1/num);
-          p1++;
-          p2++;
-        }
-      }
-
-      delete [] this->AccumulationBuffer;
-      this->AccumulationBuffer = NULL;
-    }
-
-    this->CopyResultFrame();
-  }
+  this->DoStereoRender();
+  this->CopyResultFrame();
 
   delete [] this->ResultFrame;
-  this->ResultFrame = NULL;
+  this->ResultFrame = nullptr;
+
+  // Stop the render timer before invoking the EndEvent.
+  event.Stop();
 
   this->InRender = 0;
-  this->InvokeEvent(vtkCommand::EndEvent,NULL);
+  this->InvokeEvent(vtkCommand::EndEvent,nullptr);
 }
-
-//----------------------------------------------------------------------------
-// Handle rendering any antialiased frames.
-void vtkRenderWindow::DoAARender()
-{
-  int i;
-
-  // handle any anti aliasing
-  if (this->AAFrames)
-  {
-    int *size;
-    int x,y;
-    float *p1;
-    vtkRenderer *aren;
-    vtkCamera *acam;
-    double *dpoint;
-    double offsets[2];
-    double origfocus[4];
-    double worldOffset[3];
-
-    // get the size
-    size = this->GetSize();
-
-    origfocus[3] = 1.0;
-
-    for (i = 0; i < this->AAFrames; i++)
-    {
-      // jitter the cameras
-      offsets[0] = vtkMath::Random() - 0.5;
-      offsets[1] = vtkMath::Random() - 0.5;
-
-      vtkCollectionSimpleIterator rsit;
-      for (this->Renderers->InitTraversal(rsit);
-           (aren = this->Renderers->GetNextRenderer(rsit)); )
-      {
-        acam = aren->GetActiveCamera();
-
-        // calculate the amount to jitter
-        acam->GetFocalPoint(origfocus);
-        aren->SetWorldPoint(origfocus);
-        aren->WorldToDisplay();
-        dpoint = aren->GetDisplayPoint();
-        aren->SetDisplayPoint(dpoint[0] + offsets[0],
-                              dpoint[1] + offsets[1],
-                              dpoint[2]);
-        aren->DisplayToWorld();
-        dpoint = aren->GetWorldPoint();
-        dpoint[0] /= dpoint[3];
-        dpoint[1] /= dpoint[3];
-        dpoint[2] /= dpoint[3];
-        acam->SetFocalPoint(dpoint);
-
-        worldOffset[0] = dpoint[0] - origfocus[0];
-        worldOffset[1] = dpoint[1] - origfocus[1];
-        worldOffset[2] = dpoint[2] - origfocus[2];
-
-        acam->GetPosition(dpoint);
-        acam->SetPosition(dpoint[0]+worldOffset[0],
-                          dpoint[1]+worldOffset[1],
-                          dpoint[2]+worldOffset[2]);
-      }
-
-      // draw the images
-      this->DoFDRender();
-
-      // restore the jitter to normal
-      for (this->Renderers->InitTraversal(rsit);
-           (aren = this->Renderers->GetNextRenderer(rsit)); )
-      {
-        acam = aren->GetActiveCamera();
-
-        // calculate the amount to jitter
-        acam->GetFocalPoint(origfocus);
-        aren->SetWorldPoint(origfocus);
-        aren->WorldToDisplay();
-        dpoint = aren->GetDisplayPoint();
-        aren->SetDisplayPoint(dpoint[0] - offsets[0],
-                              dpoint[1] - offsets[1],
-                              dpoint[2]);
-        aren->DisplayToWorld();
-        dpoint = aren->GetWorldPoint();
-        dpoint[0] /= dpoint[3];
-        dpoint[1] /= dpoint[3];
-        dpoint[2] /= dpoint[3];
-        acam->SetFocalPoint(dpoint);
-
-        worldOffset[0] = dpoint[0] - origfocus[0];
-        worldOffset[1] = dpoint[1] - origfocus[1];
-        worldOffset[2] = dpoint[2] - origfocus[2];
-
-        acam->GetPosition(dpoint);
-        acam->SetPosition(dpoint[0]+worldOffset[0],
-                          dpoint[1]+worldOffset[1],
-                          dpoint[2]+worldOffset[2]);
-      }
-
-
-      // now accumulate the images
-      p1 = this->AccumulationBuffer;
-      if (!this->FDFrames)
-      {
-        unsigned char *p2;
-        unsigned char *p3;
-        if (this->ResultFrame)
-        {
-          p2 = this->ResultFrame;
-        }
-        else
-        {
-          p2 = this->GetPixelData(0,0,size[0]-1,size[1]-1,!this->DoubleBuffer);
-        }
-        p3 = p2;
-        for (y = 0; y < size[1]; y++)
-        {
-          for (x = 0; x < size[0]; x++)
-          {
-            *p1 += static_cast<float>(*p2);
-            p1++;
-            p2++;
-            *p1 += static_cast<float>(*p2);
-            p1++;
-            p2++;
-            *p1 += static_cast<float>(*p2);
-            p1++;
-            p2++;
-          }
-        }
-        delete [] p3;
-      }
-    }
-  }
-  else
-  {
-    this->DoFDRender();
-  }
-}
-
-//----------------------------------------------------------------------------
-// Handle rendering any focal depth frames.
-void vtkRenderWindow::DoFDRender()
-{
-  int i;
-
-  // handle any focal depth
-  if (this->FDFrames)
-  {
-    int *size;
-    int x,y;
-    unsigned char *p2;
-    unsigned char *p3;
-    float *p1;
-    vtkRenderer *aren;
-    vtkCamera *acam;
-    double focalDisk;
-    double *vpn, *dpoint;
-    double vec[3];
-    vtkTransform *aTrans = vtkTransform::New();
-    double offsets[2];
-    double *orig;
-    vtkCollectionSimpleIterator rsit;
-
-    // get the size
-    size = this->GetSize();
-
-    orig = new double [3*this->Renderers->GetNumberOfItems()];
-
-    for (i = 0; i < this->FDFrames; i++)
-    {
-      int j = 0;
-
-      if (this->UseConstantFDOffsets)
-      {
-        offsets[0] = this->ConstantFDOffsets[0][i]; // radius
-        offsets[1] = this->ConstantFDOffsets[1][i]*360.0; // angle
-      }
-      else
-      {
-        offsets[0] = vtkMath::Random(); // radius
-        offsets[1] = vtkMath::Random()*360.0; // angle
-      }
-
-      // store offsets for each renderer
-      for (this->Renderers->InitTraversal(rsit);
-           (aren = this->Renderers->GetNextRenderer(rsit)); )
-      {
-        acam = aren->GetActiveCamera();
-        focalDisk = acam->GetFocalDisk()*offsets[0];
-
-        vpn = acam->GetViewPlaneNormal();
-        aTrans->Identity();
-        aTrans->Scale(focalDisk,focalDisk,focalDisk);
-        aTrans->RotateWXYZ(-offsets[1],vpn[0],vpn[1],vpn[2]);
-        aTrans->TransformVector(acam->GetViewUp(),vec);
-
-        dpoint = acam->GetPosition();
-
-        // store the position for later
-        memcpy(orig + j*3,dpoint,3 * sizeof (double));
-        j++;
-
-        acam->SetPosition(dpoint[0]+vec[0],
-                          dpoint[1]+vec[1],
-                          dpoint[2]+vec[2]);
-      }
-
-      // draw the images
-      this->DoStereoRender();
-
-      // restore the jitter to normal
-      j = 0;
-      for (this->Renderers->InitTraversal(rsit);
-           (aren = this->Renderers->GetNextRenderer(rsit)); )
-      {
-        acam = aren->GetActiveCamera();
-        acam->SetPosition(orig + j*3);
-        j++;
-      }
-
-      // get the pixels for accumulation
-      // now accumulate the images
-      p1 = this->AccumulationBuffer;
-      if (this->ResultFrame)
-      {
-        p2 = this->ResultFrame;
-      }
-      else
-      {
-        p2 = this->GetPixelData(0,0,size[0]-1,size[1]-1,!this->DoubleBuffer);
-      }
-      p3 = p2;
-      for (y = 0; y < size[1]; y++)
-      {
-        for (x = 0; x < size[0]; x++)
-        {
-          *p1 += static_cast<float>(*p2);
-          p1++;
-          p2++;
-          *p1 += static_cast<float>(*p2);
-          p1++;
-          p2++;
-          *p1 += static_cast<float>(*p2);
-          p1++;
-          p2++;
-        }
-      }
-      delete [] p3;
-    }
-
-    // free memory
-    delete [] orig;
-    aTrans->Delete();
-  }
-  else
-  {
-    this->DoStereoRender();
-  }
-}
-
 
 //----------------------------------------------------------------------------
 // Handle rendering the two different views for stereo rendering.
@@ -829,7 +391,7 @@ void vtkRenderWindow::RemoveRenderer(vtkRenderer *ren)
   if (ren->GetRenderWindow() == this)
   {
     ren->ReleaseGraphicsResources(this);
-    ren->SetRenderWindow(NULL);
+    ren->SetRenderWindow(nullptr);
   }
   this->Renderers->RemoveItem(ren);
 }
@@ -848,7 +410,7 @@ int vtkRenderWindow::CheckAbortStatus()
     if (vtkTimerLog::GetUniversalTime() - this->AbortCheckTime > 0.2)
     {
       this->InAbortCheck = 1;
-      this->InvokeEvent(vtkCommand::AbortCheckEvent,NULL);
+      this->InvokeEvent(vtkCommand::AbortCheckEvent,nullptr);
       this->InAbortCheck = 0;
       this->AbortCheckTime = vtkTimerLog::GetUniversalTime();
     }
@@ -878,20 +440,19 @@ void vtkRenderWindow::PrintSelf(ostream& os, vtkIndent indent)
      << (this->LineSmoothing ? "On\n":"Off\n");
   os << indent << "Polygon Smoothing: "
      << (this->PolygonSmoothing ? "On\n":"Off\n");
-  os << indent << "Anti Aliased Frames: " << this->AAFrames << "\n";
   os << indent << "Abort Render: " << this->AbortRender << "\n";
   os << indent << "Current Cursor: " << this->CurrentCursor << "\n";
   os << indent << "Desired Update Rate: " << this->DesiredUpdateRate << "\n";
-  os << indent << "Focal Depth Frames: " << this->FDFrames << "\n";
   os << indent << "In Abort Check: " << this->InAbortCheck << "\n";
   os << indent << "NeverRendered: " << this->NeverRendered << "\n";
   os << indent << "Interactor: " << this->Interactor << "\n";
-  os << indent << "Motion Blur Frames: " << this->SubFrames << "\n";
   os << indent << "Swap Buffers: " << (this->SwapBuffers ? "On\n":"Off\n");
   os << indent << "Stereo Type: " << this->GetStereoTypeAsString() << "\n";
   os << indent << "Number of Layers: " << this->NumberOfLayers << "\n";
   os << indent << "AccumulationBuffer Size " << this->AccumulationBufferSize << "\n";
   os << indent << "AlphaBitPlanes: " << (this->AlphaBitPlanes ? "On" : "Off")
+     << endl;
+  os << indent << "UseSRGBColorSpace: " << (this->UseSRGBColorSpace ? "On" : "Off")
      << endl;
 
   os << indent << "AnaglyphColorSaturation: "
@@ -899,17 +460,6 @@ void vtkRenderWindow::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "AnaglyphColorMask: "
      << this->AnaglyphColorMask[0] << " , "
      << this->AnaglyphColorMask[1] << "\n";
-
-  os << indent << "PainterDeviceAdapter: ";
-  if (this->PainterDeviceAdapter)
-  {
-    os << endl;
-    this->PainterDeviceAdapter->PrintSelf(os, indent.GetNextIndent());
-  }
-  else
-  {
-    os << "(none)" << endl;
-  }
 
   os << indent << "MultiSamples: " << this->MultiSamples << "\n";
   os << indent << "StencilCapable: " <<
@@ -921,55 +471,6 @@ void vtkRenderWindow::PrintSelf(ostream& os, vtkIndent indent)
 // methods, subclasses might need to switch some hardware settings here.
 void vtkRenderWindow::StereoUpdate(void)
 {
-  // if stereo is on and it wasn't before
-  if (this->StereoRender && (!this->StereoStatus))
-  {
-    switch (this->StereoType)
-    {
-      case VTK_STEREO_RED_BLUE:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_ANAGLYPH:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_DRESDEN:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_INTERLACED:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_CHECKERBOARD:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_SPLITVIEWPORT_HORIZONTAL:
-        this->StereoStatus = 1;
-        break;
-    }
-  }
-  else if ((!this->StereoRender) && this->StereoStatus)
-  {
-    switch (this->StereoType)
-    {
-      case VTK_STEREO_RED_BLUE:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_ANAGLYPH:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_DRESDEN:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_INTERLACED:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_CHECKERBOARD:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_SPLITVIEWPORT_HORIZONTAL:
-        this->StereoStatus = 0;
-        break;
-    }
-  }
 }
 
 //----------------------------------------------------------------------------
@@ -1048,7 +549,7 @@ void vtkRenderWindow::StereoRenderComplete(void)
       }
       this->ResultFrame = result;
       delete [] this->StereoBuffer;
-      this->StereoBuffer = NULL;
+      this->StereoBuffer = nullptr;
       delete [] buff;
     }
       break;
@@ -1131,7 +632,7 @@ void vtkRenderWindow::StereoRenderComplete(void)
       }
       this->ResultFrame = result;
       delete [] this->StereoBuffer;
-      this->StereoBuffer = NULL;
+      this->StereoBuffer = nullptr;
       delete [] buff;
     }
       break;
@@ -1191,7 +692,7 @@ void vtkRenderWindow::StereoRenderComplete(void)
 
       this->ResultFrame = result;
       delete [] this->StereoBuffer;
-      this->StereoBuffer = NULL;
+      this->StereoBuffer = nullptr;
       delete [] buff;
     }
       break;
@@ -1265,7 +766,7 @@ void vtkRenderWindow::StereoRenderComplete(void)
 
       this->ResultFrame = result;
       delete [] this->StereoBuffer;
-      this->StereoBuffer = NULL;
+      this->StereoBuffer = nullptr;
       delete [] buff;
     }
       break;
@@ -1287,7 +788,7 @@ void vtkRenderWindow::StereoRenderComplete(void)
         // set up the pointers
         // right starts on x = 1 on even scanlines
         // right starts on x = 0 on odd scanlines
-        if(y % 2) {
+        if (y % 2 == 0) {
           left = sleft + y * 3 * size[0] + 3;
           right = sright + y * 3 * size[0] + 3;
         }
@@ -1311,7 +812,7 @@ void vtkRenderWindow::StereoRenderComplete(void)
       // cleanup
       this->ResultFrame = sleft;
 
-      this->StereoBuffer = NULL;
+      this->StereoBuffer = nullptr;
       delete [] sright;
     }
     break;
@@ -1369,7 +870,7 @@ void vtkRenderWindow::StereoRenderComplete(void)
       // cleanup
       this->ResultFrame = sleft;
 
-      this->StereoBuffer = NULL;
+      this->StereoBuffer = nullptr;
       delete [] sright;
     }
     break;
@@ -1410,9 +911,9 @@ void vtkRenderWindow::UnRegister(vtkObjectBase *o)
     {
       this->vtkObject::UnRegister(o);
       vtkRenderWindowInteractor *tmp = this->Interactor;
-      tmp->Register(0);
-      this->Interactor->SetRenderWindow(NULL);
-      tmp->UnRegister(0);
+      tmp->Register(nullptr);
+      this->Interactor->SetRenderWindow(nullptr);
+      tmp->UnRegister(nullptr);
       return;
     }
   }
@@ -1435,9 +936,9 @@ const char *vtkRenderWindow::GetRenderingBackend()
 //----------------------------------------------------------------------------
 void vtkRenderWindow::CaptureGL2PSSpecialProps(vtkCollection *result)
 {
-  if (result == NULL)
+  if (result == nullptr)
   {
-    vtkErrorMacro(<<"CaptureGL2PSSpecialProps was passed a NULL pointer.");
+    vtkErrorMacro(<<"CaptureGL2PSSpecialProps was passed a nullptr pointer.");
     return;
   }
 
@@ -1454,15 +955,15 @@ void vtkRenderWindow::CaptureGL2PSSpecialProps(vtkCollection *result)
   for (Renderers->InitTraversal(); (ren = Renderers->GetNextItem());)
   {
     vtkNew<vtkPropCollection> props;
-    result->AddItem(props.GetPointer());
-    ren->SetGL2PSSpecialPropCollection(props.GetPointer());
+    result->AddItem(props);
+    ren->SetGL2PSSpecialPropCollection(props);
   }
 
   this->Render();
 
   for (Renderers->InitTraversal(); (ren = Renderers->GetNextItem());)
   {
-    ren->SetGL2PSSpecialPropCollection(NULL);
+    ren->SetGL2PSSpecialPropCollection(nullptr);
   }
   this->CapturingGL2PSSpecialProps = 0;
 }

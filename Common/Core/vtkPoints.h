@@ -39,12 +39,12 @@ public:
   static vtkPoints *New();
 
   vtkTypeMacro(vtkPoints,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Allocate initial memory size. ext is no longer used.
    */
-  virtual int Allocate(const vtkIdType sz, const vtkIdType ext = 1000);
+  virtual vtkTypeBool Allocate(vtkIdType sz, vtkIdType ext = 1000);
 
   /**
    * Return object to instantiated state.
@@ -131,22 +131,34 @@ public:
    * and its values are only valid as long as another method invocation is not
    * performed. Prefer GetPoint() with the return value in argument.
    */
-  double *GetPoint(vtkIdType id) { return this->Data->GetTuple(id); }
+  double *GetPoint(vtkIdType id)
+    VTK_EXPECTS(0 <= id && id < GetNumberOfPoints())
+    VTK_SIZEHINT(3)
+    { return this->Data->GetTuple(id); }
 
   /**
    * Copy point components into user provided array v[3] for specified
    * id.
    */
-  void GetPoint(vtkIdType id, double x[3]) { this->Data->GetTuple(id,x); }
+  void GetPoint(vtkIdType id, double x[3])
+    VTK_EXPECTS(0 <= id && id < GetNumberOfPoints())
+    VTK_SIZEHINT(3)
+    { this->Data->GetTuple(id,x); }
 
   /**
    * Insert point into object. No range checking performed (fast!).
    * Make sure you use SetNumberOfPoints() to allocate memory prior
-   * to using SetPoint().
+   * to using SetPoint(). You should call Modified() finally after
+   * changing points using this method as it will not do it itself.
    */
-  void SetPoint(vtkIdType id, const float x[3]) { this->Data->SetTuple(id,x); }
-  void SetPoint(vtkIdType id, const double x[3]) { this->Data->SetTuple(id,x); }
-  void SetPoint(vtkIdType id, double x, double y, double z);
+  void SetPoint(vtkIdType id, const float x[3])
+    VTK_EXPECTS(0 <= id && id < GetNumberOfPoints())
+    { this->Data->SetTuple(id,x); }
+  void SetPoint(vtkIdType id, const double x[3])
+    VTK_EXPECTS(0 <= id && id < GetNumberOfPoints())
+    { this->Data->SetTuple(id,x); }
+  void SetPoint(vtkIdType id, double x, double y, double z)
+    VTK_EXPECTS(0 <= id && id < GetNumberOfPoints());
 
   //@{
   /**
@@ -154,10 +166,13 @@ public:
    * allocated as necessary.
    */
   void InsertPoint(vtkIdType id, const float x[3])
+    VTK_EXPECTS(0 <= id)
     { this->Data->InsertTuple(id,x);};
   void InsertPoint(vtkIdType id, const double x[3])
+    VTK_EXPECTS(0 <= id)
     {this->Data->InsertTuple(id,x);};
-  void InsertPoint(vtkIdType id, double x, double y, double z);
+  void InsertPoint(vtkIdType id, double x, double y, double z)
+    VTK_EXPECTS(0 <= id);
   //@}
 
   /**
@@ -197,7 +212,7 @@ public:
    * Resize the internal array while conserving the data.  Returns 1 if
    * resizing succeeded and 0 otherwise.
    */
-  int Resize(vtkIdType numPoints);
+  vtkTypeBool Resize(vtkIdType numPoints);
 
   /**
    * Given a list of pt ids, return an array of points.
@@ -212,7 +227,7 @@ public:
   /**
    * Return the bounds of the points.
    */
-  double *GetBounds();
+  double *GetBounds() VTK_SIZEHINT(6);
 
   /**
    * Return the bounds of the points.
@@ -222,19 +237,26 @@ public:
   /**
    * The modified time of the points.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
+
+  /**
+   * Update the modification time for this object and its Data.
+   * As this object acts as a shell around a DataArray and
+   * forwards Set methods it needs to forward Modified as well.
+   */
+  void Modified() override;
 
 protected:
   vtkPoints(int dataType = VTK_FLOAT);
-  ~vtkPoints() VTK_OVERRIDE;
+  ~vtkPoints() override;
 
   double Bounds[6];
   vtkTimeStamp ComputeTime; // Time at which bounds computed
   vtkDataArray *Data;  // Array which represents data
 
 private:
-  vtkPoints(const vtkPoints&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPoints&) VTK_DELETE_FUNCTION;
+  vtkPoints(const vtkPoints&) = delete;
+  void operator=(const vtkPoints&) = delete;
 };
 
 inline void vtkPoints::Reset()
@@ -250,7 +272,7 @@ inline void vtkPoints::SetNumberOfPoints(vtkIdType numPoints)
   this->Modified();
 }
 
-inline int vtkPoints::Resize(vtkIdType numPoints)
+inline vtkTypeBool vtkPoints::Resize(vtkIdType numPoints)
 {
   this->Data->SetNumberOfComponents(3);
   this->Modified();

@@ -46,7 +46,7 @@ vtkPolyLine::~vtkPolyLine()
 int vtkPolyLine::GenerateSlidingNormals(vtkPoints *pts, vtkCellArray *lines,
                                         vtkDataArray *normals)
 {
-  return vtkPolyLine::GenerateSlidingNormals(pts, lines, normals, 0);
+  return vtkPolyLine::GenerateSlidingNormals(pts, lines, normals, nullptr);
 }
 
 
@@ -76,7 +76,7 @@ inline vtkIdType FindNextValidSegment(vtkPoints *points, vtkIdList *pointIds,
 // normals, they are "orientation" normals used by classes like vtkTubeFilter
 // that control the rotation around the line. The normals try to stay pointing
 // in the same direction as much as possible (i.e., minimal rotation) w.r.t the
-// firstNormal (computed if NULL). Always returns 1 (success).
+// firstNormal (computed if nullptr). Always returns 1 (success).
 int vtkPolyLine::GenerateSlidingNormals(vtkPoints *pts, vtkCellArray *lines,
                                         vtkDataArray *normals,
                                         double* firstNormal)
@@ -85,7 +85,7 @@ int vtkPolyLine::GenerateSlidingNormals(vtkPoints *pts, vtkCellArray *lines,
 
   vtkIdType lid = 0;
   vtkNew<vtkIdList> linePts;
-  for (lines->InitTraversal(); lines->GetNextCell(linePts.GetPointer()); ++lid)
+  for (lines->InitTraversal(); lines->GetNextCell(linePts); ++lid)
   {
     vtkIdType npts = linePts->GetNumberOfIds();
     if (npts <= 0)
@@ -102,8 +102,8 @@ int vtkPolyLine::GenerateSlidingNormals(vtkPoints *pts, vtkCellArray *lines,
     vtkIdType sNextId = 0;
     vtkVector3d sPrev, sNext;
 
-    sNextId = FindNextValidSegment(pts, linePts.GetPointer(), 0);
-    if (sNextId != npts) // atleast one valid segment
+    sNextId = FindNextValidSegment(pts, linePts, 0);
+    if (sNextId != npts) // at least one valid segment
     {
       vtkVector3d pt1, pt2;
       pts->GetPoint(linePts->GetId(sNextId), pt1.GetData());
@@ -129,7 +129,7 @@ int vtkPolyLine::GenerateSlidingNormals(vtkPoints *pts, vtkCellArray *lines,
       // find the next valid, non-parallel segment
       while (++sNextId < npts)
       {
-        sNextId = FindNextValidSegment(pts, linePts.GetPointer(), sNextId);
+        sNextId = FindNextValidSegment(pts, linePts, sNextId);
         if (sNextId != npts)
         {
           vtkVector3d pt1, pt2;
@@ -173,7 +173,7 @@ int vtkPolyLine::GenerateSlidingNormals(vtkPoints *pts, vtkCellArray *lines,
     vtkIdType lastNormalId = 0;
     while (++sNextId < npts)
     {
-      sNextId = FindNextValidSegment(pts, linePts.GetPointer(), sNextId);
+      sNextId = FindNextValidSegment(pts, linePts, sNextId);
       if (sNextId == npts)
       {
         break;
@@ -240,9 +240,9 @@ int vtkPolyLine::GenerateSlidingNormals(vtkPoints *pts, vtkCellArray *lines,
 }
 
 //----------------------------------------------------------------------------
-int vtkPolyLine::EvaluatePosition(double x[3], double* closestPoint,
+int vtkPolyLine::EvaluatePosition(const double x[3], double closestPoint[3],
                                  int& subId, double pcoords[3],
-                                 double& minDist2, double *weights)
+                                 double& minDist2, double weights[])
 {
   double closest[3];
   double pc[3], dist2;
@@ -288,7 +288,7 @@ int vtkPolyLine::EvaluatePosition(double x[3], double* closestPoint,
 }
 
 //----------------------------------------------------------------------------
-void vtkPolyLine::EvaluateLocation(int& subId, double pcoords[3], double x[3],
+void vtkPolyLine::EvaluateLocation(int& subId, const double pcoords[3], double x[3],
                                    double *weights)
 {
   int i;
@@ -307,7 +307,7 @@ void vtkPolyLine::EvaluateLocation(int& subId, double pcoords[3], double x[3],
 }
 
 //----------------------------------------------------------------------------
-int vtkPolyLine::CellBoundary(int subId, double pcoords[3], vtkIdList *pts)
+int vtkPolyLine::CellBoundary(int subId, const double pcoords[3], vtkIdList *pts)
 {
   pts->SetNumberOfIds(1);
 
@@ -373,7 +373,7 @@ void vtkPolyLine::Contour(double value, vtkDataArray *cellScalars,
 //----------------------------------------------------------------------------
 // Intersect with sub-lines
 //
-int vtkPolyLine::IntersectWithLine(double p1[3], double p2[3],double tol,double& t,
+int vtkPolyLine::IntersectWithLine(const double p1[3], const double p2[3],double tol,double& t,
                                   double x[3], double pcoords[3], int& subId)
 {
   int subTest, numLines=this->Points->GetNumberOfPoints() - 1;
@@ -413,7 +413,7 @@ int vtkPolyLine::Triangulate(int vtkNotUsed(index), vtkIdList *ptIds,
 }
 
 //----------------------------------------------------------------------------
-void vtkPolyLine::Derivatives(int subId, double pcoords[3], double *values,
+void vtkPolyLine::Derivatives(int subId, const double pcoords[3], const double *values,
                               int dim, double *derivs)
 {
   this->Line->PointIds->SetNumberOfIds(2);

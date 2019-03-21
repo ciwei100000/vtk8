@@ -49,7 +49,7 @@ struct vtkPlot3DMetaReaderInternals
   std::map<std::string, Plot3DFunction> FunctionMap;
   std::vector<Plot3DTimeStep> TimeSteps;
 
-  std::string ResolveFileName(std::string metaFileName,
+  std::string ResolveFileName(const std::string& metaFileName,
                               std::string fileName)
   {
       if (vtksys::SystemTools::FileIsFullPath(fileName.c_str()))
@@ -76,7 +76,7 @@ vtkPlot3DMetaReader::vtkPlot3DMetaReader()
   this->Reader = vtkMultiBlockPLOT3DReader::New();
   this->Reader->AutoDetectFormatOn();
 
-  this->FileName = 0;
+  this->FileName = nullptr;
 
   this->Internal = new vtkPlot3DMetaReaderInternals;
 
@@ -365,14 +365,19 @@ int vtkPlot3DMetaReader::RequestInformation(
 
   ifstream file(this->FileName);
 
+  Json::CharReaderBuilder rbuilder;
+  rbuilder["collectComments"] = true;
+
   Json::Value root;
-  Json::Reader reader;
-  bool parsingSuccessful = reader.parse(file, root);
+  std::string formattedErrorMessages;
+
+  bool parsingSuccessful = Json::parseFromStream(rbuilder, file, &root, &formattedErrorMessages);
+
   if (!parsingSuccessful)
   {
     // report to the user the failure and their locations in the document.
     vtkErrorMacro("Failed to parse configuration\n"
-                  << reader.getFormattedErrorMessages().c_str());
+                  << formattedErrorMessages);
     return 0;
   }
 
@@ -438,7 +443,7 @@ int vtkPlot3DMetaReader::RequestData(
   double timeValue = 0;
   if (outInfo->Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()))
   {
-    // Get the requested time step. We only supprt requests of a single time
+    // Get the requested time step. We only support requests of a single time
     // step in this reader right now
     timeValue =
       outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
@@ -483,7 +488,7 @@ int vtkPlot3DMetaReader::RequestData(
     }
     else
     {
-      this->Reader->SetQFileName(0);
+      this->Reader->SetQFileName(nullptr);
     }
     const char* fname =
       this->Internal->TimeSteps[updateTime].FunctionFile.c_str();
@@ -493,7 +498,7 @@ int vtkPlot3DMetaReader::RequestData(
     }
     else
     {
-      this->Reader->SetFunctionFileName(0);
+      this->Reader->SetFunctionFileName(nullptr);
     }
     this->Reader->UpdatePiece(
       outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_PIECE_NUMBER()),

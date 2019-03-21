@@ -25,7 +25,7 @@
 vtkStandardNewMacro(vtkImageSobel2D);
 
 //----------------------------------------------------------------------------
-// Construct an instance of vtkImageSobel2D fitler.
+// Construct an instance of vtkImageSobel2D filter.
 vtkImageSobel2D::vtkImageSobel2D()
 {
   this->KernelSize[0] = 3;
@@ -204,7 +204,7 @@ void vtkImageSobel2D::ThreadedRequestData(
   // this filter cannot handle multi component input.
   if (inData[0][0]->GetNumberOfScalarComponents() != 1)
   {
-    vtkWarningMacro("Expecting input with only one compenent.\n");
+    vtkWarningMacro("Expecting input with only one component.\n");
   }
 
   switch (inData[0][0]->GetScalarType())

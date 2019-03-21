@@ -41,7 +41,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkFixedPointRayCastImage : public vtkObject
 public:
   static vtkFixedPointRayCastImage *New();
   vtkTypeMacro(vtkFixedPointRayCastImage,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get the internal storage for the image. It is a pointer to
@@ -151,9 +151,9 @@ public:
    * is on in the mapper, and when there are props that have been
    * rendered before the current volume.
    */
-  vtkSetClampMacro( UseZBuffer, int, 0, 1 );
-  vtkGetMacro( UseZBuffer, int );
-  vtkBooleanMacro( UseZBuffer, int );
+  vtkSetClampMacro( UseZBuffer, vtkTypeBool, 0, 1 );
+  vtkGetMacro( UseZBuffer, vtkTypeBool );
+  vtkBooleanMacro( UseZBuffer, vtkTypeBool );
   //@}
 
   /**
@@ -177,7 +177,7 @@ public:
 
 protected:
   vtkFixedPointRayCastImage();
-  ~vtkFixedPointRayCastImage() VTK_OVERRIDE;
+  ~vtkFixedPointRayCastImage() override;
 
   // This is how big the image would be if it covered the entire viewport
   int             ImageViewportSize[2];
@@ -218,15 +218,15 @@ protected:
   int             ZBufferOrigin[2];
 
   // This is the flag that indicate whether the ZBuffer is in use
-  int             UseZBuffer;
+  vtkTypeBool             UseZBuffer;
 
   // This is the actual ZBuffer data in floats
   float          *ZBuffer;
 
 
 private:
-  vtkFixedPointRayCastImage(const vtkFixedPointRayCastImage&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFixedPointRayCastImage&) VTK_DELETE_FUNCTION;
+  vtkFixedPointRayCastImage(const vtkFixedPointRayCastImage&) = delete;
+  void operator=(const vtkFixedPointRayCastImage&) = delete;
 };
 
 #endif

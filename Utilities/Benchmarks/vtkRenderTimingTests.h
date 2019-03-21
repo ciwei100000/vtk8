@@ -29,6 +29,7 @@ existing tests to get an idea of what to do.
 #include "vtkActor.h"
 #include "vtkCamera.h"
 #include "vtkCellArray.h"
+#include "vtkCullerCollection.h"
 #include "vtkPointData.h"
 #include "vtkPolyData.h"
 #include "vtkPolyDataMapper.h"
@@ -54,12 +55,12 @@ class surfaceTest : public vtkRTTest
     this->WithNormals = withNormals;
   }
 
-  const char *GetSummaryResultName() { return "Mtris/sec"; }
+  const char *GetSummaryResultName() override { return "Mtris/sec"; }
 
-  const char *GetSecondSummaryResultName() { return "Mtris"; }
+  const char *GetSecondSummaryResultName() override { return "Mtris"; }
 
-  virtual vtkRTTestResult Run(vtkRTTestSequence *ats,
-      int /*argc*/, char * /* argv */[])
+  vtkRTTestResult Run(vtkRTTestSequence *ats,
+      int /*argc*/, char * /* argv */[]) override
     {
     int ures, vres;
     ats->GetSequenceNumbers(ures,vres);
@@ -158,12 +159,12 @@ class glyphTest : public vtkRTTest
   {
   }
 
-  const char *GetSummaryResultName() { return "Mtris/sec"; }
+  const char *GetSummaryResultName() override { return "Mtris/sec"; }
 
-  const char *GetSecondSummaryResultName() { return "triangles"; }
+  const char *GetSecondSummaryResultName() override { return "triangles"; }
 
-  virtual vtkRTTestResult Run(vtkRTTestSequence *ats,
-      int /*argc*/, char * /* argv */[])
+  vtkRTTestResult Run(vtkRTTestSequence *ats,
+      int /*argc*/, char * /* argv */[]) override
     {
     int res1, res2, res3, res4;
     ats->GetSequenceNumbers(res1, res2, res3, res4);
@@ -256,9 +257,7 @@ Define a test for molecules
 #include "vtkPointLocator.h"
 #include "vtkMath.h"
 
-#ifdef VTK_OPENGL2
 VTK_MODULE_INIT(vtkDomainsChemistryOpenGL2);
-#endif
 
 class moleculeTest : public vtkRTTest
 {
@@ -268,14 +267,14 @@ class moleculeTest : public vtkRTTest
     this->AtomsOnly = atomsOnly;
   }
 
-  const char *GetSummaryResultName() {
+  const char *GetSummaryResultName() override {
     return this->AtomsOnly ? "Atoms/sec" : "Atoms+Bonds/sec"; }
 
-  const char *GetSecondSummaryResultName() {
+  const char *GetSecondSummaryResultName() override {
     return this->AtomsOnly ? "Atoms" : "Atoms+Bonds"; }
 
-  virtual vtkRTTestResult Run(vtkRTTestSequence *ats,
-      int /*argc*/, char * /* argv */[])
+  vtkRTTestResult Run(vtkRTTestSequence *ats,
+      int /*argc*/, char * /* argv */[]) override
     {
     int res1;
     ats->GetSequenceNumbers(res1);
@@ -407,18 +406,18 @@ class volumeTest : public vtkRTTest
     this->WithShading = withShading;
     }
 
-  const char *GetSummaryResultName()
+  const char *GetSummaryResultName() override
     {
     return "Mvoxels/sec" ;
     }
 
-  const char *GetSecondSummaryResultName()
+  const char *GetSecondSummaryResultName() override
     {
     return "Mvoxels";
     }
 
-  virtual vtkRTTestResult Run(vtkRTTestSequence *ats,
-      int /*argc*/, char * /* argv */[])
+  vtkRTTestResult Run(vtkRTTestSequence *ats,
+      int /*argc*/, char * /* argv */[]) override
     {
     int res1, res2, res3;
     ats->GetSequenceNumbers(res1,res2,res3);
@@ -530,12 +529,12 @@ class depthPeelingTest : public vtkRTTest
   {
   }
 
-  const char *GetSummaryResultName() { return "subsequent frame time"; }
+  const char *GetSummaryResultName() override { return "subsequent frame time"; }
 
-  const char *GetSecondSummaryResultName() { return "first frame time"; }
+  const char *GetSecondSummaryResultName() override { return "first frame time"; }
 
-  virtual vtkRTTestResult Run(vtkRTTestSequence *ats,
-      int /*argc*/, char * /* argv */[])
+  vtkRTTestResult Run(vtkRTTestSequence *ats,
+      int /*argc*/, char * /* argv */[]) override
     {
     int ures, vres;
     ats->GetSequenceNumbers(ures,vres);
@@ -640,6 +639,107 @@ class depthPeelingTest : public vtkRTTest
 
   protected:
   bool WithNormals;
+};
+
+/*=========================================================================
+Define a test for simple triangle mesh surfaces
+=========================================================================*/
+#include "vtkParametricBoy.h"
+#include "vtkParametricTorus.h"
+#include "vtkParametricFunctionSource.h"
+
+class manyActorTest : public vtkRTTest
+{
+  public:
+  manyActorTest(const char *name) : vtkRTTest(name)
+  {
+  }
+
+  const char *GetSummaryResultName() override { return "actors"; }
+
+  const char *GetSecondSummaryResultName() override { return "frames/sec"; }
+
+  vtkRTTestResult Run(vtkRTTestSequence *ats,
+      int /*argc*/, char * /* argv */[]) override
+    {
+    int ures, vres;
+    ats->GetSequenceNumbers(ures,vres);
+
+    // ------------------------------------------------------------
+    // Create surface
+    // ------------------------------------------------------------
+    //  vtkNew<vtkParametricBoy> PB;
+    vtkNew<vtkParametricTorus> PB;
+    vtkNew<vtkParametricFunctionSource> PFS;
+    PFS->SetParametricFunction(PB.Get());
+    //  PFS->SetScalarModeToPhase();
+      PFS->SetScalarModeToNone();
+    //  PFS->GenerateNormalsOff();
+    PFS->SetUResolution(10);
+    PFS->SetVResolution(20);
+    PFS->Update();
+
+    // create a rendering window and renderer
+    vtkNew<vtkRenderer> ren1;
+    // ren1->RemoveCuller(ren1->GetCullers()->GetLastItem());
+    vtkNew<vtkRenderWindow> renWindow;
+    renWindow->AddRenderer(ren1.Get());
+
+    // create many actors
+    for (int u = 0; u < ures*10; ++u)
+    {
+      for (int v = 0; v < vres*10; ++v)
+      {
+        vtkNew<vtkPolyDataMapper> mapper;
+        mapper->SetInputConnection(PFS->GetOutputPort());
+        mapper->SetScalarRange(0.0, 360.0);
+        mapper->StaticOn();
+
+        vtkNew<vtkActor> actor;
+        actor->SetMapper(mapper.Get());
+        actor->ForceOpaqueOn();
+        ren1->AddActor(actor.Get());
+      }
+    }
+
+    // set the size/color of our window
+    renWindow->SetSize(this->GetRenderWidth(), this->GetRenderHeight());
+    ren1->SetBackground(0.2, 0.3, 0.5);
+
+    // draw the resulting scene
+    double startTime = vtkTimerLog::GetUniversalTime();
+    renWindow->Render();
+    double firstFrameTime = vtkTimerLog::GetUniversalTime() - startTime;
+    ren1->GetActiveCamera()->Azimuth(90);
+    ren1->GetActiveCamera()->Zoom(0.3);
+    ren1->ResetCameraClippingRange();
+
+    int frameCount = 80;
+    for (int i = 0; i < frameCount; i++)
+      {
+      renWindow->Render();
+      ren1->GetActiveCamera()->Azimuth(1);
+      ren1->GetActiveCamera()->Elevation(1);
+      if ((vtkTimerLog::GetUniversalTime() - startTime - firstFrameTime) >
+          this->TargetTime * 1.5)
+        {
+        frameCount = i + 1;
+        break;
+        }
+      }
+    double subsequentFrameTime = (vtkTimerLog::GetUniversalTime() - startTime -
+                                  firstFrameTime) / frameCount;
+
+    vtkRTTestResult result;
+    result.Results["first frame time"] = firstFrameTime;
+    result.Results["subsequent frame time"] = subsequentFrameTime;
+    result.Results["frames/sec"] = 1.0/subsequentFrameTime;
+    result.Results["actors"] = 100*ures*vres;
+
+    return result;
+    }
+
+  protected:
 };
 
 #endif

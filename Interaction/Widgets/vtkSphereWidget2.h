@@ -31,7 +31,7 @@
  * handles.
  *
  * To use this widget, you generally pair it with a vtkSphereRepresentation
- * (or a subclass). Variuos options are available in the representation for
+ * (or a subclass). Various options are available in the representation for
  * controlling how the widget appears, and how the widget functions.
  *
  * @par Event Bindings:
@@ -40,7 +40,7 @@
  * <pre>
  * If the handle or sphere are selected:
  *   LeftButtonPressEvent - select the handle or sphere
- *   LeftButtonReleaseEvent - release the handle ot sphere
+ *   LeftButtonReleaseEvent - release the handle to sphere
  *   MouseMoveEvent - move the handle or translate the sphere
  * In all the cases, independent of what is picked, the widget responds to the
  * following VTK events:
@@ -107,7 +107,7 @@ public:
    * Standard class methods for type information and printing.
    */
   vtkTypeMacro(vtkSphereWidget2,vtkAbstractWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -123,23 +123,23 @@ public:
    * Control the behavior of the widget (i.e., how it processes
    * events). Translation, and scaling can all be enabled and disabled.
    */
-  vtkSetMacro(TranslationEnabled,int);
-  vtkGetMacro(TranslationEnabled,int);
-  vtkBooleanMacro(TranslationEnabled,int);
-  vtkSetMacro(ScalingEnabled,int);
-  vtkGetMacro(ScalingEnabled,int);
-  vtkBooleanMacro(ScalingEnabled,int);
+  vtkSetMacro(TranslationEnabled,vtkTypeBool);
+  vtkGetMacro(TranslationEnabled,vtkTypeBool);
+  vtkBooleanMacro(TranslationEnabled,vtkTypeBool);
+  vtkSetMacro(ScalingEnabled,vtkTypeBool);
+  vtkGetMacro(ScalingEnabled,vtkTypeBool);
+  vtkBooleanMacro(ScalingEnabled,vtkTypeBool);
   //@}
 
   /**
    * Create the default widget representation if one is not set. By default,
    * this is an instance of the vtkSphereRepresentation class.
    */
-  void CreateDefaultRepresentation() VTK_OVERRIDE;
+  void CreateDefaultRepresentation() override;
 
 protected:
   vtkSphereWidget2();
-  ~vtkSphereWidget2() VTK_OVERRIDE;
+  ~vtkSphereWidget2() override;
 
   // Manage the state of the widget
   int WidgetState;
@@ -153,12 +153,12 @@ protected:
   static void MoveAction(vtkAbstractWidget*);
 
   // Control whether scaling and translation are supported
-  int TranslationEnabled;
-  int ScalingEnabled;
+  vtkTypeBool TranslationEnabled;
+  vtkTypeBool ScalingEnabled;
 
 private:
-  vtkSphereWidget2(const vtkSphereWidget2&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSphereWidget2&) VTK_DELETE_FUNCTION;
+  vtkSphereWidget2(const vtkSphereWidget2&) = delete;
+  void operator=(const vtkSphereWidget2&) = delete;
 };
 
 #endif

@@ -68,7 +68,7 @@ vtkCubeAxesActor::vtkCubeAxesActor() : vtkActor()
 
   this->RebuildAxes = true;
 
-  this->Camera = NULL;
+  this->Camera = nullptr;
 
   this->FlyMode = VTK_FLY_CLOSEST_TRIAD;
   this->GridLineLocation = VTK_GRID_LINES_ALL;
@@ -224,17 +224,17 @@ vtkCubeAxesActor::vtkCubeAxesActor() : vtkActor()
 
   this->XTitle = new char[7];
   snprintf(this->XTitle, 7, "%s", "X-Axis");
-  this->XUnits = NULL;
+  this->XUnits = nullptr;
   this->YTitle = new char[7];
   snprintf(this->YTitle, 7, "%s", "Y-Axis");
-  this->YUnits = NULL;
+  this->YUnits = nullptr;
   this->ZTitle = new char[7];
   snprintf(this->ZTitle, 7, "%s", "Z-Axis");
-  this->ZUnits = NULL;
+  this->ZUnits = nullptr;
 
-  this->ActualXLabel = 0;
-  this->ActualYLabel = 0;
-  this->ActualZLabel = 0;
+  this->ActualXLabel = nullptr;
+  this->ActualYLabel = nullptr;
+  this->ActualZLabel = nullptr;
 
   this->TickLocation = VTK_TICKS_INSIDE;
 
@@ -340,7 +340,7 @@ vtkCubeAxesActor::vtkCubeAxesActor() : vtkActor()
 
   for (int i = 0; i < 3; ++i)
   {
-    this->AxisLabels[i] = NULL;
+    this->AxisLabels[i] = nullptr;
   }
   this->LabelScale = -1.0;
   this->TitleScale = -1.0;
@@ -404,24 +404,24 @@ void vtkCubeAxesActor::SetSaveTitlePosition( int val )
 // ****************************************************************************
 vtkCubeAxesActor::~vtkCubeAxesActor()
 {
-  this->SetCamera(NULL);
+  this->SetCamera(nullptr);
 
   for (int i = 0; i < NUMBER_OF_ALIGNED_AXIS; i++)
   {
     if (this->XAxes[i])
     {
       this->XAxes[i]->Delete();
-      this->XAxes[i] = NULL;
+      this->XAxes[i] = nullptr;
     }
     if (this->YAxes[i])
     {
       this->YAxes[i]->Delete();
-      this->YAxes[i] = NULL;
+      this->YAxes[i] = nullptr;
     }
     if (this->ZAxes[i])
     {
       this->ZAxes[i]->Delete();
-      this->ZAxes[i] = NULL;
+      this->ZAxes[i] = nullptr;
     }
   }
 
@@ -476,54 +476,54 @@ vtkCubeAxesActor::~vtkCubeAxesActor()
 
   for (int i = 0; i < 3; i++)
   {
-    if(this->TitleTextProperty[i] != NULL)
+    if(this->TitleTextProperty[i] != nullptr)
     {
       this->TitleTextProperty[i]->Delete();
     }
-    this->TitleTextProperty[i] = NULL;
+    this->TitleTextProperty[i] = nullptr;
 
-    if(this->LabelTextProperty[i] != NULL)
+    if(this->LabelTextProperty[i] != nullptr)
     {
       this->LabelTextProperty[i]->Delete();
     }
-    this->LabelTextProperty[i] = NULL;
+    this->LabelTextProperty[i] = nullptr;
   }
 
   delete [] this->XLabelFormat;
-  this->XLabelFormat = NULL;
+  this->XLabelFormat = nullptr;
 
   delete [] this->YLabelFormat;
-  this->YLabelFormat = NULL;
+  this->YLabelFormat = nullptr;
 
   delete [] this->ZLabelFormat;
-  this->ZLabelFormat = NULL;
+  this->ZLabelFormat = nullptr;
 
   delete [] this->XTitle;
-  this->XTitle = NULL;
+  this->XTitle = nullptr;
 
   delete [] this->YTitle;
-  this->YTitle = NULL;
+  this->YTitle = nullptr;
 
   delete [] this->ZTitle;
-  this->ZTitle = NULL;
+  this->ZTitle = nullptr;
 
   delete [] this->XUnits;
-  this->XUnits = NULL;
+  this->XUnits = nullptr;
 
   delete [] this->YUnits;
-  this->YUnits = NULL;
+  this->YUnits = nullptr;
 
   delete [] this->ZUnits;
-  this->ZUnits = NULL;
+  this->ZUnits = nullptr;
 
   delete [] this->ActualXLabel;
-  this->ActualXLabel = NULL;
+  this->ActualXLabel = nullptr;
 
   delete [] this->ActualYLabel;
-  this->ActualYLabel = NULL;
+  this->ActualYLabel = nullptr;
 
   delete [] this->ActualZLabel;
-  this->ActualZLabel = NULL;
+  this->ActualZLabel = nullptr;
 }
 
 // *************************************************************************
@@ -577,7 +577,7 @@ int vtkCubeAxesActor::RenderOverlay(vtkViewport *viewport)
 }
 
 // --------------------------------------------------------------------------
-int vtkCubeAxesActor::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkCubeAxesActor::HasTranslucentPolygonalGeometry()
 {
   if ((this->NumberOfAxesX > 0 &&
        this->XAxes[0]->HasTranslucentPolygonalGeometry()) ||
@@ -643,9 +643,12 @@ void vtkCubeAxesActor::AdjustAxes(double bounds[6],
     zRange[1] = range[5];
   }
 
-  const double xScale = (xRange[1] - xRange[0])/(bounds[1] - bounds[0]);
-  const double yScale = (yRange[1] - yRange[0])/(bounds[3] - bounds[2]);
-  const double zScale = (zRange[1] - zRange[0])/(bounds[5] - bounds[4]);
+  const double xScale =
+    (bounds[1] - bounds[0]) != 0.0 ? (xRange[1] - xRange[0])/(bounds[1] - bounds[0]) : 1.0;
+  const double yScale =
+    (bounds[3] - bounds[2]) != 0.0 ? (yRange[1] - yRange[0])/(bounds[3] - bounds[2]) : 1.0;
+  const double zScale =
+    (bounds[5] - bounds[4]) != 0.0 ? (zRange[1] - zRange[0])/(bounds[5] - bounds[4]) : 1.0;
 
   // Pull back the corners if specified
   if (this->CornerOffset > 0.0)
@@ -1105,7 +1108,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
 
   if (AutoLabelScaling)
   {
-    if (this->AxisLabels[0] == NULL)
+    if (this->AxisLabels[0] == nullptr)
     {
       xPow = this->LabelExponent(xRange[0], xRange[1]);
     }
@@ -1113,7 +1116,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
     {
       xPow = 0;
     }
-    if (this->AxisLabels[1] == NULL)
+    if (this->AxisLabels[1] == nullptr)
     {
       yPow = this->LabelExponent(yRange[0], yRange[1]);
     }
@@ -1121,7 +1124,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
     {
       yPow = 0;
     }
-    if (this->AxisLabels[2] == NULL)
+    if (this->AxisLabels[2] == nullptr)
     {
       zPow = this->LabelExponent(zRange[0], zRange[1]);
     }
@@ -1151,7 +1154,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
     this->MustAdjustXValue = true;
 
     std::ostringstream sstream;
-    if (XUnits == NULL || XUnits[0] == '\0')
+    if (XUnits == nullptr || XUnits[0] == '\0')
     {
       sstream << this->XTitle << " (x10^" << xPow << ")";
     }
@@ -1174,7 +1177,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
     }
     this->MustAdjustXValue = false;
 
-    if (XUnits == NULL || XUnits[0] == '\0')
+    if (XUnits == nullptr || XUnits[0] == '\0')
     {
       xTitle = this->XTitle;
     }
@@ -1198,7 +1201,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
     this->MustAdjustYValue = true;
 
     std::ostringstream sstream;
-    if (YUnits == NULL || YUnits[0] == '\0')
+    if (YUnits == nullptr || YUnits[0] == '\0')
     {
       sstream << this->YTitle << " (x10^" << yPow << ")";
     }
@@ -1220,7 +1223,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
       this->ForceYLabelReset = false;
     }
     this->MustAdjustYValue = false;
-    if (YUnits == NULL || YUnits[0] == '\0')
+    if (YUnits == nullptr || YUnits[0] == '\0')
     {
       yTitle = this->YTitle;
     }
@@ -1244,7 +1247,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
     this->MustAdjustZValue = true;
 
     std::ostringstream sstream;
-    if (ZUnits == NULL || ZUnits[0] == '\0')
+    if (ZUnits == nullptr || ZUnits[0] == '\0')
     {
       sstream << this->ZTitle << " (x10^" << zPow << ")";
     }
@@ -1267,7 +1270,7 @@ void vtkCubeAxesActor::AdjustValues(const double xRange[2],
     }
     this->MustAdjustZValue = false;
 
-    if (ZUnits == NULL || ZUnits[0] == '\0')
+    if (ZUnits == nullptr || ZUnits[0] == '\0')
     {
       zTitle = this->ZTitle;
     }
@@ -1682,7 +1685,7 @@ void vtkCubeAxesActor::BuildAxes(vtkViewport *viewport)
     // Allow a bit bigger title if we have units, otherwise
     // the title may be too small to read.
     //
-    if (XUnits != NULL && XUnits[0] != '\0')
+    if (XUnits != nullptr && XUnits[0] != '\0')
     {
       this->TitleScale *= 2;
     }
@@ -1728,7 +1731,7 @@ void vtkCubeAxesActor::SetNonDependentAttributes()
   vtkMath::Normalize(this->AxisBaseForY);
   vtkMath::Normalize(this->AxisBaseForZ);
 
-  // Manage custome grid visibility location if FLY and STATIC axis
+  // Manage custom grid visibility location if FLY and STATIC axis
   int gridLocationBasedOnAxis = (this->GridLineLocation == VTK_GRID_LINES_ALL)
       ? VTK_GRID_LINES_ALL : VTK_GRID_LINES_CLOSEST;
 
@@ -1951,7 +1954,7 @@ inline int vtkCubeAxesActor::FRound(double value)
 inline int vtkCubeAxesActor::GetNumTicks(double range, double fxt)
 {
   // Find the number of integral points in the interval.
-  double fnt  = range/fxt;
+  double fnt  = fxt != 0.0 ? range/fxt : 0.0;
   fnt  = this->FFix(fnt);
   return this->FRound(fnt);
 }
@@ -1986,50 +1989,12 @@ void vtkCubeAxesActor::AdjustTicksComputeRange(vtkAxisActor *axes[NUMBER_OF_ALIG
   double majorStart, minorStart;
   int numTicks;
   double *inRange = axes[0]->GetRange();
-  vtkStringArray* customizedLabels = NULL;
+  vtkStringArray* customizedLabels = nullptr;
 
   sortedRange[0] = inRange[0] < inRange[1] ? inRange[0] : inRange[1];
   sortedRange[1] = inRange[0] > inRange[1] ? inRange[0] : inRange[1];
 
   range = sortedRange[1] - sortedRange[0];
-
-  // Find the integral points.
-  double pow10 = log10(range);
-
-  // Build in numerical tolerance
-  if (pow10 != 0.)
-  {
-    double eps = 10.0e-10;
-    pow10 = this->FSign((fabs(pow10) + eps), pow10);
-  }
-
-  // FFix move you in the wrong direction if pow10 is negative.
-  if (pow10 < 0.)
-  {
-    pow10 = pow10 - 1.;
-  }
-
-  fxt = pow(10., this->FFix(pow10));
-
-  numTicks = this->GetNumTicks(range, fxt);
-
-  div = 1.;
-  if (numTicks < 5)
-  {
-    div = 2.;
-  }
-  if (numTicks <= 2)
-  {
-    div = 5.;
-  }
-
-  // If there aren't enough major tick points in this decade, use the next
-  // decade.
-  major = fxt;
-  if (div != 1.)
-  {
-    major /= div;
-  }
 
   int axis = 0;
   switch(axes[0]->GetAxisType())
@@ -2046,21 +2011,76 @@ void vtkCubeAxesActor::AdjustTicksComputeRange(vtkAxisActor *axes[NUMBER_OF_ALIG
   }
   customizedLabels = this->AxisLabels[axis];
 
-  if (customizedLabels == NULL)
+  if (range == 0.0)
   {
-    // Figure out the first major tick locations, relative to the
-    // start of the axis.
-    if (sortedRange[0] <= 0.)
+    majorStart = sortedRange[0];
+    minorStart = sortedRange[0];
+    major = 1.0;
+    minor = 1.0;
+    for (int i = 0; i < NUMBER_OF_ALIGNED_AXIS; i++)
     {
-      majorStart = major*(this->FFix(sortedRange[0]*(1./major)) + 0.);
+      axes[i]->SetMinorRangeStart(minorStart);
+      axes[i]->SetMajorRangeStart(majorStart);
+      axes[i]->SetDeltaRangeMinor(minor);
+      axes[i]->SetDeltaRangeMajor(major);
     }
-    else
-    {
-      majorStart = major*(this->FFix(sortedRange[0]*(1./major)) + 1.);
-    }
+
   }
   else
   {
+    // Find the integral points.
+    double pow10 = log10(range);
+
+    // Build in numerical tolerance
+    if (pow10 != 0.)
+    {
+      double eps = 10.0e-10;
+      pow10 = this->FSign((fabs(pow10) + eps), pow10);
+    }
+
+    // FFix move you in the wrong direction if pow10 is negative.
+    if (pow10 < 0.)
+    {
+      pow10 = pow10 - 1.;
+    }
+
+    fxt = pow(10., this->FFix(pow10));
+
+    numTicks = this->GetNumTicks(range, fxt);
+
+    div = 1.;
+    if (numTicks < 5)
+    {
+      div = 2.;
+    }
+    if (numTicks <= 2)
+    {
+      div = 5.;
+    }
+
+    // If there aren't enough major tick points in this decade, use the next
+    // decade.
+    major = fxt;
+    if (div != 1.)
+    {
+      major /= div;
+    }
+
+    if (customizedLabels == nullptr)
+    {
+      // Figure out the first major tick locations, relative to the
+      // start of the axis.
+      if (sortedRange[0] <= 0.)
+      {
+        majorStart = major*(this->FFix(sortedRange[0]*(1./major)) + 0.);
+      }
+      else
+      {
+        majorStart = major*(this->FFix(sortedRange[0]*(1./major)) + 1.);
+      }
+    }
+    else
+    {
       // If we have custom labels, they are supposed to be uniformly distributed
       // inside the values range.
       majorStart = sortedRange[0];
@@ -2070,36 +2090,37 @@ void vtkCubeAxesActor::AdjustTicksComputeRange(vtkAxisActor *axes[NUMBER_OF_ALIG
       {
         major = range / (labelsCount - 1.);
       }
-  }
+    }
 
-  minor = major / 10.;
-  // Figure out the first minor tick locations, relative to the
-  // start of the axis.
-  if (sortedRange[0] <= 0.)
-  {
-    minorStart = minor*(this->FFix(sortedRange[0]*(1./minor)) + 0.);
-  }
-  else
-  {
-    minorStart = minor*(this->FFix(sortedRange[0]*(1./minor)) + 1.);
-  }
+    minor = major / 10.;
+    // Figure out the first minor tick locations, relative to the
+    // start of the axis.
+    if (sortedRange[0] <= 0.)
+    {
+      minorStart = minor*(this->FFix(sortedRange[0]*(1./minor)) + 0.);
+    }
+    else
+    {
+      minorStart = minor*(this->FFix(sortedRange[0]*(1./minor)) + 1.);
+    }
 
-  for (int i = 0; i < NUMBER_OF_ALIGNED_AXIS; i++)
-  {
-    axes[i]->SetMinorRangeStart(minorStart);
-    axes[i]->SetMajorRangeStart(majorStart);
-    axes[i]->SetDeltaRangeMinor(minor);
-    axes[i]->SetDeltaRangeMajor(major);
-  }
+    for (int i = 0; i < NUMBER_OF_ALIGNED_AXIS; i++)
+    {
+      axes[i]->SetMinorRangeStart(minorStart);
+      axes[i]->SetMajorRangeStart(majorStart);
+      axes[i]->SetDeltaRangeMinor(minor);
+      axes[i]->SetDeltaRangeMajor(major);
+    }
 
-  double t;
-  t = (minorStart - sortedRange[0])/range;
-  minorStart = t * boundsMax + (1-t) * boundsMin;
-  t = (majorStart - sortedRange[0])/range;
-  majorStart = t * boundsMax + (1-t) * boundsMin;
-  const double scale = (boundsMax - boundsMin) / range;
-  minor *= scale;
-  major *= scale;
+    double t;
+    t = (minorStart - sortedRange[0])/range;
+    minorStart = t * boundsMax + (1-t) * boundsMin;
+    t = (majorStart - sortedRange[0])/range;
+    majorStart = t * boundsMax + (1-t) * boundsMin;
+    const double scale = (boundsMax - boundsMin) / range;
+    minor *= scale;
+    major *= scale;
+  }
 
   // Set major start and delta for the corresponding cube axis
   switch(axes[0]->GetAxisType())
@@ -2204,7 +2225,7 @@ void vtkCubeAxesActor::BuildLabels(vtkAxisActor *axes[NUMBER_OF_ALIGNED_AXIS])
   bool mustAdjustValue = 0;
   int lastPow = 0;
   int axisIndex = 0;
-  vtkStringArray* customizedLabels = NULL;
+  vtkStringArray* customizedLabels = nullptr;
 
   vtkStringArray *labels = vtkStringArray::New();
   const char *format = "%s";
@@ -2244,7 +2265,7 @@ void vtkCubeAxesActor::BuildLabels(vtkAxisActor *axes[NUMBER_OF_ALIGNED_AXIS])
 
   labels->SetNumberOfValues(labelCount);
 
-  if (customizedLabels == NULL)
+  if (customizedLabels == nullptr)
   {
     // Convert deltaMajor from world coord to range scale
     deltaMajor = extents * deltaMajor/axisLength;
@@ -2326,7 +2347,7 @@ void vtkCubeAxesActor::BuildLabels(vtkAxisActor *axes[NUMBER_OF_ALIGNED_AXIS])
 
 vtkStringArray* vtkCubeAxesActor::GetAxisLabels(int axis)
 {
-  return (axis >= 0 && axis < 3) ? this->AxisLabels[axis] : NULL;
+  return (axis >= 0 && axis < 3) ? this->AxisLabels[axis] : nullptr;
 }
 
 void vtkCubeAxesActor::SetAxisLabels(int axis, vtkStringArray* value)
@@ -2334,12 +2355,12 @@ void vtkCubeAxesActor::SetAxisLabels(int axis, vtkStringArray* value)
   if (axis >= 0 && axis < 3 && value != this->AxisLabels[axis])
   {
     vtkStringArray* previous = this->AxisLabels[axis];
-    if (value != NULL)
+    if (value != nullptr)
     {
       value->Register(this);
     }
     this->AxisLabels[axis] = value;
-    if (previous != NULL)
+    if (previous != nullptr)
     {
       previous->UnRegister(this);
     }
@@ -2370,7 +2391,7 @@ void vtkCubeAxesActor::SetLabelScaling(bool autoscale, int upowX, int upowY,
 
 vtkTextProperty* vtkCubeAxesActor::GetTitleTextProperty(int axis)
 {
-  return (axis >= 0 && axis < 3) ? this->TitleTextProperty[axis] : NULL;
+  return (axis >= 0 && axis < 3) ? this->TitleTextProperty[axis] : nullptr;
 }
 
 // ****************************************************************************
@@ -2379,7 +2400,7 @@ vtkTextProperty* vtkCubeAxesActor::GetTitleTextProperty(int axis)
 
 vtkTextProperty* vtkCubeAxesActor::GetLabelTextProperty(int axis)
 {
-  return (axis >= 0 && axis < 3) ? this->LabelTextProperty[axis] : NULL;
+  return (axis >= 0 && axis < 3) ? this->LabelTextProperty[axis] : nullptr;
 }
 
 // ****************************************************************************
@@ -2760,21 +2781,27 @@ int vtkCubeAxesActor::RenderGeometry(
     this->DetermineRenderAxes(viewport);
   }
 
+  // pass keys to sub props
+  vtkInformation *propKeys = this->GetPropertyKeys();
+
   // Render the axes
   for (i = 0; i < this->NumberOfAxesX; i++)
   {
+    this->XAxes[this->RenderAxesX[i]]->SetPropertyKeys(propKeys);
     renderedSomething +=
         (this->XAxes[this->RenderAxesX[i]]->*renderMethod)(viewport);
   }
 
   for (i = 0; i < this->NumberOfAxesY; i++)
   {
+    this->YAxes[this->RenderAxesY[i]]->SetPropertyKeys(propKeys);
     renderedSomething +=
         (this->YAxes[this->RenderAxesY[i]]->*renderMethod)(viewport);
   }
 
   for (i = 0; i < this->NumberOfAxesZ; i++)
   {
+    this->ZAxes[this->RenderAxesZ[i]]->SetPropertyKeys(propKeys);
     renderedSomething +=
         (this->ZAxes[this->RenderAxesZ[i]]->*renderMethod)(viewport);
   }

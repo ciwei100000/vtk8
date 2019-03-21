@@ -160,7 +160,7 @@ vtkBoxWidget::vtkBoxWidget()
   this->HexPicker->AddPickList(HexActor);
   this->HexPicker->PickFromListOn();
 
-  this->CurrentHandle = NULL;
+  this->CurrentHandle = nullptr;
 
   this->Transform = vtkTransform::New();
 }
@@ -225,7 +225,7 @@ void vtkBoxWidget::SetEnabled(int enabling)
       this->SetCurrentRenderer(this->Interactor->FindPokedRenderer(
         this->Interactor->GetLastEventPosition()[0],
         this->Interactor->GetLastEventPosition()[1]));
-      if (this->CurrentRenderer == NULL)
+      if (this->CurrentRenderer == nullptr)
       {
         return;
       }
@@ -267,8 +267,9 @@ void vtkBoxWidget::SetEnabled(int enabling)
       this->CurrentRenderer->AddActor(this->Handle[j]);
       this->Handle[j]->SetProperty(this->HandleProperty);
     }
+    this->RegisterPickers();
 
-    this->InvokeEvent(vtkCommand::EnableEvent,NULL);
+    this->InvokeEvent(vtkCommand::EnableEvent,nullptr);
   }
 
   else //disabling-------------------------------------------------------------
@@ -298,9 +299,10 @@ void vtkBoxWidget::SetEnabled(int enabling)
       this->CurrentRenderer->RemoveActor(this->Handle[i]);
     }
 
-    this->CurrentHandle = NULL;
-    this->InvokeEvent(vtkCommand::DisableEvent,NULL);
-    this->SetCurrentRenderer(NULL);
+    this->CurrentHandle = nullptr;
+    this->InvokeEvent(vtkCommand::DisableEvent,nullptr);
+    this->SetCurrentRenderer(nullptr);
+    this->UnRegisterPickers();
   }
 
   this->Interactor->Render();
@@ -524,8 +526,8 @@ void vtkBoxWidget::HighlightFace(int cellId)
     vtkIdType *pts;
     vtkCellArray *cells = this->HexFacePolyData->GetPolys();
     this->HexPolyData->GetCellPoints(cellId, npts, pts);
-    this->HexFacePolyData->Modified();
     cells->ReplaceCell(0,npts,pts);
+    cells->Modified();
     this->CurrentHexFace = cellId;
     this->HexFace->SetProperty(this->SelectedFaceProperty);
     if ( !this->CurrentHandle )
@@ -569,7 +571,7 @@ void vtkBoxWidget::OnLeftButtonDown()
 
   vtkAssemblyPath* path = this->GetAssemblyPath(X, Y, 0., this->HandlePicker);
 
-  if ( path != NULL )
+  if ( path != nullptr )
   {
     this->State = vtkBoxWidget::Moving;
     this->HighlightFace(
@@ -581,14 +583,14 @@ void vtkBoxWidget::OnLeftButtonDown()
   {
     path = this->GetAssemblyPath(X, Y, 0., this->HexPicker);
 
-    if ( path != NULL )
+    if ( path != nullptr )
     {
       this->State = vtkBoxWidget::Moving;
       this->HexPicker->GetPickPosition(this->LastPickPosition);
       this->ValidPick = 1;
       if ( !this->Interactor->GetShiftKey() )
       {
-        this->HighlightHandle(NULL);
+        this->HighlightHandle(nullptr);
         this->HighlightFace(this->HexPicker->GetCellId());
       }
       else
@@ -599,7 +601,7 @@ void vtkBoxWidget::OnLeftButtonDown()
     }
     else
     {
-      this->HighlightFace(this->HighlightHandle(NULL));
+      this->HighlightFace(this->HighlightHandle(nullptr));
       this->State = vtkBoxWidget::Outside;
       return;
     }
@@ -607,7 +609,7 @@ void vtkBoxWidget::OnLeftButtonDown()
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->StartInteraction();
-  this->InvokeEvent(vtkCommand::StartInteractionEvent, NULL);
+  this->InvokeEvent(vtkCommand::StartInteractionEvent, nullptr);
   this->Interactor->Render();
 }
 
@@ -620,12 +622,12 @@ void vtkBoxWidget::OnLeftButtonUp()
   }
 
   this->State = vtkBoxWidget::Start;
-  this->HighlightFace(this->HighlightHandle(NULL));
+  this->HighlightFace(this->HighlightHandle(nullptr));
   this->SizeHandles();
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->EndInteraction();
-  this->InvokeEvent(vtkCommand::EndInteractionEvent, NULL);
+  this->InvokeEvent(vtkCommand::EndInteractionEvent, nullptr);
   this->Interactor->Render();
 
 }
@@ -645,7 +647,7 @@ void vtkBoxWidget::OnMiddleButtonDown()
 
   vtkAssemblyPath* path = this->GetAssemblyPath(X, Y, 0., this->HandlePicker);
 
-  if ( path != NULL )
+  if ( path != nullptr )
   {
     this->State = vtkBoxWidget::Moving;
     this->CurrentHandle = this->Handle[6];
@@ -657,7 +659,7 @@ void vtkBoxWidget::OnMiddleButtonDown()
   {
     path = this->GetAssemblyPath(X, Y, 0., this->HexPicker);
 
-    if ( path != NULL )
+    if ( path != nullptr )
     {
       this->State = vtkBoxWidget::Moving;
       this->CurrentHandle = this->Handle[6];
@@ -667,7 +669,7 @@ void vtkBoxWidget::OnMiddleButtonDown()
     }
     else
     {
-      this->HighlightFace(this->HighlightHandle(NULL));
+      this->HighlightFace(this->HighlightHandle(nullptr));
       this->State = vtkBoxWidget::Outside;
       return;
     }
@@ -675,7 +677,7 @@ void vtkBoxWidget::OnMiddleButtonDown()
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->StartInteraction();
-  this->InvokeEvent(vtkCommand::StartInteractionEvent, NULL);
+  this->InvokeEvent(vtkCommand::StartInteractionEvent, nullptr);
   this->Interactor->Render();
 }
 
@@ -688,12 +690,12 @@ void vtkBoxWidget::OnMiddleButtonUp()
   }
 
   this->State = vtkBoxWidget::Start;
-  this->HighlightFace(this->HighlightHandle(NULL));
+  this->HighlightFace(this->HighlightHandle(nullptr));
   this->SizeHandles();
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->EndInteraction();
-  this->InvokeEvent(vtkCommand::EndInteractionEvent, NULL);
+  this->InvokeEvent(vtkCommand::EndInteractionEvent, nullptr);
   this->Interactor->Render();
 
 }
@@ -713,7 +715,7 @@ void vtkBoxWidget::OnRightButtonDown()
 
   vtkAssemblyPath* path = this->GetAssemblyPath(X, Y, 0., this->HandlePicker);
 
-  if ( path != NULL )
+  if ( path != nullptr )
   {
     this->State = vtkBoxWidget::Scaling;
     this->HighlightOutline(1);
@@ -724,7 +726,7 @@ void vtkBoxWidget::OnRightButtonDown()
   {
     path = this->GetAssemblyPath(X, Y, 0., this->HexPicker);
 
-    if ( path != NULL )
+    if ( path != nullptr )
     {
       this->State = vtkBoxWidget::Scaling;
       this->HighlightOutline(1);
@@ -740,7 +742,7 @@ void vtkBoxWidget::OnRightButtonDown()
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->StartInteraction();
-  this->InvokeEvent(vtkCommand::StartInteractionEvent, NULL);
+  this->InvokeEvent(vtkCommand::StartInteractionEvent, nullptr);
   this->Interactor->Render();
 }
 
@@ -757,7 +759,7 @@ void vtkBoxWidget::OnRightButtonUp()
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->EndInteraction();
-  this->InvokeEvent(vtkCommand::EndInteractionEvent, NULL);
+  this->InvokeEvent(vtkCommand::EndInteractionEvent, nullptr);
   this->Interactor->Render();
 }
 
@@ -844,7 +846,7 @@ void vtkBoxWidget::OnMouseMove()
 
   // Interact, if desired
   this->EventCallbackCommand->SetAbortFlag(1);
-  this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
+  this->InvokeEvent(vtkCommand::InteractionEvent, nullptr);
   this->Interactor->Render();
 }
 
@@ -1315,7 +1317,7 @@ void vtkBoxWidget::SetTransform(vtkTransform* t)
 {
   if (!t)
   {
-    vtkErrorMacro(<<"vtkTransform t must be non-NULL");
+    vtkErrorMacro(<<"vtkTransform t must be non-nullptr");
     return;
   }
 
@@ -1446,6 +1448,11 @@ void vtkBoxWidget::GenerateOutline()
 //------------------------------------------------------------------------------
 void vtkBoxWidget::RegisterPickers()
 {
-  this->Interactor->GetPickingManager()->AddPicker(this->HandlePicker, this);
-  this->Interactor->GetPickingManager()->AddPicker(this->HexPicker, this);
+  vtkPickingManager* pm = this->GetPickingManager();
+  if (!pm)
+  {
+    return;
+  }
+  pm->AddPicker(this->HandlePicker, this);
+  pm->AddPicker(this->HexPicker, this);
 }

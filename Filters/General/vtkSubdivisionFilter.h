@@ -38,7 +38,7 @@ class VTKFILTERSGENERAL_EXPORT vtkSubdivisionFilter : public vtkPolyDataAlgorith
 {
 public:
   vtkTypeMacro(vtkSubdivisionFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -55,22 +55,22 @@ public:
    * Should subdivision check that the dataset only contains triangles?
    * Default is On (1).
    */
-  vtkSetClampMacro(CheckForTriangles, int, 0, 1);
-  vtkGetMacro(CheckForTriangles, int);
-  vtkBooleanMacro(CheckForTriangles, int);
+  vtkSetClampMacro(CheckForTriangles, vtkTypeBool, 0, 1);
+  vtkGetMacro(CheckForTriangles, vtkTypeBool);
+  vtkBooleanMacro(CheckForTriangles, vtkTypeBool);
   //@}
 
 protected:
   vtkSubdivisionFilter();
-  ~vtkSubdivisionFilter() VTK_OVERRIDE {}
+  ~vtkSubdivisionFilter() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   int NumberOfSubdivisions;
-  int CheckForTriangles;
+  vtkTypeBool CheckForTriangles;
 private:
-  vtkSubdivisionFilter(const vtkSubdivisionFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSubdivisionFilter&) VTK_DELETE_FUNCTION;
+  vtkSubdivisionFilter(const vtkSubdivisionFilter&) = delete;
+  void operator=(const vtkSubdivisionFilter&) = delete;
 };
 
 #endif

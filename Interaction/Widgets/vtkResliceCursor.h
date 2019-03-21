@@ -76,9 +76,9 @@ public:
   /**
    * Enable disable thick mode. Default is to enable it.
    */
-  vtkSetMacro( ThickMode, int );
-  vtkGetMacro( ThickMode, int );
-  vtkBooleanMacro( ThickMode, int );
+  vtkSetMacro( ThickMode, vtkTypeBool );
+  vtkGetMacro( ThickMode, vtkTypeBool );
+  vtkBooleanMacro( ThickMode, vtkTypeBool );
   //@}
 
   /**
@@ -94,7 +94,7 @@ public:
   /**
    * Printself method.
    */
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get the planes that represent normals along the X, Y and Z. The argument
@@ -150,7 +150,7 @@ public:
   /**
    * Get the MTime. Check the MTime of the internal planes as well.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   /**
    * Reset the cursor to the default position, ie with the axes, normal
@@ -161,7 +161,7 @@ public:
 
 protected:
   vtkResliceCursor();
-  ~vtkResliceCursor() VTK_OVERRIDE;
+  ~vtkResliceCursor() override;
 
   virtual void BuildCursorGeometry();
   virtual void BuildPolyData();
@@ -172,7 +172,7 @@ protected:
   virtual void BuildCursorGeometryWithHole();
   virtual void ComputeAxes();
 
-  int           ThickMode;
+  vtkTypeBool           ThickMode;
   int           Hole;
   double        HoleWidth;
   double        HoleWidthInPixels;
@@ -190,8 +190,8 @@ protected:
   vtkTimeStamp  PolyDataBuildTime;
 
 private:
-  vtkResliceCursor(const vtkResliceCursor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkResliceCursor&) VTK_DELETE_FUNCTION;
+  vtkResliceCursor(const vtkResliceCursor&) = delete;
+  void operator=(const vtkResliceCursor&) = delete;
 };
 
 #endif

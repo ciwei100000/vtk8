@@ -56,7 +56,7 @@ class VTKIMAGINGGENERAL_EXPORT vtkImageEuclideanDistance : public vtkImageDecomp
 public:
   static vtkImageEuclideanDistance *New();
   vtkTypeMacro(vtkImageEuclideanDistance,vtkImageDecomposeFilter);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -65,9 +65,9 @@ public:
    * value in the input image as starting point. This allows to superimpose
    * several distance maps.
    */
-  vtkSetMacro(Initialize, int);
-  vtkGetMacro(Initialize, int);
-  vtkBooleanMacro(Initialize, int);
+  vtkSetMacro(Initialize, vtkTypeBool);
+  vtkGetMacro(Initialize, vtkTypeBool);
+  vtkBooleanMacro(Initialize, vtkTypeBool);
   //@}
 
   //@{
@@ -75,9 +75,9 @@ public:
    * Used to define whether Spacing should be used in the computation of the
    * distances
    */
-  vtkSetMacro(ConsiderAnisotropy, int);
-  vtkGetMacro(ConsiderAnisotropy, int);
-  vtkBooleanMacro(ConsiderAnisotropy, int);
+  vtkSetMacro(ConsiderAnisotropy, vtkTypeBool);
+  vtkGetMacro(ConsiderAnisotropy, vtkTypeBool);
+  vtkBooleanMacro(ConsiderAnisotropy, vtkTypeBool);
   //@}
 
   //@{
@@ -106,15 +106,15 @@ public:
 
   int IterativeRequestData(vtkInformation*,
                                    vtkInformationVector**,
-                                   vtkInformationVector*) VTK_OVERRIDE;
+                                   vtkInformationVector*) override;
 
 protected:
   vtkImageEuclideanDistance();
-  ~vtkImageEuclideanDistance()VTK_OVERRIDE {}
+  ~vtkImageEuclideanDistance() override {}
 
   double MaximumDistance;
-  int Initialize;
-  int ConsiderAnisotropy;
+  vtkTypeBool Initialize;
+  vtkTypeBool ConsiderAnisotropy;
   int Algorithm;
 
   // Replaces "EnlargeOutputUpdateExtent"
@@ -123,13 +123,13 @@ protected:
                                      vtkInformation* outInfo);
 
   int IterativeRequestInformation(vtkInformation* in,
-                                          vtkInformation* out) VTK_OVERRIDE;
+                                          vtkInformation* out) override;
   int IterativeRequestUpdateExtent(vtkInformation* in,
-                                           vtkInformation* out) VTK_OVERRIDE;
+                                           vtkInformation* out) override;
 
 private:
-  vtkImageEuclideanDistance(const vtkImageEuclideanDistance&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageEuclideanDistance&) VTK_DELETE_FUNCTION;
+  vtkImageEuclideanDistance(const vtkImageEuclideanDistance&) = delete;
+  void operator=(const vtkImageEuclideanDistance&) = delete;
 };
 
 #endif

@@ -93,7 +93,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkGenericAdaptorCell : public vtkObject
 {
 public:
   vtkTypeMacro(vtkGenericAdaptorCell,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Unique identification number of the cell over the whole
@@ -153,7 +153,7 @@ public:
    * \pre a_exists: a!=0
    * \post definition: result==(GetAttributeOrder()==1)
    */
-  int IsAttributeLinear(vtkGenericAttribute *a);
+  vtkTypeBool IsAttributeLinear(vtkGenericAttribute *a);
 
   /**
    * Is the cell primary (i.e. not composite) ?
@@ -263,7 +263,7 @@ public:
    * \post positive_distance: result!=-1 implies (closestPoint!=0 implies
    * dist2>=0)
    */
-  virtual int EvaluatePosition(double x[3],
+  virtual int EvaluatePosition(const double x[3],
                                double *closestPoint,
                                int &subId,
                                double pcoords[3],
@@ -322,9 +322,9 @@ public:
    * - `lines' is an array of generated lines
    * - `polys' is an array of generated polygons
    * - `outPd' is an array of interpolated point data along the edge (if
-   * not-NULL)
+   * not-nullptr)
    * - `outCd' is an array of copied cell data of the current cell (if
-   * not-NULL)
+   * not-nullptr)
    * `internalPd', `secondaryPd' and `secondaryCd' are initialized by the
    * filter that call it from `attributes'.
    * - `internalPd' stores the result of the tessellation pass: the
@@ -379,9 +379,9 @@ public:
    * (i.e., prevents duplicates).
    * - `connectivity' is an array of generated cells
    * - `outPd' is an array of interpolated point data along the edge (if
-   * not-NULL)
+   * not-nullptr)
    * - `outCd' is an array of copied cell data of the current cell (if
-   * not-NULL)
+   * not-nullptr)
    * `internalPd', `secondaryPd' and `secondaryCd' are initialized by the
    * filter that call it from `attributes'.
    * - `internalPd' stores the result of the tessellation pass: the
@@ -484,7 +484,7 @@ public:
    * will occasionally allow cells to be picked who are not really
    * intersected "inside" the cell.)  \post positive_result: result>=0
    */
-  virtual double GetParametricDistance(double pcoords[3])=0;
+  virtual double GetParametricDistance(const double pcoords[3])=0;
 
   /**
    * Return a contiguous array of parametric coordinates of the corrner points
@@ -527,7 +527,7 @@ public:
                           vtkPointData *pd, vtkCellData* cd,
                           vtkUnsignedCharArray *types);
 
-  // The following methods are for the internals of the tesselation algorithm
+  // The following methods are for the internals of the tessellation algorithm
   // (the hash table in particular)
 
   /**
@@ -602,7 +602,7 @@ public:
 
 protected:
   vtkGenericAdaptorCell();
-  ~vtkGenericAdaptorCell() VTK_OVERRIDE;
+  ~vtkGenericAdaptorCell() override;
 
   /**
    * Reset internal structures.
@@ -651,8 +651,8 @@ protected:
   double Bounds[6];
 
 private:
-  vtkGenericAdaptorCell(const vtkGenericAdaptorCell&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGenericAdaptorCell&) VTK_DELETE_FUNCTION;
+  vtkGenericAdaptorCell(const vtkGenericAdaptorCell&) = delete;
+  void operator=(const vtkGenericAdaptorCell&) = delete;
 };
 
 #endif

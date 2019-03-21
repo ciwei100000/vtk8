@@ -28,9 +28,7 @@ vtkRenderPass::vtkRenderPass()
 // ----------------------------------------------------------------------------
 // Description:
 // Destructor. Do nothing.
-vtkRenderPass::~vtkRenderPass()
-{
-}
+vtkRenderPass::~vtkRenderPass() = default;
 
 // ----------------------------------------------------------------------------
 // Description:
@@ -39,7 +37,7 @@ vtkRenderPass::~vtkRenderPass()
 // \pre w_exists: w!=0
 void vtkRenderPass::ReleaseGraphicsResources(vtkWindow *w)
 {
-  assert("pre: w_exists" && w != 0);
+  assert("pre: w_exists" && w != nullptr);
   // empty implementation;
   static_cast<void>(w); // avoid warning in release mode.
 }
@@ -51,7 +49,7 @@ void vtkRenderPass::ReleaseGraphicsResources(vtkWindow *w)
 // \pre renderer_exists: renderer!=0
 void vtkRenderPass::UpdateCamera(vtkRenderer *renderer)
 {
-  assert("pre: renderer_exists" && renderer != 0);
+  assert("pre: renderer_exists" && renderer != nullptr);
   renderer->UpdateCamera();
 }
 
@@ -71,7 +69,7 @@ void vtkRenderPass::ClearLights(vtkRenderer *renderer)
 // \pre renderer_exists: renderer!=0
 void vtkRenderPass::UpdateLightGeometry(vtkRenderer *renderer)
 {
-  assert("pre: renderer_exists" && renderer != 0);
+  assert("pre: renderer_exists" && renderer != nullptr);
   renderer->UpdateLightGeometry();
 }
 
@@ -81,7 +79,7 @@ void vtkRenderPass::UpdateLightGeometry(vtkRenderer *renderer)
 // \pre renderer_exists: renderer!=0
 void vtkRenderPass::UpdateLights(vtkRenderer *renderer)
 {
-  assert("pre: renderer_exists" && renderer != 0);
+  assert("pre: renderer_exists" && renderer != nullptr);
   renderer->UpdateLights();
 }
 
@@ -91,7 +89,7 @@ void vtkRenderPass::UpdateLights(vtkRenderer *renderer)
 // \pre renderer_exists: renderer!=0
 void vtkRenderPass::UpdateGeometry(vtkRenderer *renderer)
 {
-  assert("pre: renderer_exists" && renderer != 0);
+  assert("pre: renderer_exists" && renderer != nullptr);
   renderer->UpdateGeometry();
 }
 
@@ -99,7 +97,7 @@ void vtkRenderPass::UpdateGeometry(vtkRenderer *renderer)
 void vtkRenderPass::SetLastRenderingUsedDepthPeeling(vtkRenderer *renderer,
                                                      bool value)
 {
-  assert("pre: renderer_exists" && renderer != 0);
+  assert("pre: renderer_exists" && renderer != nullptr);
 
   renderer->LastRenderingUsedDepthPeeling = value;
 }

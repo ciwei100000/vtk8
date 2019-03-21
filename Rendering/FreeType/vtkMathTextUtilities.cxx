@@ -27,22 +27,20 @@
 
 //----------------------------------------------------------------------------
 // The singleton, and the singleton cleanup
-vtkMathTextUtilities* vtkMathTextUtilities::Instance = NULL;
+vtkMathTextUtilities* vtkMathTextUtilities::Instance = nullptr;
 vtkMathTextUtilitiesCleanup vtkMathTextUtilities::Cleanup;
 
 //----------------------------------------------------------------------------
 // Create the singleton cleanup
 // Register our singleton cleanup callback against the FTLibrary so that
 // it might be called before the FTLibrary singleton is destroyed.
-vtkMathTextUtilitiesCleanup::vtkMathTextUtilitiesCleanup()
-{
-}
+vtkMathTextUtilitiesCleanup::vtkMathTextUtilitiesCleanup() = default;
 
 //----------------------------------------------------------------------------
 // Delete the singleton cleanup
 vtkMathTextUtilitiesCleanup::~vtkMathTextUtilitiesCleanup()
 {
-  vtkMathTextUtilities::SetInstance(NULL);
+  vtkMathTextUtilities::SetInstance(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -75,7 +73,7 @@ void vtkMathTextUtilities::SetInstance(vtkMathTextUtilities* instance)
   // User will call ->Delete() after setting instance
   if (instance)
   {
-    instance->Register(NULL);
+    instance->Register(nullptr);
   }
 }
 
@@ -86,8 +84,8 @@ int vtkMathTextUtilities::GetConstrainedFontSize(const char *str,
                                                  int targetHeight,
                                                  int dpi)
 {
-  if (str == NULL || str[0] == '\0' || targetWidth == 0 || targetHeight == 0 ||
-      tprop == NULL)
+  if (str == nullptr || str[0] == '\0' || targetWidth == 0 || targetHeight == 0 ||
+      tprop == nullptr)
   {
     return 0;
   }
@@ -152,20 +150,16 @@ vtkMathTextUtilities* vtkMathTextUtilities::New()
   vtkMathTextUtilities* ret = vtkMathTextUtilities::GetInstance();
   if (ret)
   {
-    ret->Register(NULL);
+    ret->Register(nullptr);
   }
   return ret;
 }
 
 //----------------------------------------------------------------------------
-vtkMathTextUtilities::vtkMathTextUtilities()
-{
-}
+vtkMathTextUtilities::vtkMathTextUtilities() = default;
 
 //----------------------------------------------------------------------------
-vtkMathTextUtilities::~vtkMathTextUtilities()
-{
-}
+vtkMathTextUtilities::~vtkMathTextUtilities() = default;
 
 //----------------------------------------------------------------------------
 void vtkMathTextUtilities::PrintSelf(ostream &os, vtkIndent indent)

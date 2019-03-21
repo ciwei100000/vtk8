@@ -23,7 +23,7 @@
  * can be constructed using the AppendAtom() and AppendBond() methods in one
  * of two ways; either by fully specifying the atom/bond in a single
  * call, or by incrementally setting the various attributes using the
- * convience vtkAtom and vtkBond classes:
+ * convenience vtkAtom and vtkBond classes:
  *
  * Single call:
  * \code
@@ -51,7 +51,7 @@
  *
  * Both of the above methods will produce the same molecule, two
  * hydrogens connected with a 1.0 Angstrom single bond, aligned to the
- * z-axis. The second example also demostrates the use of VTK's
+ * z-axis. The second example also demonstrates the use of VTK's
  * vtkVector class, which is fully supported by the Chemistry kit.
  *
  * The vtkMolecule object is intended to be used with the
@@ -79,9 +79,13 @@
 #include "vtkVector.h" // Small templated vector convenience class
 
 class vtkAbstractElectronicData;
+class vtkDataArray;
+class vtkInformation;
+class vtkInformationVector;
 class vtkMatrix3x3;
 class vtkPlane;
 class vtkPoints;
+class vtkUnsignedCharArray;
 class vtkUnsignedShortArray;
 
 class VTKCOMMONDATAMODEL_EXPORT vtkMolecule : public vtkUndirectedGraph
@@ -89,13 +93,13 @@ class VTKCOMMONDATAMODEL_EXPORT vtkMolecule : public vtkUndirectedGraph
 public:
   static vtkMolecule *New();
   vtkTypeMacro(vtkMolecule,vtkUndirectedGraph);
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
-  void Initialize() VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
+  void Initialize() override;
 
   /**
    * Return what type of dataset this is.
    */
-  int GetDataObjectType() VTK_OVERRIDE {return VTK_MOLECULE;}
+  int GetDataObjectType() override {return VTK_MOLECULE;}
 
   /**
    * Add new atom with atomic number 0 (dummy atom) at origin. Return
@@ -208,6 +212,7 @@ public:
    */
   vtkPoints * GetAtomicPositionArray();
   vtkUnsignedShortArray * GetAtomicNumberArray();
+  vtkUnsignedShortArray * GetBondOrdersArray();
   //@}
 
   //@{
@@ -223,24 +228,24 @@ public:
    * but instead of reporting an error for an incompatible graph,
    * returns false.
    */
-  bool CheckedShallowCopy(vtkGraph *g) VTK_OVERRIDE;
+  bool CheckedShallowCopy(vtkGraph *g) override;
 
   /**
    * Performs the same operation as DeepCopy(),
    * but instead of reporting an error for an incompatible graph,
    * returns false.
    */
-  bool CheckedDeepCopy(vtkGraph *g) VTK_OVERRIDE;
+  bool CheckedDeepCopy(vtkGraph *g) override;
 
   /**
    * Shallow copies the data object into this molecule.
    */
-  void ShallowCopy(vtkDataObject *obj) VTK_OVERRIDE;
+  void ShallowCopy(vtkDataObject *obj) override;
 
   /**
    * Deep copies the data object into this molecule.
    */
-  void DeepCopy(vtkDataObject *obj) VTK_OVERRIDE;
+  void DeepCopy(vtkDataObject *obj) override;
 
   /**
    * Shallow copies the atoms and bonds from @a m into @a this.
@@ -321,7 +326,7 @@ public:
 
   /**
    * Get the unit cell lattice vectors. The matrix is stored using a row-major
-   * layout, with the vectors encoded as columns. Will return NULL if no
+   * layout, with the vectors encoded as columns. Will return nullptr if no
    * unit cell information is available.
    * @sa GetLatticeOrigin
    */
@@ -344,9 +349,99 @@ public:
   vtkSetMacro(LatticeOrigin, vtkVector3d)
   //@}
 
+  /**
+   * Get the array that defines the ghost type of each atom.
+   */
+  vtkUnsignedCharArray* GetAtomGhostArray();
+
+  /**
+   * Allocate ghost array for atoms.
+   */
+  void AllocateAtomGhostArray();
+
+  /**
+   * Get the array that defines the ghost type of each bond.
+   */
+  vtkUnsignedCharArray* GetBondGhostArray();
+
+  /**
+   * Allocate ghost array for bonds.
+   */
+  void AllocateBondGhostArray();
+
+  /**
+   * Initialize a molecule with an atom per input point.
+   * Parameters atomPositions and atomicNumberArray should have the same size.
+   */
+  int Initialize(vtkPoints* atomPositions,
+    vtkDataArray* atomicNumberArray,
+    vtkDataSetAttributes* atomData);
+
+  /**
+   * Overloads Initialize method.
+   */
+  int Initialize(vtkPoints* atomPositions,
+    vtkDataSetAttributes* atomData)
+  {
+    return this->Initialize(atomPositions, nullptr, atomData);
+  }
+
+  /**
+   * Use input molecule points, atomic number and atomic data to initialize the new molecule.
+   */
+  int Initialize(vtkMolecule* molecule);
+
+  //@{
+  /**
+   * Retrieve a molecule from an information vector.
+   */
+  static vtkMolecule* GetData(vtkInformation *info);
+  static vtkMolecule* GetData(vtkInformationVector *v, int i=0);
+  //@}
+
+  /**
+   * Return the VertexData of the underlying graph
+   */
+  vtkDataSetAttributes* GetAtomData()
+  {
+    return this->GetVertexData();
+  }
+
+  /**
+   * Return the EdgeData of the underlying graph
+   */
+  vtkDataSetAttributes* GetBondData()
+  {
+    return this->GetEdgeData();
+  }
+
+  /**
+   * Return the edge id from the underlying graph.
+   */
+  vtkIdType GetBondId(vtkIdType a, vtkIdType b)
+  {
+    return this->GetEdgeId(a, b);
+  }
+
+  //@{
+  /**
+   * Get/Set the atomic number array name.
+   */
+  vtkSetStringMacro(AtomicNumberArrayName);
+  vtkGetStringMacro(AtomicNumberArrayName);
+  //@}
+
+  //@{
+  /**
+   * Get/Set the bond orders array name.
+   */
+  vtkSetStringMacro(BondOrdersArrayName);
+  vtkGetStringMacro(BondOrdersArrayName);
+  //@}
+
  protected:
   vtkMolecule();
-  ~vtkMolecule() VTK_OVERRIDE;
+  ~vtkMolecule() override;
 
   /**
    * Copy bonds and atoms.
@@ -378,9 +473,15 @@ public:
   vtkSmartPointer<vtkMatrix3x3> Lattice;
   vtkVector3d LatticeOrigin;
 
+  vtkUnsignedCharArray* AtomGhostArray;
+  vtkUnsignedCharArray* BondGhostArray;
+
+  char* AtomicNumberArrayName;
+  char* BondOrdersArrayName;
+
 private:
-  vtkMolecule(const vtkMolecule&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMolecule&) VTK_DELETE_FUNCTION;
+  vtkMolecule(const vtkMolecule&) = delete;
+  void operator=(const vtkMolecule&) = delete;
 };
 
 #endif

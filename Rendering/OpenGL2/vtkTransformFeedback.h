@@ -35,13 +35,14 @@
 
 class vtkShaderProgram;
 class vtkWindow;
+class vtkOpenGLBufferObject;
 
 class VTKRENDERINGOPENGL2_EXPORT vtkTransformFeedback : public vtkObject
 {
 public:
   static vtkTransformFeedback *New();
   vtkTypeMacro(vtkTransformFeedback, vtkObject)
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   /**
    * The role a captured varying fills. Useful for parsing later.
@@ -49,7 +50,9 @@ public:
   enum VaryingRole
   {
     Vertex_ClipCoordinate_F, // Projected XYZW
-    Color_RGBA_F
+    Color_RGBA_F,
+    Normal_F,
+    Next_Buffer // Switch to next vertex stream (varying name must be "gl_NextBuffer")
   };
 
   struct VaryingMetaData
@@ -125,13 +128,15 @@ public:
    */
   void BindVaryings(vtkShaderProgram *prog);
 
-  //@{
   /**
-   * Get the handle to the transform buffer object. Only valid after calling
-   * BindBuffer and before ReadBuffer.
+   * Get the transform buffer object. Only valid after calling BindBuffer.
    */
-  vtkGetMacro(BufferHandle, int)
-  //@}
+  vtkOpenGLBufferObject* GetBuffer(int index);
+
+  /**
+   * Get the transform buffer object handle. Only valid after calling BindBuffer.
+   */
+  int GetBufferHandle(int index = 0);
 
   //@{
   /**
@@ -144,18 +149,29 @@ public:
   //@}
 
   /**
-   * Generates, binds, and allocates the feedback buffer, then call
-   * glBeginTransformFeedback with the specified PrimitiveMode. Must be called
-   * after BindVaryings and before any relevant glDraw commands.
+   * Generates and allocates the transform feedback buffers.
+   * Must be called before BindBuffer. This releases old buffers.
+   * nbBuffers is the number of buffers to allocate.
+   * size if the size in byte to allocate per buffer.
+   * hint is the type of buffer (for example, GL_DYNAMIC_COPY)
    */
-  void BindBuffer();
+  void Allocate(int nbBuffers, size_t size, unsigned int hint);
+
+  /**
+   * Binds the feedback buffer, then call glBeginTransformFeedback
+   * with the specified PrimitiveMode. Must be called
+   * after BindVaryings and before any relevant glDraw commands.
+   * If allocateOneBuffer is true, allocates 1 buffer (used for retro compatibility).
+   */
+  void BindBuffer(bool allocateOneBuffer = true);
 
   /**
    * Calls glEndTransformFeedback(), flushes the OpenGL command stream, and
    * reads the transform feedback buffer into BufferData. Must be called after
    * any relevant glDraw commands.
+   * If index is positive, data of specified buffer is copied to BufferData.
    */
-  void ReadBuffer();
+  void ReadBuffer(int index = 0);
 
   //@{
   /**
@@ -179,11 +195,11 @@ public:
 
 protected:
   vtkTransformFeedback();
-  ~vtkTransformFeedback() VTK_OVERRIDE;
+  ~vtkTransformFeedback() override;
 
 private:
-  vtkTransformFeedback(const vtkTransformFeedback &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTransformFeedback &) VTK_DELETE_FUNCTION;
+  vtkTransformFeedback(const vtkTransformFeedback &) = delete;
+  void operator=(const vtkTransformFeedback &) = delete;
 
   bool VaryingsBound;
 
@@ -191,7 +207,7 @@ private:
   size_t NumberOfVertices;
   int BufferMode;
 
-  int BufferHandle;
+  std::vector<vtkOpenGLBufferObject*> Buffers;
   int PrimitiveMode;
 
   unsigned char *BufferData;
@@ -207,6 +223,10 @@ inline size_t vtkTransformFeedback::GetBytesPerVertex(
       return 4 * sizeof(float);
     case Color_RGBA_F:
       return 4 * sizeof(float);
+    case Normal_F:
+      return 3 * sizeof(float);
+    case Next_Buffer:
+      return 0;
   }
 
   vtkGenericWarningMacro("Unknown role enum value: " << role);

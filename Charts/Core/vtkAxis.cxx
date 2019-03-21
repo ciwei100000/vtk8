@@ -58,6 +58,7 @@ vtkAxis::vtkAxis()
   this->LabelProperties->SetFontSize(12);
   this->LabelProperties->SetFontFamilyToArial();
   this->LabelProperties->SetJustificationToCentered();
+  this->TitleVisible = true;
   this->TitleProperties = vtkTextProperty::New();
   this->TitleProperties->SetColor(0.0, 0.0, 0.0);
   this->TitleProperties->SetFontSize(12);
@@ -325,7 +326,7 @@ bool vtkAxis::Paint(vtkContext2D *painter)
   }
 
   // Draw the axis title if there is one
-  if (!this->Title.empty())
+  if (!this->Title.empty() && this->TitleVisible)
   {
     int x = 0;
     int y = 0;
@@ -719,8 +720,30 @@ void vtkAxis::SetUnscaledMaximumLimit(double highest)
 //-----------------------------------------------------------------------------
 void vtkAxis::SetRange(double minimum, double maximum)
 {
-  this->SetMinimum(minimum);
-  this->SetMaximum(maximum);
+  bool rangeModified = false;
+  minimum = std::max(minimum, this->MinimumLimit);
+  if (this->Minimum != minimum)
+  {
+    this->Minimum = minimum;
+    this->UnscaledMinimum = this->LogScaleActive ? pow(10., this->Minimum) : this->Minimum;
+    rangeModified = true;
+  }
+
+  maximum = std::min(maximum, this->MaximumLimit);
+  if (this->Maximum != maximum)
+  {
+    this->Maximum = maximum;
+    this->UnscaledMaximum = this->LogScaleActive ? pow(10., this->Maximum) : this->Maximum;
+    rangeModified = true;
+  }
+
+  if (rangeModified)
+  {
+    this->UsingNiceMinMax = false;
+    this->TickMarksDirty = true;
+    this->Modified();
+    this->InvokeEvent(vtkChart::UpdateRange);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -728,16 +751,38 @@ void vtkAxis::SetRange(double *range)
 {
   if (range)
   {
-    this->SetMinimum(range[0]);
-    this->SetMaximum(range[1]);
+    this->SetRange(range[0], range[1]);
   }
 }
 
 //-----------------------------------------------------------------------------
 void vtkAxis::SetUnscaledRange(double minimum, double maximum)
 {
-  this->SetUnscaledMinimum(minimum);
-  this->SetUnscaledMaximum(maximum);
+  bool rangeModified = false;
+
+  minimum = std::max(minimum, this->UnscaledMinimumLimit);
+  if (this->UnscaledMinimum != minimum)
+  {
+    this->UnscaledMinimum = minimum;
+    this->UpdateLogScaleActive(true);
+    rangeModified = true;
+  }
+
+  maximum = std::min(maximum, this->UnscaledMaximumLimit);
+  if (this->UnscaledMaximum != maximum)
+  {
+    this->UnscaledMaximum = maximum;
+    this->UpdateLogScaleActive(true);
+    rangeModified = true;
+  }
+
+  if (rangeModified)
+  {
+    this->UsingNiceMinMax = false;
+    this->TickMarksDirty = true;
+    this->Modified();
+    this->InvokeEvent(vtkChart::UpdateRange);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -745,8 +790,7 @@ void vtkAxis::SetUnscaledRange(double *range)
 {
   if (range)
   {
-    this->SetUnscaledMinimum(range[0]);
-    this->SetUnscaledMaximum(range[1]);
+    this->SetUnscaledRange(range[0], range[1]);
   }
 }
 
@@ -1086,6 +1130,19 @@ void vtkAxis::UpdateLogScaleActive(bool alwaysUpdateMinMaxFromUnscaled)
           // The limit is on the other side of 0 relative to the data...
           // move it to the same side as the data.
           // Specifically, allow scrolling equal to the width of the plot.
+
+          // Note: There may be something wrong with this logic,
+          // as calling UpdateLogScaleActive(true) first will set
+          // this->NonLogUnscaledMinLimit = this->UnscaledMinimumLimit
+          // but when it is called again, it will set
+          // this->NonLogUnscaledMinLimit = 0.
+          // If this->NonLogUnscaledMinLimit should be set to 0 then
+          // it should be set immediately (on the first call).
+          // If the original this->UnscaledMinimumLimit needs to be preserved
+          // then the current behavior is broken, as the value is not preserved
+          // after calling this method multiple times (the method is usually
+          // called twice: first for the minimum, then for the maximum value).
+
           this->MinimumLimit = -vtkMath::Inf();
           this->NonLogUnscaledMinLimit = this->UnscaledMinimumLimit;
           this->UnscaledMinimumLimit = 0.;
@@ -1265,7 +1322,7 @@ void vtkAxis::GenerateTickLabels(double min, double max)
       range = mult > 0.0 ? max - min : min - max;
       n = vtkContext2D::FloatToInt(range / this->TickInterval);
     }
-    for (int i = 0; i <= n && i < 200; ++i)
+    for (int i = 0; i <= n; ++i)
     {
       double value = 0.0;
       if (this->LogScaleActive)
@@ -1374,6 +1431,26 @@ vtkStdString vtkAxis::GenerateSimpleLabel(double val)
       result.erase(regExp.start());
     }
   }
+
+  # if defined(_WIN32)
+  // Hacky fix for the Precision = 0 bug on MSVC compilers
+  if (this->Precision == 0 && this->Notation == SCIENTIFIC_NOTATION)
+  {
+    vtksys::RegularExpression regExp2("[+-]?[0-9]+\\.[0-9]+");
+    if (regExp2.find(result))
+    {
+      vtkStdString tmp(result);
+      long num = std::lround(stof(regExp2.match(0)));
+      result = std::to_string(num);
+      vtkStdString::iterator it = tmp.begin();
+      for (int i = 0; i < regExp2.end() - regExp2.start(); ++i)
+      {
+        it = tmp.erase(it);
+      }
+      result.append(tmp);
+    }
+  }
+  #endif
 
   return result;
 }
@@ -1673,10 +1750,10 @@ double vtkAxis::LogScaleTickMark(double number,
                                  bool &niceValue,
                                  int &order)
 {
-  // We need to retrive the order of our number.
+  // We need to retrieve the order of our number.
   order = static_cast<int>(floor(log10(number)));
 
-  // We retrive the basis of our number depending on roundUp and return it as
+  // We retrieve the basis of our number depending on roundUp and return it as
   // result.
   number = number * pow(10.0, static_cast<double>(order*(-1)));
   double result = roundUp ? ceil(number) : floor(number);
@@ -1835,25 +1912,24 @@ void vtkAxis::PrintSelf(ostream &os, vtkIndent indent)
   this->Superclass::PrintSelf(os, indent);
   if (this->Title)
   {
-    os << indent << "Axis title: \"" << *this->Title << "\"" << endl;
+    os << indent << "Title: \"" << *this->Title << "\"" << "\n";
   }
-  os << indent << "Minimum point: " << this->Point1[0] << ", "
-     << this->Point1[1] << endl;
-  os << indent << "Maximum point: " << this->Point2[0] << ", "
-     << this->Point2[1] << endl;
-  os << indent << "Range: " << this->Minimum << " - " << this->Maximum << endl;
-  os << indent << "Range limits: "
-    << this->MinimumLimit << " - " << this->MaximumLimit << endl;
-  os << indent << "Number of tick marks: " << this->NumberOfTicks << endl;
-  os << indent << "Tick length: " << this->TickLength << endl;
-  os << indent << "LogScale: " << (this->LogScale ? "TRUE" : "FALSE") << endl;
-  os << indent << "LogScaleActive: " << (this->LogScaleActive ? "TRUE" : "FALSE") << endl;
-  os << indent << "GridVisible: " << (this->GridVisible ? "TRUE" : "FALSE") << endl;
-  os << indent << "LabelsVisible: " << (this->LabelsVisible ? "TRUE" : "FALSE") << endl;
-  os << indent << "RangeLabelsVisible: " << (this->RangeLabelsVisible ? "TRUE" : "FALSE") << endl;
-  os << indent << "TicksVisible: " << (this->TicksVisible ? "TRUE" : "FALSE") << endl;
-  os << indent << "AxisVisible: " << (this->AxisVisible ? "TRUE" : "FALSE") << endl;
-  os << indent << "Precision: " << this->Precision << endl;
+  os << indent << "Point1: " << this->Point1[0] << ", " << this->Point1[1] << "\n";
+  os << indent << "Point2: " << this->Point2[0] << ", " << this->Point2[1] << "\n";
+  os << indent << "Minimum: " << this->Minimum << "\n";
+  os << indent << "Maximum: " << this->Maximum << "\n";
+  os << indent << "MinimumLimit: " << this->MinimumLimit << "\n";
+  os << indent << "MaximumLimit: " << this->MaximumLimit << "\n";
+  os << indent << "NumberOfTicks: " << this->NumberOfTicks << "\n";
+  os << indent << "TickLength: " << this->TickLength << "\n";
+  os << indent << "LogScale: " << (this->LogScale ? "TRUE" : "FALSE") << "\n";
+  os << indent << "LogScaleActive: " << (this->LogScaleActive ? "TRUE" : "FALSE") << "\n";
+  os << indent << "GridVisible: " << (this->GridVisible ? "TRUE" : "FALSE") << "\n";
+  os << indent << "LabelsVisible: " << (this->LabelsVisible ? "TRUE" : "FALSE") << "\n";
+  os << indent << "RangeLabelsVisible: " << (this->RangeLabelsVisible ? "TRUE" : "FALSE") << "\n";
+  os << indent << "TicksVisible: " << (this->TicksVisible ? "TRUE" : "FALSE") << "\n";
+  os << indent << "AxisVisible: " << (this->AxisVisible ? "TRUE" : "FALSE") << "\n";
+  os << indent << "Precision: " << this->Precision << "\n";
   os << indent << "Notation: ";
   switch (this->Notation)
   {
@@ -1877,8 +1953,8 @@ void vtkAxis::PrintSelf(ostream &os, vtkIndent indent)
       os << "<unknown>";
       break;
   }
-  os << endl;
-  os << indent << "LabelFormat: " << this->LabelFormat << endl;
+  os << "\n";
+  os << indent << "LabelFormat: " << this->LabelFormat << "\n";
   os << indent << "Behavior: ";
   switch (this->Behavior)
   {
@@ -1898,14 +1974,14 @@ void vtkAxis::PrintSelf(ostream &os, vtkIndent indent)
       os << "<unknown>";
       break;
   }
-  os << endl;
+  os << "\n";
 
-  os << indent << "Unscaled range: "
-    << this->UnscaledMinimum << " - " << this->UnscaledMaximum << endl;
-  os << indent << "Unscaled range limits: "
-    << this->UnscaledMinimumLimit << " - " << this->UnscaledMaximumLimit << endl;
-  os << indent << "Fallback unscaled range limits: "
-    << this->NonLogUnscaledMinLimit << " - " << this->NonLogUnscaledMaxLimit << endl;
-  os << indent << "ScalingFactor: " << this->ScalingFactor << endl;
-  os << indent << "Shift: " << this->Shift << endl;
+  os << indent << "UnscaledMinimum: " << this->UnscaledMinimum << "\n";
+  os << indent << "UnscaledMaximum: " << this->UnscaledMaximum << "\n";
+  os << indent << "UnscaledMinimumLimit: " << this->UnscaledMinimumLimit << "\n";
+  os << indent << "UnscaledMaximumLimit: " << this->UnscaledMaximumLimit << "\n";
+  os << indent << "NonLogUnscaledMinLimit: " << this->NonLogUnscaledMinLimit << "\n";
+  os << indent << "NonLogUnscaledMaxLimit: " << this->NonLogUnscaledMaxLimit << "\n";
+  os << indent << "ScalingFactor: " << this->ScalingFactor << "\n";
+  os << indent << "Shift: " << this->Shift << "\n";
 }

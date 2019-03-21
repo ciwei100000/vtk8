@@ -40,7 +40,7 @@ public:
   static vtkPieceScalars *New();
 
   vtkTypeMacro(vtkPieceScalars,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Option to centerate cell scalars of points scalars.  Default is point scalars.
@@ -52,26 +52,26 @@ public:
   // Dscription:
   // This option uses a random mapping between pieces and scalar values.
   // The scalar values are chosen between 0 and 1.  By default, random mode is off.
-  vtkSetMacro(RandomMode, int);
-  vtkGetMacro(RandomMode, int);
-  vtkBooleanMacro(RandomMode, int);
+  vtkSetMacro(RandomMode, vtkTypeBool);
+  vtkGetMacro(RandomMode, vtkTypeBool);
+  vtkBooleanMacro(RandomMode, vtkTypeBool);
 
 protected:
   vtkPieceScalars();
-  ~vtkPieceScalars() VTK_OVERRIDE;
+  ~vtkPieceScalars() override;
 
   // Append the pieces.
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   vtkIntArray *MakePieceScalars(int piece, vtkIdType numScalars);
   vtkFloatArray *MakeRandomScalars(int piece, vtkIdType numScalars);
 
   vtkSetMacro(CellScalarsFlag,int);
   int CellScalarsFlag;
-  int RandomMode;
+  vtkTypeBool RandomMode;
 private:
-  vtkPieceScalars(const vtkPieceScalars&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPieceScalars&) VTK_DELETE_FUNCTION;
+  vtkPieceScalars(const vtkPieceScalars&) = delete;
+  void operator=(const vtkPieceScalars&) = delete;
 };
 
 #endif

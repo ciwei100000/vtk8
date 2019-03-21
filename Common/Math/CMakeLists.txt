@@ -15,12 +15,6 @@ set(Module_SRCS
   vtkTuple.h
   )
 
-set_source_files_properties(
-  vtkQuaternion
-  vtkTuple
-  WRAP_EXCLUDE
-  )
-
 set(
   ${vtk-module}_HDRS
   vtkQuaternion.txx
@@ -30,11 +24,5 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set_source_files_properties(vtkPolynomialSolversUnivariate.cxx
     PROPERTIES COMPILE_FLAGS -O0)
 endif()
-
-set_source_files_properties(
-  vtkFunctionSet
-  vtkInitialValueProblemSolver
-  ABSTRACT
-  )
 
 vtk_module_library(vtkCommonMath ${Module_SRCS})

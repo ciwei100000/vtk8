@@ -17,7 +17,7 @@
  *
  *
  *  GPU implementation of a Line Integral Convolution, a technique for
- *  imaging  vector fields.
+ *  imaging vector fields.
  *
  *  The input on port 0 is an vtkImageData with extents of a 2D image. It needs
  *  a vector field on point data. This filter only works on point vectors. One
@@ -49,7 +49,7 @@ class VTKRENDERINGLICOPENGL2_EXPORT vtkImageDataLIC2D : public vtkImageAlgorithm
 public:
   static vtkImageDataLIC2D* New();
   vtkTypeMacro(vtkImageDataLIC2D, vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -77,7 +77,7 @@ public:
   /**
    * Step size.
    * Specify the step size as a unit of the cell length of the input vector
-   * field. Cell lengthh is the length of the diagonal of a cell.
+   * field. Cell length is the length of the diagonal of a cell.
    * Initial value is 1.0.
    * class invariant: StepSize>0.0.
    * In term of visual quality, the smaller the better.
@@ -91,7 +91,7 @@ public:
 
   //@{
   /**
-   * The the magnification factor. Default is 1
+   * The magnification factor. Default is 1
    */
   vtkSetMacro(Magnification, int);
   vtkGetMacro(Magnification, int);
@@ -111,10 +111,10 @@ public:
 
 protected:
   vtkImageDataLIC2D();
-  ~vtkImageDataLIC2D();
+  ~vtkImageDataLIC2D() override;
 
-  virtual int RequestInformation(vtkInformation *,
-    vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestInformation(vtkInformation *,
+    vtkInformationVector **, vtkInformationVector *) override;
 
   /**
    * Fill the input port information objects for this algorithm.  This
@@ -122,20 +122,20 @@ protected:
    * port so subclasses can specify what they can handle.
    * Redefined from the superclass.
    */
-  virtual int FillInputPortInformation(int port,
-                                       vtkInformation *info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port,
+                               vtkInformation *info) override;
 
   int RequestUpdateExtent (vtkInformation * vtkNotUsed(request),
                            vtkInformationVector **inputVector,
-                           vtkInformationVector *vtkNotUsed( outputVector )) VTK_OVERRIDE;
+                           vtkInformationVector *vtkNotUsed( outputVector )) override;
 
   /**
    * This is called by the superclass.
    * This is the method you should override.
    */
-  virtual int RequestData(vtkInformation *request,
-                          vtkInformationVector **inputVector,
-                          vtkInformationVector *outputVector) VTK_OVERRIDE;
+  int RequestData(vtkInformation *request,
+                  vtkInformationVector **inputVector,
+                  vtkInformationVector *outputVector) override;
 
   vtkWeakPointer<vtkOpenGLRenderWindow> Context;
   bool OwnWindow;
@@ -150,8 +150,8 @@ protected:
 
 
 private:
-  vtkImageDataLIC2D(const vtkImageDataLIC2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageDataLIC2D&) VTK_DELETE_FUNCTION;
+  vtkImageDataLIC2D(const vtkImageDataLIC2D&) = delete;
+  void operator=(const vtkImageDataLIC2D&) = delete;
 
 };
 

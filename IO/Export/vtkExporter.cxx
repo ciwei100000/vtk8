@@ -15,26 +15,30 @@
 #include "vtkExporter.h"
 
 #include "vtkRenderWindow.h"
+#include "vtkRenderer.h"
 
 
 vtkCxxSetObjectMacro(vtkExporter,RenderWindow,vtkRenderWindow);
+vtkCxxSetObjectMacro(vtkExporter,ActiveRenderer,vtkRenderer);
 
 
 // Construct with no start and end write methods or arguments.
 vtkExporter::vtkExporter()
 {
-  this->RenderWindow = NULL;
-  this->StartWrite = NULL;
-  this->StartWriteArgDelete = NULL;
-  this->StartWriteArg = NULL;
-  this->EndWrite = NULL;
-  this->EndWriteArgDelete = NULL;
-  this->EndWriteArg = NULL;
+  this->RenderWindow = nullptr;
+  this->ActiveRenderer = nullptr;
+  this->StartWrite = nullptr;
+  this->StartWriteArgDelete = nullptr;
+  this->StartWriteArg = nullptr;
+  this->EndWrite = nullptr;
+  this->EndWriteArgDelete = nullptr;
+  this->EndWriteArg = nullptr;
 }
 
 vtkExporter::~vtkExporter()
 {
-  this->SetRenderWindow(NULL);
+  this->SetRenderWindow(nullptr);
+  this->SetActiveRenderer(nullptr);
 
   if ((this->StartWriteArg)&&(this->StartWriteArgDelete))
   {
@@ -55,6 +59,12 @@ void vtkExporter::Write()
   if ( !this->RenderWindow )
   {
     vtkErrorMacro(<< "No render window provided!");
+    return;
+  }
+  if ( this->ActiveRenderer != nullptr
+    && !this->RenderWindow->HasRenderer(this->ActiveRenderer) )
+  {
+    vtkErrorMacro(<< "ActiveRenderer must be a renderer owned by the RenderWindow");
     return;
   }
 
@@ -144,6 +154,16 @@ void vtkExporter::PrintSelf(ostream& os, vtkIndent indent)
     os << indent << "Render Window: (none)\n";
   }
 
+  if ( this->ActiveRenderer )
+  {
+    os << indent << "Active Renderer: (" <<
+      static_cast<void *>(this->ActiveRenderer) << ")\n";
+  }
+  else
+  {
+    os << indent << "Active Renderer: (none)\n";
+  }
+
   if ( this->StartWrite )
   {
     os << indent << "Start Write: (" <<
@@ -170,7 +190,7 @@ vtkMTimeType vtkExporter::GetMTime()
   vtkMTimeType mTime=this-> vtkObject::GetMTime();
   vtkMTimeType time;
 
-  if ( this->RenderWindow != NULL )
+  if ( this->RenderWindow != nullptr )
   {
     time = this->RenderWindow->GetMTime();
     mTime = ( time > mTime ? time : mTime );

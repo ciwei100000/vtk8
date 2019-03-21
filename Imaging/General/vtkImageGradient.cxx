@@ -28,7 +28,7 @@
 vtkStandardNewMacro(vtkImageGradient);
 
 //----------------------------------------------------------------------------
-// Construct an instance of vtkImageGradient fitler.
+// Construct an instance of vtkImageGradient filter.
 vtkImageGradient::vtkImageGradient()
 {
   this->HandleBoundaries = 1;
@@ -73,7 +73,7 @@ int vtkImageGradient::RequestInformation(vtkInformation*,
   // Store the new whole extent for the output.
   outInfo->Set(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), extent, 6);
 
-  // Set the number of point data componets to the number of
+  // Set the number of point data components to the number of
   // components in the gradient vector.
   vtkDataObject::SetPointDataActiveScalarInfo(outInfo, VTK_DOUBLE,
                                               this->Dimensionality);
@@ -312,7 +312,7 @@ void vtkImageGradient::ThreadedRequestData(vtkInformation*,
   vtkImageData* input = inData[0][0];
   vtkImageData* output = outData[0];
 
-  // The ouptut scalar type must be double to store proper gradients.
+  // The output scalar type must be double to store proper gradients.
   if(output->GetScalarType() != VTK_DOUBLE)
   {
     vtkErrorMacro("Execute: output ScalarType is "

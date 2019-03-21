@@ -110,18 +110,18 @@ public:
   static vtkSplineWidget *New();
 
   vtkTypeMacro(vtkSplineWidget,vtk3DWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Methods that satisfy the superclass' API.
    */
-  void SetEnabled(int) VTK_OVERRIDE;
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void PlaceWidget() VTK_OVERRIDE
+  void SetEnabled(int) override;
+  void PlaceWidget(double bounds[6]) override;
+  void PlaceWidget() override
     {this->Superclass::PlaceWidget();}
   void PlaceWidget(double xmin, double xmax, double ymin, double ymax,
-                   double zmin, double zmax) VTK_OVERRIDE
+                   double zmin, double zmax) override
     {this->Superclass::PlaceWidget(xmin,xmax,ymin,ymax,zmin,zmax);}
   //@}
 
@@ -134,9 +134,9 @@ public:
    * planes respectively and 3 for arbitrary oblique planes when the widget
    * is tied to a vtkPlaneSource.
    */
-  vtkSetMacro(ProjectToPlane,int);
-  vtkGetMacro(ProjectToPlane,int);
-  vtkBooleanMacro(ProjectToPlane,int);
+  vtkSetMacro(ProjectToPlane,vtkTypeBool);
+  vtkGetMacro(ProjectToPlane,vtkTypeBool);
+  vtkBooleanMacro(ProjectToPlane,vtkTypeBool);
   //@}
 
   /**
@@ -162,7 +162,7 @@ public:
    * position. i.e., if ProjectionNormal is 0, all of the x-coordinate
    * values of the points are set to position. Any value can be passed (and is
    * ignored) to update the spline points when Projection normal is set to 3
-   * for arbritrary plane orientations.
+   * for arbitrary plane orientations.
    */
   void SetProjectionPosition(double position);
   vtkGetMacro(ProjectionPosition, double);
@@ -172,7 +172,7 @@ public:
    * Grab the polydata (including points) that defines the spline.  The
    * polydata consists of points and line segments numbering Resolution + 1
    * and Resoltuion, respectively. Points are guaranteed to be up-to-date when
-   * either the InteractionEvent or  EndInteraction events are invoked. The
+   * either the InteractionEvent or EndInteraction events are invoked. The
    * user provides the vtkPolyData and the points and polyline are added to it.
    */
   void GetPolyData(vtkPolyData *pd);
@@ -237,7 +237,7 @@ public:
   void SetHandlePosition(int handle, double x, double y, double z);
   void SetHandlePosition(int handle, double xyz[3]);
   void GetHandlePosition(int handle, double xyz[3]);
-  double* GetHandlePosition(int handle);
+  double* GetHandlePosition(int handle) VTK_SIZEHINT(3);
   //@}
 
   //@{
@@ -248,9 +248,9 @@ public:
    * form a closed loop.  This method enforces consistency with
    * user supplied subclasses of vtkSpline.
    */
-  void SetClosed(int closed);
-  vtkGetMacro(Closed,int);
-  vtkBooleanMacro(Closed,int);
+  void SetClosed(vtkTypeBool closed);
+  vtkGetMacro(Closed,vtkTypeBool);
+  vtkBooleanMacro(Closed,vtkTypeBool);
   //@}
 
   /**
@@ -280,14 +280,14 @@ public:
    * Turn on / off event processing for this widget. If off, the widget will
    * not respond to user interaction
    */
-  vtkSetClampMacro(ProcessEvents, int, 0, 1);
-  vtkGetMacro(ProcessEvents, int);
-  vtkBooleanMacro( ProcessEvents, int );
+  vtkSetClampMacro(ProcessEvents, vtkTypeBool, 0, 1);
+  vtkGetMacro(ProcessEvents, vtkTypeBool);
+  vtkBooleanMacro( ProcessEvents, vtkTypeBool );
   //@}
 
 protected:
   vtkSplineWidget();
-  ~vtkSplineWidget() VTK_OVERRIDE;
+  ~vtkSplineWidget() override;
 
   // Manage the state of the widget
   int State;
@@ -320,7 +320,7 @@ protected:
   // Controlling vars
   int   ProjectionNormal;
   double ProjectionPosition;
-  int   ProjectToPlane;
+  vtkTypeBool   ProjectToPlane;
   vtkPlaneSource* PlaneSource;
 
   // Projection capabilities
@@ -332,7 +332,7 @@ protected:
   vtkParametricSpline *ParametricSpline;
   vtkParametricFunctionSource *ParametricFunctionSource;
   int NumberOfHandles;
-  int Closed;
+  vtkTypeBool Closed;
   void BuildRepresentation();
 
   // The line segments
@@ -345,7 +345,7 @@ protected:
   vtkSphereSource   **HandleGeometry;
   void Initialize();
   int  HighlightHandle(vtkProp *prop); //returns handle index or -1 on fail
-  void SizeHandles() VTK_OVERRIDE;
+  void SizeHandles() override;
   void InsertHandleOnLine(double* pos);
   void EraseHandle(const int&);
 
@@ -356,7 +356,7 @@ protected:
   int CurrentHandleIndex;
 
   // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
+  void RegisterPickers() override;
 
   // Methods to manipulate the spline.
   void MovePoint(double *p1, double *p2);
@@ -378,11 +378,11 @@ protected:
   // For efficient spinning
   double Centroid[3];
   void CalculateCentroid();
-  int  ProcessEvents;
+  vtkTypeBool  ProcessEvents;
 
 private:
-  vtkSplineWidget(const vtkSplineWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSplineWidget&) VTK_DELETE_FUNCTION;
+  vtkSplineWidget(const vtkSplineWidget&) = delete;
+  void operator=(const vtkSplineWidget&) = delete;
 };
 
 #endif

@@ -75,7 +75,7 @@ public:
    * Standard methods for the class.
    */
   vtkTypeMacro(vtkImplicitCylinderRepresentation,vtkWidgetRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -85,7 +85,7 @@ public:
    */
   void SetCenter(double x, double y, double z);
   void SetCenter(double x[3]);
-  double* GetCenter();
+  double* GetCenter() VTK_SIZEHINT(3);
   void GetCenter(double xyz[3]);
   //@}
 
@@ -96,7 +96,7 @@ public:
    */
   void SetAxis(double x, double y, double z);
   void SetAxis(double a[3]);
-  double* GetAxis();
+  double* GetAxis() VTK_SIZEHINT(3);
   void GetAxis(double a[3]);
   //@}
 
@@ -131,15 +131,15 @@ public:
    * This can be used to snap the cylinder to the axes if it is originally
    * not aligned.
    */
-  void SetAlongXAxis(int);
-  vtkGetMacro(AlongXAxis,int);
-  vtkBooleanMacro(AlongXAxis,int);
-  void SetAlongYAxis(int);
-  vtkGetMacro(AlongYAxis,int);
-  vtkBooleanMacro(AlongYAxis,int);
-  void SetAlongZAxis(int);
-  vtkGetMacro(AlongZAxis,int);
-  vtkBooleanMacro(AlongZAxis,int);
+  void SetAlongXAxis(vtkTypeBool);
+  vtkGetMacro(AlongXAxis,vtkTypeBool);
+  vtkBooleanMacro(AlongXAxis,vtkTypeBool);
+  void SetAlongYAxis(vtkTypeBool);
+  vtkGetMacro(AlongYAxis,vtkTypeBool);
+  vtkBooleanMacro(AlongYAxis,vtkTypeBool);
+  void SetAlongZAxis(vtkTypeBool);
+  vtkGetMacro(AlongZAxis,vtkTypeBool);
+  vtkBooleanMacro(AlongZAxis,vtkTypeBool);
   //@}
 
   //@{
@@ -149,9 +149,9 @@ public:
    * cylinder interferes with the cut surface it produces resulting in
    * z-buffer artifacts.) By default it is off.
    */
-  void SetDrawCylinder(int drawCyl);
-  vtkGetMacro(DrawCylinder,int);
-  vtkBooleanMacro(DrawCylinder,int);
+  void SetDrawCylinder(vtkTypeBool drawCyl);
+  vtkGetMacro(DrawCylinder,vtkTypeBool);
+  vtkBooleanMacro(DrawCylinder,vtkTypeBool);
   //@}
 
   //@{
@@ -168,12 +168,12 @@ public:
   //@{
   /**
    * Turn on/off tubing of the wire outline of the cylinder
-   * intersecton (against the bounding box). The tube thickens the
+   * intersection (against the bounding box). The tube thickens the
    * line by wrapping with a vtkTubeFilter.
    */
-  vtkSetMacro(Tubing,int);
-  vtkGetMacro(Tubing,int);
-  vtkBooleanMacro(Tubing,int);
+  vtkSetMacro(Tubing,vtkTypeBool);
+  vtkGetMacro(Tubing,vtkTypeBool);
+  vtkBooleanMacro(Tubing,vtkTypeBool);
   //@}
 
   //@{
@@ -181,9 +181,9 @@ public:
    * Turn on/off the ability to translate the bounding box by moving it
    * with the mouse.
    */
-  vtkSetMacro(OutlineTranslation,int);
-  vtkGetMacro(OutlineTranslation,int);
-  vtkBooleanMacro(OutlineTranslation,int);
+  vtkSetMacro(OutlineTranslation,vtkTypeBool);
+  vtkGetMacro(OutlineTranslation,vtkTypeBool);
+  vtkBooleanMacro(OutlineTranslation,vtkTypeBool);
   //@}
 
   //@{
@@ -191,16 +191,16 @@ public:
    * Turn on/off the ability to move the widget outside of the bounds
    * specified in the PlaceWidget() invocation.
    */
-  vtkSetMacro(OutsideBounds,int);
-  vtkGetMacro(OutsideBounds,int);
-  vtkBooleanMacro(OutsideBounds,int);
+  vtkSetMacro(OutsideBounds,vtkTypeBool);
+  vtkGetMacro(OutsideBounds,vtkTypeBool);
+  vtkBooleanMacro(OutsideBounds,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get the bounds of the widget representation. PlaceWidget can also be
    * used to set the bounds of the widget but it may also have other effects
-   * on the internal state of the represenation. Use this function when only
+   * on the internal state of the representation. Use this function when only
    * the widget bounds are needs to be modified.
    */
   vtkSetVector6Macro(WidgetBounds, double);
@@ -216,18 +216,18 @@ public:
    * If off, the center can be freely moved and the radius can be set to
    * arbitrary values. The widget outline will change accordingly.
    */
-  vtkSetMacro(ConstrainToWidgetBounds, int);
-  vtkGetMacro(ConstrainToWidgetBounds, int);
-  vtkBooleanMacro(ConstrainToWidgetBounds, int);
+  vtkSetMacro(ConstrainToWidgetBounds, vtkTypeBool);
+  vtkGetMacro(ConstrainToWidgetBounds, vtkTypeBool);
+  vtkBooleanMacro(ConstrainToWidgetBounds, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off the ability to scale the widget with the mouse.
    */
-  vtkSetMacro(ScaleEnabled,int);
-  vtkGetMacro(ScaleEnabled,int);
-  vtkBooleanMacro(ScaleEnabled,int);
+  vtkSetMacro(ScaleEnabled, vtkTypeBool);
+  vtkGetMacro(ScaleEnabled, vtkTypeBool);
+  vtkBooleanMacro(ScaleEnabled, vtkTypeBool);
   //@}
 
   /**
@@ -295,24 +295,24 @@ public:
   /**
    * Methods to interface with the vtkImplicitCylinderWidget.
    */
-  int ComputeInteractionState(int X, int Y, int modify=0) VTK_OVERRIDE;
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void BuildRepresentation() VTK_OVERRIDE;
-  void StartWidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
-  void WidgetInteraction(double newEventPos[2]) VTK_OVERRIDE;
-  void EndWidgetInteraction(double newEventPos[2]) VTK_OVERRIDE;
+  int ComputeInteractionState(int X, int Y, int modify=0) override;
+  void PlaceWidget(double bounds[6]) override;
+  void BuildRepresentation() override;
+  void StartWidgetInteraction(double eventPos[2]) override;
+  void WidgetInteraction(double newEventPos[2]) override;
+  void EndWidgetInteraction(double newEventPos[2]) override;
   //@}
 
   //@{
   /**
    * Methods supporting the rendering process.
    */
-  double *GetBounds() VTK_OVERRIDE;
-  void GetActors(vtkPropCollection *pc) VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
-  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport*) VTK_OVERRIDE;
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  double *GetBounds() override;
+  void GetActors(vtkPropCollection *pc) override;
+  void ReleaseGraphicsResources(vtkWindow*) override;
+  int RenderOpaqueGeometry(vtkViewport*) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport*) override;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
   //@}
 
   //@{
@@ -377,9 +377,14 @@ public:
   vtkGetMacro(RepresentationState, int);
   //@}
 
+  /*
+  * Register internal Pickers within PickingManager
+  */
+  void RegisterPickers() override;
+
 protected:
   vtkImplicitCylinderRepresentation();
-  ~vtkImplicitCylinderRepresentation() VTK_OVERRIDE;
+  ~vtkImplicitCylinderRepresentation() override;
 
   int RepresentationState;
 
@@ -394,9 +399,9 @@ protected:
   double BumpDistance;
 
   // Controlling ivars
-  int AlongXAxis;
-  int AlongYAxis;
-  int AlongZAxis;
+  vtkTypeBool AlongXAxis;
+  vtkTypeBool AlongYAxis;
+  vtkTypeBool AlongZAxis;
 
   // The actual cylinder which is being manipulated
   vtkCylinder *Cylinder;
@@ -410,9 +415,9 @@ protected:
   vtkPolyDataMapper *OutlineMapper;
   vtkActor          *OutlineActor;
   void HighlightOutline(int highlight);
-  int  OutlineTranslation; //whether the outline can be moved
-  int  ScaleEnabled; //whether the widget can be scaled
-  int  OutsideBounds; //whether the widget can be moved outside input's bounds
+  vtkTypeBool  OutlineTranslation; //whether the outline can be moved
+  vtkTypeBool  ScaleEnabled; //whether the widget can be scaled
+  vtkTypeBool  OutsideBounds; //whether the widget can be moved outside input's bounds
   double WidgetBounds[6];
   int ConstrainToWidgetBounds;
 
@@ -420,7 +425,7 @@ protected:
   vtkPolyData       *Cyl;
   vtkPolyDataMapper *CylMapper;
   vtkActor          *CylActor;
-  int                DrawCylinder;
+  vtkTypeBool                DrawCylinder;
   void HighlightCylinder(int highlight);
 
   // Optional tubes are represented by extracting boundary edges and tubing
@@ -428,7 +433,7 @@ protected:
   vtkTubeFilter     *EdgesTuber;
   vtkPolyDataMapper *EdgesMapper;
   vtkActor          *EdgesActor;
-  int                Tubing; //control whether tubing is on
+  vtkTypeBool                Tubing; //control whether tubing is on
 
   // The + normal cone (i.e., in positive direction along normal)
   vtkConeSource     *ConeSource;
@@ -459,9 +464,6 @@ protected:
   // Do the picking
   vtkCellPicker *Picker;
   vtkCellPicker *CylPicker;
-
-  // Register internal Pickers within PickingManager
-  void RegisterPickers() VTK_OVERRIDE;
 
   // Transform the normal (used for rotation)
   vtkTransform *Transform;
@@ -495,8 +497,8 @@ protected:
   vtkBox *BoundingBox;
 
 private:
-  vtkImplicitCylinderRepresentation(const vtkImplicitCylinderRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImplicitCylinderRepresentation&) VTK_DELETE_FUNCTION;
+  vtkImplicitCylinderRepresentation(const vtkImplicitCylinderRepresentation&) = delete;
+  void operator=(const vtkImplicitCylinderRepresentation&) = delete;
 };
 
 #endif

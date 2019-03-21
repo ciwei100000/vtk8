@@ -19,38 +19,44 @@
  * vtkGPUVolumeRayCastMapper is a volume mapper that performs ray casting on
  * the GPU using fragment programs.
  *
-*/
-
+ * This mapper supports connections in multiple ports of input 0 (port 0 being
+ * the only required connection). It is up to the concrete implementation
+ * whether additional inputs will be used during rendering. This class maintains
+ * a list of the currently active input ports (Ports) as well as a list of the
+ * ports that have been disconnected (RemovedPorts). RemovedPorts is used the
+ * the concrete implementation to clean up internal structures.
+ *
+ */
 #ifndef vtkGPUVolumeRayCastMapper_h
 #define vtkGPUVolumeRayCastMapper_h
+#include <unordered_map>              // For std::unordered_map
+#include <vector>                     // For std::vector
 
 #include <vtkRenderingVolumeModule.h> // For export macro
-
 #include "vtkVolumeMapper.h"
+
 
 class vtkContourValues;
 class vtkRenderWindow;
 class vtkVolumeProperty;
-
-//class vtkKWAMRVolumeMapper; // friend class.
 
 class VTKRENDERINGVOLUME_EXPORT vtkGPUVolumeRayCastMapper : public vtkVolumeMapper
 {
 public:
   static vtkGPUVolumeRayCastMapper *New();
   vtkTypeMacro(vtkGPUVolumeRayCastMapper,vtkVolumeMapper);
-  void PrintSelf( ostream& os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream& os, vtkIndent indent ) override;
 
   //@{
   /**
-   * If AutoAdjustSampleDistances is on, the the ImageSampleDistance
+   * If AutoAdjustSampleDistances is on, the ImageSampleDistance
    * will be varied to achieve the allocated render time of this
    * prop (controlled by the desired update rate and any culling in
    * use).
    */
-  vtkSetClampMacro( AutoAdjustSampleDistances, int, 0, 1 );
-  vtkGetMacro( AutoAdjustSampleDistances, int );
-  vtkBooleanMacro( AutoAdjustSampleDistances, int );
+  vtkSetClampMacro( AutoAdjustSampleDistances, vtkTypeBool, 0, 1 );
+  vtkGetMacro( AutoAdjustSampleDistances, vtkTypeBool );
+  vtkBooleanMacro( AutoAdjustSampleDistances, vtkTypeBool );
   //@}
 
   //@{
@@ -59,9 +65,9 @@ public:
    * voxels is 8, the sample distance will be roughly 1/200 the average voxel
    * size. The distance will grow proportionally to numVoxels^(1/3). Off by default.
    */
-  vtkSetClampMacro( LockSampleDistanceToInputSpacing, int, 0, 1 );
-  vtkGetMacro( LockSampleDistanceToInputSpacing, int );
-  vtkBooleanMacro( LockSampleDistanceToInputSpacing, int );
+  vtkSetClampMacro( LockSampleDistanceToInputSpacing, vtkTypeBool, 0, 1 );
+  vtkGetMacro( LockSampleDistanceToInputSpacing, vtkTypeBool );
+  vtkBooleanMacro( LockSampleDistanceToInputSpacing, vtkTypeBool );
   //@}
 
   //@{
@@ -70,9 +76,9 @@ public:
    * perturbed slightly using a noise-texture to get rid of wood-grain
    * effect.
    */
-  vtkSetClampMacro( UseJittering, int, 0, 1 );
-  vtkGetMacro( UseJittering, int );
-  vtkBooleanMacro( UseJittering, int );
+  vtkSetClampMacro( UseJittering, vtkTypeBool, 0, 1 );
+  vtkGetMacro( UseJittering, vtkTypeBool );
+  vtkBooleanMacro( UseJittering, vtkTypeBool );
   //@}
 
   //@{
@@ -84,9 +90,9 @@ public:
    * reasonable contour values to be set which can be set by calling
    * GetDepthPassContourValues() method and using vtkControurValues API.
    */
-  vtkSetClampMacro( UseDepthPass, int, 0, 1 );
-  vtkGetMacro( UseDepthPass, int );
-  vtkBooleanMacro( UseDepthPass, int );
+  vtkSetClampMacro( UseDepthPass, vtkTypeBool, 0, 1 );
+  vtkGetMacro( UseDepthPass, vtkTypeBool );
+  vtkBooleanMacro( UseDepthPass, vtkTypeBool );
   //@}
 
   /**
@@ -277,9 +283,9 @@ public:
 
    * \sa GetDepthImage(), GetColorImage()
    */
-  vtkSetMacro(RenderToImage, int);
-  vtkGetMacro(RenderToImage, int);
-  vtkBooleanMacro(RenderToImage, int);
+  vtkSetMacro(RenderToImage, vtkTypeBool);
+  vtkGetMacro(RenderToImage, vtkTypeBool);
+  vtkBooleanMacro(RenderToImage, vtkTypeBool);
   //@}
 
   //@{
@@ -307,9 +313,9 @@ public:
    * By default, this is set to 0 (off).
    * \sa SetRenderToImage(), GetDepthImage()
    */
-  vtkSetMacro(ClampDepthToBackface, int);
-  vtkGetMacro(ClampDepthToBackface, int);
-  vtkBooleanMacro(ClampDepthToBackface, int);
+  vtkSetMacro(ClampDepthToBackface, vtkTypeBool);
+  vtkGetMacro(ClampDepthToBackface, vtkTypeBool);
+  vtkBooleanMacro(ClampDepthToBackface, vtkTypeBool);
   //@}
 
   /**
@@ -332,7 +338,7 @@ public:
    * Initialize rendering for this volume.
    * \warning INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
    */
-  void Render( vtkRenderer *, vtkVolume * ) VTK_OVERRIDE;
+  void Render( vtkRenderer *, vtkVolume * ) override;
 
   /**
    * Handled in the subclass - the actual render method
@@ -346,7 +352,7 @@ public:
    * resources to release.
    * \warning INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE {}
+  void ReleaseGraphicsResources(vtkWindow *) override {}
 
   /**
    * Return how much the dataset has to be reduced in each dimension to
@@ -362,13 +368,115 @@ public:
    */
   virtual void GetReductionRatio(double ratio[3])=0;
 
+  enum TFRangeType
+  {
+    SCALAR = 0, // default
+    NATIVE
+  };
+
+  //@{
+  /**
+   * Set whether to use the scalar range or the native transfer function range
+   * when looking up transfer functions for color and opacity values. When the
+   * range is set to TransferFunctionRange::SCALAR, the function is distributed
+   * over the entire scalar range. If it is set to
+   * TransferFunctionRange::NATIVE, the scalar values outside the native
+   * transfer function range will be truncated to native range. By
+   * default, the volume scalar range is used.
+   *
+   * \note The native range of the transfer function is the range returned by
+   * vtkColorTransferFunction::GetRange() or vtkPiecewiseFunction::GetRange().
+   *
+   * \note There is no special API provided for 2D transfer functions
+   * considering that they are set as a pre-generated vtkImageData on this
+   * class i.e. the range is already encoded.
+   */
+  vtkSetMacro(ColorRangeType, int);
+  vtkGetMacro(ColorRangeType, int);
+  vtkSetMacro(ScalarOpacityRangeType, int);
+  vtkGetMacro(ScalarOpacityRangeType, int);
+  vtkSetMacro(GradientOpacityRangeType, int);
+  vtkGetMacro(GradientOpacityRangeType, int);
+  //@}
+
+  vtkImageData* GetInput() override
+  {
+    return this->GetInput(0);
+  };
+
+  //@{
+  /**
+   * Add/Remove input connections. Active and removed ports are cached in
+   * Ports and RemovedPorts respectively.
+   */
+  void RemoveInputConnection(int port, vtkAlgorithmOutput* input) override;
+  void RemoveInputConnection(int port, int idx) override;
+  void SetInputConnection(int port, vtkAlgorithmOutput* input) override;
+  void SetInputConnection(vtkAlgorithmOutput* input) override
+  {
+    this->SetInputConnection(0, input);
+  }
+  //@}
+
+  /**
+   * Number of currently active ports.
+   */
+  int GetInputCount();
+
+  vtkImageData* GetTransformedInput(const int port = 0);
+
+  double* GetBoundsFromPort(const int port) VTK_SIZEHINT(6);
+
 protected:
   vtkGPUVolumeRayCastMapper();
-  ~vtkGPUVolumeRayCastMapper() VTK_OVERRIDE;
+  ~vtkGPUVolumeRayCastMapper() override;
 
-  // Check to see that the render will be OK
+  /**
+   * Handle inputs. This mapper provides an interface to support multiple
+   * inputs but it is up to the OpenGL implementation use them during rendering.
+   * Currently, only VolumeOpenGL2/vtkOpenGLGPUVolumeRayCastMapper makes use
+   * of these inputs.
+   *
+   * \sa vtkOpenGLGPUVolumeRayCastMapper vtkMultiVolume
+   */
+  int FillInputPortInformation(int port, vtkInformation* info) override;
+
+  /**
+   * A transformation is applied (translation) to the input.  The resulting
+   * data is stored in TransformedInputs. Takes as an argumet the port of an
+   * input connection.
+   *
+   * ///TODO Elaborate on why this is an issue, texture coords (?)
+   * @TODO: This is the workaround to deal with GPUVolumeRayCastMapper
+   * not able to handle extents starting from non zero values.
+   * There is not a easy fix in the GPU volume ray cast mapper hence
+   * this fix has been introduced.
+   */
+  void TransformInput(const int port);
+
+  //@{
+  /**
+   * This method is used by the Render() method to validate everything before
+   * attempting to render. This method returns 0 if something is not right -
+   * such as missing input, a null renderer or a null volume, no scalars, etc.
+   * In some cases it will produce a vtkErrorMacro message, and in others
+   * (for example, in the case of cropping planes that define a region with
+   * a volume or 0 or less) it will fail silently. If everything is OK, it will
+   * return with a value of 1.
+   */
   int ValidateRender( vtkRenderer *, vtkVolume * );
+  int ValidateInputs();
+  int ValidateInput(vtkVolumeProperty* property, const int port);
+  //@}
 
+  //@{
+  /**
+   * Shallow-copy the inputs into a transform-adjusted clone.
+   * \sa vtkGPUVolumeRayCastMapper::TransformInput
+   */
+  void CloneInputs();
+  void CloneInput(vtkImageData* input, const int port);
+  //@}
 
   // Special version of render called during the creation
   // of a canonical view.
@@ -389,6 +497,7 @@ protected:
 
   virtual void PostRender(vtkRenderer *ren,
                           int numberOfScalarComponents)=0;
+  vtkImageData* GetInput(const int port) override;
 
   /**
    * Called by the AMR Volume Mapper.
@@ -396,28 +505,29 @@ protected:
    * cell data (1).
    */
   void SetCellFlag(int cellFlag);
+  void RemovePortInternal(const int port);
 
-  int LockSampleDistanceToInputSpacing;
-  int    AutoAdjustSampleDistances;
+  vtkTypeBool LockSampleDistanceToInputSpacing;
+  vtkTypeBool    AutoAdjustSampleDistances;
   float  ImageSampleDistance;
   float  MinimumImageSampleDistance;
   float  MaximumImageSampleDistance;
 
   // Render to texture mode flag
-  int RenderToImage;
+  vtkTypeBool RenderToImage;
 
   // Depth image scalar type
   int DepthImageScalarType;
 
   // Clamp depth values to the depth of the face at which the ray
   // exits the volume
-  int ClampDepthToBackface;
+  vtkTypeBool ClampDepthToBackface;
 
   // Enable / disable stochastic jittering
-  int UseJittering;
+  vtkTypeBool UseJittering;
 
   // Enable / disable two pass rendering
-  int UseDepthPass;
+  vtkTypeBool UseDepthPass;
   vtkContourValues* DepthPassContourValues;
 
   // The distance between sample points along the ray
@@ -439,16 +549,21 @@ protected:
    * Set the mapper in AMR Mode or not. Initial value is false.
    * Called only by the vtkKWAMRVolumeMapper
    */
-  vtkSetClampMacro(AMRMode,int,0,1);
-  vtkGetMacro(AMRMode,int);
-  vtkBooleanMacro(AMRMode,int);
+  vtkSetClampMacro(AMRMode,vtkTypeBool,0,1);
+  vtkGetMacro(AMRMode,vtkTypeBool);
+  vtkBooleanMacro(AMRMode,vtkTypeBool);
   //@}
 
   vtkImageData * MaskInput;
   float          MaskBlendFactor;
   int            MaskType;
 
-  int AMRMode;
+  vtkTypeBool AMRMode;
+
+  // Transfer function range type
+  int ColorRangeType;
+  int ScalarOpacityRangeType;
+  int GradientOpacityRangeType;
 
   // Point data or cell data (or field data, not handled) ?
   int CellFlag;
@@ -467,28 +582,29 @@ protected:
    */
   virtual void ClipCroppingRegionPlanes();
 
+  using DataMap = std::unordered_map<int, vtkImageData*>;
+  void SetTransformedInput(vtkImageData*);
+  vtkImageData* FindData(int port, DataMap& container);
+
   double         ClippedCroppingRegionPlanes[6];
 
   vtkIdType MaxMemoryInBytes;
   float MaxMemoryFraction;
 
   bool           ReportProgress;
-
-  vtkImageData * TransformedInput;
-
-  vtkGetObjectMacro(TransformedInput, vtkImageData);
-  void SetTransformedInput(vtkImageData*);
+  std::vector<int> Ports;
+  std::vector<int> RemovedPorts;
+  DataMap TransformedInputs;
 
   /**
    * This is needed only to check if the input data has been changed since the last
    * Render() call.
    */
-  vtkImageData* LastInput;
+  DataMap LastInputs;
 
 private:
-  vtkGPUVolumeRayCastMapper(const vtkGPUVolumeRayCastMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGPUVolumeRayCastMapper&) VTK_DELETE_FUNCTION;
+  vtkGPUVolumeRayCastMapper(const vtkGPUVolumeRayCastMapper&) = delete;
+  void operator=(const vtkGPUVolumeRayCastMapper&) = delete;
 };
 
 #endif
-

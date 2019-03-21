@@ -35,7 +35,7 @@ class VTKCOMMONCORE_EXPORT vtkDataArraySelection : public vtkObject
 {
 public:
   vtkTypeMacro(vtkDataArraySelection,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   static vtkDataArraySelection* New();
 
   /**
@@ -97,16 +97,24 @@ public:
    */
   int GetEnabledArrayIndex(const char* name);
 
-  //@{
   /**
    * Get whether the array at the given index is enabled.
+   */
+  int GetArraySetting(int index);
+
+  /**
+   * Get whether the array is enabled/disable using its name.
    */
   int GetArraySetting(const char* name)
   {
     return this->GetArraySetting(this->GetArrayIndex(name));
   }
-  int GetArraySetting(int index);
-  //@}
+
+  /**
+   * Set array setting given the name. If the array doesn't exist, it will be
+   * added.
+   */
+  void SetArraySetting(const char* name, int status);
 
   /**
    * Remove all array entries.
@@ -116,11 +124,12 @@ public:
   /**
    * Add to the list of arrays that have entries.  For arrays that
    * already have entries, the settings are untouched.  For arrays
-   * that don't already have an entry, they are assumed to be enabled.
+   * that don't already have an entry, they are assumed to be enabled
+   * by default. The state can also be passed as the second argument.
    * This method should be called only by the filter owning this
    * object.
    */
-  int AddArray(const char* name);
+  int AddArray(const char* name, bool state=true);
 
   /**
    * Remove an array setting given its index.
@@ -153,16 +162,24 @@ public:
    */
   void CopySelections(vtkDataArraySelection* selections);
 
+  /**
+   * Update `this` to include values from `other`. For arrays that don't
+   * exist in `this` but exist in `other`, they will get added to `this` with
+   * the same array setting as in `other`. Array settings for arrays already in
+   * `this` are left unchanged.
+   */
+  void Union(vtkDataArraySelection* other);
+
 protected:
   vtkDataArraySelection();
-  ~vtkDataArraySelection() VTK_OVERRIDE;
+  ~vtkDataArraySelection() override;
 
   // Internal implementation details.
   vtkDataArraySelectionInternals* Internal;
 
 private:
-  vtkDataArraySelection(const vtkDataArraySelection&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataArraySelection&) VTK_DELETE_FUNCTION;
+  vtkDataArraySelection(const vtkDataArraySelection&) = delete;
+  void operator=(const vtkDataArraySelection&) = delete;
 };
 
 #endif

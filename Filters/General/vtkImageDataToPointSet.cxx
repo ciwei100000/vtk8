@@ -31,13 +31,9 @@
 vtkStandardNewMacro(vtkImageDataToPointSet);
 
 //-------------------------------------------------------------------------
-vtkImageDataToPointSet::vtkImageDataToPointSet()
-{
-}
+vtkImageDataToPointSet::vtkImageDataToPointSet() = default;
 
-vtkImageDataToPointSet::~vtkImageDataToPointSet()
-{
-}
+vtkImageDataToPointSet::~vtkImageDataToPointSet() = default;
 
 void vtkImageDataToPointSet::PrintSelf(ostream &os, vtkIndent indent)
 {
@@ -98,11 +94,11 @@ int vtkImageDataToPointSet::CopyStructure(vtkStructuredGrid *outData,
 
   if (pointId != points->GetNumberOfPoints())
   {
-    vtkErrorMacro(<< "Somehow misscounted points");
+    vtkErrorMacro(<< "Somehow miscounted points");
     return 0;
   }
 
-  outData->SetPoints(points.GetPointer());
+  outData->SetPoints(points);
 
   return 1;
 }
@@ -115,14 +111,14 @@ int vtkImageDataToPointSet::RequestData(vtkInformation *vtkNotUsed(request),
   vtkImageData *inData = vtkImageData::GetData(inputVector[0]);
   vtkStructuredGrid *outData = vtkStructuredGrid::GetData(outputVector);
 
-  if (inData == NULL)
+  if (inData == nullptr)
   {
-    vtkErrorMacro(<< "Input data is NULL.");
+    vtkErrorMacro(<< "Input data is nullptr.");
     return 0;
   }
-  if (outData == NULL)
+  if (outData == nullptr)
   {
-    vtkErrorMacro(<< "Output data is NULL.");
+    vtkErrorMacro(<< "Output data is nullptr.");
     return 0;
   }
 

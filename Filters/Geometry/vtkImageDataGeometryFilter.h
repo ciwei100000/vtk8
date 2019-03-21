@@ -45,7 +45,7 @@ class VTKFILTERSGEOMETRY_EXPORT vtkImageDataGeometryFilter : public vtkPolyDataA
 {
 public:
   vtkTypeMacro(vtkImageDataGeometryFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with initial extent of all the data
@@ -67,9 +67,9 @@ public:
    * values less than the specified threshold.
    * Currently this functionality is only implemented for 2D imagedata
    */
-  vtkSetMacro(ThresholdCells,int);
-  vtkGetMacro(ThresholdCells,int);
-  vtkBooleanMacro(ThresholdCells,int);
+  vtkSetMacro(ThresholdCells,vtkTypeBool);
+  vtkGetMacro(ThresholdCells,vtkTypeBool);
+  vtkBooleanMacro(ThresholdCells,vtkTypeBool);
   //@}
 
   //@{
@@ -88,26 +88,26 @@ public:
    * when extracting cells from 2D imagedata
    * Currently this functionality is only implemented for 2D imagedata
    */
-  vtkSetMacro(OutputTriangles,int);
-  vtkGetMacro(OutputTriangles,int);
-  vtkBooleanMacro(OutputTriangles,int);
+  vtkSetMacro(OutputTriangles,vtkTypeBool);
+  vtkGetMacro(OutputTriangles,vtkTypeBool);
+  vtkBooleanMacro(OutputTriangles,vtkTypeBool);
   //@}
 
 protected:
   vtkImageDataGeometryFilter();
-  ~vtkImageDataGeometryFilter() VTK_OVERRIDE {}
+  ~vtkImageDataGeometryFilter() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   int    Extent[6];
-  int    ThresholdCells;
+  vtkTypeBool    ThresholdCells;
   double ThresholdValue;
-  int    OutputTriangles;
+  vtkTypeBool    OutputTriangles;
 
 private:
-  vtkImageDataGeometryFilter(const vtkImageDataGeometryFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageDataGeometryFilter&) VTK_DELETE_FUNCTION;
+  vtkImageDataGeometryFilter(const vtkImageDataGeometryFilter&) = delete;
+  void operator=(const vtkImageDataGeometryFilter&) = delete;
 };
 
 #endif

@@ -13,6 +13,7 @@
 
 =========================================================================*/
 
+#include "vtkAxis.h"
 #include "vtkBrush.h"
 #include "vtkCallbackCommand.h"
 #include "vtkContext2D.h"
@@ -38,7 +39,7 @@ vtkScalarsToColorsItem::vtkScalarsToColorsItem()
   this->PolyLinePen->SetColor(64, 64, 72); // Payne's grey, why not
   this->PolyLinePen->SetLineType(vtkPen::NO_PEN);
 
-  this->Texture = 0;
+  this->Texture = nullptr;
   this->Interpolate = true;
   this->Shape = vtkPoints2D::New();
   this->Shape->SetDataTypeToFloat();
@@ -61,22 +62,60 @@ vtkScalarsToColorsItem::~vtkScalarsToColorsItem()
   if (this->PolyLinePen)
   {
     this->PolyLinePen->Delete();
-    this->PolyLinePen = 0;
+    this->PolyLinePen = nullptr;
   }
   if (this->Texture)
   {
     this->Texture->Delete();
-    this->Texture = 0;
+    this->Texture = nullptr;
   }
   if (this->Shape)
   {
     this->Shape->Delete();
-    this->Shape = 0;
+    this->Shape = nullptr;
   }
   if (this->Callback)
   {
     this->Callback->Delete();
-    this->Callback = 0;
+    this->Callback = nullptr;
+  }
+}
+
+//-----------------------------------------------------------------------------
+void vtkScalarsToColorsItem::TransformDataToScreen(
+    const double dataX, const double dataY, double &screenX, double &screenY)
+{
+  const bool logX = this->GetXAxis() && this->GetXAxis()->GetLogScaleActive();
+  const bool logY = this->GetYAxis() && this->GetYAxis()->GetLogScaleActive();
+
+  screenX = logX ? log10(dataX) : dataX;
+  screenY = logY ? log10(dataY) : dataY;
+
+  // now, shift/scale to screen space.
+  const vtkRectd& ss = this->ShiftScale;
+  screenX = (screenX + ss[0]) * ss[2];
+  screenY = (screenY + ss[1]) * ss[3];
+}
+
+//-----------------------------------------------------------------------------
+void vtkScalarsToColorsItem::TransformScreenToData(
+    const double screenX, const double screenY, double &dataX, double &dataY)
+{
+  // inverse shift/scale from screen space.
+  const vtkRectd& ss = this->ShiftScale;
+  dataX = (screenX / ss[2]) - ss[0];
+  dataY = (screenY / ss[3]) - ss[1];
+
+  const bool logX = this->GetXAxis() && this->GetXAxis()->GetLogScaleActive();
+  const bool logY = this->GetYAxis() && this->GetYAxis()->GetLogScaleActive();
+
+  if (logX)
+  {
+    dataX = pow(10., dataX);
+  }
+  if (logY)
+  {
+    dataY = pow(10., dataY);
   }
 }
 
@@ -115,19 +154,19 @@ void vtkScalarsToColorsItem::ComputeBounds(double bounds[4])
 bool vtkScalarsToColorsItem::Paint(vtkContext2D* painter)
 {
   this->TextureWidth = this->GetScene()->GetViewWidth();
-  if (this->Texture == 0 ||
+  if (this->Texture == nullptr ||
       this->Texture->GetMTime() < this->GetMTime())
   {
     this->ComputeTexture();
   }
-  if (this->Texture == 0)
+  if (this->Texture == nullptr)
   {
     return false;
   }
   vtkSmartPointer<vtkPen> transparentPen = vtkSmartPointer<vtkPen>::New();
   transparentPen->SetLineType(vtkPen::NO_PEN);
   painter->ApplyPen(transparentPen);
-  painter->GetBrush()->SetColorF(0., 0.,0.,1.);
+  painter->GetBrush()->SetColorF(0., 0., 0., 1.);
   painter->GetBrush()->SetColorF(1., 1., 1., 1.);
   painter->GetBrush()->SetTexture(this->Texture);
   painter->GetBrush()->SetTextureProperties(
@@ -138,18 +177,10 @@ bool vtkScalarsToColorsItem::Paint(vtkContext2D* painter)
   {
     double dbounds[4];
     this->GetBounds(dbounds);
-
-    // shift/scale to scale from data space to rendering space.
-    const vtkRectd& ss = this->ShiftScale;
-    float fbounds[4];
-    fbounds[0] = static_cast<float>((dbounds[0] + ss[0]) * ss[2]);
-    fbounds[1] = static_cast<float>((dbounds[1] + ss[0]) * ss[2]);
-    fbounds[2] = static_cast<float>((dbounds[2] + ss[1]) * ss[3]);
-    fbounds[3] = static_cast<float>((dbounds[3] + ss[1]) * ss[3]);
-    painter->DrawQuad(fbounds[0], fbounds[2],
-                      fbounds[0], fbounds[3],
-                      fbounds[1], fbounds[3],
-                      fbounds[1], fbounds[2]);
+    painter->DrawQuad(dbounds[0], dbounds[2],
+                      dbounds[0], dbounds[3],
+                      dbounds[1], dbounds[3],
+                      dbounds[1], dbounds[2]);
   }
   else
   {
@@ -173,7 +204,8 @@ bool vtkScalarsToColorsItem::Paint(vtkContext2D* painter)
     trapezoids->Delete();
   }
 
-  if (this->PolyLinePen->GetLineType() != vtkPen::NO_PEN)
+  if (this->PolyLinePen->GetLineType() != vtkPen::NO_PEN
+    && size >= 2)
   {
     const vtkRectd& ss = this->ShiftScale;
 
@@ -189,7 +221,7 @@ bool vtkScalarsToColorsItem::Paint(vtkContext2D* painter)
       transformedShape->SetPoint(i, point);
     }
     painter->ApplyPen(this->PolyLinePen);
-    painter->DrawPoly(transformedShape.GetPointer());
+    painter->DrawPoly(transformedShape);
   }
 
   return true;

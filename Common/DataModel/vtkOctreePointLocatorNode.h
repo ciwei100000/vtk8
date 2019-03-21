@@ -47,7 +47,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkOctreePointLocatorNode : public vtkObject
 {
 public:
   vtkTypeMacro(vtkOctreePointLocatorNode, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkOctreePointLocatorNode *New();
 
@@ -167,7 +167,7 @@ public:
   /**
    * If this node is not a leaf node, there are leaf nodes below it whose
    * regions represent a partitioning of this region.  The IDs of these
-   * leaf nodes form a contigous set.  Get the first of the first point's
+   * leaf nodes form a contiguous set.  Get the first of the first point's
    * ID that is contained in this node.
    */
   vtkGetMacro(MinID, int);
@@ -203,7 +203,7 @@ public:
    * Use the possibly smaller bounds of the points within the region
    * if useDataBounds is non-zero.
    */
-  int ContainsPoint(double x, double y, double z, int useDataBounds);
+  vtkTypeBool ContainsPoint(double x, double y, double z, int useDataBounds);
 
   /**
    * Calculate the distance squared from any point to the boundary of this
@@ -252,7 +252,7 @@ public:
 
 protected:
   vtkOctreePointLocatorNode();
-  ~vtkOctreePointLocatorNode() VTK_OVERRIDE;
+  ~vtkOctreePointLocatorNode() override;
 
 private:
 
@@ -308,8 +308,8 @@ private:
    */
   int MinID;
 
-  vtkOctreePointLocatorNode(const vtkOctreePointLocatorNode&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOctreePointLocatorNode&) VTK_DELETE_FUNCTION;
+  vtkOctreePointLocatorNode(const vtkOctreePointLocatorNode&) = delete;
+  void operator=(const vtkOctreePointLocatorNode&) = delete;
 };
 
 #endif

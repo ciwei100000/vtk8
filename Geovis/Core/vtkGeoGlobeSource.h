@@ -34,30 +34,32 @@
 
 class vtkGeoTerrainNode;
 
+#if !defined(VTK_LEGACY_REMOVE)
 class VTKGEOVISCORE_EXPORT vtkGeoGlobeSource : public vtkGeoSource
 {
 public:
   static vtkGeoGlobeSource *New();
   vtkTypeMacro(vtkGeoGlobeSource,vtkGeoSource);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Fetches a low-resolution sphere for the entire globe.
    */
-  bool FetchRoot(vtkGeoTreeNode* root) VTK_OVERRIDE;
+  bool FetchRoot(vtkGeoTreeNode* root) override;
 
   /**
    * Fetches a refined geometry patch, a section of a sphere.
    */
-  bool FetchChild(vtkGeoTreeNode* node, int index, vtkGeoTreeNode* child) VTK_OVERRIDE;
+  bool FetchChild(vtkGeoTreeNode* node, int index, vtkGeoTreeNode* child) override;
 
 protected:
   vtkGeoGlobeSource();
-  ~vtkGeoGlobeSource() VTK_OVERRIDE;
+  ~vtkGeoGlobeSource() override;
 
 private:
-  vtkGeoGlobeSource(const vtkGeoGlobeSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGeoGlobeSource&) VTK_DELETE_FUNCTION;
+  vtkGeoGlobeSource(const vtkGeoGlobeSource&) = delete;
+  void operator=(const vtkGeoGlobeSource&) = delete;
 };
 
+#endif //VTK_LEGACY_REMOVE
 #endif

@@ -330,7 +330,7 @@ public:
   struct ScreenTile
   {
     std::vector<LabelRect> Labels;
-    ScreenTile() { }
+    ScreenTile() = default;
     /// Is there space to place the given rectangle in this tile so that it doesn't overlap any labels in this tile?
     bool IsSpotOpen( const LabelRect& r )
     {
@@ -451,7 +451,7 @@ vtkLabelPlacementMapper::vtkLabelPlacementMapper()
   this->AnchorTransform = vtkCoordinate::New();
   this->AnchorTransform->SetCoordinateSystemToWorld();
   this->MaximumLabelFraction = 0.05; // Take up no more than 5% of screen real estate with labels.
-  this->Buckets = 0;
+  this->Buckets = nullptr;
   this->PositionsAsNormals = false;
   this->IteratorType = vtkLabelHierarchy::QUEUE;
   this->VisiblePoints = vtkSelectVisiblePoints::New();
@@ -483,7 +483,7 @@ vtkLabelPlacementMapper::vtkLabelPlacementMapper()
 
   this->UseDepthBuffer = false;
 
-  this->RenderStrategy = 0;
+  this->RenderStrategy = nullptr;
   vtkSmartPointer<vtkFreeTypeLabelRenderStrategy> s =
     vtkSmartPointer<vtkFreeTypeLabelRenderStrategy>::New();
   this->SetRenderStrategy(s);
@@ -580,7 +580,7 @@ void vtkLabelPlacementMapper::RenderOverlay(vtkViewport *viewport,
     this->Buckets->Reset( kdbounds, tileSize );
   }
 
-  float * zPtr = NULL;
+  float * zPtr = nullptr;
   int placed = 0;
   int occluded = 0;
 
@@ -735,7 +735,7 @@ void vtkLabelPlacementMapper::RenderOverlay(vtkViewport *viewport,
     ur[0] = dispx[0] + sz[0];
     ur[1] = dispx[1] + sz[1];
 
-    if ( ll[1] > kdbounds[3] || ur[1] < kdbounds[2] || ll[0] > kdbounds[1] || ll[1] < kdbounds[0] )
+    if ( ll[1] > kdbounds[3] || ur[1] < kdbounds[2] || ll[0] > kdbounds[1] || ur[1] < kdbounds[0] )
     {
       continue; // cull label not in frame
     }
@@ -859,7 +859,7 @@ void vtkLabelPlacementMapper::RenderOverlay(vtkViewport *viewport,
 
   // Done rendering labels
   this->RenderStrategy->EndFrame();
-  this->RenderStrategy->SetRenderer(0);
+  this->RenderStrategy->SetRenderer(nullptr);
 
   if ( this->OutputTraversedBounds )
   {

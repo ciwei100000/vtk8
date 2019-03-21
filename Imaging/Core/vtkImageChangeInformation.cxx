@@ -57,15 +57,13 @@ vtkImageData *vtkImageChangeInformation::GetInformationInput()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return 0;
+    return nullptr;
   }
   return vtkImageData::SafeDownCast(this->GetExecutive()->GetInputData(1, 0));
 }
 
 //----------------------------------------------------------------------------
-vtkImageChangeInformation::~vtkImageChangeInformation()
-{
-}
+vtkImageChangeInformation::~vtkImageChangeInformation() = default;
 
 //----------------------------------------------------------------------------
 void vtkImageChangeInformation::PrintSelf(ostream& os, vtkIndent indent)

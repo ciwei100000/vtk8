@@ -23,7 +23,7 @@
  *  see vtkPStructuredGridConnectivity.
  *
  * @sa
- *  vtkGhostArray vtkPStructuredGridConnectivity
+ *  vtkPStructuredGridConnectivity
 */
 
 #ifndef vtkStructuredGridConnectivity_h
@@ -60,7 +60,7 @@ class VTKFILTERSGEOMETRY_EXPORT vtkStructuredGridConnectivity :
 public:
   static vtkStructuredGridConnectivity* New();
   vtkTypeMacro( vtkStructuredGridConnectivity, vtkAbstractGridConnectivity );
-  void PrintSelf(ostream& os, vtkIndent  indent ) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent  indent ) override;
 
   //@{
   /**
@@ -80,7 +80,7 @@ public:
   /**
    * Set/Get the total number of domains distributed among processors
    */
-  void SetNumberOfGrids( const unsigned int N ) VTK_OVERRIDE;
+  void SetNumberOfGrids( const unsigned int N ) override;
 
   /**
    * Registers the current grid corresponding to the grid ID by its global
@@ -112,7 +112,7 @@ public:
   /**
    * Computes neighboring information
    */
-  void ComputeNeighbors() VTK_OVERRIDE;
+  void ComputeNeighbors() override;
 
   /**
    * Returns the number of neighbors for the grid corresponding to the given
@@ -137,23 +137,23 @@ public:
   vtkIdList* GetNeighbors( const int gridID, int *extents );
 
   /**
-   * Filles the mesh property arrays, nodes and cells, for the grid
+   * Fills the mesh property arrays, nodes and cells, for the grid
    * corresponding to the given grid ID.
    * NOTE: this method assumes that ComputeNeighbors() has been called.
    */
   void FillGhostArrays(
      const int gridID,
      vtkUnsignedCharArray *nodesArray,
-     vtkUnsignedCharArray *cellsArray ) VTK_OVERRIDE;
+     vtkUnsignedCharArray *cellsArray ) override;
 
   /**
    * Creates ghost layers.
    */
-  void CreateGhostLayers( const int N=1 ) VTK_OVERRIDE;
+  void CreateGhostLayers( const int N=1 ) override;
 
 protected:
   vtkStructuredGridConnectivity();
-  ~vtkStructuredGridConnectivity() VTK_OVERRIDE;
+  ~vtkStructuredGridConnectivity() override;
 
   /**
    * Returns true iff Lo <= idx <= Hi, otherwise false.
@@ -205,7 +205,7 @@ protected:
   //@}
 
   /**
-   * Fills the the ghost array for the nodes
+   * Fills the ghost array for the nodes
    */
   void FillNodesGhostArray(
       const int gridID, const int dataDescription,
@@ -436,7 +436,7 @@ protected:
   /**
    * Checks if the block corresponding to the given grid ID has a block
    * adjacent to it in the given block direction.
-   * NOTE: The block direction is essentially one of the 6 faces  of the
+   * NOTE: The block direction is essentially one of the 6 faces of the
    * block defined as follows:
    * <ul>
    * <li> FRONT  = 0 (+k diretion)  </li>
@@ -452,7 +452,7 @@ protected:
   /**
    * Removes a block connection along the given direction for the block
    * corresponding to the given gridID.
-   * NOTE: The block direction is essentially one of the 6 faces  of the
+   * NOTE: The block direction is essentially one of the 6 faces of the
    * block defined as follows:
    * <ul>
    * <li> FRONT  = 0 (+k diretion)  </li>
@@ -468,7 +468,7 @@ protected:
   /**
    * Adds a block connection along the given direction for the block
    * corresponding to the given gridID.
-   * NOTE: The block direction is essentially one of the 6 faces  of the
+   * NOTE: The block direction is essentially one of the 6 faces of the
    * block defined as follows:
    * <ul>
    * <li> FRONT  = 0 (+k diretion)  </li>
@@ -482,7 +482,7 @@ protected:
   void AddBlockConnection( const int gridID, const int blockDirection );
 
   /**
-   * Clears all block connections for the  block corresponding to the given
+   * Clears all block connections for the block corresponding to the given
    * grid ID.
    */
   void ClearBlockConnections( const int gridID );
@@ -596,7 +596,7 @@ protected:
   /**
    * Loops through all arrays in the source and for each array, it copies the
    * tuples from sourceIdx to the target at targetIdx. This method assumes
-   * that the source and target have a one-to-one array correspondance, that
+   * that the source and target have a one-to-one array correspondence, that
    * is array i in the source corresponds to array i in the target.
    */
   void CopyFieldData(
@@ -626,8 +626,8 @@ protected:
   std::map< std::pair< int,int >, int > NeighborPair2NeighborListIndex;
 
 private:
-  vtkStructuredGridConnectivity( const vtkStructuredGridConnectivity& ) VTK_DELETE_FUNCTION;
-  void operator=(const vtkStructuredGridConnectivity& ) VTK_DELETE_FUNCTION;
+  vtkStructuredGridConnectivity( const vtkStructuredGridConnectivity& ) = delete;
+  void operator=(const vtkStructuredGridConnectivity& ) = delete;
 };
 
 //=============================================================================
@@ -659,7 +659,7 @@ inline void vtkStructuredGridConnectivity::GetGhostedExtent(
     const int minIdx, const int maxIdx, const int N )
 {
   assert( "pre: Number of ghost layers must be N >= 1" && (N >= 1) );
-  assert( "pre: ghosted extent pointer is NULL" && ghostedExtent != NULL);
+  assert( "pre: ghosted extent pointer is nullptr" && ghostedExtent != nullptr);
 
   ghostedExtent[minIdx] = GridExtent[minIdx]-N;
   ghostedExtent[maxIdx] = GridExtent[maxIdx]+N;

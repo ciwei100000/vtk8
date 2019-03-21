@@ -53,7 +53,7 @@ class VTKINFOVISBOOSTGRAPHALGORITHMS_EXPORT vtkBoostBiconnectedComponents : publ
 public:
   static vtkBoostBiconnectedComponents *New();
   vtkTypeMacro(vtkBoostBiconnectedComponents, vtkUndirectedGraphAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -67,14 +67,14 @@ protected:
   vtkBoostBiconnectedComponents();
   ~vtkBoostBiconnectedComponents();
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
 private:
 
   char* OutputArrayName;
 
-  vtkBoostBiconnectedComponents(const vtkBoostBiconnectedComponents&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoostBiconnectedComponents&) VTK_DELETE_FUNCTION;
+  vtkBoostBiconnectedComponents(const vtkBoostBiconnectedComponents&) = delete;
+  void operator=(const vtkBoostBiconnectedComponents&) = delete;
 };
 
 #endif

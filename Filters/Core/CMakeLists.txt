@@ -15,6 +15,7 @@ set(Module_SRCS
   vtkContourFilter.cxx
   vtkContourGrid.cxx
   vtkContourHelper.cxx
+  vtkContour3DLinearGrid.cxx
   vtkDataObjectGenerator.cxx
   vtkDataObjectToDataSetFilter.cxx
   vtkDataSetEdgeSubdivisionCriterion.cxx
@@ -44,6 +45,8 @@ set(Module_SRCS
   vtkMergeDataObjectFilter.cxx
   vtkMergeFields.cxx
   vtkMergeFilter.cxx
+  vtkMoleculeAppend.cxx
+  vtkMultiObjectMassProperties.cxx
   vtkPlaneCutter.cxx
   vtkPointDataToCellData.cxx
   vtkPolyDataConnectivityFilter.cxx
@@ -52,12 +55,14 @@ set(Module_SRCS
   vtkQuadricClustering.cxx
   vtkQuadricDecimation.cxx
   vtkRearrangeFields.cxx
+  vtkRemoveDuplicatePolys.cxx
   vtkResampleToImage.cxx
   vtkResampleWithDataSet.cxx
   vtkReverseSense.cxx
   vtkSimpleElevationFilter.cxx
   vtkSmoothPolyDataFilter.cxx
   vtkSphereTreeFilter.cxx
+  vtkStaticCleanPolyData.cxx
   vtkStripper.cxx
   vtkStructuredGridOutlineFilter.cxx
   vtkSynchronizedTemplates2D.cxx
@@ -73,6 +78,7 @@ set(Module_SRCS
   vtkUnstructuredGridQuadricDecimation.cxx
   vtkVectorDot.cxx
   vtkVectorNorm.cxx
+  vtkVoronoi2D.cxx
   vtkWindowedSincPolyDataFilter.cxx
 
   vtkCutter.cxx
@@ -88,17 +94,6 @@ set(Module_SRCS
   vtkImageAppend.cxx
   vtkStructuredGridAppend.cxx
   vtkAppendCompositeDataLeaves.cxx
-  )
-
-set_source_files_properties(
-  vtkEdgeSubdivisionCriterion
-  vtkStreamerBase
-  ABSTRACT
-  )
-
-set_source_files_properties(
-  vtkContourHelper
-  WRAP_EXCLUDE
   )
 
 vtk_module_library(vtkFiltersCore ${Module_SRCS})

@@ -817,8 +817,8 @@ class vtkDistanceWidget3DCallback : public vtkCommand
 public:
   static vtkDistanceWidget3DCallback *New()
     { return new vtkDistanceWidget3DCallback; }
-  void Execute(vtkObject *caller, unsigned long, void*) VTK_OVERRIDE;
-  vtkDistanceWidget3DCallback():Renderer(0),RenderWindow(0),DistanceWidget(0),Distance(0) {}
+  void Execute(vtkObject *caller, unsigned long, void*) override;
+  vtkDistanceWidget3DCallback():Renderer(nullptr),RenderWindow(nullptr),DistanceWidget(nullptr),Distance(nullptr) {}
   vtkRenderer *Renderer;
   vtkRenderWindow *RenderWindow;
   vtkDistanceWidget *DistanceWidget;
@@ -901,7 +901,7 @@ int TestDistanceWidget3D( int argc, char *argv[] )
   VTK_CREATE(vtkRenderWindow, renWin);
   renWin->AddRenderer(ren1);
 
-  VTK_CREATE(vtkRenderWindowInteractor, iren);;
+  VTK_CREATE(vtkRenderWindowInteractor, iren);
   iren->SetRenderWindow(renWin);
 
   // Create a test pipeline

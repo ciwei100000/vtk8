@@ -42,7 +42,7 @@ class VTKINFOVISBOOSTGRAPHALGORITHMS_EXPORT vtkBoostLogWeighting : public vtkArr
 public:
   static vtkBoostLogWeighting* New();
   vtkTypeMacro(vtkBoostLogWeighting, vtkArrayDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   enum
   {
@@ -74,11 +74,11 @@ protected:
   int RequestData(
     vtkInformation*,
     vtkInformationVector**,
-    vtkInformationVector*);
+    vtkInformationVector*) override;
 
 private:
-  vtkBoostLogWeighting(const vtkBoostLogWeighting&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoostLogWeighting&) VTK_DELETE_FUNCTION;
+  vtkBoostLogWeighting(const vtkBoostLogWeighting&) = delete;
+  void operator=(const vtkBoostLogWeighting&) = delete;
 
   int Base;
   bool EmitProgress;

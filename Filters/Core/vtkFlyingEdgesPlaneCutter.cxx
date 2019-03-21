@@ -136,7 +136,7 @@ public:
   {
     this->Origin[0] = this->Origin[0] + this->Spacing[0]*this->Min0;
     this->Origin[1] = this->Origin[1] + this->Spacing[1]*this->Min1;
-    this->Origin[2] = this->Origin[2] + this->Spacing[2]*this->Min2;;
+    this->Origin[2] = this->Origin[2] + this->Spacing[2]*this->Min2;
   }
 
   // The three main passes of the algorithm.
@@ -212,7 +212,7 @@ public:
       if ( this->InterpolateAttributes )
       {
         vtkIdType v0=ijk0[0] + ijk0[1]*incs[1] + ijk0[2]*incs[2];
-        vtkIdType v1=ijk1[0] + ijk1[1]*incs[1] + ijk1[2]*incs[2];;
+        vtkIdType v1=ijk1[0] + ijk1[1]*incs[1] + ijk1[2]*incs[2];
         this->Arrays.InterpolateEdge(v0,v1,t,vId);
       }
   }
@@ -376,12 +376,12 @@ VertOffsets[8][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {1,1,0},
 // marching cubes case table. Some of this code is borrowed shamelessly from
 // vtkVoxel::Contour() method.
 template <class T> vtkFlyingEdgesPlaneCutterAlgorithm<T>::
-vtkFlyingEdgesPlaneCutterAlgorithm():XCases(NULL),EdgeMetaData(NULL),NewScalars(NULL),
-                                     NewTris(NULL),NewPoints(NULL),NewNormals(NULL)
+vtkFlyingEdgesPlaneCutterAlgorithm():XCases(nullptr),EdgeMetaData(nullptr),NewScalars(nullptr),
+                                     NewTris(nullptr),NewPoints(nullptr),NewNormals(nullptr)
 {
   int i, j, k, l, ii, eCase, index, numTris;
-  static int vertMap[8] = {0,1,3,2,4,5,7,6};
-  static int CASE_MASK[8] = {1,2,4,8,16,32,64,128};
+  static const int vertMap[8] = {0,1,3,2,4,5,7,6};
+  static const int CASE_MASK[8] = {1,2,4,8,16,32,64,128};
   EDGE_LIST *edge;
   vtkMarchingCubesTriangleCases *triCase;
   unsigned char *edgeCase;
@@ -1148,7 +1148,7 @@ vtkFlyingEdgesPlaneCutter::vtkFlyingEdgesPlaneCutter()
 //----------------------------------------------------------------------------
 vtkFlyingEdgesPlaneCutter::~vtkFlyingEdgesPlaneCutter()
 {
-  this->SetPlane(NULL);
+  this->SetPlane(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -1157,7 +1157,7 @@ vtkFlyingEdgesPlaneCutter::~vtkFlyingEdgesPlaneCutter()
 vtkMTimeType vtkFlyingEdgesPlaneCutter::GetMTime()
 {
   vtkMTimeType mTime=this->Superclass::GetMTime();
-  if ( this->Plane != NULL )
+  if ( this->Plane != nullptr )
   {
     vtkMTimeType mTime2=this->Plane->GetMTime();
     return ( mTime2 > mTime ? mTime2 : mTime );
@@ -1220,7 +1220,7 @@ int vtkFlyingEdgesPlaneCutter::RequestData(
     return 0;
   }
 
-  if ( this->Plane == NULL )
+  if ( this->Plane == nullptr )
   {
     vtkDebugMacro(<<"Cutting requires vtkPlane");
     return 0;
@@ -1228,7 +1228,7 @@ int vtkFlyingEdgesPlaneCutter::RequestData(
 
   // Check data type and execute appropriate function
   //
-  if (inScalars == NULL)
+  if (inScalars == nullptr)
   {
     vtkDebugMacro("No scalars for cutting.");
     return 0;
@@ -1247,7 +1247,7 @@ int vtkFlyingEdgesPlaneCutter::RequestData(
   vtkCellArray *newTris = vtkCellArray::New();
   vtkPoints *newPts = vtkPoints::New();
   newPts->SetDataTypeToFloat();
-  vtkFloatArray *newNormals = NULL;
+  vtkFloatArray *newNormals = nullptr;
 
   // We are interpolating scalars across the plane
   vtkDataArray *newScalars = inScalars->NewInstance();

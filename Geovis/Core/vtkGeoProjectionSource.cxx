@@ -53,7 +53,7 @@
 //  {
 //  _HEAPINFO hinfo;
 //  int heapstatus;
-//  hinfo._pentry = NULL;
+//  hinfo._pentry = nullptr;
 //  while( ( heapstatus = _heapwalk( &hinfo ) ) == _HEAPOK )
 //    {
 //    //printf( "%6s block at %Fp of size %4.4X\n", ( hinfo._useflag == _USEDENTRY ? "USED" : "FREE" ), hinfo._pentry, hinfo._size );
@@ -88,8 +88,9 @@ vtkCxxSetObjectMacro(vtkGeoProjectionSource, Transform, vtkAbstractTransform);
 //----------------------------------------------------------------------------
 vtkGeoProjectionSource::vtkGeoProjectionSource()
 {
+  VTK_LEGACY_BODY(vtkGeoProjectionSource::vtkGeoProjectionSource, "VTK 8.2");
   this->Projection=0;
-  this->Transform = 0;
+  this->Transform = nullptr;
   this->MinCellsPerNode = 20;
 
   this->TransformLock = vtkMutexLock::New();
@@ -99,7 +100,7 @@ vtkGeoProjectionSource::vtkGeoProjectionSource()
 vtkGeoProjectionSource::~vtkGeoProjectionSource()
 {
   this->TransformLock->Delete();
-  this->SetTransform(0);
+  this->SetTransform(nullptr);
 }
 
 void vtkGeoProjectionSource::PrintSelf( ostream& os, vtkIndent indent )
@@ -244,7 +245,7 @@ bool vtkGeoProjectionSource::FetchRoot(vtkGeoTreeNode* r)
 {
   this->TransformLock->Lock();
 
-  vtkGeoTerrainNode* root = 0;
+  vtkGeoTerrainNode* root = nullptr;
   if (!(root = vtkGeoTerrainNode::SafeDownCast(r)))
   {
     vtkErrorMacro(<< "Can only fetch surface nodes from this source.");
@@ -315,13 +316,13 @@ bool vtkGeoProjectionSource::FetchChild(vtkGeoTreeNode* p, int index, vtkGeoTree
 {
   this->TransformLock->Lock();
 
-  vtkGeoTerrainNode* parent = 0;
+  vtkGeoTerrainNode* parent = nullptr;
   if (!(parent = vtkGeoTerrainNode::SafeDownCast(p)))
   {
     vtkErrorMacro(<< "Can only fetch surface nodes from this source.");
     return false;
   }
-  vtkGeoTerrainNode* child = 0;
+  vtkGeoTerrainNode* child = nullptr;
   if (!(child = vtkGeoTerrainNode::SafeDownCast(c)))
   {
     vtkErrorMacro(<< "Can only fetch surface nodes from this source.");
@@ -385,8 +386,8 @@ bool vtkGeoProjectionSource::FetchChild(vtkGeoTreeNode* p, int index, vtkGeoTree
     child->SetId(id);
   }
 
-  double* latRange = 0;
-  double* lonRange = 0;
+  double* latRange = nullptr;
+  double* lonRange = nullptr;
   if (child->GetModel()->GetNumberOfPoints() > 0)
   {
     latRange = child->GetModel()->GetPointData()->GetArray("LatLong")->GetRange(0);
@@ -480,7 +481,7 @@ void vtkGeoProjectionSource::SetProjection(int projection)
   vtkSmartPointer<vtkGeoProjection> proj = vtkSmartPointer<vtkGeoProjection>::New();
   proj->SetName(vtkGeoProjection::GetProjectionName(projection));
   trans->SetDestinationProjection(proj);
-  this->SetTransform(trans.GetPointer());
+  this->SetTransform(trans);
 }
 
 //----------------------------------------------------------------------------
@@ -488,4 +489,3 @@ vtkAbstractTransform* vtkGeoProjectionSource::GetTransform()
 {
   return this->Transform;
 }
-

@@ -33,13 +33,9 @@
 
 vtkStandardNewMacro(vtkTransposeMatrix);
 
-vtkTransposeMatrix::vtkTransposeMatrix()
-{
-}
+vtkTransposeMatrix::vtkTransposeMatrix() = default;
 
-vtkTransposeMatrix::~vtkTransposeMatrix()
-{
-}
+vtkTransposeMatrix::~vtkTransposeMatrix() = default;
 
 void vtkTransposeMatrix::PrintSelf(ostream& os, vtkIndent indent)
 {
@@ -91,7 +87,7 @@ int vtkTransposeMatrix::RequestData(
   {
     vtkDenseArray<double>* const input_array2=vtkDenseArray<double>::SafeDownCast(
       input->GetArray(static_cast<vtkIdType>(0)));
-    if(input_array2!=0)
+    if(input_array2!=nullptr)
     {
       if(input_array2->GetDimensions() != 2)
       {

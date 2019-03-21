@@ -38,7 +38,7 @@ class VTKCOMMONEXECUTIONMODEL_EXPORT vtkExtentSplitter : public vtkObject
 {
 public:
   vtkTypeMacro(vtkExtentSplitter,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   static vtkExtentSplitter *New();
 
   //@{
@@ -85,7 +85,7 @@ public:
    * sub-extent should be read.  Valid after a call to
    * ComputeSubExtents.
    */
-  int* GetSubExtent(int index);
+  int* GetSubExtent(int index) VTK_SIZEHINT(6);
   void GetSubExtent(int index, int* extent);
   //@}
 
@@ -104,14 +104,14 @@ public:
    * point data are stored in a planar slice per piece with no cell
    * data.  The default is OFF.
    */
-  vtkGetMacro(PointMode, int);
-  vtkSetMacro(PointMode, int);
-  vtkBooleanMacro(PointMode, int);
+  vtkGetMacro(PointMode, vtkTypeBool);
+  vtkSetMacro(PointMode, vtkTypeBool);
+  vtkBooleanMacro(PointMode, vtkTypeBool);
   //@}
 
 protected:
   vtkExtentSplitter();
-  ~vtkExtentSplitter() VTK_OVERRIDE;
+  ~vtkExtentSplitter() override;
 
   // Internal utility methods.
   void SplitExtent(int* extent, int* subextent);
@@ -125,11 +125,11 @@ protected:
   // On if reading only all points (but not always all cells) is
   // necessary.  Used for reading volumes of planar slices storing
   // only point data.
-  int PointMode;
+  vtkTypeBool PointMode;
 
 private:
-  vtkExtentSplitter(const vtkExtentSplitter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtentSplitter&) VTK_DELETE_FUNCTION;
+  vtkExtentSplitter(const vtkExtentSplitter&) = delete;
+  void operator=(const vtkExtentSplitter&) = delete;
 };
 
 #endif

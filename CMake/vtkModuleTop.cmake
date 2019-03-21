@@ -4,9 +4,6 @@ if(BUILD_TESTING)
   if(VTK_WRAP_PYTHON)
     list(APPEND _test_languages "Python")
   endif()
-  if(VTK_WRAP_TCL)
-    list(APPEND _test_languages "Tcl")
-  endif()
   if(VTK_WRAP_JAVA)
     list(APPEND _test_languages "Java")
   endif()
@@ -175,25 +172,25 @@ endforeach()
 
 if (NOT VTK_BUILD_ALL_MODULES_FOR_TESTS)
   # If VTK_BUILD_ALL_MODULES_FOR_TESTS is OFF, it implies that we didn't add any
-  # test modules to the dependecy graph. We now add the test modules for all
-  # enabled modules iff the all the test dependecies are already satisfied
+  # test modules to the dependency graph. We now add the test modules for all
+  # enabled modules if all the test dependencies are already satisfied
   # (BUG #13297).
   foreach(vtk-module IN LISTS VTK_MODULES_ENABLED)
     foreach(test IN LISTS ${vtk-module}_TESTED_BY)
       # if all test-dependencies are satisfied, enable it.
-      set (missing_dependencis)
+      set (missing_dependencies)
       foreach(test-depends IN LISTS ${test}_DEPENDS)
         list(FIND VTK_MODULES_ENABLED ${test-depends} found)
         if (found EQUAL -1)
-          list(APPEND missing_dependencis ${test-depends})
+          list(APPEND missing_dependencies ${test-depends})
         endif()
       endforeach()
-      if (NOT missing_dependencis)
+      if (NOT missing_dependencies)
         vtk_module_enable(${test} "")
         list(APPEND VTK_MODULES_ENABLED ${test})
       else()
         message(STATUS
-        "Disable test module ${test} since required modules are not enabled: ${missing_dependencis}")
+        "Disable test module ${test} since required modules are not enabled: ${missing_dependencies}")
       endif()
     endforeach()
   endforeach()
@@ -238,6 +235,15 @@ if(VTK_ENABLE_KITS)
     endforeach()
   endforeach()
 
+  foreach (kit IN LISTS vtk_kits)
+    set_property(GLOBAL
+      PROPERTY
+        "_vtk_${kit}Kit_is_kit" TRUE)
+    set_property(GLOBAL
+      PROPERTY
+        "_vtk_${kit}Kit_kit_modules" "${_${kit}_modules}")
+  endforeach ()
+
   list(REMOVE_DUPLICATES vtk_kits)
 
   # Put all kits in the list (if they are not dependencies of any module, they
@@ -249,12 +255,12 @@ if(VTK_ENABLE_KITS)
 endif()
 
 
-# Report what will be built.
+# Record what will be built into a log file
 set(_modules_enabled_alpha "${VTK_MODULES_ENABLED}")
 list(SORT _modules_enabled_alpha)
 list(REMOVE_ITEM _modules_enabled_alpha vtkWrappingJava vtkWrappingPythonCore)
 list(LENGTH _modules_enabled_alpha _length)
-message(STATUS "Enabled ${_length} modules:")
+set(module_string "Enabled ${_length} modules:\n")
 foreach(vtk-module ${_modules_enabled_alpha})
   if(NOT ${vtk-module}_IS_TEST)
     if(Module_${vtk-module})
@@ -279,9 +285,12 @@ foreach(vtk-module ${_modules_enabled_alpha})
     else()
       set(_kit)
     endif()
-    message(STATUS " * ${vtk-module}${_kit}${_reason}")
+    string(CONCAT module_string "${module_string}" " * ${vtk-module}${_kit}${_reason}\n")
   endif()
 endforeach()
+
+set(vtk_module_log_filename "${VTK_BINARY_DIR}/CMakeFiles/VTKModules.log")
+file(WRITE ${vtk_module_log_filename} "${module_string}")
 
 # Hide options for modules that will build anyway.
 foreach(vtk-module ${VTK_MODULES_ALL})
@@ -294,7 +303,7 @@ foreach(vtk-module ${VTK_MODULES_ALL})
   endif()
 endforeach()
 
-#hide options of modules that are part of a different backend
+# Hide options of modules that are part of a different backend
 # or are required by the backend
 foreach(backend ${VTK_BACKENDS})
   foreach(module ${VTK_BACKEND_${backend}_MODULES})
@@ -353,13 +362,19 @@ macro(_vtk_build_module _module)
   add_subdirectory("${${_module}_SOURCE_DIR}" "${${_module}_BINARY_DIR}")
 endmacro()
 
+include(vtkTargetLinkLibrariesWithDynamicLookup)
+
 # Build all modules.
 foreach(kit IN LISTS vtk_modules_and_kits)
   if(_${kit}_is_kit)
     set(_vtk_build_as_kit ${kit})
     set(kit_srcs)
+    set(_optional_python_link)
     foreach(kit_module IN LISTS _${kit}_modules)
       list(APPEND kit_srcs $<TARGET_OBJECTS:${kit_module}Objects>)
+      if(${kit_module}_OPTIONAL_PYTHON_LINK)
+        set(_optional_python_link 1)
+      endif()
     endforeach()
 
     configure_file("${_VTKModuleMacros_DIR}/vtkKit.cxx.in"
@@ -388,20 +403,25 @@ foreach(kit IN LISTS vtk_modules_and_kits)
       endif()
     endforeach()
     if(kit_priv)
-      list(REMOVE_DUPLICATES kit_priv)
       list(REMOVE_ITEM kit_priv ${kit})
     endif()
     if(kit_pub)
-      list(REMOVE_DUPLICATES kit_pub)
       list(REMOVE_ITEM kit_pub ${kit})
     endif()
     target_link_libraries(${kit}
       LINK_PRIVATE ${kit_priv}
       LINK_PUBLIC  ${kit_pub})
+    if(_optional_python_link)
+      vtk_module_load(vtkPython)
+      vtk_target_link_libraries_with_dynamic_lookup(${kit} LINK_PUBLIC ${vtkPython_LIBRARIES})
+    endif()
     vtk_target(${kit})
   else()
     if(VTK_ENABLE_KITS)
       set(_vtk_build_as_kit ${${kit}_KIT})
+      if(${kit} STREQUAL "vtkRenderingOpenGL2")
+        include(vtkOpenGL)
+      endif()
     else()
       set(_vtk_build_as_kit)
     endif()
@@ -425,6 +445,12 @@ foreach(vtk-module ${VTK_MODULES_ENABLED})
     list(APPEND VTK_CONFIG_MODULES_ENABLED ${vtk-module})
   endif()
 endforeach()
+
+# construct if this build of VTK has VTK-m enabled
+set(VTK_HAS_VTKM false)
+if(TARGET vtkm_cont)
+  set(VTK_HAS_VTKM true)
+endif()
 
 # Generate VTKConfig.cmake for the build tree.
 set(VTK_CONFIG_CODE "
@@ -484,18 +510,16 @@ if (NOT VTK_INSTALL_NO_DEVELOPMENT)
                 ${VTK_BINARY_DIR}/VTKConfigVersion.cmake
                 CMake/vtkexportheader.cmake.in
                 CMake/VTKGenerateExportHeader.cmake
+                CMake/vtkInitializeBuildType.cmake
                 CMake/pythonmodules.h.in
                 CMake/UseVTK.cmake
-                CMake/FindTCL.cmake
                 CMake/TopologicalSort.cmake
-                CMake/vtkTclTkMacros.cmake
                 CMake/vtk-forward.c.in
                 CMake/vtkGroups.cmake
+                CMake/vtkEncodeString.cmake
                 CMake/vtkForwardingExecutable.cmake
+                CMake/vtkHashSource.cmake
                 CMake/vtkJavaWrapping.cmake
-                CMake/vtkMakeInstantiator.cmake
-                CMake/vtkMakeInstantiator.cxx.in
-                CMake/vtkMakeInstantiator.h.in
                 CMake/vtkModuleAPI.cmake
                 CMake/vtkModuleHeaders.cmake.in
                 CMake/vtkModuleInfo.cmake.in
@@ -508,21 +532,24 @@ if (NOT VTK_INSTALL_NO_DEVELOPMENT)
                 CMake/vtkPythonPackages.cmake
                 CMake/vtkPythonWrapping.cmake
                 CMake/vtkTargetLinkLibrariesWithDynamicLookup.cmake
-                CMake/vtkTclWrapping.cmake
                 CMake/vtkThirdParty.cmake
                 CMake/vtkWrapHierarchy.cmake
                 CMake/vtkWrapJava.cmake
                 CMake/vtkWrapperInit.data.in
                 CMake/vtkWrapping.cmake
                 CMake/vtkWrapPython.cmake
-                CMake/vtkWrapPythonSIP.cmake
-                CMake/vtkWrapPython.sip.in
-                CMake/vtkWrapTcl.cmake
 
     DESTINATION ${VTK_INSTALL_PACKAGE_DIR})
   get_property(VTK_TARGETS GLOBAL PROPERTY VTK_TARGETS)
   if(VTK_TARGETS)
     install(EXPORT ${VTK_INSTALL_EXPORT_NAME}  DESTINATION ${VTK_INSTALL_PACKAGE_DIR} FILE ${VTK_INSTALL_EXPORT_NAME}.cmake)
+    if((NOT CMAKE_VERSION VERSION_LESS 3.11) AND
+      (CMAKE_SYSTEM_NAME STREQUAL "Android"))
+      install(
+        EXPORT_ANDROID_MK ${VTK_INSTALL_EXPORT_NAME}
+        DESTINATION ${VTK_INSTALL_NDK_MODULES_DIR}
+        )
+    endif()
   else()
     set(CMAKE_CONFIGURABLE_FILE_CONTENT "# No targets!")
     configure_file(${CMAKE_ROOT}/Modules/CMakeConfigurableFile.in
@@ -530,4 +557,71 @@ if (NOT VTK_INSTALL_NO_DEVELOPMENT)
     install(FILES ${VTK_BINARY_DIR}/CMakeFiles/${VTK_INSTALL_EXPORT_NAME}.cmake
             DESTINATION ${VTK_INSTALL_PACKAGE_DIR})
   endif()
+endif()
+
+get_property(vtk_requirements GLOBAL
+  PROPERTY vtk_required_python_modules)
+if (vtk_requirements)
+  list(REMOVE_DUPLICATES vtk_requirements)
+  string(REPLACE ";" "\n" vtk_requirements "${vtk_requirements}")
+  file(WRITE "${CMAKE_BINARY_DIR}/requirements.txt"
+    "${vtk_requirements}\n")
+endif ()
+
+option(VTK_GENERATE_MODULES_JSON "Generate modules.json file for package maintenance" OFF)
+mark_as_advanced(VTK_GENERATE_MODULES_JSON)
+
+if(VTK_GENERATE_MODULES_JSON)
+  macro(_modules_json_boolean OUTPUT_VAR INPUT_VALUE)
+    if("${INPUT_VALUE}")
+      set(${OUTPUT_VAR} true)
+    else()
+      set(${OUTPUT_VAR} false)
+    endif()
+  endmacro()
+
+  macro(_modules_json_enum_strings OUTPUT_VAR)
+    set(_sep "")
+    foreach(_i ${ARGN})
+      set(${OUTPUT_VAR} "${${OUTPUT_VAR}}${_sep}\"${_i}\"\n")
+      set(_sep ",")
+    endforeach()
+  endmacro()
+
+  set(MODULES_JSON "{\"modules\":[\n")
+
+  set(MODULES_JSON_MODULE_SEPARATOR "")
+  foreach(vtk-module ${VTK_MODULES_ALL})
+    _modules_json_boolean(MODULES_JSON_IS_TEST "${${vtk-module}_IS_TEST}")
+    _modules_json_boolean(MODULES_JSON_EXCLUDE_FROM_WRAPPING "${${vtk-module}_EXCLUDE_FROM_WRAPPING}")
+    _modules_json_boolean(MODULES_JSON_ENABLED "${${vtk-module}_ENABLED}")
+
+    set(MODULES_JSON "${MODULES_JSON}${MODULES_JSON_MODULE_SEPARATOR}{\"name\":\"${vtk-module}\",
+      \"is_test\":${MODULES_JSON_IS_TEST},
+      \"exclude_from_wrapping\":${MODULES_JSON_EXCLUDE_FROM_WRAPPING},
+      \"enabled\":${MODULES_JSON_ENABLED},
+      \"depends\":[\n")
+    _modules_json_enum_strings(MODULES_JSON ${${vtk-module}_DEPENDS})
+    set(MODULES_JSON "${MODULES_JSON}],\"private_depends\":[\n")
+    _modules_json_enum_strings(MODULES_JSON ${${vtk-module}_PRIVATE_DEPENDS})
+    set(MODULES_JSON "${MODULES_JSON}],\"implements\":[\n")
+    _modules_json_enum_strings(MODULES_JSON ${${vtk-module}_IMPLEMENTS})
+    set(MODULES_JSON "${MODULES_JSON}]}\n")
+    set(MODULES_JSON_MODULE_SEPARATOR ",")
+  endforeach()
+
+  set(MODULES_JSON "${MODULES_JSON}],\"groups\":[\n")
+
+  set(MODULES_JSON_GROUP_SEPARATOR "")
+  foreach(vtk-group ${VTK_GROUPS})
+    set(MODULES_JSON "${MODULES_JSON}${MODULES_JSON_GROUP_SEPARATOR}{\"name\":\"${vtk-group}\",
+      \"modules\":[\n")
+    _modules_json_enum_strings(MODULES_JSON ${VTK_GROUP_${vtk-group}_MODULES})
+    set(MODULES_JSON "${MODULES_JSON}]}\n")
+    set(MODULES_JSON_GROUP_SEPARATOR ",")
+  endforeach()
+
+  set(MODULES_JSON "${MODULES_JSON}]}\n")
+
+  file(WRITE "${CMAKE_BINARY_DIR}/modules.json" "${MODULES_JSON}")
 endif()

@@ -68,7 +68,7 @@ class VTKFILTERSCORE_EXPORT vtkPolyDataNormals : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkPolyDataNormals,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with feature angle=30, splitting and consistency turned on,
@@ -91,18 +91,18 @@ public:
   /**
    * Turn on/off the splitting of sharp edges.
    */
-  vtkSetMacro(Splitting,int);
-  vtkGetMacro(Splitting,int);
-  vtkBooleanMacro(Splitting,int);
+  vtkSetMacro(Splitting,vtkTypeBool);
+  vtkGetMacro(Splitting,vtkTypeBool);
+  vtkBooleanMacro(Splitting,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off the enforcement of consistent polygon ordering.
    */
-  vtkSetMacro(Consistency,int);
-  vtkGetMacro(Consistency,int);
-  vtkBooleanMacro(Consistency,int);
+  vtkSetMacro(Consistency,vtkTypeBool);
+  vtkGetMacro(Consistency,vtkTypeBool);
+  vtkBooleanMacro(Consistency,vtkTypeBool);
   //@}
 
   //@{
@@ -117,27 +117,27 @@ public:
    * flag, and if both are set, all the normals in the output will
    * point "inward".
    */
-  vtkSetMacro(AutoOrientNormals, int);
-  vtkGetMacro(AutoOrientNormals, int);
-  vtkBooleanMacro(AutoOrientNormals, int);
+  vtkSetMacro(AutoOrientNormals, vtkTypeBool);
+  vtkGetMacro(AutoOrientNormals, vtkTypeBool);
+  vtkBooleanMacro(AutoOrientNormals, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off the computation of point normals.
    */
-  vtkSetMacro(ComputePointNormals,int);
-  vtkGetMacro(ComputePointNormals,int);
-  vtkBooleanMacro(ComputePointNormals,int);
+  vtkSetMacro(ComputePointNormals,vtkTypeBool);
+  vtkGetMacro(ComputePointNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputePointNormals,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off the computation of cell normals.
    */
-  vtkSetMacro(ComputeCellNormals,int);
-  vtkGetMacro(ComputeCellNormals,int);
-  vtkBooleanMacro(ComputeCellNormals,int);
+  vtkSetMacro(ComputeCellNormals,vtkTypeBool);
+  vtkGetMacro(ComputeCellNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputeCellNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -147,9 +147,9 @@ public:
    * culling in vtkProperty.  Flipping modifies both the normal
    * direction and the order of a cell's points.
    */
-  vtkSetMacro(FlipNormals,int);
-  vtkGetMacro(FlipNormals,int);
-  vtkBooleanMacro(FlipNormals,int);
+  vtkSetMacro(FlipNormals,vtkTypeBool);
+  vtkGetMacro(FlipNormals,vtkTypeBool);
+  vtkBooleanMacro(FlipNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -158,9 +158,9 @@ public:
    * problems where the consistency of polygonal ordering is corrupted due
    * to topological loops.
    */
-  vtkSetMacro(NonManifoldTraversal,int);
-  vtkGetMacro(NonManifoldTraversal,int);
-  vtkBooleanMacro(NonManifoldTraversal,int);
+  vtkSetMacro(NonManifoldTraversal,vtkTypeBool);
+  vtkGetMacro(NonManifoldTraversal,vtkTypeBool);
+  vtkBooleanMacro(NonManifoldTraversal,vtkTypeBool);
   //@}
 
   //@{
@@ -175,19 +175,19 @@ public:
 
 protected:
   vtkPolyDataNormals();
-  ~vtkPolyDataNormals() VTK_OVERRIDE {}
+  ~vtkPolyDataNormals() override {}
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double FeatureAngle;
-  int Splitting;
-  int Consistency;
-  int FlipNormals;
-  int AutoOrientNormals;
-  int NonManifoldTraversal;
-  int ComputePointNormals;
-  int ComputeCellNormals;
+  vtkTypeBool Splitting;
+  vtkTypeBool Consistency;
+  vtkTypeBool FlipNormals;
+  vtkTypeBool AutoOrientNormals;
+  vtkTypeBool NonManifoldTraversal;
+  vtkTypeBool ComputePointNormals;
+  vtkTypeBool ComputeCellNormals;
   int NumFlips;
   int OutputPointsPrecision;
 
@@ -212,8 +212,8 @@ private:
   void MarkAndSplit(vtkIdType ptId);
 
 private:
-  vtkPolyDataNormals(const vtkPolyDataNormals&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPolyDataNormals&) VTK_DELETE_FUNCTION;
+  vtkPolyDataNormals(const vtkPolyDataNormals&) = delete;
+  void operator=(const vtkPolyDataNormals&) = delete;
 };
 
 #endif

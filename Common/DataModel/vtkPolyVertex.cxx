@@ -38,9 +38,9 @@ vtkPolyVertex::~vtkPolyVertex()
 }
 
 //----------------------------------------------------------------------------
-int vtkPolyVertex::EvaluatePosition(double x[3], double* closestPoint,
+int vtkPolyVertex::EvaluatePosition(const double x[3], double closestPoint[3],
                                    int& subId, double pcoords[3],
-                                   double& minDist2, double *weights)
+                                   double& minDist2, double weights[])
 {
   int numPts=this->Points->GetNumberOfPoints();
   double X[3];
@@ -83,7 +83,7 @@ int vtkPolyVertex::EvaluatePosition(double x[3], double* closestPoint,
 
 //----------------------------------------------------------------------------
 void vtkPolyVertex::EvaluateLocation(int& subId,
-                                     double vtkNotUsed(pcoords)[3],
+                                     const double vtkNotUsed(pcoords)[3],
                                      double x[3], double *weights)
 {
   int i;
@@ -97,7 +97,7 @@ void vtkPolyVertex::EvaluateLocation(int& subId,
 }
 
 //----------------------------------------------------------------------------
-int vtkPolyVertex::CellBoundary(int subId, double pcoords[3], vtkIdList *pts)
+int vtkPolyVertex::CellBoundary(int subId, const double pcoords[3], vtkIdList *pts)
 {
   pts->SetNumberOfIds(1);
   pts->SetId(0,this->PointIds->GetId(subId));
@@ -134,7 +134,10 @@ void vtkPolyVertex::Contour(double value, vtkDataArray *cellScalars,
         outPd->CopyData(inPd,this->PointIds->GetId(i),pts[0]);
       }
       newCellId = verts->InsertNextCell(1,pts);
-      outCd->CopyData(inCd,cellId,newCellId);
+      if (outCd)
+      {
+        outCd->CopyData(inCd, cellId, newCellId);
+      }
     }
   }
 }
@@ -143,7 +146,7 @@ void vtkPolyVertex::Contour(double value, vtkDataArray *cellScalars,
 //
 // Intersect with sub-vertices
 //
-int vtkPolyVertex::IntersectWithLine(double p1[3], double p2[3],
+int vtkPolyVertex::IntersectWithLine(const double p1[3], const double p2[3],
                                     double tol, double& t, double x[3],
                                     double pcoords[3], int& subId)
 {
@@ -180,8 +183,8 @@ int vtkPolyVertex::Triangulate(int vtkNotUsed(index), vtkIdList *ptIds,
 
 //----------------------------------------------------------------------------
 void vtkPolyVertex::Derivatives(int vtkNotUsed(subId),
-                                double vtkNotUsed(pcoords)[3],
-                                double *vtkNotUsed(values),
+                                const double vtkNotUsed(pcoords)[3],
+                                const double *vtkNotUsed(values),
                                 int dim, double *derivs)
 {
   int i, idx;

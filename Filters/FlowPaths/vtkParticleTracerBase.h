@@ -105,7 +105,7 @@ public:
   };
 
   vtkTypeMacro(vtkParticleTracerBase,vtkPolyDataAlgorithm)
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   void PrintParticleHistories();
 
   //@{
@@ -140,9 +140,9 @@ public:
    * To get around problems with the Paraview Animation controls
    * we can just animate the time step and ignore the TIME_ requests
    */
-  vtkSetMacro(IgnorePipelineTime, int);
-  vtkGetMacro(IgnorePipelineTime, int);
-  vtkBooleanMacro(IgnorePipelineTime, int);
+  vtkSetMacro(IgnorePipelineTime, vtkTypeBool);
+  vtkGetMacro(IgnorePipelineTime, vtkTypeBool);
+  vtkBooleanMacro(IgnorePipelineTime, vtkTypeBool);
   //@}
 
   //@{
@@ -163,7 +163,7 @@ public:
   /**
    * Setting TerminationTime to a positive value will cause particles
    * to terminate when the time is reached. Use a vlue of zero to
-   * diable termination. The units of time should be consistent with the
+   * disable termination. The units of time should be consistent with the
    * primary time variable.
    */
   void SetTerminationTime(double t);
@@ -238,9 +238,9 @@ public:
    * Set/Get the filename to be used with the particle writer when
    * dumping particles to disk
    */
-  vtkSetMacro(EnableParticleWriting,int);
-  vtkGetMacro(EnableParticleWriting,int);
-  vtkBooleanMacro(EnableParticleWriting,int);
+  vtkSetMacro(EnableParticleWriting,vtkTypeBool);
+  vtkGetMacro(EnableParticleWriting,vtkTypeBool);
+  vtkBooleanMacro(EnableParticleWriting,vtkTypeBool);
   //@}
 
   //@{
@@ -249,9 +249,9 @@ public:
    * This is off by default and turned on in special circumstances
    * such as in a coprocessing workflow
    */
-  vtkSetMacro(DisableResetCache,int);
-  vtkGetMacro(DisableResetCache,int);
-  vtkBooleanMacro(DisableResetCache,int);
+  vtkSetMacro(DisableResetCache,vtkTypeBool);
+  vtkGetMacro(DisableResetCache,vtkTypeBool);
+  vtkBooleanMacro(DisableResetCache,vtkTypeBool);
   //@}
 
   //@{
@@ -275,24 +275,24 @@ public:
   vtkSmartPointer<vtkPointData>     ParticlePointData; //the current particle point data consistent
                                                        //with particle history
   //Everything related to time
-  int IgnorePipelineTime; //whether to use the pipeline time for termination
-  int DisableResetCache; //whether to enable ResetCache() method
+  vtkTypeBool IgnorePipelineTime; //whether to use the pipeline time for termination
+  vtkTypeBool DisableResetCache; //whether to enable ResetCache() method
   //@}
 
   vtkParticleTracerBase();
-  ~vtkParticleTracerBase() VTK_OVERRIDE;
+  ~vtkParticleTracerBase() override;
 
   //
   // Make sure the pipeline knows what type we expect as input
   //
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
 
   //
   // The usual suspects
   //
   int ProcessRequest(vtkInformation* request,
                      vtkInformationVector** inputVector,
-                     vtkInformationVector* outputVector) VTK_OVERRIDE;
+                     vtkInformationVector* outputVector) override;
 
   //
   // Store any information we need in the output and fetch what we can
@@ -300,21 +300,21 @@ public:
   //
   int RequestInformation(vtkInformation* request,
                          vtkInformationVector** inputVector,
-                         vtkInformationVector* outputVector) VTK_OVERRIDE;
+                         vtkInformationVector* outputVector) override;
 
   //
   // Compute input time steps given the output step
   //
   int RequestUpdateExtent(vtkInformation* request,
                           vtkInformationVector** inputVector,
-                          vtkInformationVector* outputVector) VTK_OVERRIDE;
+                          vtkInformationVector* outputVector) override;
 
   //
   // what the pipeline calls for each time step
   //
   int RequestData(vtkInformation* request,
                   vtkInformationVector** inputVector,
-                  vtkInformationVector* outputVector) VTK_OVERRIDE;
+                  vtkInformationVector* outputVector) override;
 
   //
   // these routines are internally called to actually generate the output
@@ -531,7 +531,7 @@ public:
   // Particle writing to disk
   vtkAbstractParticleWriter *ParticleWriter;
   char                      *ParticleFileName;
-  int                        EnableParticleWriting;
+  vtkTypeBool                        EnableParticleWriting;
 
 
   // The main lists which are held during operation- between time step updates
@@ -558,7 +558,7 @@ public:
   vtkSmartPointer<vtkCharArray>     ParticleSourceIds;
   vtkSmartPointer<vtkIntArray>      InjectedPointIds;
   vtkSmartPointer<vtkIntArray>      InjectedStepIds;
-  vtkSmartPointer<vtkIntArray>      ErrorCode;
+  vtkSmartPointer<vtkIntArray>      ErrorCodeArray;
   vtkSmartPointer<vtkFloatArray>    ParticleVorticity;
   vtkSmartPointer<vtkFloatArray>    ParticleRotation;
   vtkSmartPointer<vtkFloatArray>    ParticleAngularVel;
@@ -567,8 +567,8 @@ public:
   vtkSmartPointer<vtkDataSet>       DataReferenceT[2];
   vtkSmartPointer<vtkCellArray>     ParticleCells;
 
-  vtkParticleTracerBase(const vtkParticleTracerBase&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkParticleTracerBase&) VTK_DELETE_FUNCTION;
+  vtkParticleTracerBase(const vtkParticleTracerBase&) = delete;
+  void operator=(const vtkParticleTracerBase&) = delete;
   vtkTimeStamp ExecuteTime;
 
   unsigned int NumberOfParticles();

@@ -27,16 +27,17 @@
  * PLOT3D files consist of a grid file (also known as XYZ file), an
  * optional solution file (also known as a Q file), and an optional function
  * file that contains user created data (currently unsupported). The Q file
- * contains solution  information as follows: the four parameters free stream
+ * contains solution information as follows: the four parameters free stream
  * mach number (Fsmach), angle of attack (Alpha), Reynolds number (Re), and
  * total integration time (Time). This information is stored in an array
  * called Properties in the FieldData of each output (tuple 0: fsmach, tuple 1:
  * alpha, tuple 2: re, tuple 3: time). In addition, the solution file contains
  * the flow density (scalar), flow momentum (vector), and flow energy (scalar).
  *
- * Note that this reader does not support time series data which is usually
- * stored as a series of Q and optionally XYZ files. If you want to read such
- * a file series, use vtkPlot3DMetaReader.
+ * This reader supports a limited form of time series data which are stored
+ * as a series of Q files. Using the AddFileName() method provided by the
+ * superclass, one can define a file series. For other cases, for example where
+ * the XYZ or function files vary over time, use vtkPlot3DMetaReader.
  *
  * The reader can generate additional scalars and vectors (or "functions")
  * from this information. To use vtkMultiBlockPLOT3DReader, you must specify the
@@ -88,22 +89,70 @@
 
 #include <vector>  // For holding function-names
 #include "vtkIOParallelModule.h" // For export macro
-#include "vtkMultiBlockDataSetAlgorithm.h"
+#include "vtkParallelReader.h"
 
 class vtkDataArray;
-class vtkUnsignedCharArray;
+class vtkDataSetAttributes;
 class vtkIntArray;
-class vtkStructuredGrid;
-class vtkMultiProcessController;
 class vtkMultiBlockPLOT3DReaderRecord;
+class vtkMultiProcessController;
+class vtkStructuredGrid;
+class vtkUnsignedCharArray;
 struct vtkMultiBlockPLOT3DReaderInternals;
+class vtkMultiBlockDataSet;
 
-class VTKIOPARALLEL_EXPORT vtkMultiBlockPLOT3DReader : public vtkMultiBlockDataSetAlgorithm
+namespace Functors
 {
+  class ComputeFunctor;
+  class ComputeTemperatureFunctor;
+  class ComputePressureFunctor;
+  class ComputePressureCoefficientFunctor;
+  class ComputeMachNumberFunctor;
+  class ComputeSoundSpeedFunctor;
+  class ComputeEnthalpyFunctor;
+  class ComputeKinecticEnergyFunctor;
+  class ComputeVelocityMagnitudeFunctor;
+  class ComputeEntropyFunctor;
+  class ComputeSwirlFunctor;
+  class ComputeVelocityFunctor;
+  class ComputeVorticityMagnitudeFunctor;
+  class ComputePressureGradientFunctor;
+  class ComputeVorticityFunctor;
+  class ComputeStrainRateFunctor;
+}
+
+
+class VTKIOPARALLEL_EXPORT vtkMultiBlockPLOT3DReader : public vtkParallelReader
+{
+friend class Functors::ComputeFunctor;
+friend class Functors::ComputeTemperatureFunctor;
+friend class Functors::ComputePressureFunctor;
+friend class Functors::ComputePressureCoefficientFunctor;
+friend class Functors::ComputeMachNumberFunctor;
+friend class Functors::ComputeSoundSpeedFunctor;
+friend class Functors::ComputeEnthalpyFunctor;
+friend class Functors::ComputeKinecticEnergyFunctor;
+friend class Functors::ComputeVelocityMagnitudeFunctor;
+friend class Functors::ComputeEntropyFunctor;
+friend class Functors::ComputeSwirlFunctor;
+friend class Functors::ComputeVelocityFunctor;
+friend class Functors::ComputeVorticityMagnitudeFunctor;
+friend class Functors::ComputePressureGradientFunctor;
+friend class Functors::ComputeVorticityFunctor;
+friend class Functors::ComputeStrainRateFunctor;
 public:
   static vtkMultiBlockPLOT3DReader *New();
-  vtkTypeMacro(vtkMultiBlockPLOT3DReader,vtkMultiBlockDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  vtkTypeMacro(vtkMultiBlockPLOT3DReader,vtkParallelReader);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
+
+  //@{
+  /**
+   * Get the output data object for a port on this algorithm.
+   */
+  vtkMultiBlockDataSet* GetOutput();
+  vtkMultiBlockDataSet* GetOutput(int);
+  //@}
+
 
   //@{
   /**
@@ -111,16 +160,24 @@ public:
    */
   void SetFileName(const char* name) { this->SetXYZFileName(name); }
   const char* GetFileName() { return this->GetXYZFileName(); }
+  const char* GetFileName(int i) { return this->vtkParallelReader::GetFileName(i); }
   virtual void SetXYZFileName( const char* );
   vtkGetStringMacro(XYZFileName);
   //@}
 
   //@{
   /**
-   * Set/Get the PLOT3D solution filename.
+   * Set/Get the PLOT3D solution filename. This adds a filename
+   * using the superclass' AddFileName() method. To read a series
+   * of q files, use the AddFileName() interface directly to add
+   * multiple q filenames in the appropriate order. If the files
+   * are of Overflow format, the reader will read the time values
+   * from the files. Otherwise, it will use an integer sequence.
+   * Use a meta reader to support time values for non-Overflow file
+   * sequences.
    */
-  vtkSetStringMacro(QFileName);
-  vtkGetStringMacro(QFileName);
+  void SetQFileName(const char* name);
+  const char* GetQFileName();
   //@}
 
   //@{
@@ -142,9 +199,9 @@ public:
    * that you turn on AutoDetectFormat and leave the other file format
    * related options untouched.
    */
-  vtkSetMacro(AutoDetectFormat, int);
-  vtkGetMacro(AutoDetectFormat, int);
-  vtkBooleanMacro(AutoDetectFormat, int);
+  vtkSetMacro(AutoDetectFormat, vtkTypeBool);
+  vtkGetMacro(AutoDetectFormat, vtkTypeBool);
+  vtkBooleanMacro(AutoDetectFormat, vtkTypeBool);
   //@}
 
   //@{
@@ -152,9 +209,9 @@ public:
    * Is the file to be read written in binary format (as opposed
    * to ascii).
    */
-  vtkSetMacro(BinaryFile, int);
-  vtkGetMacro(BinaryFile, int);
-  vtkBooleanMacro(BinaryFile, int);
+  vtkSetMacro(BinaryFile, vtkTypeBool);
+  vtkGetMacro(BinaryFile, vtkTypeBool);
+  vtkBooleanMacro(BinaryFile, vtkTypeBool);
   //@}
 
   //@{
@@ -164,9 +221,9 @@ public:
    * of grids (even if there is only 1). If reading such a file,
    * set this to true.
    */
-  vtkSetMacro(MultiGrid, int);
-  vtkGetMacro(MultiGrid, int);
-  vtkBooleanMacro(MultiGrid, int);
+  vtkSetMacro(MultiGrid, vtkTypeBool);
+  vtkGetMacro(MultiGrid, vtkTypeBool);
+  vtkBooleanMacro(MultiGrid, vtkTypeBool);
   //@}
 
   //@{
@@ -175,9 +232,9 @@ public:
    * Usually, files written by a fortran program will contain these
    * byte counts whereas the ones written by C/C++ won't.
    */
-  vtkSetMacro(HasByteCount, int);
-  vtkGetMacro(HasByteCount, int);
-  vtkBooleanMacro(HasByteCount, int);
+  vtkSetMacro(HasByteCount, vtkTypeBool);
+  vtkGetMacro(HasByteCount, vtkTypeBool);
+  vtkBooleanMacro(HasByteCount, vtkTypeBool);
   //@}
 
   //@{
@@ -186,9 +243,9 @@ public:
    * If there is iblanking arrays, these will be read and assigned
    * to the PointVisibility array of the output.
    */
-  vtkSetMacro(IBlanking, int);
-  vtkGetMacro(IBlanking, int);
-  vtkBooleanMacro(IBlanking, int);
+  vtkSetMacro(IBlanking, vtkTypeBool);
+  vtkGetMacro(IBlanking, vtkTypeBool);
+  vtkBooleanMacro(IBlanking, vtkTypeBool);
   //@}
 
   //@{
@@ -196,9 +253,9 @@ public:
    * If only two-dimensional data was written to the file,
    * turn this on.
    */
-  vtkSetMacro(TwoDimensionalGeometry, int);
-  vtkGetMacro(TwoDimensionalGeometry, int);
-  vtkBooleanMacro(TwoDimensionalGeometry, int);
+  vtkSetMacro(TwoDimensionalGeometry, vtkTypeBool);
+  vtkGetMacro(TwoDimensionalGeometry, vtkTypeBool);
+  vtkBooleanMacro(TwoDimensionalGeometry, vtkTypeBool);
   //@}
 
   //@{
@@ -207,9 +264,9 @@ public:
    * This only matters for binary files.
    * Default is single.
    */
-  vtkSetMacro(DoublePrecision, int);
-  vtkGetMacro(DoublePrecision, int);
-  vtkBooleanMacro(DoublePrecision, int);
+  vtkSetMacro(DoublePrecision, vtkTypeBool);
+  vtkGetMacro(DoublePrecision, vtkTypeBool);
+  vtkBooleanMacro(DoublePrecision, vtkTypeBool);
   //@}
 
   //@{
@@ -219,9 +276,9 @@ public:
    * if the file length is not the same as calculated from the header.
    * either the file is corrupt or the settings are wrong.
    */
-  vtkSetMacro(ForceRead, int);
-  vtkGetMacro(ForceRead, int);
-  vtkBooleanMacro(ForceRead, int);
+  vtkSetMacro(ForceRead, vtkTypeBool);
+  vtkGetMacro(ForceRead, vtkTypeBool);
+  vtkBooleanMacro(ForceRead, vtkTypeBool);
   //@}
 
   //@{
@@ -253,6 +310,19 @@ public:
   vtkSetMacro(Gamma,double);
   vtkGetMacro(Gamma,double);
   //@}
+
+  //@{
+  /**
+   * When set to true (default), the reader will preserve intermediate computed
+   * quantities that were not explicitly requested e.g. if `VelocityMagnitude` is
+   * enabled, but not `Velocity`, the reader still needs to compute `Velocity`.
+   * If `PreserveIntermediateFunctions` if false, then the output will not have
+   * `Velocity` array, only the requested `VelocityMagnitude`. This is useful to
+   * avoid using up memory for arrays that are not relevant for the analysis.
+   */
+  vtkSetMacro(PreserveIntermediateFunctions, bool);
+  vtkGetMacro(PreserveIntermediateFunctions, bool);
+  vtkBooleanMacro(PreserveIntermediateFunctions, bool);
 
   //@{
   /**
@@ -306,15 +376,55 @@ public:
     FILE_LITTLE_ENDIAN=1
   };
 
+  //@{
+  /**
+  * These methods have to be overwritten from superclass
+  * because Plot3D actually uses the XYZ file to read these.
+  * This is not recognized by the superclass which returns
+  * an error when a filename (Q filename) is not set.
+  */
+  int ReadMetaData(vtkInformation* metadata) override;
+  int ReadMesh(
+    int piece, int npieces, int nghosts, int timestep,
+    vtkDataObject* output) override;
+  int ReadPoints(
+    int piece, int npieces, int nghosts, int timestep,
+    vtkDataObject* output) override;
+  int ReadArrays(
+    int piece, int npieces, int nghosts, int timestep,
+    vtkDataObject* output) override;
+  //@}
+
 protected:
   vtkMultiBlockPLOT3DReader();
-  ~vtkMultiBlockPLOT3DReader() VTK_OVERRIDE;
+  ~vtkMultiBlockPLOT3DReader() override;
+
+  //@{
+  /**
+  * Overridden from superclass to do actual reading.
+  */
+  double GetTimeValue(const std::string& fname) override;
+  int ReadMesh(const std::string& fname,
+               int piece,
+               int npieces,
+               int nghosts,
+               vtkDataObject* output) override;
+  int ReadPoints(const std::string& fname,
+                 int piece,
+                 int npieces,
+                 int nghosts,
+                 vtkDataObject* output) override;
+  int ReadArrays(const std::string& fname,
+                 int piece,
+                 int npieces,
+                 int nghosts,
+                 vtkDataObject* output) override;
+  //@}
 
   vtkDataArray* CreateFloatArray();
 
   int CheckFile(FILE*& fp, const char* fname);
   int CheckGeometryFile(FILE*& xyzFp);
-  int CheckSolutionFile(FILE*& qFp);
   int CheckFunctionFile(FILE*& fFp);
 
   int GetByteCountSize();
@@ -356,21 +466,28 @@ protected:
   void AssignAttribute(int fNumber, vtkStructuredGrid* output,
                        int attributeType);
   void MapFunction(int fNumber, vtkStructuredGrid* output);
-  void ComputeTemperature(vtkStructuredGrid* output);
-  void ComputePressure(vtkStructuredGrid* output);
-  void ComputeEnthalpy(vtkStructuredGrid* output);
-  void ComputeKineticEnergy(vtkStructuredGrid* output);
-  void ComputeVelocityMagnitude(vtkStructuredGrid* output);
-  void ComputeEntropy(vtkStructuredGrid* output);
-  void ComputeSwirl(vtkStructuredGrid* output);
-  void ComputeVelocity(vtkStructuredGrid* output);
-  void ComputeVorticity(vtkStructuredGrid* output);
-  void ComputePressureGradient(vtkStructuredGrid* output);
-  void ComputePressureCoefficient(vtkStructuredGrid* output);
-  void ComputeMachNumber(vtkStructuredGrid* output);
-  void ComputeSoundSpeed(vtkStructuredGrid* output);
-  void ComputeVorticityMagnitude(vtkStructuredGrid* output);
-  void ComputeStrainRate(vtkStructuredGrid* output);
+
+  //@{
+  /**
+   * Each of these methods compute a derived quantity. On success, the array is
+   * added to the output and a pointer to the same is returned.
+   */
+  vtkDataArray* ComputeTemperature(vtkStructuredGrid* output);
+  vtkDataArray* ComputePressure(vtkStructuredGrid* output);
+  vtkDataArray* ComputeEnthalpy(vtkStructuredGrid* output);
+  vtkDataArray* ComputeKineticEnergy(vtkStructuredGrid* output);
+  vtkDataArray* ComputeVelocityMagnitude(vtkStructuredGrid* output);
+  vtkDataArray* ComputeEntropy(vtkStructuredGrid* output);
+  vtkDataArray* ComputeSwirl(vtkStructuredGrid* output);
+  vtkDataArray* ComputeVelocity(vtkStructuredGrid* output);
+  vtkDataArray* ComputeVorticity(vtkStructuredGrid* output);
+  vtkDataArray* ComputePressureGradient(vtkStructuredGrid* output);
+  vtkDataArray* ComputePressureCoefficient(vtkStructuredGrid* output);
+  vtkDataArray* ComputeMachNumber(vtkStructuredGrid* output);
+  vtkDataArray* ComputeSoundSpeed(vtkStructuredGrid* output);
+  vtkDataArray* ComputeVorticityMagnitude(vtkStructuredGrid* output);
+  vtkDataArray* ComputeStrainRate(vtkStructuredGrid* output);
+  //@}
 
   // Returns a vtkFloatArray or a vtkDoubleArray depending
   // on DoublePrecision setting
@@ -388,15 +505,15 @@ protected:
   char *QFileName;
   char *FunctionFileName;
 
-  int BinaryFile;
-  int HasByteCount;
-  int TwoDimensionalGeometry;
-  int MultiGrid;
-  int ForceRead;
+  vtkTypeBool BinaryFile;
+  vtkTypeBool HasByteCount;
+  vtkTypeBool TwoDimensionalGeometry;
+  vtkTypeBool MultiGrid;
+  vtkTypeBool ForceRead;
   int ByteOrder;
-  int IBlanking;
-  int DoublePrecision;
-  int AutoDetectFormat;
+  vtkTypeBool IBlanking;
+  vtkTypeBool DoublePrecision;
+  vtkTypeBool AutoDetectFormat;
 
   int ExecutedGhostLevels;
 
@@ -406,9 +523,8 @@ protected:
   double R;
   double Gamma;
   double GammaInf;
-  double Uvinf;
-  double Vvinf;
-  double Wvinf;
+
+  bool PreserveIntermediateFunctions;
 
   //named functions from meta data
   std::vector<std::string> FunctionNames;
@@ -419,22 +535,23 @@ protected:
   int ScalarFunctionNumber;
   int VectorFunctionNumber;
 
-  int FillOutputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
-
-  int RequestData(vtkInformation*,
-                          vtkInformationVector**,
-                          vtkInformationVector*) VTK_OVERRIDE;
-  int RequestInformation(vtkInformation*,
-                                 vtkInformationVector**,
-                                 vtkInformationVector*) VTK_OVERRIDE;
+  int FillOutputPortInformation(int port, vtkInformation* info) override;
 
   vtkMultiBlockPLOT3DReaderInternals* Internal;
 
   vtkMultiProcessController *Controller;
 
 private:
-  vtkMultiBlockPLOT3DReader(const vtkMultiBlockPLOT3DReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMultiBlockPLOT3DReader&) VTK_DELETE_FUNCTION;
+  vtkMultiBlockPLOT3DReader(const vtkMultiBlockPLOT3DReader&) = delete;
+  void operator=(const vtkMultiBlockPLOT3DReader&) = delete;
+
+  // Key used to flag intermediate results.
+  static vtkInformationIntegerKey* INTERMEDIATE_RESULT();
+
+  /**
+   * Remove intermediate results
+   */
+  void RemoveIntermediateFunctions(vtkDataSetAttributes* dsa);
 };
 
 #endif

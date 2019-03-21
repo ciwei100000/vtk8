@@ -27,6 +27,7 @@
 #include "vtkPolyDataMapper.h"
 #include "vtkShader.h" // for methods
 #include "vtkOpenGLHelper.h" // used for ivars
+#include "vtkStateStorage.h" // used for ivars
 
 #include <vector> //for ivars
 #include <map> //for methods
@@ -41,6 +42,7 @@ class vtkOpenGLBufferObject;
 class vtkOpenGLVertexBufferObject;
 class vtkOpenGLVertexBufferObjectGroup;
 class vtkPoints;
+class vtkTexture;
 class vtkTextureObject;
 class vtkTransform;
 
@@ -50,12 +52,12 @@ class VTKRENDERINGOPENGL2_EXPORT vtkOpenGLPolyDataMapper : public vtkPolyDataMap
 public:
   static vtkOpenGLPolyDataMapper* New();
   vtkTypeMacro(vtkOpenGLPolyDataMapper, vtkPolyDataMapper)
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Implemented by sub classes. Actual rendering is done here.
    */
-  void RenderPiece(vtkRenderer *ren, vtkActor *act) VTK_OVERRIDE;
+  void RenderPiece(vtkRenderer *ren, vtkActor *act) override;
 
   //@{
   /**
@@ -71,7 +73,7 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   vtkGetMacro(PopulateSelectionSettings,int);
   void SetPopulateSelectionSettings(int v) { this->PopulateSelectionSettings = v; };
@@ -82,7 +84,7 @@ public:
    * Used by vtkHardwareSelector to determine if the prop supports hardware
    * selection.
    */
-  bool GetSupportsSelection() VTK_OVERRIDE { return true; }
+  bool GetSupportsSelection() override { return true; }
 
   /**
    * Returns if the mapper does not expect to have translucent geometry. This
@@ -94,7 +96,7 @@ public:
    * Overridden to use the actual data and ScalarMode to determine if we have
    * opaque geometry.
    */
-  bool GetIsOpaque() VTK_OVERRIDE;
+  bool GetIsOpaque() override;
 
   // used by RenderPiece and functions it calls to reduce
   // calls to get the input and allow for rendering of
@@ -157,6 +159,8 @@ public:
     vtkShader::Type shaderType, // vertex, fragment, etc
     const std::string& originalValue,
     bool replaceFirst);
+  void ClearAllShaderReplacements(vtkShader::Type shaderType);
+  void ClearAllShaderReplacements();
   //@}
 
   //@{
@@ -176,8 +180,8 @@ public:
 
   // the following is all extra stuff to work around the
   // fact that gl_PrimitiveID does not work correctly on
-  // Apple devices with AMD graphics hardware. See apple
-  // bug ID 20747550
+  // Apple Macs with AMD graphics hardware (before macOS 10.11).
+  // See <rdar://20747550>.
   static vtkPolyData *HandleAppleBug(
     vtkPolyData *poly,
     std::vector<float> &buffData);
@@ -185,7 +189,7 @@ public:
   /**
    * Make a shallow copy of this mapper.
    */
-  void ShallowCopy(vtkAbstractMapper *m);
+  void ShallowCopy(vtkAbstractMapper *m) override;
 
   //@{
   /**
@@ -228,25 +232,86 @@ public:
     PrimitiveEnd
   };
 
+  void UpdateCellMaps(
+    bool HaveAppleBug,
+    vtkPolyData *poly,
+    vtkCellArray **prims, int representation,
+    vtkPoints *points);
+
   /**
    * Get access to the map of glprim to vtkcell ids
    */
-  static void MakeCellCellMap(std::vector<vtkIdType> &CellCellMap,
-                              bool HaveAppleBug,
-                              vtkPolyData *poly,
-                              vtkCellArray **prims, int representation,
-                              vtkPoints *points);
+  static void MakeCellCellMap(
+    std::vector<vtkIdType> &cellCellMap,
+    bool HaveAppleBug,
+    vtkPolyData *poly,
+    vtkCellArray **prims, int representation,
+    vtkPoints *points);
+
+  /**
+   * Select a data array from the point/cell data
+   * and map it to a generic vertex attribute.
+   * vertexAttributeName is the name of the vertex attribute.
+   * dataArrayName is the name of the data array.
+   * fieldAssociation indicates when the data array is a point data array or
+   * cell data array (vtkDataObject::FIELD_ASSOCIATION_POINTS or
+   * (vtkDataObject::FIELD_ASSOCIATION_CELLS).
+   * componentno indicates which component from the data array must be passed as
+   * the attribute. If -1, then all components are passed.
+   */
+  void MapDataArrayToVertexAttribute(
+    const char* vertexAttributeName,
+    const char* dataArrayName,
+    int fieldAssociation,
+    int componentno = -1) override;
+
+  // This method will Map the specified data array for use as
+  // a texture coordinate for texture tname. The actual
+  // attribute will be named tname_coord so as to not
+  // conflict with the texture sampler definition which will
+  // be tname.
+  void MapDataArrayToMultiTextureAttribute(
+    const char *tname,
+    const char* dataArrayName, int fieldAssociation, int componentno = -1) override;
+
+  /**
+   * Remove a vertex attribute mapping.
+   */
+  void RemoveVertexAttributeMapping(const char* vertexAttributeName) override;
+
+  /**
+   * Remove all vertex attributes.
+   */
+  void RemoveAllVertexAttributeMappings() override;
+
+  /**
+   * allows a mapper to update a selections color buffers
+   * Called from a prop which in turn is called from the selector
+   */
+  void ProcessSelectorPixelBuffers(vtkHardwareSelector *sel,
+    std::vector<unsigned int> &pixeloffsets,
+    vtkProp *prop) override;
 
 protected:
   vtkOpenGLPolyDataMapper();
-  ~vtkOpenGLPolyDataMapper() VTK_OVERRIDE;
+  ~vtkOpenGLPolyDataMapper() override;
 
   vtkGenericOpenGLResourceFreeCallback *ResourceCallback;
 
+  void MapDataArray(
+    const char* vertexAttributeName,
+    const char* dataArrayName,
+    const char *texturename,
+    int fieldAssociation,
+    int componentno);
+
+  // what coordinate should be used for this texture
+  std::string GetTextureCoordinateName(const char *tname);
+
   // the following is all extra stuff to work around the
   // fact that gl_PrimitiveID does not work correctly on
-  // Apple devices with AMD graphics hardware. See apple
-  // bug ID 20747550
+  // Apple Macs with AMD graphics hardware (before macOS 10.11).
+  // See <rdar://20747550>.
   bool HaveAppleBug;
   int HaveAppleBugForce; // 0 = default 1 = 0ff 2 = on
   std::vector<float> AppleBugPrimIDs;
@@ -263,7 +328,7 @@ protected:
    * to be updated depending on whether this->Static is set or not. This method
    * simply obtains the bounds from the data-object and returns it.
    */
-  void ComputeBounds() VTK_OVERRIDE;
+  void ComputeBounds() override;
 
   /**
    * Make sure appropriate shaders are defined, compiled and bound.  This method
@@ -293,7 +358,7 @@ protected:
     vtkRenderer *ren, vtkActor *act);
 
   /**
-   * Perform string replacments on the shader templates
+   * Perform string replacements on the shader templates
    */
   virtual void ReplaceShaderValues(
     std::map<vtkShader::Type, vtkShader *> shaders,
@@ -301,7 +366,7 @@ protected:
 
   //@{
   /**
-   * Perform string replacments on the shader templates, called from
+   * Perform string replacements on the shader templates, called from
    * ReplaceShaderValues
    */
   virtual void ReplaceShaderRenderPass(
@@ -400,8 +465,8 @@ protected:
   // the order is always
   //  ColorInternalTexture
   //  Actors texture
-  //  Properies textures
-  virtual std::vector<vtkTexture *> GetTextures(vtkActor *actor);
+  //  Properties textures
+  virtual std::vector<std::pair<vtkTexture *, std::string> > GetTextures(vtkActor *actor);
 
   // do we have textures coordinates that require special handling
   virtual bool HaveTCoords(vtkPolyData *poly);
@@ -425,9 +490,10 @@ protected:
 
   bool UsingScalarColoring;
   vtkTimeStamp VBOBuildTime; // When was the OpenGL VBO updated?
-  std::string VBOBuildString; // used for determining whento rebuild the VBO
-  std::string IBOBuildString; // used for determining whento rebuild the IBOs
-  std::string CellTextureBuildString;
+  vtkStateStorage VBOBuildState; // used for determining when to rebuild the VBO
+  vtkStateStorage IBOBuildState; // used for determining whento rebuild the IBOs
+  vtkStateStorage CellTextureBuildState;
+  vtkStateStorage TempState; // can be used to avoid constant allocs/deallocs
   vtkOpenGLTexture* InternalColorTexture;
 
   int PopulateSelectionSettings;
@@ -442,10 +508,10 @@ protected:
   // if set to true, tcoords will be passed to the
   // VBO even if the mapper knows of no texture maps
   // normally tcoords are only added to the VBO if the
-  // mapper has indentified a texture map as well.
+  // mapper has identified a texture map as well.
   bool ForceTextureCoordinates;
 
-  void BuildCellTextures(
+  virtual void BuildCellTextures(
     vtkRenderer *ren,
     vtkActor *,
     vtkCellArray *prims[4],
@@ -460,7 +526,6 @@ protected:
     std::vector<float> &normals,
     vtkPolyData *pd);
 
-  bool HavePickScalars;
   vtkTextureObject *CellScalarTexture;
   vtkOpenGLBufferObject *CellScalarBuffer;
   bool HaveCellScalars;
@@ -468,39 +533,24 @@ protected:
   vtkOpenGLBufferObject *CellNormalBuffer;
   bool HaveCellNormals;
 
-  // aditional picking indirection
+  // additional picking indirection
   char* PointIdArrayName;
   char* CellIdArrayName;
   char* ProcessIdArrayName;
   char* CompositeIdArrayName;
 
-  class ReplacementSpec
-  {
-    public:
-      std::string OriginalValue;
-      vtkShader::Type ShaderType;
-      bool ReplaceFirst;
-      bool operator<(const ReplacementSpec &v1) const
-      {
-        if (this->OriginalValue != v1.OriginalValue) { return this->OriginalValue < v1.OriginalValue; }
-        if (this->ShaderType != v1.ShaderType) { return this->ShaderType < v1.ShaderType; }
-        return (this->ReplaceFirst < v1.ReplaceFirst);
-      }
-      bool operator>(const ReplacementSpec &v1) const
-      {
-        if (this->OriginalValue != v1.OriginalValue) { return this->OriginalValue > v1.OriginalValue; }
-        if (this->ShaderType != v1.ShaderType) { return this->ShaderType > v1.ShaderType; }
-        return (this->ReplaceFirst > v1.ReplaceFirst);
-      }
-  };
-  class ReplacementValue
-  {
-    public:
-      std::string Replacement;
-      bool ReplaceAll;
-  };
+  std::map<const vtkShader::ReplacementSpec, vtkShader::ReplacementValue>
+    UserShaderReplacements;
 
-  std::map<const ReplacementSpec,ReplacementValue> UserShaderReplacements;
+  class ExtraAttributeValue
+  {
+    public:
+      std::string DataArrayName;
+      int FieldAssociation;
+      int ComponentNumber;
+      std::string TextureName;
+  };
+  std::map<std::string,ExtraAttributeValue> ExtraAttributes;
 
   char *VertexShaderCode;
   char *FragmentShaderCode;
@@ -512,19 +562,27 @@ protected:
   bool DrawingTubes(vtkOpenGLHelper &cellBO, vtkActor *actor);
   bool DrawingTubesOrSpheres(vtkOpenGLHelper &cellBO, vtkActor *actor);
 
-  // get why opengl mode to use to draw the primitive
+  // get which opengl mode to use to draw the primitive
   int GetOpenGLMode(int representation, int primType);
 
   // get how big to make the points when doing point picking
   // typically 2 for points, 4 for lines, 6 for surface
   int GetPointPickingPrimitiveSize(int primType);
 
-  // a map from drawn triangles back to containing cell id
-  std::vector<unsigned int> CellCellMap;
+  // used to occasionally invoke timers
+  unsigned int TimerQueryCounter;
+
+  // stores the mapping from vtk cells to gl_PrimitiveId
+  std::vector<vtkIdType> CellCellMap;
+  std::vector<vtkIdType> PointCellMap;
+  std::string CellMapsBuildString;
+
+  // compute and set the maximum point and cell ID used in selection
+  virtual void UpdateMaximumPointCellIds(vtkRenderer* ren, vtkActor *actor);
 
 private:
-  vtkOpenGLPolyDataMapper(const vtkOpenGLPolyDataMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLPolyDataMapper&) VTK_DELETE_FUNCTION;
+  vtkOpenGLPolyDataMapper(const vtkOpenGLPolyDataMapper&) = delete;
+  void operator=(const vtkOpenGLPolyDataMapper&) = delete;
 };
 
 #endif

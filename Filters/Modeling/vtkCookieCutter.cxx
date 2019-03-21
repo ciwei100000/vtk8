@@ -378,14 +378,12 @@ namespace {
 
     // Update the sorted points array, now clean!
     sortedPoints = newSortedPoints;
-
-    return;
   }
 
   // Classify polyline segments----------------------------------------------
   // Entering this function the points are classified as either VERTEX,
   // INTERSECTION, MULT_INTS, or ON. Combine this information to classify each
-  // segment of the polyline. Note that whenever possible a pervious segment
+  // segment of the polyline. Note that whenever possible a previous segment
   // classification is propagated to the next segment to avoid extra in/out tests.
   int ClassifyPolyline(SortedPointsType &sortedPoints, vtkIdType npts, double *p,
                        double bds[6], double n[3])
@@ -449,7 +447,7 @@ namespace {
   // Classify polygon segments----------------------------------------------
   // Entering this function the points are classified as either VERTEX,
   // INTERSECTION, MULT_INTS, or ON. Combine this information to classify each
-  // segment of the polygon. Note that whenever possible a pervious segment
+  // segment of the polygon. Note that whenever possible a previous segment
   // classification is propagated to the next segment to avoid extra in/out tests.
   // This deals with closed, modulo processing. Return a non-zero value if the
   // loop is complex, i.e., has a "ON" segment classification.
@@ -876,14 +874,14 @@ namespace {
 
     // Insert "INSIDE" or "ON" edge segments into polydata (polylines) and
     // build adjacency information. We are using vtkPolyData because it does
-    // everythig we want, although there is a lot of allocation / deallocation
+    // everything we want, although there is a lot of allocation / deallocation
     // going on which is a potential area of speed improvement.
     vtkNew<vtkPoints> pDataPts;
     pDataPts->SetNumberOfPoints(numPts);
     vtkNew<vtkCellArray> pDataLines;
     vtkNew<vtkPolyData> pData;
-    pData->SetPoints(pDataPts.GetPointer());
-    pData->SetLines(pDataLines.GetPointer());
+    pData->SetPoints(pDataPts);
+    pData->SetLines(pDataLines);
 
     SortedPointsType *loops[2];
     loops[0] = &polyPoints;
@@ -923,7 +921,7 @@ namespace {
     // Check the topology of the edges and ensure that it is valid.  If there
     // are "ON" classifications, may need to remove potential non-manifold
     // edges. Bail out if can't fix any problems.
-    if ( ! ResolveTopology(pData.GetPointer()) )
+    if ( ! ResolveTopology(pData) )
     {
       return;
     }
@@ -974,9 +972,7 @@ vtkCookieCutter::vtkCookieCutter()
 }
 
 //----------------------------------------------------------------------------
-vtkCookieCutter::~vtkCookieCutter()
-{
-}
+vtkCookieCutter::~vtkCookieCutter() = default;
 
 //----------------------------------------------------------------------------
 void vtkCookieCutter::SetLoopsConnection(vtkAlgorithmOutput* algOutput)
@@ -1001,7 +997,7 @@ vtkDataObject *vtkCookieCutter::GetLoops()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return NULL;
+    return nullptr;
   }
 
   return this->GetExecutive()->GetInputData(1, 0);

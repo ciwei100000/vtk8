@@ -31,13 +31,13 @@ vtkLinearSelector::vtkLinearSelector()
   this->Tolerance = 0.;
   this->IncludeVertices = true;
   this->VertexEliminationTolerance = 1.e-6;
-  this->Points = 0;
+  this->Points = nullptr;
 }
 
 // ----------------------------------------------------------------------
 vtkLinearSelector::~vtkLinearSelector()
 {
-  this->SetPoints( 0 );
+  this->SetPoints( nullptr );
 }
 
 // ----------------------------------------------------------------------
@@ -109,7 +109,7 @@ int vtkLinearSelector::RequestData( vtkInformation* vtkNotUsed( request ),
   vtkInformation *inInfo = inputVector[0]->GetInformationObject( 0 );
   vtkInformation *outInfo = outputVector->GetInformationObject( 0 );
 
-  // Get input and ouptut
+  // Get input and output
   vtkCompositeDataSet *compositeInput
     = vtkCompositeDataSet::SafeDownCast( inInfo->Get( vtkDataObject::DATA_OBJECT() ) );
 

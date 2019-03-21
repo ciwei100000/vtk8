@@ -176,8 +176,6 @@ void vtkCompositePolyDataMapper::Render(vtkRenderer *ren, vtkActor *a)
       this->GetUseLookupTableScalarRange());
     this->Internal->Mappers[i]->SetScalarRange(
       this->GetScalarRange());
-    this->Internal->Mappers[i]->SetImmediateModeRendering(
-      this->GetImmediateModeRendering());
     this->Internal->Mappers[i]->SetColorMode(this->GetColorMode());
     this->Internal->Mappers[i]->SetInterpolateScalarsBeforeMapping(
       this->GetInterpolateScalarsBeforeMapping());
@@ -312,5 +310,8 @@ void vtkCompositePolyDataMapper::PrintSelf(ostream& os, vtkIndent indent)
 
 vtkPolyDataMapper *vtkCompositePolyDataMapper::MakeAMapper()
 {
-  return vtkPolyDataMapper::New();
+  vtkPolyDataMapper* m = vtkPolyDataMapper::New();
+  // Copy our vtkMapper properties to the delegate
+  m->vtkMapper::ShallowCopy( this );
+  return m;
 }

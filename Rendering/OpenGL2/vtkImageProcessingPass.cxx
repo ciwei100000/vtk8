@@ -13,8 +13,6 @@
 
 =========================================================================*/
 
-#include "vtk_glew.h"
-
 #include "vtkImageProcessingPass.h"
 #include "vtkObjectFactory.h"
 #include <cassert>
@@ -23,6 +21,8 @@
 #include "vtkOpenGLFramebufferObject.h"
 #include "vtkTextureObject.h"
 #include "vtkOpenGLRenderWindow.h"
+#include "vtkOpenGLState.h"
+#include "vtk_glew.h"
 
 // to be able to dump intermediate passes into png files for debugging.
 // only for vtkImageProcessingPass developers.
@@ -38,13 +38,13 @@ vtkCxxSetObjectMacro(vtkImageProcessingPass,DelegatePass,vtkRenderPass);
 // ----------------------------------------------------------------------------
 vtkImageProcessingPass::vtkImageProcessingPass()
 {
-  this->DelegatePass=0;
+  this->DelegatePass=nullptr;
 }
 
 // ----------------------------------------------------------------------------
 vtkImageProcessingPass::~vtkImageProcessingPass()
 {
-  if(this->DelegatePass!=0)
+  if(this->DelegatePass!=nullptr)
   {
       this->DelegatePass->Delete();
   }
@@ -56,7 +56,7 @@ void vtkImageProcessingPass::PrintSelf(ostream& os, vtkIndent indent)
   this->Superclass::PrintSelf(os,indent);
 
   os << indent << "DelegatePass:";
-  if(this->DelegatePass!=0)
+  if(this->DelegatePass!=nullptr)
   {
     this->DelegatePass->PrintSelf(os,indent);
   }
@@ -82,11 +82,11 @@ void vtkImageProcessingPass::RenderDelegate(const vtkRenderState *s,
                                             vtkOpenGLFramebufferObject *fbo,
                                             vtkTextureObject *target)
 {
-  assert("pre: s_exists" && s!=0);
-  assert("pre: fbo_exists" && fbo!=0);
-  assert("pre: fbo_has_context" && fbo->GetContext()!=0);
-  assert("pre: target_exists" && target!=0);
-  assert("pre: target_has_context" && target->GetContext()!=0);
+  assert("pre: s_exists" && s!=nullptr);
+  assert("pre: fbo_exists" && fbo!=nullptr);
+  assert("pre: fbo_has_context" && fbo->GetContext()!=nullptr);
+  assert("pre: target_exists" && target!=nullptr);
+  assert("pre: target_has_context" && target->GetContext()!=nullptr);
 
 #ifdef VTK_IMAGE_PROCESSING_PASS_DEBUG
   cout << "width=" << width << endl;
@@ -104,6 +104,8 @@ void vtkImageProcessingPass::RenderDelegate(const vtkRenderState *s,
   savedCamera->Register(this);
   vtkCamera *newCamera=vtkCamera::New();
   newCamera->DeepCopy(savedCamera);
+
+  vtkOpenGLState *ostate = static_cast<vtkOpenGLRenderWindow *>(r->GetVTKWindow())->GetState();
 
 #ifdef VTK_IMAGE_PROCESSING_PASS_DEBUG
   cout << "old camera params=";
@@ -165,11 +167,11 @@ void vtkImageProcessingPass::RenderDelegate(const vtkRenderState *s,
 
   fbo->AddDepthAttachment(fbo->GetBothMode());
   fbo->StartNonOrtho(newWidth,newHeight);
-  glViewport(0, 0, newWidth, newHeight);
-  glScissor(0, 0, newWidth, newHeight);
+  ostate->vtkglViewport(0, 0, newWidth, newHeight);
+  ostate->vtkglScissor(0, 0, newWidth, newHeight);
 
   // 2. Delegate render in FBO
-  glEnable(GL_DEPTH_TEST);
+  ostate->vtkglEnable(GL_DEPTH_TEST);
   this->DelegatePass->Render(&s2);
   this->NumberOfRenderedProps+=
     this->DelegatePass->GetNumberOfRenderedProps();
@@ -224,8 +226,8 @@ void vtkImageProcessingPass::RenderDelegate(const vtkRenderState *s,
 // \pre w_exists: w!=0
 void vtkImageProcessingPass::ReleaseGraphicsResources(vtkWindow *w)
 {
-  assert("pre: w_exists" && w!=0);
-  if(this->DelegatePass!=0)
+  assert("pre: w_exists" && w!=nullptr);
+  if(this->DelegatePass!=nullptr)
   {
     this->DelegatePass->ReleaseGraphicsResources(w);
   }

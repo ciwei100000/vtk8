@@ -27,7 +27,7 @@ vtkStandardNewMacro(vtkHull);
 // Construct an the hull object with no planes
 vtkHull::vtkHull()
 {
-  this->Planes             = NULL;
+  this->Planes             = nullptr;
   this->PlanesStorageSize  = 0;
   this->NumberOfPlanes     = 0;
 }
@@ -36,14 +36,14 @@ vtkHull::vtkHull()
 vtkHull::~vtkHull()
 {
   delete [] this->Planes;
-  this->Planes = NULL;
+  this->Planes = nullptr;
 }
 
 // Remove all planes.
 void vtkHull::RemoveAllPlanes()
 {
   delete [] this->Planes;
-  this->Planes = NULL;
+  this->Planes = nullptr;
 
   this->PlanesStorageSize  = 0;
   this->NumberOfPlanes     = 0;
@@ -146,7 +146,7 @@ int vtkHull::AddPlane( double plane[3] )
 }
 
 // Set a specific plane - this plane should already have been added with
-// AddPlane, and the return value then used to modifiy the plane normal
+// AddPlane, and the return value then used to modify the plane normal
 // with this method.
 void vtkHull::SetPlane( int i, double A, double B, double C )
 {
@@ -278,8 +278,6 @@ void  vtkHull::SetPlanes( vtkPlanes *planes )
       }//for all planes
     }//if points and normals
   }//if planes defined
-
-  return;
 }
 
 // Add the six planes that represent the faces on a cube
@@ -577,7 +575,7 @@ void vtkHull::ClipPolygonsFromPlanes( vtkPoints *outPoints,
   int            i, j, k, q;
   double         previousD, d, crosspoint;
   double         *verts, *newVerts, *tmpVerts;
-  int            vertCount, newVertCount;
+  int            vertCount, newVertCount, oldSize;
   vtkIdType      *pnts;
 
   // Use two arrays to store the vertices of the polygon
@@ -585,7 +583,8 @@ void vtkHull::ClipPolygonsFromPlanes( vtkPoints *outPoints,
   newVerts = new double[3*(this->NumberOfPlanes+1)];
 
   // We need an array to store the indices for the polygon
-  pnts = new vtkIdType[this->NumberOfPlanes-1];
+  oldSize = this->NumberOfPlanes-1;
+  pnts = static_cast<vtkIdType*>(malloc(sizeof(vtkIdType) * oldSize));
 
   // We have no vertices yet
   //vertCount = 0;
@@ -673,6 +672,16 @@ void vtkHull::ClipPolygonsFromPlanes( vtkPoints *outPoints,
 
     if ( vertCount > 0 )
     {
+      if ( vertCount > oldSize )
+      {
+        vtkIdType *tmpPointer = static_cast<vtkIdType*>(realloc(pnts, vertCount * sizeof(vtkIdType)));
+        if (tmpPointer == nullptr)
+        {
+          vtkErrorMacro( << "Unable to allocate space for PointIds" );
+        }
+        pnts = tmpPointer;
+        oldSize = vertCount;
+      }
       for ( j = 0; j < vertCount; j++ )
       {
         pnts[j] = outPoints->InsertNextPoint( (verts + j*3) );
@@ -683,7 +692,7 @@ void vtkHull::ClipPolygonsFromPlanes( vtkPoints *outPoints,
 
   delete [] verts;
   delete [] newVerts;
-  delete [] pnts;
+  free(pnts);
 }
 
 void vtkHull::CreateInitialPolygon( double *verts, int i, const double *bounds)

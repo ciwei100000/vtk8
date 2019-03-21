@@ -34,6 +34,9 @@
  * AddArray will be processed. If instead UseFieldTypes
  * is turned on, you explicitly set which field types to process with AddFieldType.
  *
+ * By default, ghost arrays will be passed unless RemoveArrays is selected
+ * and those arrays are specifically chosen to be removed.
+ *
  * Example 1:
  *
  * <pre>
@@ -68,7 +71,7 @@ class VTKFILTERSGENERAL_EXPORT vtkPassArrays : public vtkDataObjectAlgorithm
 public:
   static vtkPassArrays* New();
   vtkTypeMacro(vtkPassArrays,vtkDataObjectAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Adds an array to pass through.
@@ -138,29 +141,29 @@ public:
    */
   int ProcessRequest(vtkInformation* request,
                      vtkInformationVector** inputVector,
-                     vtkInformationVector* outputVector) VTK_OVERRIDE;
+                     vtkInformationVector* outputVector) override;
 
 protected:
   vtkPassArrays();
-  ~vtkPassArrays() VTK_OVERRIDE;
+  ~vtkPassArrays() override;
 
   /**
    * Override to limit types of supported input types to non-composite
    * datasets
    */
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
 
   /**
    * Creates the same output type as the input type.
    */
   int RequestDataObject(vtkInformation* request,
                         vtkInformationVector** inputVector,
-                        vtkInformationVector* outputVector) VTK_OVERRIDE;
+                        vtkInformationVector* outputVector) override;
 
   int RequestData(
     vtkInformation*,
     vtkInformationVector**,
-    vtkInformationVector*) VTK_OVERRIDE;
+    vtkInformationVector*) override;
 
   bool RemoveArrays;
   bool UseFieldTypes;
@@ -169,8 +172,8 @@ protected:
   Internals* Implementation;
 
 private:
-  vtkPassArrays(const vtkPassArrays&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPassArrays&) VTK_DELETE_FUNCTION;
+  vtkPassArrays(const vtkPassArrays&) = delete;
+  void operator=(const vtkPassArrays&) = delete;
 };
 
 #endif

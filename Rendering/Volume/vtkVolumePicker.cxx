@@ -30,9 +30,7 @@ vtkVolumePicker::vtkVolumePicker()
 }
 
 //----------------------------------------------------------------------------
-vtkVolumePicker::~vtkVolumePicker()
-{
-}
+vtkVolumePicker::~vtkVolumePicker() = default;
 
 //----------------------------------------------------------------------------
 void vtkVolumePicker::PrintSelf(ostream& os, vtkIndent indent)
@@ -68,7 +66,7 @@ double vtkVolumePicker::IntersectVolumeWithLine(const double p1[3],
   vtkImageData *data = vtkImageData::SafeDownCast(mapper->GetDataSetInput());
   vtkVolumeMapper *vmapper = vtkVolumeMapper::SafeDownCast(mapper);
 
-  if (data == 0)
+  if (data == nullptr)
   {
     // This picker only works with image inputs
     return VTK_DOUBLE_MAX;
@@ -306,7 +304,7 @@ int vtkVolumePicker::ClipLineWithCroppingRegion(
   for (;;)
   {
     if (!vtkBox::IntersectWithLine(blockBounds, x1, x2,
-                                   s1, s2, 0, 0, plane1, plane2))
+                                   s1, s2, nullptr, nullptr, plane1, plane2))
     {
       // This should never happen, but if it does, stop here
       break;
@@ -328,7 +326,7 @@ int vtkVolumePicker::ClipLineWithCroppingRegion(
         // Need to know if the ray is entering the volume, i.e. whether
         // the adjacent block that the ray is coming from is "off", because
         // we can't define a clip plane unless it is off.
-        static int blockInc[3] = {1, 3, 9};
+        static const int blockInc[3] = {1, 3, 9};
         int noPlane = 1;
 
         if (xi[k] == 1)

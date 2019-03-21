@@ -27,7 +27,7 @@
  * Example use of this include writing a function to read a data file or
  * interface to another system. (You might want to do this in favor of
  * deriving a new class.) Another important use of this class is that it
- * allows users of interpreters (e.g., Tcl or Java) the ability to write
+ * allows users of interpreters (e.g., Java) the ability to write
  * source objects without having to recompile C++ code or generate new
  * libraries.
  * @sa
@@ -39,19 +39,22 @@
 #define vtkProgrammableSource_h
 
 #include "vtkFiltersSourcesModule.h" // For export macro
-#include "vtkDataSetAlgorithm.h"
+#include "vtkDataObjectAlgorithm.h"
 
+class vtkGraph;
+class vtkMolecule;
 class vtkPolyData;
-class vtkStructuredPoints;
-class vtkStructuredGrid;
-class vtkUnstructuredGrid;
 class vtkRectilinearGrid;
+class vtkStructuredGrid;
+class vtkStructuredPoints;
+class vtkTable;
+class vtkUnstructuredGrid;
 
-class VTKFILTERSSOURCES_EXPORT vtkProgrammableSource : public vtkDataSetAlgorithm
+class VTKFILTERSSOURCES_EXPORT vtkProgrammableSource : public vtkDataObjectAlgorithm
 {
 public:
   static vtkProgrammableSource *New();
-  vtkTypeMacro(vtkProgrammableSource,vtkDataSetAlgorithm);
+  vtkTypeMacro(vtkProgrammableSource,vtkDataObjectAlgorithm);
 
   /**
    * Signature definition for programmable method callbacks. Methods passed
@@ -80,6 +83,7 @@ public:
    */
   void SetRequestInformationMethod(void (*f)(void *));
 
+  //@{
   /**
    * Get the output as a concrete type. This method is typically used by the
    * writer of the source function to get the output as a particular type
@@ -87,34 +91,22 @@ public:
    * to know the correct type of the output data.
    */
   vtkPolyData *GetPolyDataOutput();
-
-  /**
-   * Get the output as a concrete type.
-   */
   vtkStructuredPoints *GetStructuredPointsOutput();
-
-  /**
-   * Get the output as a concrete type.
-   */
   vtkStructuredGrid *GetStructuredGridOutput();
-
-  /**
-   * Get the output as a concrete type.
-   */
   vtkUnstructuredGrid *GetUnstructuredGridOutput();
-
-  /**
-   * Get the output as a concrete type.
-   */
   vtkRectilinearGrid *GetRectilinearGridOutput();
+  vtkGraph *GetGraphOutput();
+  vtkMolecule *GetMoleculeOutput();
+  vtkTable *GetTableOutput();
+  //@}
 
 protected:
   vtkProgrammableSource();
-  ~vtkProgrammableSource() VTK_OVERRIDE;
+  ~vtkProgrammableSource() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestDataObject(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestDataObject(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   ProgrammableMethodCallbackType ExecuteMethod; //function to invoke
   ProgrammableMethodCallbackType ExecuteMethodArgDelete;
@@ -125,8 +117,8 @@ protected:
   int RequestedDataType;
 
 private:
-  vtkProgrammableSource(const vtkProgrammableSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkProgrammableSource&) VTK_DELETE_FUNCTION;
+  vtkProgrammableSource(const vtkProgrammableSource&) = delete;
+  void operator=(const vtkProgrammableSource&) = delete;
 };
 
 #endif

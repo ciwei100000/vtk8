@@ -5,6 +5,7 @@ set(Module_SRCS
   vtkAdjacentVertexIterator.cxx
   vtkAMRBox.cxx
   vtkAMRUtilities.cxx
+  vtkAngularPeriodicDataArray.txx
   vtkAnimationScene.cxx
   vtkAnnotation.cxx
   vtkAnnotationLayers.cxx
@@ -39,6 +40,7 @@ set(Module_SRCS
   vtkDataObjectTree.cxx
   vtkDataObjectTreeIterator.cxx
   vtkDataSetAttributes.cxx
+  vtkDataSetAttributesFieldList.cxx
   vtkDataSetCollection.cxx
   vtkDataSet.cxx
   vtkDirectedAcyclicGraph.cxx
@@ -68,12 +70,10 @@ set(Module_SRCS
   vtkHexahedron.cxx
   vtkHierarchicalBoxDataIterator.cxx
   vtkHierarchicalBoxDataSet.cxx
-  vtkHyperOctreeCursor.cxx
-  vtkHyperOctree.cxx
-  vtkHyperOctreePointsGrabber.cxx
   vtkHyperTree.cxx
   vtkHyperTreeCursor.cxx
   vtkHyperTreeGrid.cxx
+  vtkHyperTreeGridCursor.cxx
   vtkImageData.cxx
   vtkImageIterator.cxx
   vtkImplicitBoolean.cxx
@@ -94,6 +94,13 @@ set(Module_SRCS
   vtkKdNode.cxx
   vtkKdTree.cxx
   vtkKdTreePointLocator.cxx
+  vtkLagrangeCurve.cxx
+  vtkLagrangeHexahedron.cxx
+  vtkLagrangeInterpolation.cxx
+  vtkLagrangeQuadrilateral.cxx
+  vtkLagrangeTetra.cxx
+  vtkLagrangeTriangle.cxx
+  vtkLagrangeWedge.cxx
   vtkLine.cxx
   vtkLocator.cxx
   vtkMappedUnstructuredGrid.txx
@@ -112,8 +119,11 @@ set(Module_SRCS
   vtkOctreePointLocatorNode.cxx
   vtkOrderedTriangulator.cxx
   vtkOutEdgeIterator.cxx
+  vtkPartitionedDataSet.cxx
+  vtkPartitionedDataSetCollection.cxx
   vtkPath.cxx
   vtkPentagonalPrism.cxx
+  vtkPeriodicDataArray.txx
   vtkPerlinNoise.cxx
   vtkPiecewiseFunction.cxx
   vtkPixel.cxx
@@ -158,10 +168,14 @@ set(Module_SRCS
   vtkSmoothErrorMetric.cxx
   vtkSortFieldData.cxx
   vtkSphere.cxx
+  vtkSpheres.cxx
   vtkSpline.cxx
   vtkStaticCellLinks.cxx
   vtkStaticCellLinksTemplate.txx
+  vtkStaticCellLocator.cxx
+  vtkStaticEdgeLocatorTemplate.txx
   vtkStaticPointLocator.cxx
+  vtkStaticPointLocator2D.cxx
   vtkStructuredData.cxx
   vtkStructuredExtent.cxx
   vtkStructuredGrid.cxx
@@ -195,14 +209,15 @@ set(Module_SRCS
   vtkCellType.h
 
   # Header only classes
+  vtkColor.h
   vtkDataArrayDispatcher.h
   vtkDispatcher.h
   vtkDispatcher_Private.h
   vtkDoubleDispatcher.h
+  vtkIntersectionCounter.h
+  vtkRect.h
   vtkVector.h
   vtkVectorOperators.h
-  vtkColor.h
-  vtkRect.h
 
   # New classes for AMR
   vtkNonOverlappingAMR.cxx
@@ -214,83 +229,14 @@ set(Module_SRCS
   )
 
 set(${vtk-module}_HDRS
+  vtkAngularPeriodicDataArray.h
   vtkArrayListTemplate.h
   vtkCellType.h
   vtkMappedUnstructuredGrid.h
   vtkMappedUnstructuredGridCellIterator.h
+  vtkPeriodicDataArray.h
   vtkStaticCellLinksTemplate.h
-  )
-
-set_source_files_properties(
-  vtkAbstractCellLinks
-  vtkAbstractCellLocator
-  vtkAbstractPointLocator
-  vtkCell
-  vtkCell3D
-  vtkCellIterator
-  vtkCompositeDataIterator
-  vtkCompositeDataSet
-  vtkDataObjectTree
-  vtkAbstractElectronicData
-  vtkDataSet
-  vtkDataSetGhostGenerator
-  vtkDistributedGraphHelper
-  vtkGenericAttribute
-  vtkGenericAdaptorCell
-  vtkGenericCellIterator
-  vtkGenericCellTessellator
-  vtkGenericDataSet
-  vtkGenericPointIterator
-  vtkGenericSubdivisionErrorMetric
-  vtkGraph
-  vtkHyperOctreeCursor
-  vtkHyperOctreePointsGrabber
-  vtkHyperTree
-  vtkHyperTreeCursor
-  vtkImplicitFunction
-  vtkIncrementalPointLocator
-  vtkInformationQuadratureSchemeDefinitionVectorKey
-  vtkLocator
-  vtkNonLinearCell
-  vtkPointSet
-  vtkSpline
-  vtkStructuredData
-  vtkTreeIterator
-  vtkUnstructuredGridBase
-  ABSTRACT
-  )
-
-set_source_files_properties(
-  vtkAMRBox
-  vtkArrayListTemplate.txx
-  vtkAtom
-  vtkBond
-  vtkBoundingBox
-  vtkCellType
-  vtkDataArrayDispatcher
-  vtkDispatcher_Private
-  vtkDispatcher
-  vtkDoubleDispatcher
-  vtkMappedUnstructuredGrid.txx
-  vtkMappedUnstructuredGridCellIterator.txx
-  vtkMarchingSquaresLineCases
-  vtkMarchingCubesTriangleCases
-  vtkImageIterator
-  vtkImageProgressIterator
-  vtkPixelExtent.cxx
-  vtkPixelTransfer.cxx
-  vtkStaticCellLinksTemplate.txx
-  vtkVector
-  vtkColor
-  vtkRect
-  vtkVectorOperators
-  vtkAMRDataInternals
-  WRAP_EXCLUDE
-  )
-
-set_source_files_properties(
-  vtkDispatcher_Private
-  PROPERTIES WRAP_EXCLUDE_PYTHON 1
+  vtkStaticEdgeLocatorTemplate.h
   )
 
 vtk_module_library(vtkCommonDataModel ${Module_SRCS})

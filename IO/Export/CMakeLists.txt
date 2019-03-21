@@ -4,12 +4,13 @@ set(Module_SRCS
   vtkIVExporter.cxx
   vtkOBJExporter.cxx
   vtkOOGLExporter.cxx
-  vtkPDFContextDevice2D.cxx
-  vtkPDFExporter.cxx
   vtkPOVExporter.cxx
   vtkRIBExporter.cxx
   vtkRIBLight.cxx
   vtkRIBProperty.cxx
+  vtkSVGContextDevice2D.cxx
+  vtkSVGExporter.cxx
+  vtkSingleVTPExporter.cxx
   vtkVRMLExporter.cxx
   vtkX3D.cxx
   vtkX3DExporter.cxx
@@ -17,20 +18,6 @@ set(Module_SRCS
   #vtkX3DExporterJavaHelper.cxx Needs JNI
   vtkX3DExporterWriter.cxx
   vtkX3DExporterXMLWriter.cxx
-  )
-
-set_source_files_properties(
-  vtkPDFContextDevice2D
-  vtkX3D
-  vtkX3DExporterWriter
-  vtkX3DExporterFIWriter
-  vtkX3DExporterXMLWriter
-  WRAP_EXCLUDE
-  )
-
-set_source_files_properties(
-  vtkExporter
-  ABSTRACT
   )
 
 vtk_module_library(vtkIOExport ${Module_SRCS})

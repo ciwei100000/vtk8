@@ -68,7 +68,7 @@ class VTKFILTERSMODELING_EXPORT vtkRuledSurfaceFilter : public vtkPolyDataAlgori
 {
 public:
   vtkTypeMacro(vtkRuledSurfaceFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with OnRatio=1, Offset=0. DistanceFactor=3.0,
@@ -112,9 +112,9 @@ public:
    * direction, repeat the first point in the polyline as the last
    * point in the polyline.)
    */
-  vtkSetMacro(CloseSurface,int);
-  vtkGetMacro(CloseSurface,int);
-  vtkBooleanMacro(CloseSurface,int);
+  vtkSetMacro(CloseSurface,vtkTypeBool);
+  vtkGetMacro(CloseSurface,vtkTypeBool);
+  vtkBooleanMacro(CloseSurface,vtkTypeBool);
   //@}
 
   //@{
@@ -150,11 +150,11 @@ public:
   //@{
   /**
    * Indicate whether the generating lines are to be passed to the output.
-   * By defualt lines are not passed to the output.
+   * By default lines are not passed to the output.
    */
-  vtkSetMacro(PassLines,int);
-  vtkGetMacro(PassLines,int);
-  vtkBooleanMacro(PassLines,int);
+  vtkSetMacro(PassLines,vtkTypeBool);
+  vtkGetMacro(PassLines,vtkTypeBool);
+  vtkBooleanMacro(PassLines,vtkTypeBool);
   //@}
 
   //@{
@@ -162,28 +162,28 @@ public:
    * Indicate whether the starting points of the loops need to be determined.
    * If set to 0, then its assumes that the 0th point of each loop should be
    * always connected
-   * By defualt the loops are not oriented.
+   * By default the loops are not oriented.
    */
-  vtkSetMacro(OrientLoops,int);
-  vtkGetMacro(OrientLoops,int);
-  vtkBooleanMacro(OrientLoops,int);
+  vtkSetMacro(OrientLoops,vtkTypeBool);
+  vtkGetMacro(OrientLoops,vtkTypeBool);
+  vtkBooleanMacro(OrientLoops,vtkTypeBool);
   //@}
 
 protected:
   vtkRuledSurfaceFilter();
-  ~vtkRuledSurfaceFilter() VTK_OVERRIDE;
+  ~vtkRuledSurfaceFilter() override;
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double DistanceFactor;
   int   OnRatio;
   int   Offset;
-  int   CloseSurface;
+  vtkTypeBool   CloseSurface;
   int   RuledMode;
   int   Resolution[2];
-  int   PassLines;
-  int   OrientLoops;
+  vtkTypeBool   PassLines;
+  vtkTypeBool   OrientLoops;
 
 private:
   vtkIdList *Ids;
@@ -196,8 +196,8 @@ private:
                   int npts, vtkIdType *pts, int npts2, vtkIdType *pts2);
 
 private:
-  vtkRuledSurfaceFilter(const vtkRuledSurfaceFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRuledSurfaceFilter&) VTK_DELETE_FUNCTION;
+  vtkRuledSurfaceFilter(const vtkRuledSurfaceFilter&) = delete;
+  void operator=(const vtkRuledSurfaceFilter&) = delete;
 };
 
 #endif

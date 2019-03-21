@@ -37,8 +37,9 @@ MAX_DOT_GRAPH_DEPTH  = 3
 ALLEXTERNALS         = NO
 
 IMAGE_PATH           = "@VTK_SOURCE_DIR@/Utilities/Doxygen" "@VTK_BINARY_DIR@/Utilities/Doxygen/contrib" \
-                       "@VTK_SOURCE_DIR@/Rendering" \
-                       "@VTK_SOURCE_DIR@/Geovis"
+                       "@VTK_SOURCE_DIR@/Filters" \
+                       "@VTK_SOURCE_DIR@/Geovis" \
+                       "@VTK_SOURCE_DIR@/Rendering"
 
 OUTPUT_DIRECTORY     = "@VTK_BINARY_DIR@/Utilities/Doxygen/doc"
 
@@ -58,15 +59,12 @@ EXCLUDE              = \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/DataModel/vtkMarchingSquaresCases.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/DataModel/vtkMarchingCubesCases.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/Core/vtkWindows.h" \
-    "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkTcl.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkTk.h" \
-    "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkTclUtil.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkPython.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkPythonUtil.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkJavaAwt.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkJavaUtil.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkPythonUtil.h" \
-    "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Common/vtkTclUtil.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/Parallel/MPI/vtkMPI.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/IO/Import/vtk3DS.h" \
     "@VTK_BINARY_DIR@/Utilities/Doxygen/dox/IO/Import/vtkVRML.h" \
@@ -109,6 +107,10 @@ MACRO_EXPANSION      = YES
 SEARCH_INCLUDES      = YES
 INCLUDE_PATH         =
 EXPAND_ONLY_PREDEF   = YES
+EXPAND_AS_DEFINED = vtkDataArray \
+                    vtkAllEventsMacro \
+                    vtkEventDeclarationMacro \
+                    _vtk_add_event
 PREDEFINED  = "vtkSetMacro(name,type)= \
                  virtual void Set##name (type);" \
               "vtkGetMacro(name,type)= \
@@ -176,13 +178,16 @@ PREDEFINED  = "vtkSetMacro(name,type)= \
                    private: \
                    virtual const char* GetClassNameInternal() const; \
                    public: \
-                   static int IsTypeOf(const char *type); \
-                   virtual int IsA(const char *type); \
+                   static vtkTypeBool IsTypeOf(const char *type); \
+                   virtual vtkTypeBool IsA(const char *type); \
                    static thisClass* SafeDownCast(vtkObjectBase *o); \
                    protected: \
                    virtual vtkObjectBase *NewInstanceInternal() const; \
                    public: \
                    thisClass *NewInstance() const;" \
                "VTK_LEGACY(x)= x" \
-               "VTK_OVERRIDE=override" \
-               "VTK_DELETE=delete"
+               "VTK_NEWINSTANCE=" \
+               "VTK_ZEROCOPY=" \
+               "VTK_EXPECTS(x)=" \
+               "VTK_SIZEHINT(...)=" \
+               "DOXYGEN_SHOULD_SKIP_THIS"

@@ -92,7 +92,7 @@ public:
    * Standard methods for class.
    */
   vtkTypeMacro(vtkBorderWidget,vtkAbstractWidget);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -102,9 +102,9 @@ public:
    * "move" the widget, and no selection is possible. Otherwise the
    * SelectRegion() method is invoked.
    */
-  vtkSetMacro(Selectable,int);
-  vtkGetMacro(Selectable,int);
-  vtkBooleanMacro(Selectable,int);
+  vtkSetMacro(Selectable,vtkTypeBool);
+  vtkGetMacro(Selectable,vtkTypeBool);
+  vtkBooleanMacro(Selectable,vtkTypeBool);
   //@}
 
 
@@ -114,9 +114,9 @@ public:
    * If not, the cursor will not change to "resize" type when mouse
    * over the boundary.
    */
-  vtkSetMacro(Resizable,int);
-  vtkGetMacro(Resizable,int);
-  vtkBooleanMacro(Resizable,int);
+  vtkSetMacro(Resizable,vtkTypeBool);
+  vtkGetMacro(Resizable,vtkTypeBool);
+  vtkBooleanMacro(Resizable,vtkTypeBool);
   //@}
 
 
@@ -137,11 +137,11 @@ public:
   /**
    * Create the default widget representation if one is not set.
    */
-  void CreateDefaultRepresentation() VTK_OVERRIDE;
+  void CreateDefaultRepresentation() override;
 
 protected:
   vtkBorderWidget();
-  ~vtkBorderWidget() VTK_OVERRIDE;
+  ~vtkBorderWidget() override;
 
   /**
    * Subclasses generally implement this method. The SelectRegion() method
@@ -151,8 +151,8 @@ protected:
   virtual void SelectRegion(double eventPos[2]);
 
   //enable the selection of the region interior to the widget
-  int Selectable;
-  int Resizable;
+  vtkTypeBool Selectable;
+  vtkTypeBool Resizable;
 
   //processes the registered events
   static void SelectAction(vtkAbstractWidget*);
@@ -168,15 +168,15 @@ protected:
   virtual int SubclassMoveAction() {return 0;}
 
   // helper methods for cursoe management
-  void SetCursor(int State) VTK_OVERRIDE;
+  void SetCursor(int State) override;
 
   //widget state
   int WidgetState;
   enum _WidgetState{Start=0,Define,Manipulate,Selected};
 
 private:
-  vtkBorderWidget(const vtkBorderWidget&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBorderWidget&) VTK_DELETE_FUNCTION;
+  vtkBorderWidget(const vtkBorderWidget&) = delete;
+  void operator=(const vtkBorderWidget&) = delete;
 };
 
 #endif

@@ -26,6 +26,13 @@
 
 vtkStandardNewMacro(vtkSMPTransform);
 
+vtkSMPTransform::vtkSMPTransform()
+{
+  VTK_LEGACY_BODY(
+    vtkSMPTransform::vtkSMPTransform,
+    "VTK 8.1");
+}
+
 //----------------------------------------------------------------------------
 void vtkSMPTransform::PrintSelf(ostream& os, vtkIndent indent)
 {
@@ -100,12 +107,12 @@ inline void vtkSMPTransformNormal(T1 mat[4][4],
 
 //----------------------------------------------------------------------------
 // Transform the normals and vectors using the derivative of the
-// transformation.  Either inNms or inVrs can be set to NULL.
+// transformation.  Either inNms or inVrs can be set to nullptr.
 // Normals are multiplied by the inverse transpose of the transform
 // derivative, while vectors are simply multiplied by the derivative.
 // Note that the derivative of the inverse transform is simply the
 // inverse of the derivative of the forward transform.
-class TranformAllFunctor
+class TransformAllFunctor
 {
 public:
   vtkPoints* inPts;
@@ -114,6 +121,9 @@ public:
   vtkDataArray* outNms;
   vtkDataArray* inVcs;
   vtkDataArray* outVcs;
+  int nOptionalVectors;
+  vtkDataArray** inVrsArr;
+  vtkDataArray** outVrsArr;
   double (*matrix)[4];
   double (*matrixInvTr)[4];
   void operator()( vtkIdType begin, vtkIdType end ) const
@@ -129,6 +139,15 @@ public:
         inVcs->GetTuple(id, point);
         vtkSMPTransformVector(matrix, point, point);
         outVcs->SetTuple(id, point);
+      }
+      if (inVrsArr)
+      {
+        for (int iArr = 0; iArr < nOptionalVectors; iArr++)
+        {
+          inVrsArr[iArr]->GetTuple(id, point);
+          vtkSMPTransformVector(matrix, point, point);
+          outVrsArr[iArr]->SetTuple(id, point);
+        }
       }
       if (inNms)
       {
@@ -146,19 +165,25 @@ void vtkSMPTransform::TransformPointsNormalsVectors(vtkPoints *inPts,
                                                     vtkDataArray *inNms,
                                                     vtkDataArray *outNms,
                                                     vtkDataArray *inVrs,
-                                                    vtkDataArray *outVrs)
+                                                    vtkDataArray *outVrs,
+                                                    int nOptionalVectors,
+                                                    vtkDataArray** inVrsArr,
+                                                    vtkDataArray** outVrsArr)
 {
   vtkIdType n = inPts->GetNumberOfPoints();
   double matrix[4][4];
   this->Update();
 
-  TranformAllFunctor functor;
+  TransformAllFunctor functor;
   functor.inPts = inPts;
   functor.outPts = outPts;
   functor.inNms = inNms;
   functor.outNms = outNms;
   functor.inVcs = inVrs;
   functor.outVcs = outVrs;
+  functor.nOptionalVectors = nOptionalVectors;
+  functor.inVrsArr = inVrsArr;
+  functor.outVrsArr = outVrsArr;
   functor.matrix = this->Matrix->Element;
   if (inNms)
   {

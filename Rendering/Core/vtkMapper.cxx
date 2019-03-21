@@ -32,9 +32,6 @@
 #include "vtkVariantArray.h"
 
 
-// Initialize static member that controls global immediate mode rendering
-static int vtkMapperGlobalImmediateModeRendering = 0;
-
 // Initialize static member that controls global coincidence resolution
 static int vtkMapperGlobalResolveCoincidentTopology = VTK_RESOLVE_OFF;
 static double vtkMapperGlobalResolveCoincidentTopologyZShift = 0.01;
@@ -48,21 +45,18 @@ static double vtkMapperGlobalResolveCoincidentTopologyPointOffsetUnits = 0.0;
 
 // Construct with initial range (0,1).
 vtkMapper::vtkMapper()
-: ArrayName(NULL)
+: ArrayName(nullptr)
 {
-  this->Colors = 0;
+  this->Colors = nullptr;
   this->Static = 0;
-  this->LookupTable = 0;
+  this->LookupTable = nullptr;
 
   this->ScalarVisibility = 1;
   this->ScalarRange[0] = 0.0; this->ScalarRange[1] = 1.0;
   this->UseLookupTableScalarRange = 0;
 
-  this->ImmediateModeRendering = 0;
-
   this->ColorMode = VTK_COLOR_MODE_DEFAULT;
   this->ScalarMode = VTK_SCALAR_MODE_DEFAULT;
-  this->ScalarMaterialMode = VTK_MATERIALMODE_DEFAULT;
 
   vtkMath::UninitializeBounds(this->Bounds);
   this->Center[0] = this->Center[1] = this->Center[2] = 0.0;
@@ -77,10 +71,9 @@ vtkMapper::vtkMapper()
   this->FieldDataTupleId = -1;
 
   this->InterpolateScalarsBeforeMapping = 0;
-  this->ColorCoordinates = 0;
-  this->ColorTextureMap = 0;
+  this->ColorCoordinates = nullptr;
+  this->ColorTextureMap = nullptr;
 
-  this->ForceCompileOnly=0;
 
   this->CoincidentPolygonFactor = 0.0;
   this->CoincidentPolygonOffset = 0.0;
@@ -95,19 +88,19 @@ vtkMapper::~vtkMapper()
   {
     this->LookupTable->UnRegister(this);
   }
-  if ( this->Colors != 0 )
+  if ( this->Colors != nullptr )
   {
     this->Colors->UnRegister(this);
   }
-  if ( this->ColorCoordinates != 0 )
+  if ( this->ColorCoordinates != nullptr )
   {
     this->ColorCoordinates->UnRegister(this);
   }
-  if ( this->ColorTextureMap != 0 )
+  if ( this->ColorTextureMap != nullptr )
   {
     this->ColorTextureMap->UnRegister(this);
   }
-  this->SetArrayName(NULL);
+  this->SetArrayName(nullptr);
 }
 
 // Get the bounds for the input of this mapper as
@@ -134,34 +127,10 @@ vtkDataSet *vtkMapper::GetInput()
 {
   if (this->GetNumberOfInputConnections(0) < 1)
   {
-    return 0;
+    return nullptr;
   }
   return vtkDataSet::SafeDownCast(
     this->GetExecutive()->GetInputData(0, 0));
-}
-
-void vtkMapper::SetForceCompileOnly(int value)
-{
-  if(this->ForceCompileOnly!=value)
-  {
-      this->ForceCompileOnly=value;
-      // make sure we don't call this->Modified();
-      //      this->Modified();
-  }
-}
-
-void vtkMapper::SetGlobalImmediateModeRendering(int val)
-{
-  if (val == vtkMapperGlobalImmediateModeRendering)
-  {
-    return;
-  }
-  vtkMapperGlobalImmediateModeRendering = val;
-}
-
-int vtkMapper::GetGlobalImmediateModeRendering()
-{
-  return vtkMapperGlobalImmediateModeRendering;
 }
 
 void vtkMapper::SetResolveCoincidentTopology(int val)
@@ -226,6 +195,7 @@ void vtkMapper::SetRelativeCoincidentTopologyPolygonOffsetParameters(
   }
   this->CoincidentPolygonFactor = factor;
   this->CoincidentPolygonOffset = units;
+  this->Modified();
 }
 
 void vtkMapper::GetRelativeCoincidentTopologyPolygonOffsetParameters(
@@ -273,6 +243,7 @@ void vtkMapper::SetRelativeCoincidentTopologyLineOffsetParameters(
   }
   this->CoincidentLineFactor = factor;
   this->CoincidentLineOffset = units;
+  this->Modified();
 }
 
 void vtkMapper::GetRelativeCoincidentTopologyLineOffsetParameters(
@@ -315,6 +286,7 @@ void vtkMapper::SetRelativeCoincidentTopologyPointOffsetParameter(
     return;
   }
   this->CoincidentPointOffset = units;
+  this->Modified();
 }
 
 void vtkMapper::GetRelativeCoincidentTopologyPointOffsetParameter(
@@ -347,7 +319,7 @@ vtkMTimeType vtkMapper::GetMTime()
   vtkMTimeType mTime=vtkAbstractMapper::GetMTime();
   vtkMTimeType lutMTime;
 
-  if ( this->LookupTable != NULL )
+  if ( this->LookupTable != nullptr )
   {
     lutMTime = this->LookupTable->GetMTime();
     mTime = ( lutMTime > mTime ? lutMTime : mTime );
@@ -359,15 +331,13 @@ vtkMTimeType vtkMapper::GetMTime()
 void vtkMapper::ShallowCopy(vtkAbstractMapper *mapper)
 {
   vtkMapper *m = vtkMapper::SafeDownCast(mapper);
-  if ( m != NULL )
+  if ( m != nullptr )
   {
     this->SetLookupTable(m->GetLookupTable());
     this->SetScalarVisibility(m->GetScalarVisibility());
     this->SetScalarRange(m->GetScalarRange());
     this->SetColorMode(m->GetColorMode());
     this->SetScalarMode(m->GetScalarMode());
-    this->SetScalarMaterialMode(m->GetScalarMaterialMode());
-    this->SetImmediateModeRendering(m->GetImmediateModeRendering());
     this->SetUseLookupTableScalarRange(m->GetUseLookupTableScalarRange());
     this->SetInterpolateScalarsBeforeMapping(
       m->GetInterpolateScalarsBeforeMapping());
@@ -381,6 +351,16 @@ void vtkMapper::ShallowCopy(vtkAbstractMapper *mapper)
     {
       this->ColorByArrayComponent(m->GetArrayName(),m->GetArrayComponent());
     }
+
+    double f, u;
+    m->GetRelativeCoincidentTopologyPolygonOffsetParameters( f, u );
+    this->SetRelativeCoincidentTopologyPolygonOffsetParameters( f, u );
+
+    m->GetRelativeCoincidentTopologyLineOffsetParameters( f, u );
+    this->SetRelativeCoincidentTopologyLineOffsetParameters( f, u );
+
+    m->GetRelativeCoincidentTopologyPointOffsetParameter( u );
+    this->SetRelativeCoincidentTopologyPointOffsetParameter( u );
   }
 
   // Now do superclass
@@ -436,7 +416,7 @@ int vtkMapper::CanUseTextureMapForColoring(vtkDataObject* input)
 
     if (!scalars)
     {
-      // no scalars on  this dataset, we don't care if texture is used at all.
+      // no scalars on this dataset, we don't care if texture is used at all.
       return 1;
     }
 
@@ -478,29 +458,29 @@ vtkUnsignedCharArray *vtkMapper::MapScalars(vtkDataSet *input,
   // This is for a legacy feature: selection of the array component to color by
   // from the mapper.  It is now in the lookuptable.  When this feature
   // is removed, we can remove this condition.
-  if (scalars == 0 || scalars->GetNumberOfComponents() <= this->ArrayComponent)
+  if (scalars == nullptr || scalars->GetNumberOfComponents() <= this->ArrayComponent)
   {
     this->ArrayComponent = 0;
   }
 
-  if ( !this->ScalarVisibility || scalars==0 || input==0)
+  if ( !this->ScalarVisibility || scalars==nullptr || input==nullptr)
   { // No scalar colors.
     if ( this->ColorCoordinates )
     {
       this->ColorCoordinates->UnRegister(this);
-      this->ColorCoordinates = 0;
+      this->ColorCoordinates = nullptr;
     }
     if ( this->ColorTextureMap )
     {
       this->ColorTextureMap->UnRegister(this);
-      this->ColorTextureMap = 0;
+      this->ColorTextureMap = nullptr;
     }
     if ( this->Colors )
     {
       this->Colors->UnRegister(this);
-      this->Colors = 0;
+      this->Colors = nullptr;
     }
-    return 0;
+    return nullptr;
   }
 
   // Get the lookup table.
@@ -512,7 +492,7 @@ vtkUnsignedCharArray *vtkMapper::MapScalars(vtkDataSet *input,
   else
   {
     // make sure we have a lookup table
-    if ( this->LookupTable == 0 )
+    if ( this->LookupTable == nullptr )
     {
       this->CreateDefaultLookupTable();
     }
@@ -523,13 +503,13 @@ vtkUnsignedCharArray *vtkMapper::MapScalars(vtkDataSet *input,
     this->LookupTable->SetRange(this->ScalarRange);
   }
 
-  // Decide betweeen texture color or vertex color.
+  // Decide between texture color or vertex color.
   // Cell data always uses vertex color.
   // Only point data can use both texture and vertex coloring.
   if (this->CanUseTextureMapForColoring(input))
   {
     this->MapScalarsToTexture(scalars, alpha);
-    return 0;
+    return nullptr;
   }
 
   // Vertex colors are being used.
@@ -539,12 +519,12 @@ vtkUnsignedCharArray *vtkMapper::MapScalars(vtkDataSet *input,
   if ( this->ColorCoordinates )
   {
     this->ColorCoordinates->UnRegister(this);
-    this->ColorCoordinates = 0;
+    this->ColorCoordinates = nullptr;
   }
   if ( this->ColorTextureMap )
   {
     this->ColorTextureMap->UnRegister(this);
-    this->ColorTextureMap = 0;
+    this->ColorTextureMap = nullptr;
   }
 
   // Lets try to resuse the old colors.
@@ -565,7 +545,7 @@ vtkUnsignedCharArray *vtkMapper::MapScalars(vtkDataSet *input,
   if ( this->Colors )
   {
     this->Colors->UnRegister(this);
-    this->Colors = 0;
+    this->Colors = nullptr;
   }
 
   // map scalars
@@ -644,7 +624,7 @@ void vtkMapper::SetLookupTable(vtkScalarsToColors *lut)
 
 vtkScalarsToColors *vtkMapper::GetLookupTable()
 {
-  if ( this->LookupTable == 0 )
+  if ( this->LookupTable == nullptr )
   {
     this->CreateDefaultLookupTable();
   }
@@ -729,26 +709,6 @@ const char *vtkMapper::GetScalarModeAsString(void)
   else if ( this->ScalarMode == VTK_SCALAR_MODE_USE_FIELD_DATA )
   {
     return "UseFieldData";
-  }
-  else
-  {
-    return "Default";
-  }
-}
-
-const char *vtkMapper::GetScalarMaterialModeAsString(void)
-{
-  if ( this->ScalarMaterialMode == VTK_MATERIALMODE_AMBIENT )
-  {
-    return "Ambient";
-  }
-  else if ( this->ScalarMaterialMode == VTK_MATERIALMODE_DIFFUSE )
-  {
-    return "Diffuse";
-  }
-  else if ( this->ScalarMaterialMode == VTK_MATERIALMODE_AMBIENT_AND_DIFFUSE )
-  {
-    return "Ambient and Diffuse";
   }
   else
   {
@@ -903,12 +863,12 @@ void vtkMapper::MapScalarsToTexture(vtkAbstractArray* scalars, double alpha)
   if ( this->Colors )
   {
     this->Colors->UnRegister(this);
-    this->Colors = 0;
+    this->Colors = nullptr;
   }
 
   // If the lookup table has changed, the recreate the color texture map.
   // Set a new lookup table changes this->MTime.
-  if (this->ColorTextureMap == 0 ||
+  if (this->ColorTextureMap == nullptr ||
       this->GetMTime() > this->ColorTextureMap->GetMTime() ||
       this->LookupTable->GetMTime() > this->ColorTextureMap->GetMTime() ||
       this->LookupTable->GetAlpha() != alpha)
@@ -917,7 +877,7 @@ void vtkMapper::MapScalarsToTexture(vtkAbstractArray* scalars, double alpha)
     if ( this->ColorTextureMap )
     {
       this->ColorTextureMap->UnRegister(this);
-      this->ColorTextureMap = 0;
+      this->ColorTextureMap = nullptr;
     }
     // Get the texture map from the lookup table.
     // Create a dummy ramp of scalars.
@@ -932,13 +892,13 @@ void vtkMapper::MapScalarsToTexture(vtkAbstractArray* scalars, double alpha)
     {
       numberOfColors = 8192;
     }
-    double k = (range[1]-range[0]) / (numberOfColors-1-2);
+    double k = (range[1]-range[0]) / (numberOfColors-2);
     vtkDoubleArray* tmp = vtkDoubleArray::New();
     tmp->SetNumberOfTuples(numberOfColors*2);
     double* ptr = tmp->GetPointer(0);
     for (int i = 0; i < numberOfColors; ++i)
     {
-      *ptr = range[0] + i * k - k; // minus k to start at below range color
+      *ptr = range[0] + i * k - k / 2.0; // minus k / 2 to start at below range color
       if (use_log_scale)
       {
         *ptr = pow(10.0, *ptr);
@@ -967,8 +927,8 @@ void vtkMapper::MapScalarsToTexture(vtkAbstractArray* scalars, double alpha)
   }
 
   // Create new coordinates if necessary.
-  // Need to compare lookup table incase the range has changed.
-  if (this->ColorCoordinates == 0 ||
+  // Need to compare lookup table in case the range has changed.
+  if (this->ColorCoordinates == nullptr ||
       this->GetMTime() > this->ColorCoordinates->GetMTime() ||
       this->GetExecutive()->GetInputData(0, 0)->GetMTime() >
       this->ColorCoordinates->GetMTime() ||
@@ -978,7 +938,7 @@ void vtkMapper::MapScalarsToTexture(vtkAbstractArray* scalars, double alpha)
     if ( this->ColorCoordinates )
     {
       this->ColorCoordinates->UnRegister(this);
-      this->ColorCoordinates = 0;
+      this->ColorCoordinates = nullptr;
     }
 
     // Now create the color texture coordinates.
@@ -1035,15 +995,6 @@ void vtkMapper::PrintSelf(ostream& os, vtkIndent indent)
     os << indent << "Lookup Table: (none)\n";
   }
 
-  os << indent << "Immediate Mode Rendering: "
-    << (this->ImmediateModeRendering ? "On\n" : "Off\n");
-
-   os << indent << "Force compile only for display lists: "
-    << (this->ForceCompileOnly ? "On\n" : "Off\n");
-
-  os << indent << "Global Immediate Mode Rendering: " <<
-    (vtkMapperGlobalImmediateModeRendering ? "On\n" : "Off\n");
-
   os << indent << "Scalar Visibility: "
     << (this->ScalarVisibility ? "On\n" : "Off\n");
 
@@ -1061,9 +1012,6 @@ void vtkMapper::PrintSelf(ostream& os, vtkIndent indent)
      << (this->InterpolateScalarsBeforeMapping ? "On\n" : "Off\n");
 
   os << indent << "Scalar Mode: " << this->GetScalarModeAsString() << endl;
-
-  os << indent << "LM Color Mode: "
-     << this->GetScalarMaterialModeAsString() << endl;
 
   os << indent << "RenderTime: " << this->RenderTime << endl;
 
@@ -1099,17 +1047,17 @@ void vtkMapper::ClearColorArrays()
   if (this->Colors)
   {
     this->Colors->Delete();
-    this->Colors = NULL;
+    this->Colors = nullptr;
   }
   if (this->ColorCoordinates)
   {
     this->ColorCoordinates->Delete();
-    this->ColorCoordinates = NULL;
+    this->ColorCoordinates = nullptr;
   }
   if (this->ColorTextureMap)
   {
     this->ColorTextureMap->Delete();
-    this->ColorTextureMap = NULL;
+    this->ColorTextureMap = nullptr;
   }
 }
 

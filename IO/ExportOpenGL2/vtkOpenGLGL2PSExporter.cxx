@@ -39,20 +39,16 @@ void vtkOpenGLGL2PSExporter::PrintSelf(std::ostream &os, vtkIndent indent)
 }
 
 //------------------------------------------------------------------------------
-vtkOpenGLGL2PSExporter::vtkOpenGLGL2PSExporter()
-{
-}
+vtkOpenGLGL2PSExporter::vtkOpenGLGL2PSExporter() = default;
 
 //------------------------------------------------------------------------------
-vtkOpenGLGL2PSExporter::~vtkOpenGLGL2PSExporter()
-{
-}
+vtkOpenGLGL2PSExporter::~vtkOpenGLGL2PSExporter() = default;
 
 //------------------------------------------------------------------------------
 void vtkOpenGLGL2PSExporter::WriteData()
 {
   // Open file:
-  if (this->FilePrefix == NULL)
+  if (this->FilePrefix == nullptr)
   {
     vtkErrorMacro(<< "Please specify a file prefix to use");
     return;
@@ -83,13 +79,13 @@ void vtkOpenGLGL2PSExporter::WriteData()
 
   // Setup helper class:
   vtkNew<vtkOpenGLGL2PSHelper> gl2ps;
-  gl2ps->SetInstance(gl2ps.GetPointer());
+  gl2ps->SetInstance(gl2ps);
   gl2ps->SetTextAsPath(this->TextAsPath);
   gl2ps->SetRenderWindow(this->RenderWindow);
 
   // Grab the image background:
   vtkNew<vtkImageData> background;
-  if (!this->RasterizeBackground(background.GetPointer()))
+  if (!this->RasterizeBackground(background))
   {
     vtkErrorMacro("Error rasterizing background image. Exported image may be "
                   "incorrect.");
@@ -113,12 +109,12 @@ void vtkOpenGLGL2PSExporter::WriteData()
   // Export file. No worries about buffersize, since we're manually adding
   // geometry through vtkOpenGLGL2PSHelper::ProcessTransformFeedback.
   GLint err = gl2psBeginPage(title.c_str(), "VTK", viewport, format, sort,
-                             options, GL_RGBA, 0, NULL, 0, 0, 0, 0, file,
+                             options, GL_RGBA, 0, nullptr, 0, 0, 0, 0, file,
                              fname.str().c_str());
   if (err != GL2PS_SUCCESS)
   {
     vtkErrorMacro("Error calling gl2psBeginPage. Error code: " << err);
-    gl2ps->SetInstance(NULL);
+    gl2ps->SetInstance(nullptr);
     fclose(file);
     return;
   }
@@ -148,7 +144,7 @@ void vtkOpenGLGL2PSExporter::WriteData()
 
   // Cleanup
   err = gl2psEndPage();
-  gl2ps->SetInstance(NULL);
+  gl2ps->SetInstance(nullptr);
   fclose(file);
 
   switch (err)

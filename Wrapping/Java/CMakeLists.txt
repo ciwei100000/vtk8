@@ -50,22 +50,38 @@ endif()
 set(JOGL_VERSION "2.3.2")
 option(VTK_JAVA_JOGL_COMPONENT "Need JOGL jar files" OFF)
 
-if(VTK_JAVA_JOGL_COMPONENT)
+if(VTK_JAVA_JOGL_COMPONENT OR VTK_JAVA_SWT_COMPONENT )
   set(MAVEN_REPO "$ENV{HOME}/.m2/repository")
   find_file(JOGL_LIB jogl-all-${JOGL_VERSION}.jar PATHS ${MAVEN_REPO}/org/jogamp/jogl/jogl-all/${JOGL_VERSION} )
   find_file(JOGL_GLUE gluegen-rt-${JOGL_VERSION}.jar PATHS ${MAVEN_REPO}/org/jogamp/gluegen/gluegen-rt/${JOGL_VERSION})
   mark_as_advanced(JOGL_LIB JOGL_GLUE)
-  if(NOT JOGL_LIB)
-     message(ERROR "
-     CMake can not build VTK with VTK_JAVA_JOGL_COMPONENT ON if the JOGL jar file is not provided.
-     Please set the JOGL_LIB variable.
-     ")
+  if(VTK_JAVA_JOGL_COMPONENT)
+      if(NOT JOGL_LIB)
+         message(ERROR "
+         CMake can not build VTK with VTK_JAVA_JOGL_COMPONENT ON if the JOGL jar file is not provided.
+         Please set the JOGL_LIB variable.
+         ")
+      endif()
+      if(NOT JOGL_GLUE)
+         message(ERROR "
+         CMake can not build VTK with VTK_JAVA_JOGL_COMPONENT ON if the GLUE jar file is not provided.
+         Please set the JOGL_GLUE variable.
+         ")
+      endif()
   endif()
-  if(NOT JOGL_GLUE)
-     message(ERROR "
-     CMake can not build VTK with VTK_JAVA_JOGL_COMPONENT ON if the GLUE jar file is not provided.
-     Please set the JOGL_GLUE variable.
-     ")
+  if(VTK_JAVA_SWT_COMPONENT)
+    if(NOT JOGL_LIB)
+      message(ERROR "
+      CMake can not build VTK with VTK_JAVA_SWT_COMPONENT ON if the JOGL jar file is not provided.
+      Please set the JOGL_LIB variable.
+      ")
+    endif()
+    if(NOT JOGL_GLUE)
+      message(ERROR "
+      CMake can not build VTK with VTK_JAVA_SWT_COMPONENT ON if the GLUE jar file is not provided.
+      Please set the JOGL_GLUE variable.
+      ")
+    endif()
   endif()
 endif()
 
@@ -207,7 +223,6 @@ if(vtkRenderingCore_ENABLED)
   endif()
   set(VTK_JAVA_DEPENDENCIES ${VTK_JAVA_DEPENDENCIES}
     AxesActor
-    vtkRenderWindowPanel
     )
 endif()
 
@@ -215,6 +230,11 @@ if(vtkInteractionWidgets_ENABLED)
   set(VTK_JAVA_DEPENDENCIES ${VTK_JAVA_DEPENDENCIES}
     vtkCanvas
     )
+
+  if (vtkRenderingCore_ENABLED)
+    list(APPEND VTK_JAVA_DEPENDENCIES
+      vtkRenderWindowPanel)
+  endif ()
 endif()
 
 if(vtkRenderingCore_ENABLED AND vtkIOImage_ENABLED)
@@ -349,7 +369,6 @@ add_custom_command(
           -source ${VTK_JAVA_SOURCE_VERSION}
           -target ${VTK_JAVA_TARGET_VERSION}
           -classpath ${JAVA_COMPILATION_CLASSPATH}
-          -sourcepath ${VTK_SOURCE_DIR}/Wrapping/Java/
           -d ${VTK_BINARY_DIR}/java
           @${VTK_BINARY_DIR}/java/javac_stamp.rsp
   COMMAND ${CMAKE_COMMAND} -E touch ${VTK_BINARY_DIR}/java/javac_stamp.txt
@@ -385,7 +404,6 @@ if(BUILD_TESTING)
             -classpath ${VTK_JAR_PATH}/vtk.jar${SEPARATOR}${VTK_BINARY_DIR}/Wrapping/Java
             -source ${VTK_JAVA_SOURCE_VERSION}
             -target ${VTK_JAVA_TARGET_VERSION}
-            -sourcepath ${VTK_SOURCE_DIR}/Wrapping/Java
             -d ${VTK_BINARY_DIR}/Wrapping/Java
             ${VTK_JAVA_TESTS}
     COMMAND ${CMAKE_COMMAND} -E touch ${VTK_BINARY_DIR}/java/javac_tests_stamp.txt
@@ -397,7 +415,7 @@ if(BUILD_TESTING)
   if(vtkTestingRendering_ENABLED)
 
     # Require Rendering
-    if(vtkRendering${VTK_RENDERING_BACKEND}_ENABLED)
+    if(vtkRenderingOpenGL2_ENABLED)
       # If JAVA_DATAMODEL_FLAG is set, pass it as first argument. Otherwise, it's empty.
       # For example, use "-d64" to force 64-bit java jvm.
       #

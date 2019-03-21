@@ -34,6 +34,7 @@ vtkStandardNewMacro(vtkGeoArcs);
 
 vtkGeoArcs::vtkGeoArcs()
 {
+  VTK_LEGACY_BODY(vtkGeoArcs::vtkGeoArcs, "VTK 8.2");
   this->GlobeRadius = vtkGeoMath::EarthRadiusMeters();
   this->ExplodeFactor = 0.2;
   this->NumberOfSubdivisions = 20;
@@ -66,7 +67,7 @@ int vtkGeoArcs::RequestData(
   for (vtkIdType i = 0; i < lines->GetNumberOfCells(); i++)
   {
       vtkIdType npts=0; // to remove warning
-    vtkIdType* pts=0; // to remove warning
+    vtkIdType* pts=nullptr; // to remove warning
     lines->GetNextCell(npts, pts);
 
     double lastPoint[3];
@@ -82,7 +83,7 @@ int vtkGeoArcs::RequestData(
       newPoints->GetPoint(pts[p], curPoint);
 
       // Find w, a unit vector pointing from the center of the
-      // earth directly inbetween the two endpoints.
+      // earth directly in between the two endpoints.
       double w[3];
       for (int c = 0; c < 3; ++c)
       {

@@ -33,9 +33,7 @@ vtkDataObjectAlgorithm::vtkDataObjectAlgorithm()
 }
 
 //----------------------------------------------------------------------------
-vtkDataObjectAlgorithm::~vtkDataObjectAlgorithm()
-{
-}
+vtkDataObjectAlgorithm::~vtkDataObjectAlgorithm() = default;
 
 //----------------------------------------------------------------------------
 void vtkDataObjectAlgorithm::PrintSelf(ostream& os, vtkIndent indent)
@@ -72,7 +70,7 @@ vtkDataObject* vtkDataObjectAlgorithm::GetInput(int port)
 {
   if (this->GetNumberOfInputConnections(port) < 1)
   {
-    return 0;
+    return nullptr;
   }
   return this->GetExecutive()->GetInputData(port, 0);
 }

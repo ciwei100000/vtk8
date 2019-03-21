@@ -66,7 +66,7 @@ class VTKFILTERSGENERAL_EXPORT vtkMarchingContourFilter : public vtkPolyDataAlgo
 {
 public:
   vtkTypeMacro(vtkMarchingContourFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with initial range (0,1) and single contour value
@@ -91,7 +91,7 @@ public:
   /**
    * Modified GetMTime Because we delegate to vtkContourValues
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -100,9 +100,9 @@ public:
    * processed by filters that modify topology or geometry, it may be
    * wise to turn Normals and Gradients off.
    */
-  vtkSetMacro(ComputeNormals,int);
-  vtkGetMacro(ComputeNormals,int);
-  vtkBooleanMacro(ComputeNormals,int);
+  vtkSetMacro(ComputeNormals,vtkTypeBool);
+  vtkGetMacro(ComputeNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputeNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -114,27 +114,27 @@ public:
    * will be processed by filters that modify topology or geometry, it
    * may be wise to turn Normals and Gradients off.
    */
-  vtkSetMacro(ComputeGradients,int);
-  vtkGetMacro(ComputeGradients,int);
-  vtkBooleanMacro(ComputeGradients,int);
+  vtkSetMacro(ComputeGradients,vtkTypeBool);
+  vtkGetMacro(ComputeGradients,vtkTypeBool);
+  vtkBooleanMacro(ComputeGradients,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get the computation of scalars.
    */
-  vtkSetMacro(ComputeScalars,int);
-  vtkGetMacro(ComputeScalars,int);
-  vtkBooleanMacro(ComputeScalars,int);
+  vtkSetMacro(ComputeScalars,vtkTypeBool);
+  vtkGetMacro(ComputeScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeScalars,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Enable the use of a scalar tree to accelerate contour extraction.
    */
-  vtkSetMacro(UseScalarTree,int);
-  vtkGetMacro(UseScalarTree,int);
-  vtkBooleanMacro(UseScalarTree,int);
+  vtkSetMacro(UseScalarTree,vtkTypeBool);
+  vtkGetMacro(UseScalarTree,vtkTypeBool);
+  vtkBooleanMacro(UseScalarTree,vtkTypeBool);
   //@}
 
   //@{
@@ -154,17 +154,17 @@ public:
 
 protected:
   vtkMarchingContourFilter();
-  ~vtkMarchingContourFilter() VTK_OVERRIDE;
+  ~vtkMarchingContourFilter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   vtkContourValues *ContourValues;
-  int ComputeNormals;
-  int ComputeGradients;
-  int ComputeScalars;
+  vtkTypeBool ComputeNormals;
+  vtkTypeBool ComputeGradients;
+  vtkTypeBool ComputeScalars;
   vtkIncrementalPointLocator *Locator;
-  int UseScalarTree;
+  vtkTypeBool UseScalarTree;
   vtkScalarTree *ScalarTree;
 
   //special contouring for structured points
@@ -174,8 +174,8 @@ protected:
   //default if not structured data
   void DataSetContour(vtkDataSet *input, vtkPolyData *output);
 private:
-  vtkMarchingContourFilter(const vtkMarchingContourFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkMarchingContourFilter&) VTK_DELETE_FUNCTION;
+  vtkMarchingContourFilter(const vtkMarchingContourFilter&) = delete;
+  void operator=(const vtkMarchingContourFilter&) = delete;
 };
 
 /**

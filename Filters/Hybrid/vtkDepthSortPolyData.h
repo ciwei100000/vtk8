@@ -47,7 +47,7 @@ public:
   static vtkDepthSortPolyData *New();
 
   vtkTypeMacro(vtkDepthSortPolyData,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   enum Directions
   {
@@ -143,22 +143,22 @@ public:
    * filter will include scalar values that range from 0 to (ncells-1),
    * where 0 is closest to the sort direction.
    */
-  vtkSetMacro(SortScalars, int);
-  vtkGetMacro(SortScalars, int);
-  vtkBooleanMacro(SortScalars, int);
+  vtkSetMacro(SortScalars, vtkTypeBool);
+  vtkGetMacro(SortScalars, vtkTypeBool);
+  vtkBooleanMacro(SortScalars, vtkTypeBool);
   //@}
 
   /**
    * Return MTime also considering the dependent objects: the camera
    * and/or the prop3D.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkDepthSortPolyData();
-  ~vtkDepthSortPolyData() VTK_OVERRIDE;
+  ~vtkDepthSortPolyData() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   void ComputeProjectionVector(double vector[3], double origin[3]);
 
   int Direction;
@@ -168,11 +168,11 @@ protected:
   vtkTransform *Transform;
   double Vector[3];
   double Origin[3];
-  int SortScalars;
+  vtkTypeBool SortScalars;
 
 private:
-  vtkDepthSortPolyData(const vtkDepthSortPolyData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDepthSortPolyData&) VTK_DELETE_FUNCTION;
+  vtkDepthSortPolyData(const vtkDepthSortPolyData&) = delete;
+  void operator=(const vtkDepthSortPolyData&) = delete;
 };
 
 #endif

@@ -43,13 +43,13 @@ vtkStandardNewMacro(vtkUnstructuredGridHomogeneousRayIntegrator);
 
 vtkUnstructuredGridHomogeneousRayIntegrator::vtkUnstructuredGridHomogeneousRayIntegrator()
 {
-  this->Property = NULL;
+  this->Property = nullptr;
 
   this->NumComponents = 0;
-  this->ColorTable = NULL;
-  this->AttenuationTable = NULL;
-  this->TableShift = NULL;
-  this->TableScale = NULL;
+  this->ColorTable = nullptr;
+  this->AttenuationTable = nullptr;
+  this->TableShift = nullptr;
+  this->TableScale = nullptr;
 
   this->UseAverageColor = 0;
   this->TransferFunctionTableSize = 1024;
@@ -139,7 +139,7 @@ void vtkUnstructuredGridHomogeneousRayIntegrator::GetTransferFunctionTables(vtkD
                  this->AttenuationTable[c]);
 
     // Adjust attenuation by scalar unit length.  This will make the unit
-    // lenth the same as the model.
+    // length the same as the model.
     float unitlength = this->Property->GetScalarOpacityUnitDistance(c);
     for (int i = 0; i < this->TransferFunctionTableSize; i++)
     {

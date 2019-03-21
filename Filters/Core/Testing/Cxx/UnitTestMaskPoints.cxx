@@ -25,6 +25,7 @@
 #include "vtkMathUtilities.h"
 
 #include <cstdio>
+#include <random>
 #include <sstream>
 #include <algorithm>
 
@@ -43,7 +44,7 @@ int UnitTestMaskPoints (int, char*[])
   vtkSmartPointer<vtkMaskPoints> mask0 =
     vtkSmartPointer<vtkMaskPoints>::New();
   mask0->Print(print0);
-  std::cout << "PASSED" << std::endl;;
+  std::cout << "PASSED" << std::endl;
 
   std::cout << "Testing defaults...";
   mask0->SetInputData(MakePolyData(10000));
@@ -197,7 +198,7 @@ vtkSmartPointer<vtkPolyData> MakePolyData(unsigned int numPoints)
   {
     line.push_back(static_cast<double>(i));
   }
-  std::random_shuffle ( line.begin(), line.end() );
+  std::shuffle(line.begin(), line.end(), std::default_random_engine());
   for (unsigned int i = 0; i < numPoints; ++i)
   {
     points->InsertNextPoint(line[i], 0.0, 0.0);

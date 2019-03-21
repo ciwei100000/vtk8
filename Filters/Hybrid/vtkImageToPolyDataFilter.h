@@ -87,7 +87,7 @@ class VTKFILTERSHYBRID_EXPORT vtkImageToPolyDataFilter : public vtkPolyDataAlgor
 {
 public:
   vtkTypeMacro(vtkImageToPolyDataFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate object with initial number of colors 256.
@@ -139,9 +139,9 @@ public:
    * If the output style is set to polygonalize, then you can control
    * whether to smooth boundaries.
    */
-  vtkSetMacro(Smoothing, int);
-  vtkGetMacro(Smoothing, int);
-  vtkBooleanMacro(Smoothing, int);
+  vtkSetMacro(Smoothing, vtkTypeBool);
+  vtkGetMacro(Smoothing, vtkTypeBool);
+  vtkBooleanMacro(Smoothing, vtkTypeBool);
   //@}
 
   //@{
@@ -158,9 +158,9 @@ public:
    * Turn on/off whether the final polygons should be decimated.
    * whether to smooth boundaries.
    */
-  vtkSetMacro(Decimation, int);
-  vtkGetMacro(Decimation, int);
-  vtkBooleanMacro(Decimation, int);
+  vtkSetMacro(Decimation, vtkTypeBool);
+  vtkGetMacro(Decimation, vtkTypeBool);
+  vtkBooleanMacro(Decimation, vtkTypeBool);
   //@}
 
   //@{
@@ -198,16 +198,16 @@ public:
 
 protected:
   vtkImageToPolyDataFilter();
-  ~vtkImageToPolyDataFilter() VTK_OVERRIDE;
+  ~vtkImageToPolyDataFilter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   int OutputStyle;
   int ColorMode;
-  int Smoothing;
+  vtkTypeBool Smoothing;
   int NumberOfSmoothingIterations;
-  int Decimation;
+  vtkTypeBool Decimation;
   double DecimationError;
   int Error;
   int SubImageSize;
@@ -256,8 +256,8 @@ private:
   int IsSameColor(unsigned char *p1, unsigned char *p2);
 
 private:
-  vtkImageToPolyDataFilter(const vtkImageToPolyDataFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageToPolyDataFilter&) VTK_DELETE_FUNCTION;
+  vtkImageToPolyDataFilter(const vtkImageToPolyDataFilter&) = delete;
+  void operator=(const vtkImageToPolyDataFilter&) = delete;
 };
 
 #endif

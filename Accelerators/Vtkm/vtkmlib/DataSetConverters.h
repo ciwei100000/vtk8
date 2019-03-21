@@ -16,8 +16,12 @@
 
 #ifndef vtkmlib_DataSetConverters_h
 #define vtkmlib_DataSetConverters_h
+#ifndef __VTK_WRAP__
 
 #include "vtkAcceleratorsVTKmModule.h"
+
+#include "ArrayConverters.h" // for FieldsFlag
+
 #include "vtkmConfig.h" //required for general vtkm setup
 
 #include <vtkm/cont/DataSet.h>
@@ -33,18 +37,17 @@ namespace tovtkm {
 VTKACCELERATORSVTKM_EXPORT
 vtkm::cont::CoordinateSystem Convert(vtkPoints* points);
 
-// convert an image data type
-VTKACCELERATORSVTKM_EXPORT
-vtkm::cont::DataSet Convert(vtkImageData* input);
-
 // convert an structured grid type
 VTKACCELERATORSVTKM_EXPORT
-vtkm::cont::DataSet Convert(vtkStructuredGrid* input);
+vtkm::cont::DataSet Convert(vtkStructuredGrid* input,
+                            FieldsFlag fields = FieldsFlag::None);
 
 
 // determine the type and call the proper Convert routine
 VTKACCELERATORSVTKM_EXPORT
-vtkm::cont::DataSet Convert(vtkDataSet* input);
+vtkm::cont::DataSet Convert(vtkDataSet* input,
+                            FieldsFlag fields = FieldsFlag::None);
 }
 
+#endif
 #endif // vtkmlib_DataSetConverters_h

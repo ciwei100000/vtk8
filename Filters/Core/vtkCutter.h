@@ -64,7 +64,7 @@ class VTKFILTERSCORE_EXPORT vtkCutter : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkCutter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with user-specified implicit function; initial value of 0.0; and
@@ -132,7 +132,7 @@ public:
    * Override GetMTime because we delegate to vtkContourValues and refer to
    * vtkImplicitFunction.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -148,9 +148,9 @@ public:
    * interpolated from the implicit function values, and not the input scalar
    * data.
    */
-  vtkSetMacro(GenerateCutScalars,int);
-  vtkGetMacro(GenerateCutScalars,int);
-  vtkBooleanMacro(GenerateCutScalars,int);
+  vtkSetMacro(GenerateCutScalars,vtkTypeBool);
+  vtkGetMacro(GenerateCutScalars,vtkTypeBool);
+  vtkBooleanMacro(GenerateCutScalars,vtkTypeBool);
   //@}
 
  //@{
@@ -161,9 +161,9 @@ public:
   * will be 3D poygons, which might be nice to look at but hard
   * to compute with downstream.
   */
-  vtkSetMacro(GenerateTriangles,int);
-  vtkGetMacro(GenerateTriangles,int);
-  vtkBooleanMacro(GenerateTriangles,int);
+  vtkSetMacro(GenerateTriangles,vtkTypeBool);
+  vtkGetMacro(GenerateTriangles,vtkTypeBool);
+  vtkBooleanMacro(GenerateTriangles,vtkTypeBool);
  //@}
 
   //@{
@@ -188,7 +188,7 @@ public:
    * For most applications, the default order is fine (and faster).
 
    * Sort by cell is going to have a problem if the input has 2D and 3D cells.
-   * Cell data will be scrambled becauses with
+   * Cell data will be scrambled because with
    * vtkPolyData output, verts and lines have lower cell ids than triangles.
    */
   vtkSetClampMacro(SortBy,int,VTK_SORT_BY_VALUE,VTK_SORT_BY_CELL);
@@ -224,12 +224,12 @@ public:
   //@}
 
 protected:
-  vtkCutter(vtkImplicitFunction *cf=NULL);
-  ~vtkCutter() VTK_OVERRIDE;
+  vtkCutter(vtkImplicitFunction *cf=nullptr);
+  ~vtkCutter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
   void UnstructuredGridCutter(vtkDataSet *input, vtkPolyData *output);
   void DataSetCutter(vtkDataSet *input, vtkPolyData *output);
   void StructuredPointsCutter(vtkDataSet *, vtkPolyData *,
@@ -238,7 +238,7 @@ protected:
   void StructuredGridCutter(vtkDataSet *, vtkPolyData *);
   void RectilinearGridCutter(vtkDataSet *, vtkPolyData *);
   vtkImplicitFunction *CutFunction;
-  int GenerateTriangles;
+  vtkTypeBool GenerateTriangles;
 
   vtkSynchronizedTemplates3D *SynchronizedTemplates3D;
   vtkSynchronizedTemplatesCutter3D *SynchronizedTemplatesCutter3D;
@@ -248,11 +248,11 @@ protected:
   vtkIncrementalPointLocator *Locator;
   int SortBy;
   vtkContourValues *ContourValues;
-  int GenerateCutScalars;
+  vtkTypeBool GenerateCutScalars;
   int OutputPointsPrecision;
 private:
-  vtkCutter(const vtkCutter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCutter&) VTK_DELETE_FUNCTION;
+  vtkCutter(const vtkCutter&) = delete;
+  void operator=(const vtkCutter&) = delete;
 };
 
 //@{

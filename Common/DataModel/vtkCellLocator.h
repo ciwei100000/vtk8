@@ -47,7 +47,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkCellLocator : public vtkAbstractCellLocator
 {
 public:
   vtkTypeMacro(vtkCellLocator,vtkAbstractCellLocator);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct with automatic computation of divisions, averaging
@@ -71,13 +71,14 @@ public:
 
   /**
    * Return intersection point (if any) AND the cell which was intersected by
-   * the finite line. The cell is returned as a cell id and as a generic cell.
-   * For other IntersectWithLine signatures, see vtkAbstractCellLocator
+   * the finite line. The cell is returned as a cell id and as a generic
+   * cell.  For other IntersectWithLine signatures, see
+   * vtkAbstractCellLocator.  Note this is currently not thread-safe.
    */
-  int IntersectWithLine(double a0[3], double a1[3], double tol,
+  int IntersectWithLine(const double a0[3], const double a1[3], double tol,
                         double& t, double x[3], double pcoords[3],
                         int &subId, vtkIdType &cellId,
-                        vtkGenericCell *cell) VTK_OVERRIDE;
+                        vtkGenericCell *cell) override;
 
   /**
    * Return the closest point and the cell which is closest to the point x.
@@ -91,9 +92,9 @@ public:
    * exit.
    */
   void FindClosestPoint(
-    double x[3], double closestPoint[3],
+    const double x[3], double closestPoint[3],
     vtkGenericCell *cell, vtkIdType &cellId,
-    int &subId, double& dist2) VTK_OVERRIDE;
+    int &subId, double& dist2) override;
 
   /**
    * Return the closest point within a specified radius and the cell which is
@@ -109,13 +110,13 @@ public:
    * for loop.  If a closest point is found, "cell" contains the points and
    * ptIds for the cell "cellId" upon exit.  If a closest point is found,
    * inside returns the return value of the EvaluatePosition call to the
-   * closest cell; inside(=1) or outside(=0).
-   * For other FindClosestPointWithinRadius signatures, see vtkAbstractCellLocator
+   * closest cell; inside(=1) or outside(=0). For other
+   * FindClosestPointWithinRadius signatures, see vtkAbstractCellLocator.
    */
   vtkIdType FindClosestPointWithinRadius(
     double x[3], double radius, double closestPoint[3],
     vtkGenericCell *cell, vtkIdType &cellId,
-    int &subId, double& dist2, int &inside) VTK_OVERRIDE;
+    int &subId, double& dist2, int &inside) override;
 
   /**
    * Get the cells in a particular bucket.
@@ -135,14 +136,14 @@ public:
    */
   vtkIdType FindCell(
     double x[3], double tol2, vtkGenericCell *GenCell,
-    double pcoords[3], double *weights) VTK_OVERRIDE;
+    double pcoords[3], double *weights) override;
 
   /**
    * Return a list of unique cell ids inside of a given bounding box. The
    * user must provide the vtkIdList to populate. This method returns data
    * only after the locator has been built.
    */
-  void FindCellsWithinBounds(double *bbox, vtkIdList *cells) VTK_OVERRIDE;
+  void FindCellsWithinBounds(double *bbox, vtkIdList *cells) override;
 
   /**
    * Given a finite line defined by the two points (p1,p2), return the list
@@ -151,34 +152,34 @@ public:
    * to populate. This method returns data only after the locator has been
    * built.
    */
-  void FindCellsAlongLine(double p1[3], double p2[3],
-                          double tolerance, vtkIdList *cells) VTK_OVERRIDE;
+  void FindCellsAlongLine(const double p1[3], const double p2[3],
+                          double tolerance, vtkIdList *cells) override;
 
   //@{
   /**
    * Satisfy vtkLocator abstract interface.
    */
-  void FreeSearchStructure() VTK_OVERRIDE;
-  void BuildLocator() VTK_OVERRIDE;
+  void FreeSearchStructure() override;
+  void BuildLocator() override;
   virtual void BuildLocatorIfNeeded();
   virtual void ForceBuildLocator();
   virtual void BuildLocatorInternal();
-  void GenerateRepresentation(int level, vtkPolyData *pd) VTK_OVERRIDE;
+  void GenerateRepresentation(int level, vtkPolyData *pd) override;
   //@}
 
 protected:
   vtkCellLocator();
-  ~vtkCellLocator() VTK_OVERRIDE;
+  ~vtkCellLocator() override;
 
   void GetBucketNeighbors(int ijk[3], int ndivs, int level);
-  void GetOverlappingBuckets(double x[3], int ijk[3], double dist,
+  void GetOverlappingBuckets(const double x[3], int ijk[3], double dist,
                              int prevMinLevel[3], int prevMaxLevel[3]);
 
   void ClearCellHasBeenVisited();
-  void ClearCellHasBeenVisited(int id);
+  void ClearCellHasBeenVisited(vtkIdType id);
 
-  double Distance2ToBucket(double x[3], int nei[3]);
-  double Distance2ToBounds(double x[3], double bounds[6]);
+  double Distance2ToBucket(const double x[3], int nei[3]);
+  double Distance2ToBounds(const double x[3], double bounds[6]);
 
   int NumberOfOctants; // number of octants in tree
   double Bounds[6]; // bounding box root octant
@@ -200,7 +201,7 @@ protected:
 
   void ComputeOctantBounds(int i, int j, int k);
   double OctantBounds[6]; //the bounds of the current octant
-  int IsInOctantBounds(double x[3], double tol = 0.0)
+  int IsInOctantBounds(const double x[3], double tol = 0.0)
   {
     if ( this->OctantBounds[0]-tol <= x[0] && x[0] <= this->OctantBounds[1]+tol &&
          this->OctantBounds[2]-tol <= x[1] && x[1] <= this->OctantBounds[3]+tol &&
@@ -215,10 +216,8 @@ protected:
   }
 
 private:
-  vtkCellLocator(const vtkCellLocator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCellLocator&) VTK_DELETE_FUNCTION;
+  vtkCellLocator(const vtkCellLocator&) = delete;
+  void operator=(const vtkCellLocator&) = delete;
 };
 
 #endif
-
-

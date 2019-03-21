@@ -43,7 +43,7 @@ vtkStandardNewMacro(vtkImageBSplineInterpolator);
 vtkImageBSplineInterpolator::vtkImageBSplineInterpolator()
 {
   this->SplineDegree = 3;
-  this->KernelLookupTable = NULL;
+  this->KernelLookupTable = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -82,10 +82,7 @@ bool vtkImageBSplineInterpolator::IsSeparable()
 //----------------------------------------------------------------------------
 void vtkImageBSplineInterpolator::SetSplineDegree(int degree)
 {
-  static int mindegree = 0;
-  static int maxdegree = VTK_IMAGE_BSPLINE_DEGREE_MAX;
-  degree = ((degree > mindegree) ? degree : mindegree);
-  degree = ((degree < maxdegree) ? degree : maxdegree);
+  degree = vtkMath::ClampValue(degree, 0, VTK_IMAGE_BSPLINE_DEGREE_MAX);
   if (this->SplineDegree != degree)
   {
     this->SplineDegree = degree;
@@ -117,7 +114,7 @@ void vtkImageBSplineInterpolator::InternalUpdate()
   int mode = this->SplineDegree;
 
   if (this->InterpolationInfo->InterpolationMode != mode ||
-      this->KernelLookupTable == NULL)
+      this->KernelLookupTable == nullptr)
   {
     this->BuildKernelLookupTable();
   }
@@ -457,7 +454,7 @@ void vtkImageBSplineInterpolatorGetInterpolationFunc(
         &(vtkImageBSplineInterpolate<F, VTK_TT>::BSpline)
       );
     default:
-      *interpolate = 0;
+      *interpolate = nullptr;
   }
 }
 
@@ -580,7 +577,7 @@ void vtkImageBSplineInterpolatorGetRowInterpolationFunc(
       *summation = &(vtkImageBSplineRowInterpolate<F,VTK_TT>::BSpline)
       );
     default:
-      *summation = 0;
+      *summation = nullptr;
   }
 }
 

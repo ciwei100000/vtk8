@@ -116,6 +116,8 @@ int vtkExtractBlock::RequestData(
   vtkMultiBlockDataSet *input = vtkMultiBlockDataSet::GetData(inputVector[0], 0);
   vtkMultiBlockDataSet *output = vtkMultiBlockDataSet::GetData(outputVector, 0);
 
+  vtkDebugMacro(<<"Extracting blocks");
+
   if (this->Indices->find(0) != this->Indices->end())
   {
     // trivial case.
@@ -132,7 +134,7 @@ int vtkExtractBlock::RequestData(
   iter->VisitOnlyLeavesOff();
 
   for (iter->InitTraversal();
-    !iter->IsDoneWithTraversal() && this->ActiveIndices->size()>0;
+    !iter->IsDoneWithTraversal() && !this->ActiveIndices->empty();
     iter->GoToNextItem())
   {
     if (this->ActiveIndices->find(iter->GetCurrentFlatIndex()) !=
@@ -155,9 +157,9 @@ int vtkExtractBlock::RequestData(
   // Now prune the output tree.
 
   // Since in case multiple processes are involved, this process may have some
-  // data-set pointers NULL. Hence, pruning cannot simply trim NULL ptrs, since
+  // data-set pointers nullptr. Hence, pruning cannot simply trim nullptr ptrs, since
   // in that case we may end up with different structures on different
-  // processess, which is a big NO-NO. Hence, we first flag nodes based on
+  // processes, which is a big NO-NO. Hence, we first flag nodes based on
   // whether they are being pruned or not.
 
   iter = output->NewTreeIterator();
@@ -177,7 +179,7 @@ int vtkExtractBlock::RequestData(
   iter->Delete();
 
   // Do the actual pruning. Only those branches are pruned which don't have
-  // DON_PRUNE flag set.
+  // DONT_PRUNE flag set.
   this->Prune(output);
   return 1;
 }
@@ -276,4 +278,3 @@ void vtkExtractBlock::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "PruneOutput: " << this->PruneOutput << endl;
   os << indent << "MaintainStructure: " << this->MaintainStructure << endl;
 }
-

@@ -81,10 +81,10 @@ class VTKFILTERSHYBRID_EXPORT vtkProjectedTerrainPath : public vtkPolyDataAlgori
 public:
   //@{
   /**
-   * Standard methids for printing and determining type information.
+   * Standard methods for printing and determining type information.
    */
   vtkTypeMacro(vtkProjectedTerrainPath,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   /**
@@ -162,11 +162,11 @@ public:
 
 protected:
   vtkProjectedTerrainPath();
-  ~vtkProjectedTerrainPath() VTK_OVERRIDE;
+  ~vtkProjectedTerrainPath() override;
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   // Supporting methods
   void GetImageIndex(double x[3], double loc[2], int ij[2]);
@@ -182,7 +182,7 @@ protected:
   double    HeightTolerance;
   vtkIdType MaximumNumberOfLines;
 
-  //Bookeeping arrays
+  //Bookkeeping arrays
   int          Dimensions[3];
   int          Extent[6];
   double       Origin[3];
@@ -200,8 +200,8 @@ protected:
   vtkEdgeList *EdgeList;
 
 private:
-  vtkProjectedTerrainPath(const vtkProjectedTerrainPath&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkProjectedTerrainPath&) VTK_DELETE_FUNCTION;
+  vtkProjectedTerrainPath(const vtkProjectedTerrainPath&) = delete;
+  void operator=(const vtkProjectedTerrainPath&) = delete;
 
 };
 

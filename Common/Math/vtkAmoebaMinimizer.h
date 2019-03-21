@@ -37,7 +37,7 @@ class VTKCOMMONMATH_EXPORT vtkAmoebaMinimizer : public vtkObject
 public:
   static vtkAmoebaMinimizer *New();
   vtkTypeMacro(vtkAmoebaMinimizer,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Specify the function to be minimized.  When this function
@@ -95,7 +95,7 @@ public:
 
   /**
    * For completeness, an unchecked method to get the name for particular
-   * parameter (the result will be NULL if no name was set).
+   * parameter (the result will be nullptr if no name was set).
    */
   const char *GetParameterName(int i) { return this->ParameterNames[i]; };
 
@@ -175,7 +175,7 @@ public:
 
   //@{
   /**
-   * Return the number of interations that have been performed.  This
+   * Return the number of iterations that have been performed.  This
    * is not necessarily the same as the number of function evaluations.
    */
   vtkGetMacro(Iterations,int);
@@ -196,7 +196,7 @@ public:
 
 protected:
   vtkAmoebaMinimizer();
-  ~vtkAmoebaMinimizer() VTK_OVERRIDE;
+  ~vtkAmoebaMinimizer() override;
 
   void (*Function)(void *);
   void (*FunctionArgDelete)(void *);
@@ -234,8 +234,8 @@ private:
   int PerformAmoeba();
   int CheckParameterTolerance();
 
-  vtkAmoebaMinimizer(const vtkAmoebaMinimizer&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAmoebaMinimizer&) VTK_DELETE_FUNCTION;
+  vtkAmoebaMinimizer(const vtkAmoebaMinimizer&) = delete;
+  void operator=(const vtkAmoebaMinimizer&) = delete;
 };
 
 #endif

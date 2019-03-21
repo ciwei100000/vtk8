@@ -22,7 +22,7 @@
 #include "vtkUnicodeString.h"
 
 #include "vtkObject.h"
-#include <utf8.h>
+#include <vtk_utf8.h>
 
 #include <map>
 #include <stdexcept>
@@ -30,9 +30,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // vtkUnicodeString::const_iterator
 
-vtkUnicodeString::const_iterator::const_iterator()
-{
-}
+vtkUnicodeString::const_iterator::const_iterator() = default;
 
 vtkUnicodeString::const_iterator::const_iterator(std::string::const_iterator position) :
   Position(position)
@@ -122,9 +120,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////
 // vtkUnicodeString
 
-vtkUnicodeString::vtkUnicodeString()
-{
-}
+vtkUnicodeString::vtkUnicodeString() = default;
 
 vtkUnicodeString::vtkUnicodeString(const vtkUnicodeString& rhs) :
   Storage(rhs.Storage)

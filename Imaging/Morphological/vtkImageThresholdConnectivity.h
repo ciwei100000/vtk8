@@ -46,7 +46,7 @@ class VTKIMAGINGMORPHOLOGICAL_EXPORT vtkImageThresholdConnectivity :
 public:
   static vtkImageThresholdConnectivity *New();
   vtkTypeMacro(vtkImageThresholdConnectivity, vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -68,7 +68,7 @@ public:
   void ThresholdByLower(double thresh);
 
   /**
-   * Values within this range will be filled, where the range inludes
+   * Values within this range will be filled, where the range includes
    * values that are exactly equal to the lower and upper thresholds.
    */
   void ThresholdBetween(double lower, double upper);
@@ -77,9 +77,9 @@ public:
   /**
    * Replace the filled region by the value set by SetInValue().
    */
-  vtkSetMacro(ReplaceIn, int);
-  vtkGetMacro(ReplaceIn, int);
-  vtkBooleanMacro(ReplaceIn, int);
+  vtkSetMacro(ReplaceIn, vtkTypeBool);
+  vtkGetMacro(ReplaceIn, vtkTypeBool);
+  vtkBooleanMacro(ReplaceIn, vtkTypeBool);
   //@}
 
   //@{
@@ -94,9 +94,9 @@ public:
   /**
    * Replace the filled region by the value set by SetInValue().
    */
-  vtkSetMacro(ReplaceOut, int);
-  vtkGetMacro(ReplaceOut, int);
-  vtkBooleanMacro(ReplaceOut, int);
+  vtkSetMacro(ReplaceOut, vtkTypeBool);
+  vtkGetMacro(ReplaceOut, vtkTypeBool);
+  vtkBooleanMacro(ReplaceOut, vtkTypeBool);
   //@}
 
   //@{
@@ -168,7 +168,7 @@ public:
   /**
    * Override the MTime to account for the seed points.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -180,14 +180,14 @@ public:
 
 protected:
   vtkImageThresholdConnectivity();
-  ~vtkImageThresholdConnectivity() VTK_OVERRIDE;
+  ~vtkImageThresholdConnectivity() override;
 
   double UpperThreshold;
   double LowerThreshold;
   double InValue;
   double OutValue;
-  int ReplaceIn;
-  int ReplaceOut;
+  vtkTypeBool ReplaceIn;
+  vtkTypeBool ReplaceOut;
 
   double NeighborhoodRadius[3];
   double NeighborhoodFraction;
@@ -206,15 +206,15 @@ protected:
 
   void ComputeInputUpdateExtent(int inExt[6], int outExt[6]);
 
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
   int RequestUpdateExtent(vtkInformation *, vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
 
 private:
-  vtkImageThresholdConnectivity(const vtkImageThresholdConnectivity&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageThresholdConnectivity&) VTK_DELETE_FUNCTION;
+  vtkImageThresholdConnectivity(const vtkImageThresholdConnectivity&) = delete;
+  void operator=(const vtkImageThresholdConnectivity&) = delete;
 };
 
 #endif

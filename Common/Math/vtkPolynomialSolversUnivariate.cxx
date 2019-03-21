@@ -27,12 +27,7 @@
 #include "vtkDataArray.h"
 #include "vtkMath.h"
 
-#if defined(_MSC_VER) || \
-    (defined(__BORLANDC__) && (__BORLANDC__ < 0x660)) || \
-    defined (__SUNPRO_C) || \
-    defined(__SUNPRO_CC)
-# define fmax(a,b) ( (a) >= (b) ? (a) : (b) )
-#endif
+#include <cmath>
 
 #define VTK_SIGN(x)              (( (x) < 0 )?( -1 ):( 1 ))
 
@@ -304,7 +299,7 @@ static int polynomialEucliDivOppositeR(
 }
 
 //----------------------------------------------------------------------------
-inline double vtkNormalizePolyCoeff( double d, double* div = 0 )
+inline double vtkNormalizePolyCoeff( double d, double* div = nullptr )
 {
   static const double high = 18446744073709551616.; // 2^64
   static const double reallyBig = 1.e300;
@@ -342,7 +337,7 @@ inline double vtkNormalizePolyCoeff( double d, double* div = 0 )
 // Does not store Q and stores -R instead of R. This premultiplies Ai by mul and
 // then divides mR by div. mR MUST have at least the size of m+1, because it is
 // used as temporary storage besides as the return value.
-// This shouldn't be too  much slower than the version without mul and div. It
+// This shouldn't be too much slower than the version without mul and div. It
 // has to copy mul*Ai into mR at the beginning. So it has m+1 extra
 // multiplications and assignments. When it assigns final values into mR it
 // divides by div. So it has deg(mR) extra divisions.
@@ -458,7 +453,7 @@ inline double evaluateHorner( double* P, int d, double x )
 }
 
 static int vtkGetSignChanges(
-  double* P, int* degP, int* offsets, int count, double val, int* fsign = 0 )
+  double* P, int* degP, int* offsets, int count, double val, int* fsign = nullptr )
 {
   int oldVal = 0;
   double v;
@@ -673,7 +668,9 @@ extern "C" {
 
 static int vtkPolynomialSolversUnivariateCompareRoots( const void* a, const void* b )
 {
-  return ( *( (const double*) a ) ) < ( *( (const double*) b ) ) ? -1 : 1;
+  double aa = *static_cast<const double*>(a);
+  double bb = *static_cast<const double*>(b);
+  return ( aa < bb ) ? -1 : 1;
 }
 
 } // extern "C"

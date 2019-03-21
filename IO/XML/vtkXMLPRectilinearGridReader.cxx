@@ -25,14 +25,10 @@
 vtkStandardNewMacro(vtkXMLPRectilinearGridReader);
 
 //----------------------------------------------------------------------------
-vtkXMLPRectilinearGridReader::vtkXMLPRectilinearGridReader()
-{
-}
+vtkXMLPRectilinearGridReader::vtkXMLPRectilinearGridReader() = default;
 
 //----------------------------------------------------------------------------
-vtkXMLPRectilinearGridReader::~vtkXMLPRectilinearGridReader()
-{
-}
+vtkXMLPRectilinearGridReader::~vtkXMLPRectilinearGridReader() = default;
 
 //----------------------------------------------------------------------------
 void vtkXMLPRectilinearGridReader::PrintSelf(ostream& os, vtkIndent indent)
@@ -91,7 +87,7 @@ vtkXMLPRectilinearGridReader::ReadPrimaryElement(vtkXMLDataElement* ePrimary)
   if(!this->Superclass::ReadPrimaryElement(ePrimary)) { return 0; }
 
   // Find the PCoordinates element.
-  this->PCoordinatesElement = 0;
+  this->PCoordinatesElement = nullptr;
   int i;
   int numNested = ePrimary->GetNumberOfNestedElements();
   for(i=0;i < numNested; ++i)

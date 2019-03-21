@@ -29,6 +29,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef vtkDispatcher_Private_h
 #define vtkDispatcher_Private_h
+#ifndef __VTK_WRAP__
 
 #include <typeinfo>
 #include <cassert>
@@ -101,7 +102,7 @@ class FunctorImpl{
     template <class U>
     static U* Clone(U* pObj)
     {
-        if (!pObj) return 0;
+        if (!pObj) return nullptr;
         U* pClone = static_cast<U*>(pObj->DoClone());
         assert(typeid(*pClone) == typeid(*pObj));
         return pClone;
@@ -110,7 +111,7 @@ class FunctorImpl{
     FunctorImpl() {}
     FunctorImpl(const FunctorImpl&) {}
   private:
-    FunctorImpl& operator =(const FunctorImpl&) VTK_DELETE_FUNCTION;
+    FunctorImpl& operator =(const FunctorImpl&) = delete;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,16 +126,16 @@ public:
   typedef typename Base::Parm1 Parm1;
 
   FunctorHandler(Fun& fun) : f_(fun) {}
-  virtual ~FunctorHandler() {}
+  ~FunctorHandler() override {}
 
-  ResultType operator()(Parm1& p1)
+  ResultType operator()(Parm1& p1) override
   { return f_(p1); }
-  virtual FunctorHandler* DoClone() const { return new FunctorHandler(*this); }
+  FunctorHandler* DoClone() const override { return new FunctorHandler(*this); }
 
 private:
   Fun f_;
   FunctorHandler(const FunctorHandler &b) : ParentFunctor::Impl(b), f_(b.f_) {}
-  FunctorHandler& operator =(const FunctorHandler& b) VTK_DELETE_FUNCTION;
+  FunctorHandler& operator =(const FunctorHandler& b) = delete;
 };
 
 
@@ -256,7 +257,7 @@ class FunctorImpl{
     template <class U>
     static U* Clone(U* pObj)
     {
-        if (!pObj) return 0;
+        if (!pObj) return nullptr;
         U* pClone = static_cast<U*>(pObj->DoClone());
         assert(typeid(*pClone) == typeid(*pObj));
         return pClone;
@@ -265,7 +266,7 @@ class FunctorImpl{
     FunctorImpl() {}
     FunctorImpl(const FunctorImpl&) {}
   private:
-    FunctorImpl& operator =(const FunctorImpl&) VTK_DELETE_FUNCTION;
+    FunctorImpl& operator =(const FunctorImpl&) = delete;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -281,17 +282,17 @@ public:
   typedef typename Base::Parm2 Parm2;
 
   FunctorHandler(const Fun& fun) : f_(fun) {}
-  virtual ~FunctorHandler() {}
+  ~FunctorHandler() override {}
 
-  ResultType operator()(Parm1& p1,Parm2& p2)
+  ResultType operator()(Parm1& p1,Parm2& p2) override
   { return f_(p1,p2); }
 
-  virtual FunctorHandler* DoClone() const { return new FunctorHandler(*this); }
+  FunctorHandler* DoClone() const override { return new FunctorHandler(*this); }
 
 private:
   Fun f_;
   FunctorHandler(const FunctorHandler &b) : ParentFunctor::Impl(b), f_(b.f_) {}
-  FunctorHandler& operator =(const FunctorHandler& b) VTK_DELETE_FUNCTION;
+  FunctorHandler& operator =(const FunctorHandler& b) = delete;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,5 +447,6 @@ inline bool operator>=(const TypeInfo& lhs, const TypeInfo& rhs)
 
 }
 
+#endif
 #endif // vtkDispatcherPrivate_h
 // VTK-HeaderTest-Exclude: vtkDispatcher_Private.h

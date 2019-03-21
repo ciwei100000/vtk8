@@ -26,7 +26,7 @@
 vtkStandardNewMacro(vtkImageContinuousErode3D);
 
 //----------------------------------------------------------------------------
-// Construct an instance of vtkImageContinuousErode3D fitler.
+// Construct an instance of vtkImageContinuousErode3D filter.
 // By default zero values are eroded.
 vtkImageContinuousErode3D::vtkImageContinuousErode3D()
 {
@@ -46,7 +46,7 @@ vtkImageContinuousErode3D::~vtkImageContinuousErode3D()
   if (this->Ellipse)
   {
     this->Ellipse->Delete();
-    this->Ellipse = NULL;
+    this->Ellipse = nullptr;
   }
 }
 

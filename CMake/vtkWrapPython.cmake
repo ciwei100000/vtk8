@@ -43,10 +43,9 @@ macro(VTK_WRAP_PYTHON3 TARGET SRC_LIST_NAME SOURCES)
     set(_common_args "${_common_args}--types \"${file}\"\n")
   endforeach()
 
-  if(NOT VTK_ENABLE_KITS)
-    # write wrapper-tool arguments to a file
-    set(_args_file ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.$<CONFIGURATION>.args)
-    file(GENERATE OUTPUT ${_args_file} CONTENT "${_common_args}
+  # write wrapper-tool arguments to a file
+  set(_args_file ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.$<CONFIGURATION>.args)
+  file(GENERATE OUTPUT ${_args_file} CONTENT "${_common_args}
 $<$<BOOL:$<TARGET_PROPERTY:${TARGET},COMPILE_DEFINITIONS>>:
 -D\"$<JOIN:$<TARGET_PROPERTY:${TARGET},COMPILE_DEFINITIONS>,\"
 -D\">\">
@@ -54,101 +53,82 @@ $<$<BOOL:$<TARGET_PROPERTY:${TARGET},INCLUDE_DIRECTORIES>>:
 -I\"$<JOIN:$<TARGET_PROPERTY:${TARGET},INCLUDE_DIRECTORIES>,\"
 -I\">\">
 ")
-  else()
-    # all the include directories
-    set(TMP_INCLUDE_DIRS)
-    set(_modules ${ARGN})
-    if(NOT _modules)
-      string(REGEX REPLACE "Python\$" "" module "${TARGET}")
-      set(_modules ${module})
-    endif()
-    foreach(module IN LISTS ${_modules})
-      if(${module}_INCLUDE_DIRS)
-        list(APPEND TMP_INCLUDE_DIRS ${${module}_INCLUDE_DIRS})
-      endif()
-    endforeach()
-    if(VTK_WRAP_INCLUDE_DIRS)
-      list(APPEND TMP_INCLUDE_DIRS ${VTK_WRAP_INCLUDE_DIRS})
-    else()
-      list(APPEND TMP_INCLUDE_DIRS ${VTK_INCLUDE_DIRS})
-    endif()
-    if(EXTRA_PYTHON_INCLUDE_DIRS)
-      list(APPEND TMP_INCLUDE_DIRS ${EXTRA_PYTHON_INCLUDE_DIRS})
-    endif()
-    foreach(INCLUDE_DIR ${TMP_INCLUDE_DIRS})
-      set(_common_args "${_common_args}-I\"${INCLUDE_DIR}\"\n")
-    endforeach()
-    get_directory_property(_def_list DEFINITION COMPILE_DEFINITIONS)
-    foreach(TMP_DEF ${_def_list})
-      set(_common_args "${_common_args}-D${TMP_DEF}\n")
-    endforeach()
-    # write wrapper-tool arguments to a file
-    string(STRIP "${_common_args}" CMAKE_CONFIGURABLE_FILE_CONTENT)
-    set(_args_file ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.args)
-    configure_file(${CMAKE_ROOT}/Modules/CMakeConfigurableFile.in
-                   ${_args_file} @ONLY)
-  endif()
+
+  if (CMAKE_GENERATOR MATCHES "Ninja")
+    set(hierarchy_depend ${KIT_HIERARCHY_FILE})
+  else ()
+    string(LENGTH "${TARGET}" target_length)
+    math(EXPR target_length "${target_length} - 6")
+    string(SUBSTRING "${TARGET}" 0 "${target_length}" target_basename)
+    get_property(is_kit GLOBAL
+      PROPERTY "_vtk_${target_basename}_is_kit")
+    if (is_kit)
+      set(hierarchy_depend)
+      get_property(kit_modules GLOBAL
+        PROPERTY "_vtk_${target_basename}_kit_modules")
+      message("depends for ${TARGET}: ${kit_modules}")
+      foreach (depend IN LISTS kit_modules)
+        if(TARGET "${depend}Hierarchy")
+          list(APPEND hierarchy_depend
+            "${depend}Hierarchy")
+        endif()
+      endforeach ()
+    else ()
+      set(hierarchy_depend "${target_basename}Hierarchy")
+    endif ()
+  endif ()
 
   # for each class
   foreach(FILE ${SOURCES})
-    # should we wrap the file?
-    get_source_file_property(TMP_EXCLUDE_PYTHON ${FILE} WRAP_EXCLUDE_PYTHON)
+    # what is the filename without the extension
+    get_filename_component(TMP_FILENAME ${FILE} NAME_WE)
 
-    # if we should wrap it
-    if(NOT TMP_EXCLUDE_PYTHON)
+    # the input file might be full path so handle that
+    get_filename_component(TMP_FILEPATH ${FILE} PATH)
 
-      # what is the filename without the extension
-      get_filename_component(TMP_FILENAME ${FILE} NAME_WE)
-
-      # the input file might be full path so handle that
-      get_filename_component(TMP_FILEPATH ${FILE} PATH)
-
-      # compute the input filename
-      if(TMP_FILEPATH)
-        set(TMP_INPUT ${TMP_FILEPATH}/${TMP_FILENAME}.h)
-      else()
-        set(TMP_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TMP_FILENAME}.h)
-      endif()
-
-      # add the info to the init file
-      set(VTK_WRAPPER_INIT_DATA
-        "${VTK_WRAPPER_INIT_DATA}\n${TMP_FILENAME}")
-
-      # new source file is namePython.cxx, add to resulting list
-      list(APPEND ${SRC_LIST_NAME} ${TMP_FILENAME}Python.cxx)
-
-      # add custom command to output
-      add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}Python.cxx
-        DEPENDS ${VTK_WRAP_PYTHON_EXE}
-                ${VTK_WRAP_HINTS}
-                ${TMP_INPUT}
-                ${_args_file}
-                ${KIT_HIERARCHY_FILE}
-        COMMAND ${VTK_WRAP_PYTHON_EXE}
-                @${_args_file}
-                -o ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}Python.cxx
-                ${TMP_INPUT}
-        COMMENT "Python Wrapping - generating ${TMP_FILENAME}Python.cxx"
-        VERBATIM
-        )
-
-      # Add this output to a custom target if needed.
-      if(VTK_WRAP_PYTHON_NEED_CUSTOM_TARGETS)
-        set(VTK_WRAP_PYTHON_CUSTOM_LIST ${VTK_WRAP_PYTHON_CUSTOM_LIST}
-          ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}Python.cxx)
-        set(VTK_WRAP_PYTHON_CUSTOM_COUNT ${VTK_WRAP_PYTHON_CUSTOM_COUNT}x)
-        if(VTK_WRAP_PYTHON_CUSTOM_COUNT MATCHES "^${VTK_WRAP_PYTHON_CUSTOM_LIMIT}$")
-          set(VTK_WRAP_PYTHON_CUSTOM_NAME ${VTK_WRAP_PYTHON_CUSTOM_NAME}Hack)
-          add_custom_target(${VTK_WRAP_PYTHON_CUSTOM_NAME}
-            DEPENDS ${VTK_WRAP_PYTHON_CUSTOM_LIST})
-          set(KIT_PYTHON_DEPS ${VTK_WRAP_PYTHON_CUSTOM_NAME})
-          set(VTK_WRAP_PYTHON_CUSTOM_LIST)
-          set(VTK_WRAP_PYTHON_CUSTOM_COUNT)
-        endif()
-      endif()
+    # compute the input filename
+    if(TMP_FILEPATH)
+      set(TMP_INPUT ${TMP_FILEPATH}/${TMP_FILENAME}.h)
     else()
-      # message("${TMP_FILENAME} will not be wrapped.")
+      set(TMP_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/${TMP_FILENAME}.h)
+    endif()
+
+    # add the info to the init file
+    set(VTK_WRAPPER_INIT_DATA
+      "${VTK_WRAPPER_INIT_DATA}\n${TMP_FILENAME}")
+
+    # new source file is namePython.cxx, add to resulting list
+    list(APPEND ${SRC_LIST_NAME} ${TMP_FILENAME}Python.cxx)
+
+    # add custom command to output
+    add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}Python.cxx
+      DEPENDS ${VTK_WRAP_PYTHON_EXE}
+              ${VTK_WRAP_HINTS}
+              ${TMP_INPUT}
+              ${_args_file}
+              ${hierarchy_depend}
+      COMMAND ${VTK_WRAP_PYTHON_EXE}
+              @${_args_file}
+              -o ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}Python.cxx
+              ${TMP_INPUT}
+      COMMENT "Python Wrapping - generating ${TMP_FILENAME}Python.cxx"
+      VERBATIM
+      )
+
+    # Add this output to a custom target if needed.
+    if(VTK_WRAP_PYTHON_NEED_CUSTOM_TARGETS)
+      set(VTK_WRAP_PYTHON_CUSTOM_LIST ${VTK_WRAP_PYTHON_CUSTOM_LIST}
+        ${CMAKE_CURRENT_BINARY_DIR}/${TMP_FILENAME}Python.cxx)
+      set(VTK_WRAP_PYTHON_CUSTOM_COUNT ${VTK_WRAP_PYTHON_CUSTOM_COUNT}x)
+      if(VTK_WRAP_PYTHON_CUSTOM_COUNT MATCHES "^${VTK_WRAP_PYTHON_CUSTOM_LIMIT}$")
+        set(VTK_WRAP_PYTHON_CUSTOM_NAME ${VTK_WRAP_PYTHON_CUSTOM_NAME}Hack)
+        add_custom_target(${VTK_WRAP_PYTHON_CUSTOM_NAME}
+          DEPENDS ${VTK_WRAP_PYTHON_CUSTOM_LIST})
+        set(KIT_PYTHON_DEPS ${VTK_WRAP_PYTHON_CUSTOM_NAME})
+        set(VTK_WRAP_PYTHON_CUSTOM_LIST)
+        set(VTK_WRAP_PYTHON_CUSTOM_COUNT)
+      endif()
     endif()
   endforeach()
 
@@ -242,18 +222,14 @@ macro(vtk_wrap_python TARGET SRC_LIST_NAME)
 
   # Decide what to do for each header.
   foreach(header ${${module}_HEADERS})
-    # Everything in this block is for headers that will be wrapped.
-    if(NOT ${module}_HEADER_${header}_WRAP_EXCLUDE_PYTHON)
-
-      # Find the full path to the header file to be wrapped.
-      vtk_find_header(${header}.h "${${module}_INCLUDE_DIRS}" class_header_path)
-      if(NOT class_header_path)
-        message(FATAL_ERROR "Could not find ${header}.h for Python wrapping!")
-      endif()
-
-      # The new list of headers has the full path to each file.
-      list(APPEND headers_to_wrap ${class_header_path})
+    # Find the full path to the header file to be wrapped.
+    vtk_find_header(${header}.h "${${module}_INCLUDE_DIRS}" class_header_path)
+    if(NOT class_header_path)
+      message(FATAL_ERROR "Could not find ${header}.h for Python wrapping!")
     endif()
+
+    # The new list of headers has the full path to each file.
+    list(APPEND headers_to_wrap ${class_header_path})
   endforeach()
 
   endforeach() # end ARGN loop

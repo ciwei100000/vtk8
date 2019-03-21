@@ -14,8 +14,10 @@ set(Module_SRCS
   vtkCamera.cxx
   vtkCameraInterpolator.cxx
   vtkCellCenterDepthSort.cxx
+  vtkCIEDE2000.cxx
   vtkColorTransferFunction.cxx
   vtkCompositeDataDisplayAttributes.cxx
+  vtkCompositeDataDisplayAttributesLegacy.cxx
   vtkCompositePolyDataMapper.cxx
   vtkCoordinate.cxx
   vtkCullerCollection.cxx
@@ -57,6 +59,7 @@ set(Module_SRCS
   vtkMapperCollection.cxx
   vtkMapper.cxx
   vtkObserverMediator.cxx
+  vtkPointGaussianMapper.cxx
   vtkPolyDataMapper2D.cxx
   vtkPolyDataMapper.cxx
   vtkProp3DCollection.cxx
@@ -64,7 +67,6 @@ set(Module_SRCS
   vtkProp3DFollower.cxx
   vtkPropAssembly.cxx
   vtkPropCollection.cxx
-  vtkPropPicker3D.cxx
   vtkProp.cxx
   vtkProperty2D.cxx
   vtkProperty.cxx
@@ -74,12 +76,14 @@ set(Module_SRCS
   vtkRendererSource.cxx
   vtkRenderPass.cxx
   vtkRenderState.cxx
+  vtkRenderTimerLog.cxx
   vtkRenderWindowCollection.cxx
   vtkRenderWindow.cxx
   vtkRenderWindowInteractor.cxx
   vtkRenderWindowInteractor3D.cxx
   vtkSelectVisiblePoints.cxx
   vtkShaderDeviceAdapter2.cxx
+  vtkSkybox.cxx
   vtkTextActor.cxx
   vtkTextActor3D.cxx
   vtkTexture.cxx
@@ -135,24 +139,11 @@ set(Module_SRCS
   vtkRenderWidget.cxx
   )
 
-if(VTK_RENDERING_BACKEND STREQUAL "OpenGL2")
-  # needed as we do not have vtkRenderingOpenGLConfigure.h here
-  set_source_files_properties(
-    vtkRenderWindow.cxx  # dummy out painterdevice adapter
-    vtkHardwareSelector.cxx # dummy out painter device adapter
-    PROPERTIES COMPILE_FLAGS -DVTK_OPENGL2)
-  list(APPEND Module_SRCS
-    vtkPointGaussianMapper.cxx
-    )
-  set_source_files_properties(
-    vtkPointGaussianMapper
-    ABSTRACT
-    )
-else() # Add painter device adapter when not OpenGL2
-  list(APPEND Module_SRCS
-    vtkPainterDeviceAdapter.cxx
-    )
-endif()
+# needed as we do not have vtkRenderingOpenGLConfigure.h here
+set_source_files_properties(
+  vtkRenderWindow.cxx  # dummy out painterdevice adapter
+  vtkHardwareSelector.cxx # dummy out painter device adapter
+  PROPERTIES COMPILE_FLAGS -DVTK_OPENGL2)
 
 set(${vtk-module}_HDRS
   vtkGPUInfoListArray.h
@@ -161,47 +152,6 @@ set(${vtk-module}_HDRS
   vtkRayCastStructures.h
   vtkRenderingCoreEnums.h
   vtkTDxMotionEventInfo.h
-  )
-
-set_source_files_properties(
-  vtkAbstractInteractionDevice
-  vtkAbstractMapper3D
-  vtkAbstractMapper
-  vtkAbstractRenderDevice
-  vtkAbstractVolumeMapper
-  vtkAbstractPicker
-  vtkAbstractPropPicker
-  vtkCuller
-  vtkFrameBufferObjectBase
-  vtkGPUInfoList.cxx
-  vtkHardwareSelector
-  vtkImageMapper3D
-  vtkInteractorObserver
-  vtkMapper
-  vtkMapper2D
-  vtkProp
-  vtkProp3D
-  vtkRendererDelegate
-  vtkRenderPass
-  vtkRenderState
-  vtkShader
-  vtkShaderDeviceAdapter
-  vtkShaderDeviceAdapter2
-  vtkShaderProgram
-  vtkTextRenderer
-  vtkTDxInteractorStyle
-  vtkViewport
-  vtkVisibilitySort
-  vtkStringToImage
-  ABSTRACT
-  )
-
-set_source_files_properties(
-  vtkAbstractInteractionDevice
-  vtkAbstractRenderDevice
-  vtkRenderState
-  vtkRenderWidget
-  WRAP_EXCLUDE
   )
 
 # On OS X, vtkRenderWindowJava must be compiled with Objective C++
@@ -214,6 +164,6 @@ endif()
 
 vtk_module_library(vtkRenderingCore ${Module_SRCS})
 
-if (VTK_USE_OFFSCREEN)
-  target_compile_definitions(vtkRenderingCore PRIVATE -DVTK_USE_OFFSCREEN)
+if (VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN)
+  target_compile_definitions(vtkRenderingCore PRIVATE -DVTK_DEFAULT_RENDER_WINDOW_OFFSCREEN)
 endif()

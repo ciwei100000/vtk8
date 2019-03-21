@@ -1,8 +1,4 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
-if(POLICY CMP0020)
-  cmake_policy(SET CMP0020 NEW)
-endif()
-
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
 
 #
 # Set the project name.

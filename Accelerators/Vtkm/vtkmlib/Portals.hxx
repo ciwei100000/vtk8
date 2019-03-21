@@ -52,7 +52,7 @@ namespace tovtkm {
 //------------------------------------------------------------------------------
 template <typename VType, typename VTKDataArrayType>
 vtkArrayPortal<VType, VTKDataArrayType>::vtkArrayPortal()
-  : VTKData(NULL), Size(0)
+  : VTKData(nullptr), Size(0)
 {
 }
 
@@ -97,7 +97,7 @@ void vtkArrayPortal<VType, VTKDataArrayType>::Set(vtkm::Id index,
 
 //------------------------------------------------------------------------------
 template <typename Type>
-vtkPointsPortal<Type>::vtkPointsPortal() : Points(NULL), Array(NULL), Size(0)
+vtkPointsPortal<Type>::vtkPointsPortal() : Points(nullptr), Array(nullptr), Size(0)
 {
 }
 
@@ -109,20 +109,6 @@ vtkPointsPortal<Type>::vtkPointsPortal(vtkPoints* points, vtkm::Id size)
     Size(size)
 {
   VTKM_ASSERT(this->GetNumberOfValues() >= 0);
-}
-
-//------------------------------------------------------------------------------
-/// Copy constructor for any other vtkArrayPortal with an iterator
-/// type that can be copied to this iterator type. This allows us to do any
-/// type casting that the iterators do (like the non-const to const cast).
-///
-template <typename Type>
-template <typename OtherType>
-vtkPointsPortal<Type>::vtkPointsPortal(const vtkPointsPortal<OtherType>& src)
-  : Points(src.GetVtkData()),
-    Array(static_cast<ComponentType*>(src.GetVtkData()->GetVoidPointer(0))),
-    Size(src.GetNumberOfValues())
-{
 }
 
 //------------------------------------------------------------------------------

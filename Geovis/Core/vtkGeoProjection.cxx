@@ -27,7 +27,7 @@
 #include <map>
 #include <vector>
 
-#include "vtk_libproj4.h"
+#include "vtk_libproj.h"
 
 vtkStandardNewMacro(vtkGeoProjection);
 
@@ -51,7 +51,7 @@ public:
       }
       return iter->first.c_str();
     }
-    return NULL;
+    return nullptr;
   }
 
   const char* GetValueAt(int index)
@@ -68,7 +68,7 @@ public:
       }
       return iter->second.c_str();
     }
-    return NULL;
+    return nullptr;
   }
 
   std::map< std::string, std::string > OptionalParameters;
@@ -89,7 +89,7 @@ int vtkGeoProjection::GetNumberOfProjections()
 const char* vtkGeoProjection::GetProjectionName( int projection )
 {
   if ( projection < 0 || projection >= vtkGeoProjection::GetNumberOfProjections() )
-    return 0;
+    return nullptr;
 
   return pj_get_list_ref()[projection].id;
 }
@@ -97,30 +97,33 @@ const char* vtkGeoProjection::GetProjectionName( int projection )
 const char* vtkGeoProjection::GetProjectionDescription( int projection )
 {
   if ( projection < 0 || projection >= vtkGeoProjection::GetNumberOfProjections() )
-    return 0;
+    return nullptr;
 
   return pj_get_list_ref()[projection].descr[0];
 }
 //-----------------------------------------------------------------------------
 vtkGeoProjection::vtkGeoProjection()
 {
-  this->Name = NULL;
+  this->Name = nullptr;
   this->SetName( "latlong" );
   this->CentralMeridian = 0.;
-  this->Projection = NULL;
+  this->Projection = nullptr;
   this->ProjectionMTime = 0;
+  this->PROJ4String = nullptr;
+  this->SetPROJ4String("");
   this->Internals = new vtkInternals();
 }
 //-----------------------------------------------------------------------------
 vtkGeoProjection::~vtkGeoProjection()
 {
-  this->SetName( 0 );
+  this->SetName( nullptr );
+  this->SetPROJ4String( nullptr );
   if ( this->Projection )
   {
     pj_free( this->Projection );
   }
   delete this->Internals;
-  this->Internals = NULL;
+  this->Internals = nullptr;
 }
 //-----------------------------------------------------------------------------
 void vtkGeoProjection::PrintSelf( ostream& os, vtkIndent indent )
@@ -128,6 +131,7 @@ void vtkGeoProjection::PrintSelf( ostream& os, vtkIndent indent )
   this->Superclass::PrintSelf( os, indent );
   os << indent << "Name: " << this->Name << "\n";
   os << indent << "CentralMeridian: " << this->CentralMeridian << "\n";
+  os << indent << "PROJ4String: " << this->PROJ4String << "\n";
   os << indent << "Projection: " << this->Projection << "\n";
   os << indent << "Optional parameters:\n";
   for(int i=0;i<this->GetNumberOfOptionalParameters();i++)
@@ -155,7 +159,7 @@ const char* vtkGeoProjection::GetDescription()
   this->UpdateProjection();
   if ( ! this->Projection )
   {
-    return 0;
+    return nullptr;
   }
   return this->Projection->descr;
 }
@@ -177,47 +181,54 @@ int vtkGeoProjection::UpdateProjection()
   if ( this->Projection )
   {
     pj_free( this->Projection );
-    this->Projection = 0;
+    this->Projection = nullptr;
   }
 
-  if ( ! this->Name || ! strlen( this->Name ) )
+  if ( this->PROJ4String && strlen( this->PROJ4String ) )
   {
-    return 1;
+    this->Projection = pj_init_plus( this->PROJ4String );
   }
-
-  if ( ! strcmp ( this->Name, "latlong" ) )
+  else
   {
-    // latlong is "null" projection.
-    return 0;
+    if ( ! this->Name || ! strlen( this->Name ) )
+    {
+      return 1;
+    }
+
+    if ( ! strcmp ( this->Name, "latlong" ) )
+    {
+      // latlong is "null" projection.
+      return 0;
+    }
+
+    int argSize = 3 + this->GetNumberOfOptionalParameters();
+    const char** pjArgs = new const char*[argSize];
+    std::string projSpec( "+proj=" );
+    projSpec += this->Name;
+    std::string ellpsSpec( "+ellps=clrk66" );
+    std::string meridSpec;
+    std::ostringstream os;
+    os << "+lon_0=" << this->CentralMeridian;
+    meridSpec = os.str();
+    pjArgs[0] = projSpec.c_str();
+    pjArgs[1] = ellpsSpec.c_str();
+    pjArgs[2] = meridSpec.c_str();
+
+    // Add optional parameters
+    std::vector<std::string> stringHolder(
+      this->GetNumberOfOptionalParameters()); // Keep string ref in memory
+    for(int i=0; i < this->GetNumberOfOptionalParameters(); i++)
+    {
+      std::ostringstream param;
+      param << "+" << this->GetOptionalParameterKey(i);
+      param << "=" << this->GetOptionalParameterValue(i);
+      stringHolder[i] = param.str();
+      pjArgs[3+i] = stringHolder[i].c_str();
+    }
+
+    this->Projection = pj_init( argSize, const_cast<char**>( pjArgs ) );
+    delete[] pjArgs;
   }
-
-  int argSize = 3 + this->GetNumberOfOptionalParameters();
-  const char** pjArgs = new const char*[argSize];
-  std::string projSpec( "+proj=" );
-  projSpec += this->Name;
-  std::string ellpsSpec( "+ellps=clrk66" );
-  std::string meridSpec;
-  std::ostringstream os;
-  os << "+lon_0=" << this->CentralMeridian;
-  meridSpec = os.str();
-  pjArgs[0] = projSpec.c_str();
-  pjArgs[1] = ellpsSpec.c_str();
-  pjArgs[2] = meridSpec.c_str();
-
-  // Add optional parameters
-  std::vector<std::string> stringHolder(
-    this->GetNumberOfOptionalParameters()); // Keep string ref in memory
-  for(int i=0; i < this->GetNumberOfOptionalParameters(); i++)
-  {
-    std::ostringstream param;
-    param << "+" << this->GetOptionalParameterKey(i);
-    param << "=" << this->GetOptionalParameterValue(i);
-    stringHolder[i] = param.str();
-    pjArgs[3+i] = stringHolder[i].c_str();
-  }
-
-  this->Projection = pj_init( argSize, const_cast<char**>( pjArgs ) );
-  delete[] pjArgs;
   this->ProjectionMTime = this->GetMTime();
   if ( this->Projection )
   {
@@ -229,14 +240,14 @@ int vtkGeoProjection::UpdateProjection()
 //-----------------------------------------------------------------------------
 void vtkGeoProjection::SetOptionalParameter(const char* key, const char* value)
 {
-  if(key != NULL && value != NULL)
+  if(key != nullptr && value != nullptr)
   {
     this->Internals->OptionalParameters[key] = value;
     this->Modified();
   }
   else
   {
-    vtkErrorMacro("Invalid Optional Parameter Key/Value pair. None can be NULL");
+    vtkErrorMacro("Invalid Optional Parameter Key/Value pair. None can be null");
   }
 }
 

@@ -69,7 +69,7 @@ public:
    * Standard methods for instances of this class.
    */
   vtkTypeMacro(vtkAffineRepresentation2D,vtkAffineRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -107,7 +107,7 @@ public:
    * scale, translate, rotate, shear) are concatenated with the internal
    * transform.
    */
-  void GetTransform(vtkTransform *t) VTK_OVERRIDE;
+  void GetTransform(vtkTransform *t) override;
 
   //@{
   /**
@@ -127,9 +127,9 @@ public:
    * transformation. Rotation and shear are expressed in degrees; translation
    * the distance in world coordinates; and scale normalized (sx,sy) values.
    */
-  vtkSetMacro(DisplayText,int);
-  vtkGetMacro(DisplayText,int);
-  vtkBooleanMacro(DisplayText,int);
+  vtkSetMacro(DisplayText,vtkTypeBool);
+  vtkGetMacro(DisplayText,vtkTypeBool);
+  vtkBooleanMacro(DisplayText,vtkTypeBool);
   //@}
 
   //@{
@@ -140,34 +140,34 @@ public:
    * transformation matrix (i.e., sets it to identity). It also sets the
    * origin for scaling and rotation.
    */
-  void PlaceWidget(double bounds[6]) VTK_OVERRIDE;
-  void StartWidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
-  void WidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
-  void EndWidgetInteraction(double eventPos[2]) VTK_OVERRIDE;
-  int ComputeInteractionState(int X, int Y, int modify=0) VTK_OVERRIDE;
-  void BuildRepresentation() VTK_OVERRIDE;
+  void PlaceWidget(double bounds[6]) override;
+  void StartWidgetInteraction(double eventPos[2]) override;
+  void WidgetInteraction(double eventPos[2]) override;
+  void EndWidgetInteraction(double eventPos[2]) override;
+  int ComputeInteractionState(int X, int Y, int modify=0) override;
+  void BuildRepresentation() override;
   //@}
 
   //@{
   /**
    * Methods to make this class behave as a vtkProp.
    */
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE;
-  void GetActors2D(vtkPropCollection *) VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
-  int RenderOverlay(vtkViewport *viewport) VTK_OVERRIDE;
+  void ShallowCopy(vtkProp *prop) override;
+  void GetActors2D(vtkPropCollection *) override;
+  void ReleaseGraphicsResources(vtkWindow *) override;
+  int RenderOverlay(vtkViewport *viewport) override;
   //@}
 
 protected:
   vtkAffineRepresentation2D();
-  ~vtkAffineRepresentation2D() VTK_OVERRIDE;
+  ~vtkAffineRepresentation2D() override;
 
   // Methods to manipulate the cursor
   void Translate(double eventPos[2]);
   void Scale(double eventPos[2]);
   void Rotate(double eventPos[2]);
   void Shear(double eventPos[2]);
-  void Highlight(int highlight) VTK_OVERRIDE;
+  void Highlight(int highlight) override;
   void UpdateText(const char *text, double eventPos[2]);
 
   // The width of the widget in normalized viewport coordinates.
@@ -176,7 +176,7 @@ protected:
   int AxesWidth;
 
   // Display text
-  int DisplayText;
+  vtkTypeBool DisplayText;
 
   // Internal variables for bookkeeping (in display coordinates unless noted)
   double CurrentWidth;
@@ -186,7 +186,6 @@ protected:
   // The internal transformation matrix
   vtkTransform *CurrentTransform;
   vtkTransform *TotalTransform;
-  vtkTransform *TempTransform;
   double Origin[4]; //the current origin in world coordinates
   double DisplayOrigin[3]; //the current origin in display coordinates
   double CurrentTranslation[3]; //translation this movement
@@ -247,8 +246,8 @@ protected:
   vtkLeaderActor2D    *HYAxis;
 
 private:
-  vtkAffineRepresentation2D(const vtkAffineRepresentation2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAffineRepresentation2D&) VTK_DELETE_FUNCTION;
+  vtkAffineRepresentation2D(const vtkAffineRepresentation2D&) = delete;
+  void operator=(const vtkAffineRepresentation2D&) = delete;
 };
 
 #endif

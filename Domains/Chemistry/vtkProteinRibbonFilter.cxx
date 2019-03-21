@@ -80,9 +80,7 @@ vtkProteinRibbonFilter::vtkProteinRibbonFilter()
   this->ElementColors["CA"] = ToColor3ubFromHex3(0xDDDDDD);
 }
 
-vtkProteinRibbonFilter::~vtkProteinRibbonFilter()
-{
-}
+vtkProteinRibbonFilter::~vtkProteinRibbonFilter() = default;
 
 int vtkProteinRibbonFilter::FillInputPortInformation(int port,
                                                      vtkInformation *info)
@@ -147,7 +145,7 @@ int vtkProteinRibbonFilter::RequestData(vtkInformation *,
   vtkNew<vtkPoints> strandPoints;
   vtkNew<vtkPolyData> strand;
   strand->Allocate();
-  strand->SetPoints(strandPoints.GetPointer());
+  strand->SetPoints(strandPoints);
 
   vtkNew<vtkUnsignedCharArray> pointsColors;
   pointsColors->SetName("RGB");
@@ -175,7 +173,7 @@ int vtkProteinRibbonFilter::RequestData(vtkInformation *,
     {
       if (type != "O")
       {
-        CreateAtomAsSphere(strand.GetPointer(), pointsColors.GetPointer(),
+        CreateAtomAsSphere(strand, pointsColors,
                            input->GetPoint(i),
                            ToColor3ubFromColor3f(pTab->GetDefaultRGBTuple(atomicNum)),
                            pTab->GetVDWRadius(atomicNum), 1.f);
@@ -190,8 +188,8 @@ int vtkProteinRibbonFilter::RequestData(vtkInformation *,
 
       if (currentChain != atomChain || currentResi + 1 != atomResi)
       {
-        this->CreateThinStrip(strand.GetPointer(), pointsColors.GetPointer(),
-          strandPoints.GetPointer(), borderPoints[0], borderPoints[1], colors);
+        this->CreateThinStrip(strand, pointsColors,
+          strandPoints, borderPoints[0], borderPoints[1], colors);
         borderPoints[0].clear();
         borderPoints[1].clear();
         colors.clear();
@@ -224,15 +222,15 @@ int vtkProteinRibbonFilter::RequestData(vtkInformation *,
   }
 
   // Create the last ribbon strip if needed
-  this->CreateThinStrip(strand.GetPointer(), pointsColors.GetPointer(),
-                        strandPoints.GetPointer(), borderPoints[0],
+  this->CreateThinStrip(strand, pointsColors,
+                        strandPoints, borderPoints[0],
                         borderPoints[1], colors);
 
-  strand->GetPointData()->SetScalars(pointsColors.GetPointer());
+  strand->GetPointData()->SetScalars(pointsColors);
 
   // Compute the model normals
   vtkNew<vtkPolyDataNormals> pdnormals;
-  pdnormals->SetInputData(strand.GetPointer());
+  pdnormals->SetInputData(strand);
   pdnormals->SetFeatureAngle(150.0);
   pdnormals->Update();
 

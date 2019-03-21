@@ -43,7 +43,7 @@ class VTKRENDERINGCORE_EXPORT vtkPointPicker : public vtkPicker
 public:
   static vtkPointPicker *New();
   vtkTypeMacro(vtkPointPicker,vtkPicker);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -57,33 +57,33 @@ public:
    * Specify whether the point search should be based on cell points or
    * directly on the point list.
    */
-  vtkSetMacro(UseCells, int);
-  vtkGetMacro(UseCells, int);
-  vtkBooleanMacro(UseCells, int);
+  vtkSetMacro(UseCells, vtkTypeBool);
+  vtkGetMacro(UseCells, vtkTypeBool);
+  vtkBooleanMacro(UseCells, vtkTypeBool);
   //@}
 
 protected:
   vtkPointPicker();
-  ~vtkPointPicker() VTK_OVERRIDE {}
+  ~vtkPointPicker() override {}
 
   vtkIdType PointId; //picked point
-  int UseCells;  // Use cell points vs. points directly
+  vtkTypeBool UseCells;  // Use cell points vs. points directly
 
-  double IntersectWithLine(double p1[3], double p2[3], double tol,
+  double IntersectWithLine(const double p1[3], const double p2[3], double tol,
                           vtkAssemblyPath *path, vtkProp3D *p,
-                          vtkAbstractMapper3D *m) VTK_OVERRIDE;
-  void Initialize() VTK_OVERRIDE;
+                          vtkAbstractMapper3D *m) override;
+  void Initialize() override;
 
-  vtkIdType IntersectDataSetWithLine(double p1[3], double ray[3],
+  vtkIdType IntersectDataSetWithLine(const double p1[3], double ray[3],
                                      double rayFactor, double tol,
                                      vtkDataSet* dataSet,
                                      double& tMin, double minXYZ[3]);
-  bool UpdateClosestPoint(double x[3], double p1[3],
+  bool UpdateClosestPoint(double x[3], const double p1[3],
                           double ray[3], double rayFactor, double tol,
                           double& tMin, double& distMin);
 private:
-  vtkPointPicker(const vtkPointPicker&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPointPicker&) VTK_DELETE_FUNCTION;
+  vtkPointPicker(const vtkPointPicker&) = delete;
+  void operator=(const vtkPointPicker&) = delete;
 };
 
 #endif

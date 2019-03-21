@@ -32,7 +32,7 @@ class VTKIOGEOJSON_EXPORT vtkGeoJSONWriter : public vtkWriter
 {
 public:
   static vtkGeoJSONWriter* New();
-  virtual void PrintSelf( ostream& os, vtkIndent indent );
+  virtual void PrintSelf( ostream& os, vtkIndent indent ) override;
   vtkTypeMacro(vtkGeoJSONWriter,vtkWriter);
 
   //@{
@@ -92,7 +92,7 @@ public:
   vtkStdString GetOutputStdString();
 
   /**
-   * This convenience method returns the string, sets the IVAR to NULL,
+   * This convenience method returns the string, sets the IVAR to nullptr,
    * so that the user is responsible for deleting the string.
    * I am not sure what the name should be, so it may change in the future.
    */
@@ -103,10 +103,10 @@ protected:
   virtual ~vtkGeoJSONWriter();
 
   // Only accepts vtkPolyData
-  virtual int FillInputPortInformation(int port, vtkInformation *info);
+  virtual int FillInputPortInformation(int port, vtkInformation *info) override;
 
   // Implementation of Write()
-  void WriteData();
+  void WriteData() override;
 
   // Helper for Write that writes attributes out
   void WriteScalar(vtkDataArray *da, vtkIdType ptId);
@@ -127,8 +127,8 @@ protected:
   char* FileName;
 
 private:
-  vtkGeoJSONWriter(const vtkGeoJSONWriter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGeoJSONWriter&) VTK_DELETE_FUNCTION;
+  vtkGeoJSONWriter(const vtkGeoJSONWriter&) = delete;
+  void operator=(const vtkGeoJSONWriter&) = delete;
 };
 
 #endif // vtkGeoJSONWriter_h

@@ -28,8 +28,6 @@
 #include "vtkGUISupportQtModule.h" // For export macro
 #include <QStandardItemModel>
 
-#include "vtkConfigure.h" //for VTK_OVERRIDE
-
 class vtkObjectBase;
 
 class VTKGUISUPPORTQT_EXPORT vtkQtDebugLeaksModel : public QStandardItemModel
@@ -38,8 +36,8 @@ class VTKGUISUPPORTQT_EXPORT vtkQtDebugLeaksModel : public QStandardItemModel
 
 public:
 
-  vtkQtDebugLeaksModel(QObject* p=0);
-  ~vtkQtDebugLeaksModel() VTK_OVERRIDE;
+  vtkQtDebugLeaksModel(QObject* p=nullptr);
+  ~vtkQtDebugLeaksModel() override;
 
   /**
    * Get the list of objects in the model that have the given class name
@@ -62,7 +60,7 @@ protected slots:
   void onAboutToQuit();
 
   // Inherited method from QAbstractItemModel
-  Qt::ItemFlags flags(const QModelIndex &index) const VTK_OVERRIDE;
+  Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 private:
 
@@ -83,14 +81,14 @@ class ReferenceCountModel : public QStandardItemModel
   Q_OBJECT
 
 public:
-  ReferenceCountModel(QObject* p=0);
-  ~ReferenceCountModel() VTK_OVERRIDE;
+  ReferenceCountModel(QObject* p=nullptr);
+  ~ReferenceCountModel() override;
   void addObject(vtkObjectBase* obj);
   void removeObject(vtkObjectBase* obj);
   QString pointerAsString(void* ptr);
 
   // Inherited method from QAbstractItemModel
-  Qt::ItemFlags flags(const QModelIndex &index) const VTK_OVERRIDE;
+  Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 protected slots:
   void updateReferenceCounts();

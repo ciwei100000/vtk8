@@ -62,9 +62,7 @@ vtkSphereWidget2::vtkSphereWidget2()
 }
 
 //----------------------------------------------------------------------------
-vtkSphereWidget2::~vtkSphereWidget2()
-{
-}
+vtkSphereWidget2::~vtkSphereWidget2() = default;
 
 //----------------------------------------------------------------------
 void vtkSphereWidget2::SelectAction(vtkAbstractWidget *w)
@@ -105,7 +103,7 @@ void vtkSphereWidget2::SelectAction(vtkAbstractWidget *w)
   if ( interactionState == vtkSphereRepresentation::OnSphere ||
        self->Interactor->GetShiftKey() || self->Interactor->GetControlKey() )
   {
-    // If  translation is disabled, do it
+    // If translation is disabled, do it
     if ( self->TranslationEnabled )
     {
       reinterpret_cast<vtkSphereRepresentation*>(self->WidgetRep)->
@@ -121,7 +119,7 @@ void vtkSphereWidget2::SelectAction(vtkAbstractWidget *w)
   // start the interaction
   self->EventCallbackCommand->SetAbortFlag(1);
   self->StartInteraction();
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   self->Render();
 }
 
@@ -170,7 +168,7 @@ void vtkSphereWidget2::TranslateAction(vtkAbstractWidget *w)
   // start the interaction
   self->EventCallbackCommand->SetAbortFlag(1);
   self->StartInteraction();
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   self->Render();
 }
 
@@ -180,7 +178,7 @@ void vtkSphereWidget2::ScaleAction(vtkAbstractWidget *w)
   // We are in a static method, cast to ourself
   vtkSphereWidget2 *self = reinterpret_cast<vtkSphereWidget2*>(w);
 
-  // If  scaling is disabled, get out of here
+  // If scaling is disabled, get out of here
   if ( ! self->ScalingEnabled )
   {
     return;
@@ -219,7 +217,7 @@ void vtkSphereWidget2::ScaleAction(vtkAbstractWidget *w)
   // start the interaction
   self->EventCallbackCommand->SetAbortFlag(1);
   self->StartInteraction();
-  self->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   self->Render();
 }
 
@@ -246,7 +244,7 @@ void vtkSphereWidget2::MoveAction(vtkAbstractWidget *w)
 
   // moving something
   self->EventCallbackCommand->SetAbortFlag(1);
-  self->InvokeEvent(vtkCommand::InteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::InteractionEvent,nullptr);
   self->Render();
 }
 
@@ -267,7 +265,7 @@ void vtkSphereWidget2::EndSelectAction(vtkAbstractWidget *w)
 
   self->EventCallbackCommand->SetAbortFlag(1);
   self->EndInteraction();
-  self->InvokeEvent(vtkCommand::EndInteractionEvent,NULL);
+  self->InvokeEvent(vtkCommand::EndInteractionEvent,nullptr);
   self->Render();
 }
 

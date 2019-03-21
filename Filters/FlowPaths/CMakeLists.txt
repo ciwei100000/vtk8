@@ -4,6 +4,7 @@ set(Module_SRCS
   vtkCachingInterpolatedVelocityField.cxx
   vtkCellLocatorInterpolatedVelocityField.cxx
   vtkCompositeInterpolatedVelocityField.cxx
+  vtkEvenlySpacedStreamlines2D.cxx
   vtkInterpolatedVelocityField.cxx
   vtkLagrangianParticleTracker.cxx
   vtkLagrangianBasicIntegrationModel.cxx
@@ -17,18 +18,6 @@ set(Module_SRCS
   vtkStreamTracer.cxx
   vtkTemporalInterpolatedVelocityField.cxx
   vtkTemporalStreamTracer.cxx
-  )
-
-set_source_files_properties(
-  vtkAbstractInterpolatedVelocityField
-  vtkCompositeInterpolatedVelocityField.cxx
-  vtkParticleTracerBase
-  ABSTRACT
-  )
-
-set_source_files_properties(
-  vtkLagrangianParticle.cxx
-  WRAP_EXCLUDE
   )
 
 vtk_module_library(vtkFiltersFlowPaths ${Module_SRCS})

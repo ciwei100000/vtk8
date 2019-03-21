@@ -52,7 +52,7 @@ public:
   static vtkGenericDataSetTessellator *New();
   vtkTypeMacro(vtkGenericDataSetTessellator,
                        vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -62,9 +62,9 @@ public:
    * cells).
    * The name of the data array is "OriginalIds". It is true by default.
    */
-  vtkSetMacro(KeepCellIds, int);
-  vtkGetMacro(KeepCellIds, int);
-  vtkBooleanMacro(KeepCellIds, int);
+  vtkSetMacro(KeepCellIds, vtkTypeBool);
+  vtkGetMacro(KeepCellIds, vtkTypeBool);
+  vtkBooleanMacro(KeepCellIds, vtkTypeBool);
   //@}
 
 
@@ -74,9 +74,9 @@ public:
    * on, points with different point attributes (e.g., normals) are merged,
    * which may cause rendering artifacts.
    */
-  vtkSetMacro(Merging,int);
-  vtkGetMacro(Merging,int);
-  vtkBooleanMacro(Merging,int);
+  vtkSetMacro(Merging,vtkTypeBool);
+  vtkGetMacro(Merging,vtkTypeBool);
+  vtkBooleanMacro(Merging,vtkTypeBool);
   //@}
 
   //@{
@@ -96,28 +96,28 @@ public:
   /**
    * Return the MTime also considering the locator.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkGenericDataSetTessellator();
-  ~vtkGenericDataSetTessellator() VTK_OVERRIDE;
+  ~vtkGenericDataSetTessellator() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
   // See Set/Get KeepCellIds() for explanations.
-  int KeepCellIds;
+  vtkTypeBool KeepCellIds;
 
   // Used internal by vtkGenericAdaptorCell::Tessellate()
   vtkPointData *InternalPD;
 
-  int Merging;
+  vtkTypeBool Merging;
   vtkIncrementalPointLocator *Locator;
 
 private:
-  vtkGenericDataSetTessellator(const vtkGenericDataSetTessellator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGenericDataSetTessellator&) VTK_DELETE_FUNCTION;
+  vtkGenericDataSetTessellator(const vtkGenericDataSetTessellator&) = delete;
+  void operator=(const vtkGenericDataSetTessellator&) = delete;
 };
 
 #endif

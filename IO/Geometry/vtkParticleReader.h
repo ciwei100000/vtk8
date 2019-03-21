@@ -46,7 +46,7 @@ class VTKIOGEOMETRY_EXPORT vtkParticleReader : public vtkPolyDataAlgorithm
 public:
   static vtkParticleReader *New();
   vtkTypeMacro(vtkParticleReader,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -83,18 +83,18 @@ public:
    * Set/Get the byte swapping to explicitly swap the bytes of a file.
    * Not used when reading text files.
    */
-  vtkSetMacro(SwapBytes,int);
-  int GetSwapBytes() {return this->SwapBytes;}
-  vtkBooleanMacro(SwapBytes,int);
+  vtkSetMacro(SwapBytes,vtkTypeBool);
+  vtkTypeBool GetSwapBytes() {return this->SwapBytes;}
+  vtkBooleanMacro(SwapBytes,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Default: 1. If 1 then each particle has a value associated with it.
    */
-  vtkSetMacro(HasScalar,int);
-  vtkGetMacro(HasScalar,int);
-  vtkBooleanMacro(HasScalar,int);
+  vtkSetMacro(HasScalar,vtkTypeBool);
+  vtkGetMacro(HasScalar,vtkTypeBool);
+  vtkBooleanMacro(HasScalar,vtkTypeBool);
   //@}
 
   //@{
@@ -129,15 +129,15 @@ public:
 
 protected:
   vtkParticleReader();
-  ~vtkParticleReader() VTK_OVERRIDE;
+  ~vtkParticleReader() override;
 
   void OpenFile();
 
   char *FileName;
   ifstream *File;
 
-  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   //@{
   /**
@@ -191,7 +191,7 @@ protected:
   enum FILE_TYPE { FILE_TYPE_IS_UNKNOWN = 0,
     FILE_TYPE_IS_TEXT, FILE_TYPE_IS_BINARY };
 
-  int HasScalar;
+  vtkTypeBool HasScalar;
   /**
    * Used to decide which reader should be used.
    */
@@ -210,12 +210,12 @@ protected:
    */
   size_t Count;
 
-  int SwapBytes;
+  vtkTypeBool SwapBytes;
   size_t NumberOfPoints;
 
 private:
-  vtkParticleReader(const vtkParticleReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkParticleReader&) VTK_DELETE_FUNCTION;
+  vtkParticleReader(const vtkParticleReader&) = delete;
+  void operator=(const vtkParticleReader&) = delete;
 };
 
 #endif

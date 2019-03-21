@@ -24,6 +24,8 @@
 #include "vtkObjectFactory.h"
 #include "vtkOpenGLPolyDataMapper.h"
 #include "vtkOpenGLRenderer.h"
+#include "vtkOpenGLRenderWindow.h"
+#include "vtkOpenGLState.h"
 #include "vtkProperty.h"
 #include "vtkOpenGLError.h"
 #include "vtkRenderWindow.h"
@@ -55,23 +57,26 @@ void vtkOpenGLActor::Render(vtkRenderer *ren, vtkMapper *mapper)
 {
   vtkOpenGLClearErrorMacro();
 
+  vtkOpenGLState *ostate = static_cast<vtkOpenGLRenderer *>(ren)->GetState();
+  vtkOpenGLState::ScopedglDepthMask dmsaver(ostate);
+
   // get opacity
   bool opaque = (this->GetIsOpaque() != 0);
   if (opaque)
   {
-    glDepthMask(GL_TRUE);
+    ostate->vtkglDepthMask(GL_TRUE);
   }
   else
   {
     vtkHardwareSelector* selector = ren->GetSelector();
-    bool picking = (ren->GetRenderWindow()->GetIsPicking() || selector != NULL);
+    bool picking = (ren->GetRenderWindow()->GetIsPicking() || selector != nullptr);
     if (picking)
     {
-      glDepthMask(GL_TRUE);
+      ostate->vtkglDepthMask(GL_TRUE);
     }
     else
     {
-      // check for deptgh peeling
+      // check for depth peeling
       vtkInformation *info = this->GetPropertyKeys();
       if (info && info->Has(vtkOpenGLActor::GLDepthMaskOverride()))
       {
@@ -79,10 +84,10 @@ void vtkOpenGLActor::Render(vtkRenderer *ren, vtkMapper *mapper)
         switch (maskoverride)
         {
           case 0:
-            glDepthMask(GL_FALSE);
+            ostate->vtkglDepthMask(GL_FALSE);
             break;
           case 1:
-            glDepthMask(GL_TRUE);
+            ostate->vtkglDepthMask(GL_TRUE);
             break;
           default:
             // Do nothing.
@@ -91,7 +96,7 @@ void vtkOpenGLActor::Render(vtkRenderer *ren, vtkMapper *mapper)
       }
       else
       {
-        glDepthMask(GL_FALSE); // transparency with alpha blending
+        ostate->vtkglDepthMask(GL_FALSE); // transparency with alpha blending
       }
     }
   }
@@ -101,7 +106,7 @@ void vtkOpenGLActor::Render(vtkRenderer *ren, vtkMapper *mapper)
 
   if (!opaque)
   {
-    glDepthMask(GL_TRUE);
+    ostate->vtkglDepthMask(GL_TRUE);
   }
 
   vtkOpenGLCheckErrorMacro("failed after Render");

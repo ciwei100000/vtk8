@@ -53,7 +53,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkIncrementalPointLocator : public vtkAbstractP
 public:
 
   vtkTypeMacro( vtkIncrementalPointLocator, vtkAbstractPointLocator );
-  void PrintSelf( ostream & os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream & os, vtkIndent indent ) override;
 
   /**
    * Given a point x assumed to be covered by the search structure, return the
@@ -97,7 +97,7 @@ public:
    * the already inserted point if true, else return -1. InitPointInsertion()
    * should have been called in advance.
    */
-  virtual vtkIdType IsInsertedPoint( double x, double  y, double z ) = 0;
+  virtual vtkIdType IsInsertedPoint( double x, double y, double z ) = 0;
 
   /**
    * Determine whether or not a given point has been inserted. Return the id of
@@ -130,11 +130,11 @@ public:
 
 protected:
   vtkIncrementalPointLocator();
-  ~vtkIncrementalPointLocator() VTK_OVERRIDE;
+  ~vtkIncrementalPointLocator() override;
 
 private:
-  vtkIncrementalPointLocator( const vtkIncrementalPointLocator & ) VTK_DELETE_FUNCTION;
-  void operator = ( const vtkIncrementalPointLocator & ) VTK_DELETE_FUNCTION;
+  vtkIncrementalPointLocator( const vtkIncrementalPointLocator & ) = delete;
+  void operator = ( const vtkIncrementalPointLocator & ) = delete;
 };
 
 #endif

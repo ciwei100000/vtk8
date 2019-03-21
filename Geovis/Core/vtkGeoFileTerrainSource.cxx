@@ -36,19 +36,20 @@ vtkStandardNewMacro(vtkGeoFileTerrainSource);
 //----------------------------------------------------------------------------
 vtkGeoFileTerrainSource::vtkGeoFileTerrainSource()
 {
-  this->Path = 0;
+  VTK_LEGACY_BODY(vtkGeoFileTerrainSource::vtkGeoFileTerrainSource, "VTK 8.2");
+  this->Path = nullptr;
 }
 
 //----------------------------------------------------------------------------
 vtkGeoFileTerrainSource::~vtkGeoFileTerrainSource()
 {
-  this->SetPath(0);
+  this->SetPath(nullptr);
 }
 
 //----------------------------------------------------------------------------
 bool vtkGeoFileTerrainSource::FetchRoot(vtkGeoTreeNode* r)
 {
-  vtkGeoTerrainNode* root = 0;
+  vtkGeoTerrainNode* root = nullptr;
   if (!(root = vtkGeoTerrainNode::SafeDownCast(r)))
   {
     vtkErrorMacro(<< "Can only fetch terrain nodes from this source.");
@@ -62,13 +63,13 @@ bool vtkGeoFileTerrainSource::FetchRoot(vtkGeoTreeNode* r)
 //----------------------------------------------------------------------------
 bool vtkGeoFileTerrainSource::FetchChild(vtkGeoTreeNode* p, int index, vtkGeoTreeNode* c)
 {
-  vtkGeoTerrainNode* parent = 0;
+  vtkGeoTerrainNode* parent = nullptr;
   if (!(parent = vtkGeoTerrainNode::SafeDownCast(p)))
   {
     vtkErrorMacro(<< "Can only fetch terrain nodes from this source.");
     return false;
   }
-  vtkGeoTerrainNode* child = 0;
+  vtkGeoTerrainNode* child = nullptr;
   if (!(child = vtkGeoTerrainNode::SafeDownCast(c)))
   {
     vtkErrorMacro(<< "Can only fetch terrain nodes from this source.");

@@ -33,7 +33,7 @@
  * directions, as well as a domain bounds. By default the model bounds are
  * defined from the input points, but the user can also manually specify
  * them. Finally, because the radius data member limits the influence of the
- * distance calulation, some voxels may receive no contribution. These voxel
+ * distance calculation, some voxels may receive no contribution. These voxel
  * values are set to the CapValue.
  *
  * This filter has one other unusual capability: it is possible to append
@@ -83,7 +83,7 @@ public:
    */
   static vtkUnsignedDistance *New();
   vtkTypeMacro(vtkUnsignedDistance,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -92,7 +92,7 @@ public:
    */
   vtkGetVectorMacro(Dimensions,int,3);
   void SetDimensions(int i, int j, int k);
-  void SetDimensions(int dim[3]);
+  void SetDimensions(const int dim[3]);
   //@}
 
   //@{
@@ -111,9 +111,9 @@ public:
    * by the fraction given by AdjustDistance. This means that the model
    * bounds is expanded in each of the x-y-z directions.
    */
-  vtkSetMacro(AdjustBounds,int);
-  vtkGetMacro(AdjustBounds,int);
-  vtkBooleanMacro(AdjustBounds,int);
+  vtkSetMacro(AdjustBounds,vtkTypeBool);
+  vtkGetMacro(AdjustBounds,vtkTypeBool);
+  vtkBooleanMacro(AdjustBounds,vtkTypeBool);
   //@}
 
   //@{
@@ -151,9 +151,9 @@ public:
    * after distances are computed. This can be used to close or "cap" all
    * surfaces during isocontouring.
    */
-  vtkSetMacro(Capping,int);
-  vtkGetMacro(Capping,int);
-  vtkBooleanMacro(Capping,int);
+  vtkSetMacro(Capping,vtkTypeBool);
+  vtkGetMacro(Capping,vtkTypeBool);
+  vtkBooleanMacro(Capping,vtkTypeBool);
   //@}
 
   //@{
@@ -199,38 +199,38 @@ public:
    */
   void EndAppend();
 
-  // See the vtkAlgorithm for a desciption of what these do
+  // See the vtkAlgorithm for a description of what these do
   int ProcessRequest(vtkInformation*,
                      vtkInformationVector**,
-                     vtkInformationVector*) VTK_OVERRIDE;
+                     vtkInformationVector*) override;
 
 protected:
   vtkUnsignedDistance();
-  ~vtkUnsignedDistance();
+  ~vtkUnsignedDistance() override;
 
   int Dimensions[3];
   double Bounds[6];
-  int AdjustBounds;
+  vtkTypeBool AdjustBounds;
   double AdjustDistance;
   double Radius;
   vtkAbstractPointLocator *Locator;
-  int Capping;
+  vtkTypeBool Capping;
   double CapValue;
   int OutputScalarType;
 
   // Flag tracks whether process needs initialization
   int Initialized;
 
-  virtual int RequestInformation (vtkInformation *,
-                                  vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
-  virtual int RequestData (vtkInformation *,
-                           vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  virtual int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int RequestInformation (vtkInformation *,
+                          vtkInformationVector **,
+                          vtkInformationVector *) override;
+  int RequestData (vtkInformation *,
+                   vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
 private:
-  vtkUnsignedDistance(const vtkUnsignedDistance&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkUnsignedDistance&) VTK_DELETE_FUNCTION;
+  vtkUnsignedDistance(const vtkUnsignedDistance&) = delete;
+  void operator=(const vtkUnsignedDistance&) = delete;
 
 };
 

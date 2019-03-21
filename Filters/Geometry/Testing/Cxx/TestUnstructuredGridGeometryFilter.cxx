@@ -3131,7 +3131,7 @@ int TestUnstructuredGridGeometryFilter(int argc, char* argv[])
   pointId+=39;
 
   // 3D: biquadraticquadratic hexahedron: 3 with a some with a common face
-  // with no center point, and other with a face witha center point.
+  // with no center point, and other with a face with a center point.
   xOffset+=2.0;
 
   // a face (back): 0-3
@@ -3663,9 +3663,9 @@ int TestUnstructuredGridGeometryFilter(int argc, char* argv[])
   mapper->SetLookupTable(lut);
   mapper->SetInputConnection(0, linearGeom->GetOutputPort(0) );
 
- if(linearGeom->GetOutput()->GetPointData()!=0)
+ if(linearGeom->GetOutput()->GetPointData()!=nullptr)
  {
-    if(linearGeom->GetOutput()->GetPointData()->GetScalars()!=0)
+    if(linearGeom->GetOutput()->GetPointData()->GetScalars()!=nullptr)
     {
       mapper->SetScalarRange( linearGeom->GetOutput()->GetPointData()->
                               GetScalars()->GetRange());

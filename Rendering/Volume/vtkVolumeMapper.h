@@ -18,11 +18,8 @@
  *
  *
  * vtkVolumeMapper is the abstract definition of a volume mapper for regular
- * rectilinear data (vtkImageData).  Several  basic types of volume mappers
+ * rectilinear data (vtkImageData). Several basic types of volume mappers
  * are supported.
- *
- * @sa
- * vtkVolumeRayCastMapper vtkVolumeTextureMapper2D
 */
 
 #ifndef vtkVolumeMapper_h
@@ -47,7 +44,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkVolumeMapper : public vtkAbstractVolumeMapper
 {
 public:
   vtkTypeMacro(vtkVolumeMapper,vtkAbstractVolumeMapper);
-  void PrintSelf( ostream& os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream& os, vtkIndent indent ) override;
 
   //@{
   /**
@@ -55,7 +52,8 @@ public:
    */
   virtual void SetInputData( vtkImageData * );
   virtual void SetInputData( vtkDataSet * );
-  vtkImageData *GetInput();
+  virtual vtkImageData* GetInput();
+  virtual vtkImageData* GetInput(const int port);
   //@}
 
   //@{
@@ -67,7 +65,7 @@ public:
    * transfer functions.
    *
    * Maximum and minimum intensity blend modes use the maximum and minimum
-   * scalar values, respectively,  along the sampling ray. The final color and
+   * scalar values, respectively, along the sampling ray. The final color and
    * opacity is determined by passing the resultant value through the color and
    * opacity transfer functions.
    *
@@ -92,9 +90,14 @@ public:
    * resultant value is a derived value and not a real data value along
    * the sampling ray.
    *
-   * \note vtkVolumeMapper::AVERAGE_INTENSITY_BLEND is only supported by the
-   * vtkGPUVolumeRayCastMapper with the OpenGL2 backend.
+   * IsoSurface blend mode uses contour values defined by the user in order
+   * to display scalar values only when the ray crosses the contour. It supports
+   * opacity the same way composite blend mode does.
+   *
+   * \note vtkVolumeMapper::AVERAGE_INTENSITY_BLEND and ISOSURFACE_BLEND are
+   * only supported by the vtkGPUVolumeRayCastMapper with the OpenGL2 backend.
    * \sa SetAverageIPScalarRange()
+   * \sa GetIsosurfaceValues()
    */
   vtkSetMacro( BlendMode, int );
   void SetBlendModeToComposite()
@@ -107,6 +110,8 @@ public:
     { this->SetBlendMode( vtkVolumeMapper::AVERAGE_INTENSITY_BLEND ); }
   void SetBlendModeToAdditive()
     { this->SetBlendMode( vtkVolumeMapper::ADDITIVE_BLEND ); }
+  void SetBlendModeToIsoSurface()
+    { this->SetBlendMode( vtkVolumeMapper::ISOSURFACE_BLEND ); }
   vtkGetMacro( BlendMode, int );
   //@}
 
@@ -116,7 +121,7 @@ public:
    * blend mode. Only scalar values between this range will be averaged during
    * ray casting. This can be useful when volume rendering CT datasets where the
    * areas occupied by air would deviate the final rendering. By default, the
-   * range is set to (VTK_DOUBLE_MIN, VTK_DOUBLE_MAX).
+   * range is set to (VTK_FLOAT_MIN, VTK_FLOAT_MAX).
    * \sa SetBlendModeToAverageIntensity()
    */
   vtkSetVector2Macro(AverageIPScalarRange, double);
@@ -128,9 +133,9 @@ public:
    * Turn On/Off orthogonal cropping. (Clipping planes are
    * perpendicular to the coordinate axes.)
    */
-  vtkSetClampMacro(Cropping,int,0,1);
-  vtkGetMacro(Cropping,int);
-  vtkBooleanMacro(Cropping,int);
+  vtkSetClampMacro(Cropping,vtkTypeBool,0,1);
+  vtkGetMacro(Cropping,vtkTypeBool);
+  vtkBooleanMacro(Cropping,vtkTypeBool);
   //@}
 
   //@{
@@ -182,7 +187,7 @@ public:
    * DO NOT USE THIS METHOD OUTSIDE OF THE RENDERING PROCESS
    * Render the volume
    */
-  void Render(vtkRenderer *ren, vtkVolume *vol) VTK_OVERRIDE =0;
+  void Render(vtkRenderer *ren, vtkVolume *vol) override =0;
 
   /**
    * WARNING: INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
@@ -190,7 +195,7 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE {}
+  void ReleaseGraphicsResources(vtkWindow *) override {}
 
   /**
    * Blend modes.
@@ -216,14 +221,23 @@ public:
    * the scalar values are multiplied by opacity calculated from the opacity
    * transfer function and then added. The additional step here is to
    * divide the sum by the number of samples taken through the volume.
+   * One can control the scalar range by setting the AverageIPScalarRange ivar
+   * to disregard scalar values, not in the range of interest, from the average
+   * computation.
    * As is the case with the additive intensity projection, the final
    * image will always be grayscale i.e. the aggregated values are not
    * passed through the color transfer function. This is because the
    * resultant value is a derived value and not a real data value along
    * the sampling ray.
    *
-   * \note vtkVolumeMapper::AVERAGE_INTENSITY_BLEND is only supported by the
-   * vtkGPUVolumeRayCastMapper with the OpenGL2 backend.
+   * IsoSurface blend mode uses contour values defined by the user in order
+   * to display scalar values only when the ray crosses the contour. It supports
+   * opacity the same way composite blend mode does.
+   *
+   * \note vtkVolumeMapper::AVERAGE_INTENSITY_BLEND and ISOSURFACE_BLEND are
+   * only supported by the vtkGPUVolumeRayCastMapper with the OpenGL2 backend.
+   * \sa SetAverageIPScalarRange()
+   * \sa GetIsoSurfaceValues()
    */
   enum BlendModes
   {
@@ -231,12 +245,13 @@ public:
     MAXIMUM_INTENSITY_BLEND,
     MINIMUM_INTENSITY_BLEND,
     AVERAGE_INTENSITY_BLEND,
-    ADDITIVE_BLEND
+    ADDITIVE_BLEND,
+    ISOSURFACE_BLEND
   };
 
 protected:
   vtkVolumeMapper();
-  ~vtkVolumeMapper() VTK_OVERRIDE;
+  ~vtkVolumeMapper() override;
 
   /**
    * Compute a sample distance from the data spacing. When the number of
@@ -258,18 +273,18 @@ protected:
    * Cropping variables, and a method for converting the world
    * coordinate cropping region planes to voxel coordinates
    */
-  int                  Cropping;
+  vtkTypeBool                  Cropping;
   double               CroppingRegionPlanes[6];
   double               VoxelCroppingRegionPlanes[6];
   int                  CroppingRegionFlags;
   void ConvertCroppingRegionPlanesToVoxels();
   //@}
 
-  int FillInputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillInputPortInformation(int, vtkInformation*) override;
 
 private:
-  vtkVolumeMapper(const vtkVolumeMapper&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkVolumeMapper&) VTK_DELETE_FUNCTION;
+  vtkVolumeMapper(const vtkVolumeMapper&) = delete;
+  void operator=(const vtkVolumeMapper&) = delete;
 };
 
 

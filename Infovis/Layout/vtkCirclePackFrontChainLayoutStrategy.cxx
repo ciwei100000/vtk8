@@ -121,13 +121,9 @@ private:
 
 };
 
-vtkCirclePackFrontChainLayoutStrategyImplementation::vtkCirclePackFrontChainLayoutStrategyImplementation()
-{
-}
+vtkCirclePackFrontChainLayoutStrategyImplementation::vtkCirclePackFrontChainLayoutStrategyImplementation() = default;
 
-vtkCirclePackFrontChainLayoutStrategyImplementation::~vtkCirclePackFrontChainLayoutStrategyImplementation()
-{
-}
+vtkCirclePackFrontChainLayoutStrategyImplementation::~vtkCirclePackFrontChainLayoutStrategyImplementation() = default;
 
 void vtkCirclePackFrontChainLayoutStrategyImplementation::incrListIteratorWrapAround(std::list<vtkIdType>::iterator& i,
                                                                                      std::list<vtkIdType>& frontChain)
@@ -194,6 +190,7 @@ void vtkCirclePackFrontChainLayoutStrategyImplementation::packTreeNodes(vtkIdTyp
                              circle);
     }
     std::vector<vtkIdType> childNodesPackList;
+    childNodesPackList.reserve(tree->GetNumberOfChildren(treeNode));
     for(int i=0;i<tree->GetNumberOfChildren(treeNode);i++)
     {
       childNodesPackList.push_back(tree->GetChild(treeNode,i));
@@ -217,7 +214,7 @@ void vtkCirclePackFrontChainLayoutStrategyImplementation::packBrotherNodes(std::
                                                                            vtkTree* tree)
 {
 
-  if(!packedNodes.size())
+  if(packedNodes.empty())
   {
     return;
   }
@@ -635,7 +632,6 @@ void vtkCirclePackFrontChainLayoutStrategyImplementation::findIntersectingCircle
   // No intersection found
   Cj = frontChain.end();
   CjAfterCn = false;
-  return;
 }
 
 void vtkCirclePackFrontChainLayoutStrategyImplementation::findCircleCenter(vtkIdType Ci,
@@ -794,7 +790,7 @@ vtkCirclePackFrontChainLayoutStrategy::vtkCirclePackFrontChainLayoutStrategy()
 vtkCirclePackFrontChainLayoutStrategy::~vtkCirclePackFrontChainLayoutStrategy()
 {
   delete this->pimpl;
-  this->pimpl=0;
+  this->pimpl=nullptr;
 }
 
 void vtkCirclePackFrontChainLayoutStrategy::Layout(vtkTree *inputTree,

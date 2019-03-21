@@ -41,7 +41,7 @@ vtkConvexPointSet::vtkConvexPointSet()
   this->Triangulator = vtkOrderedTriangulator::New();
   this->Triangulator->PreSortedOff();
   this->Triangulator->UseTemplatesOff();
-  this->ParametricCoords = NULL;
+  this->ParametricCoords = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ int vtkConvexPointSet::GetNumberOfFaces()
 vtkCell *vtkConvexPointSet::GetFace(int faceId)
 {
   int numCells = this->BoundaryTris->GetNumberOfCells();
-  if ( faceId < 0 || faceId >=numCells ) {return NULL;}
+  if ( faceId < 0 || faceId >=numCells ) {return nullptr;}
 
   vtkIdType *cells = this->BoundaryTris->GetPointer();
 
@@ -195,7 +195,7 @@ void vtkConvexPointSet::Clip(double value,
 }
 
 //----------------------------------------------------------------------------
-int vtkConvexPointSet::CellBoundary(int subId, double pcoords[3],
+int vtkConvexPointSet::CellBoundary(int subId, const double pcoords[3],
                                     vtkIdList *pts)
 {
   // This function was re-written to fix bug #9550.
@@ -215,10 +215,10 @@ int vtkConvexPointSet::CellBoundary(int subId, double pcoords[3],
 }
 
 //----------------------------------------------------------------------------
-int vtkConvexPointSet::EvaluatePosition( double x[3],
-                                         double * vtkNotUsed(closestPoint),
+int vtkConvexPointSet::EvaluatePosition(const double x[3],
+                                         double vtkNotUsed(closestPoint)[3],
                                          int & subId, double pcoords[3],
-                                         double & minDist2, double * weights )
+                                         double & minDist2, double weights[])
 {
   double pc[3], dist2;
   int ignoreId, i, j, k, returnStatus=0, status;
@@ -271,7 +271,7 @@ int vtkConvexPointSet::EvaluatePosition( double x[3],
 }
 
 //----------------------------------------------------------------------------
-void vtkConvexPointSet::EvaluateLocation( int &  subId, double   pcoords[3],
+void vtkConvexPointSet::EvaluateLocation( int &  subId, const double pcoords[3],
                                           double x[3],  double * weights )
 {
   int       i;
@@ -306,7 +306,7 @@ void vtkConvexPointSet::EvaluateLocation( int &  subId, double   pcoords[3],
 }
 
 //----------------------------------------------------------------------------
-int vtkConvexPointSet::IntersectWithLine(double p1[3], double p2[3], double tol,
+int vtkConvexPointSet::IntersectWithLine(const double p1[3], const double p2[3], double tol,
                                          double& minT, double x[3],
                                          double pcoords[3], int& subId)
 {
@@ -346,8 +346,8 @@ int vtkConvexPointSet::IntersectWithLine(double p1[3], double p2[3], double tol,
 }
 
 //----------------------------------------------------------------------------
-void vtkConvexPointSet::Derivatives(int subId, double pcoords[3],
-                                    double *values, int dim, double *derivs)
+void vtkConvexPointSet::Derivatives(int subId, const double pcoords[3],
+                                    const double *values, int dim, double *derivs)
 {
   vtkIdType ptId;
 
@@ -389,14 +389,14 @@ double *vtkConvexPointSet::GetParametricCoords()
 }
 
 //----------------------------------------------------------------------------
-void vtkConvexPointSet::InterpolateFunctions(double pcoords[3], double *sf)
+void vtkConvexPointSet::InterpolateFunctions(const double pcoords[3], double *sf)
 {
   (void)pcoords;
   (void)sf;
 }
 
 //----------------------------------------------------------------------------
-void vtkConvexPointSet::InterpolateDerivs(double pcoords[3], double *derivs)
+void vtkConvexPointSet::InterpolateDerivs(const double pcoords[3], double *derivs)
 {
   (void)pcoords;
   (void)derivs;

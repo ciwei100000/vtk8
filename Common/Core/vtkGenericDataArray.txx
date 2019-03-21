@@ -95,7 +95,7 @@ void vtkGenericDataArray<DerivedT, ValueTypeT>::InterpolateTuple(
   // way we don't waste time redoing the other checks in the superclass, and
   // can avoid doing a dispatch for the most common usage of this method.
   DerivedT *other1 = vtkArrayDownCast<DerivedT>(source1);
-  DerivedT *other2 = other1 ? vtkArrayDownCast<DerivedT>(source2) : NULL;
+  DerivedT *other2 = other1 ? vtkArrayDownCast<DerivedT>(source2) : nullptr;
   if (!other1 || !other2)
   {
     // Let the superclass handle dispatch/fallback.
@@ -220,13 +220,22 @@ void vtkGenericDataArray<DerivedT, ValueTypeT>
   vtkErrorMacro("SetVoidArray is not supported by this class.");
 }
 
+
+//-----------------------------------------------------------------------------
+template <class DerivedT, class ValueTypeT>
+void vtkGenericDataArray<DerivedT, ValueTypeT>
+::SetArrayFreeFunction(void (*)(void *))
+{
+  vtkErrorMacro("SetArrayFreeFunction is not supported by this class.");
+}
+
 //-----------------------------------------------------------------------------
 template <class DerivedT, class ValueTypeT>
 void* vtkGenericDataArray<DerivedT, ValueTypeT>
 ::WriteVoidPointer(vtkIdType, vtkIdType)
 {
   vtkErrorMacro("WriteVoidPointer is not supported by this class.");
-  return NULL;
+  return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -265,7 +274,7 @@ template <class DerivedT, class ValueTypeT>
 void* vtkGenericDataArray<DerivedT, ValueTypeT>::GetVoidPointer(vtkIdType)
 {
   vtkErrorMacro("GetVoidPointer is not supported by this class.");
-  return NULL;
+  return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -371,7 +380,7 @@ void vtkGenericDataArray<DerivedT, ValueTypeT>
 
 //-----------------------------------------------------------------------------
 template <class DerivedT, class ValueTypeT>
-int vtkGenericDataArray<DerivedT, ValueTypeT>
+vtkTypeBool vtkGenericDataArray<DerivedT, ValueTypeT>
 ::Allocate(vtkIdType size, vtkIdType vtkNotUsed(ext))
 {
   // Allocator must updated this->Size and this->MaxId properly.
@@ -384,7 +393,8 @@ int vtkGenericDataArray<DerivedT, ValueTypeT>
     size = size < 0 ? 0 : size;
     int numComps = this->GetNumberOfComponents() > 0
         ? this->GetNumberOfComponents() : 1;
-    vtkIdType numTuples = ceil(size / static_cast<double>(numComps));
+    double ceilNum = ceil(static_cast<double>(size) / static_cast<double>(numComps));
+    vtkIdType numTuples = static_cast<vtkIdType>(ceilNum);
     // NOTE: if numTuples is 0, AllocateTuples is expected to release the
     // memory.
     if (this->AllocateTuples(numTuples) == false)
@@ -411,7 +421,7 @@ int vtkGenericDataArray<DerivedT, ValueTypeT>
 
 //-----------------------------------------------------------------------------
 template <class DerivedT, class ValueTypeT>
-int vtkGenericDataArray<DerivedT, ValueTypeT>::Resize(vtkIdType numTuples)
+vtkTypeBool vtkGenericDataArray<DerivedT, ValueTypeT>::Resize(vtkIdType numTuples)
 {
   int numComps = this->GetNumberOfComponents();
   vtkIdType curNumTuples = this->Size / (numComps> 0? numComps : 1);
@@ -771,7 +781,7 @@ vtkArrayIterator* vtkGenericDataArray<DerivedT, ValueTypeT>::NewIterator()
 {
   vtkWarningMacro(<< "No vtkArrayIterator defined for " << this->GetClassName()
                   << " arrays.");
-  return NULL;
+  return nullptr;
 }
 
 //-----------------------------------------------------------------------------

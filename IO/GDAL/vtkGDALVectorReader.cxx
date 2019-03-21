@@ -50,7 +50,7 @@ public:
 #else
     GDALAllRegister();
     this->Source = static_cast<GDALDataset*>(
-      GDALOpenEx(srcName, GDAL_OF_VECTOR, NULL, NULL, NULL));
+      GDALOpenEx(srcName, GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
 #endif
     if ( ! this->Source )
     {
@@ -109,8 +109,8 @@ public:
     {
       vtkNew<vtkIdTypeArray> featIds;
       featIds->SetName("_vtkPedigreeIds");
-      (*pd)->GetCellData()->SetPedigreeIds(featIds.GetPointer());
-      fields->push_back(featIds.GetPointer());
+      (*pd)->GetCellData()->SetPedigreeIds(featIds);
+      fields->push_back(featIds);
     }
 
     *lines = vtkCellArray::New();
@@ -535,8 +535,49 @@ const char* vtkGDALVectorReader::GetLayerProjection(int layerIndex)
   }
   else
   {
-    return NULL;
+    return nullptr;
   }
+}
+
+// -----------------------------------------------------------------------------
+const char* vtkGDALVectorReader::GetLayerProjectionAsProj4(int layerIndex)
+{
+  if ( layerIndex < 0 )
+  {
+    vtkErrorMacro(<< "Layer index cannot be negative");
+    return nullptr;
+  }
+  vtkGDALVectorReader::Internal* p = this->Implementation;
+  if (!p->Source)
+  {
+    vtkErrorMacro(<< "Source dataset not provided");
+    return nullptr;
+  }
+  int layerCount = p->Source->GetLayerCount();
+  if ( layerIndex >= layerCount)
+  {
+    vtkErrorMacro(<< "Layer index " << layerIndex <<
+                  " exceeds number of layers in dataset: " << layerCount);
+    return nullptr;
+  }
+  OGRLayer* layer = p->Source->GetLayer(layerIndex);
+  if (!layer)
+  {
+    vtkErrorMacro(<< "Cannot access the GDAL dataset layer at index " <<
+                  layerIndex);
+    return nullptr;
+  }
+  if (!layer->GetSpatialRef())
+  {
+    vtkErrorMacro(<< "Cannot access the spatial ref object.");
+    return nullptr;
+  }
+  char *projStr;
+  layer->GetSpatialRef()->exportToProj4(&projStr);
+  char* returnStr = new char[strlen(projStr) + 1];
+  strcpy(returnStr, projStr);
+  CPLFree(projStr);
+  return returnStr;
 }
 
 // -----------------------------------------------------------------------------
@@ -613,7 +654,7 @@ int vtkGDALVectorReader::RequestData( vtkInformation* request,
       char *projStr;
       layer->GetSpatialRef()->exportToWkt(&projStr);
       this->LayersProjection[layerIdx] = std::string(projStr);
-      OGRFree(projStr);
+      CPLFree(projStr);
     }
 
     p->ReadLayer( layer, mbds );

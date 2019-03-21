@@ -39,12 +39,12 @@ public:
   static vtkPoints2D *New();
 
   vtkTypeMacro(vtkPoints2D, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Allocate initial memory size. ext is no longer used.
    */
-  virtual int Allocate(const vtkIdType sz, const vtkIdType ext = 1000);
+  virtual vtkTypeBool Allocate(vtkIdType sz, vtkIdType ext = 1000);
 
   /**
    * Return object to instantiated state.
@@ -131,7 +131,7 @@ public:
    * and its values are only valid as long as another method invocation is not
    * performed. Prefer GetPoint() with the return value in argument.
    */
-  double *GetPoint(vtkIdType id) { return this->Data->GetTuple(id);}
+  double *GetPoint(vtkIdType id) VTK_SIZEHINT(2) { return this->Data->GetTuple(id);}
 
   /**
    * Copy point components into user provided array v[2] for specified id.
@@ -182,7 +182,7 @@ public:
    * Resize the internal array while conserving the data.  Returns 1 if
    * resizing succeeded and 0 otherwise.
    */
-  int Resize(vtkIdType numPoints);
+  vtkTypeBool Resize(vtkIdType numPoints);
 
   /**
    * Given a list of pt ids, return an array of points.
@@ -197,7 +197,7 @@ public:
   /**
    * Return the bounds of the points.
    */
-  double *GetBounds();
+  double *GetBounds() VTK_SIZEHINT(4);
 
   /**
    * Return the bounds of the points.
@@ -206,15 +206,15 @@ public:
 
 protected:
   vtkPoints2D(int dataType = VTK_FLOAT);
-  ~vtkPoints2D() VTK_OVERRIDE;
+  ~vtkPoints2D() override;
 
   double Bounds[4];
   vtkTimeStamp ComputeTime; // Time at which bounds computed
   vtkDataArray *Data;  // Array which represents data
 
 private:
-  vtkPoints2D(const vtkPoints2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPoints2D&) VTK_DELETE_FUNCTION;
+  vtkPoints2D(const vtkPoints2D&) = delete;
+  void operator=(const vtkPoints2D&) = delete;
 };
 
 inline void vtkPoints2D::Reset()
@@ -230,7 +230,7 @@ inline void vtkPoints2D::SetNumberOfPoints(vtkIdType numPoints)
   this->Modified();
 }
 
-inline int vtkPoints2D::Resize(vtkIdType numPoints)
+inline vtkTypeBool vtkPoints2D::Resize(vtkIdType numPoints)
 {
   this->Data->SetNumberOfComponents(2);
   this->Modified();

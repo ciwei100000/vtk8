@@ -41,7 +41,7 @@ class VTKIOGEOMETRY_EXPORT vtkChacoReader : public vtkUnstructuredGridAlgorithm
 public:
   static vtkChacoReader *New();
   vtkTypeMacro(vtkChacoReader,vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Specify the base name of the Chaco files.  The reader will try to
@@ -58,9 +58,9 @@ public:
    * Default is ON.
    */
 
-  vtkSetMacro(GenerateGlobalElementIdArray, int);
-  vtkGetMacro(GenerateGlobalElementIdArray, int);
-  vtkBooleanMacro(GenerateGlobalElementIdArray, int);
+  vtkSetMacro(GenerateGlobalElementIdArray, vtkTypeBool);
+  vtkGetMacro(GenerateGlobalElementIdArray, vtkTypeBool);
+  vtkBooleanMacro(GenerateGlobalElementIdArray, vtkTypeBool);
 
   static const char *GetGlobalElementIdArrayName() { return "GlobalElementId"; }
 
@@ -72,9 +72,9 @@ public:
    * Default is ON.
    */
 
-  vtkSetMacro(GenerateGlobalNodeIdArray, int);
-  vtkGetMacro(GenerateGlobalNodeIdArray, int);
-  vtkBooleanMacro(GenerateGlobalNodeIdArray, int);
+  vtkSetMacro(GenerateGlobalNodeIdArray, vtkTypeBool);
+  vtkGetMacro(GenerateGlobalNodeIdArray, vtkTypeBool);
+  vtkBooleanMacro(GenerateGlobalNodeIdArray, vtkTypeBool);
 
   static const char *GetGlobalNodeIdArrayName() { return "GlobalNodeId"; }
 
@@ -84,9 +84,9 @@ public:
    * Default is OFF.
    */
 
-  vtkSetMacro(GenerateVertexWeightArrays, int);
-  vtkGetMacro(GenerateVertexWeightArrays, int);
-  vtkBooleanMacro(GenerateVertexWeightArrays, int);
+  vtkSetMacro(GenerateVertexWeightArrays, vtkTypeBool);
+  vtkGetMacro(GenerateVertexWeightArrays, vtkTypeBool);
+  vtkBooleanMacro(GenerateVertexWeightArrays, vtkTypeBool);
 
   /**
    * Returns the number of weights per vertex in the Chaco file, whether or
@@ -98,7 +98,7 @@ public:
   /**
    * This method returns the name of the selected Vertex weight point
    * array.  If you did not turn on GenerateVertexWeightArrays, or
-   * if the weight you requested is invalid, it returns NULL.
+   * if the weight you requested is invalid, it returns nullptr.
    * Weights begin at one and go up to NumberOfVertexWeights.
    * This is a pointer to our copy of the name, so don't "delete" it.
    */
@@ -114,9 +114,9 @@ public:
    * Default is OFF.
    */
 
-  vtkSetMacro(GenerateEdgeWeightArrays, int);
-  vtkGetMacro(GenerateEdgeWeightArrays, int);
-  vtkBooleanMacro(GenerateEdgeWeightArrays, int);
+  vtkSetMacro(GenerateEdgeWeightArrays, vtkTypeBool);
+  vtkGetMacro(GenerateEdgeWeightArrays, vtkTypeBool);
+  vtkBooleanMacro(GenerateEdgeWeightArrays, vtkTypeBool);
 
   /**
    * Returns the number of weights per edge in the Chaco file, whether or
@@ -128,7 +128,7 @@ public:
   /**
    * This method returns the name of the selected Edge weight cell
    * array.  If you did not turn on GenerateEdgeWeightArrays, or
-   * if the weight you requested is invalid, it returns NULL.
+   * if the weight you requested is invalid, it returns nullptr.
    * Weights begin at one and go up to NumberOfEdgeWeights.
    * This is a pointer to our copy of the name, so don't "delete" it.
    */
@@ -162,7 +162,7 @@ public:
 
 protected:
   vtkChacoReader();
-  ~vtkChacoReader() VTK_OVERRIDE;
+  ~vtkChacoReader() override;
 
   int BuildOutputGrid(vtkUnstructuredGrid *gr);
 
@@ -188,11 +188,11 @@ protected:
 
   // Parameters for controlling what is read in.
   char *BaseName;
-  int GenerateGlobalElementIdArray;
-  int GenerateGlobalNodeIdArray;
+  vtkTypeBool GenerateGlobalElementIdArray;
+  vtkTypeBool GenerateGlobalNodeIdArray;
 
-  int GenerateVertexWeightArrays;
-  int GenerateEdgeWeightArrays;
+  vtkTypeBool GenerateVertexWeightArrays;
+  vtkTypeBool GenerateEdgeWeightArrays;
 
   FILE *CurrentGeometryFP;
   FILE *CurrentGraphFP;
@@ -216,8 +216,8 @@ protected:
 
   //----------------------------------------------------------------------
 
-  int NumberOfPointWeightArrays;   // in output unstuctured grid
-  int NumberOfCellWeightArrays;    // in output unstuctured grid
+  int NumberOfPointWeightArrays;   // in output unstructured grid
+  int NumberOfCellWeightArrays;    // in output unstructured grid
 
   // Keep the points and cells
   // around so they don't need to be re-read when the
@@ -228,13 +228,13 @@ protected:
   int RemakeDataCacheFlag;
 
   int RequestInformation(
-    vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   int RequestData(
-    vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
 private:
-  vtkChacoReader(const vtkChacoReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkChacoReader&) VTK_DELETE_FUNCTION;
+  vtkChacoReader(const vtkChacoReader&) = delete;
+  void operator=(const vtkChacoReader&) = delete;
 
   double ReadVal(FILE *infile, int *end_flag);
   vtkIdType ReadInt(FILE *infile, int *end_flag);

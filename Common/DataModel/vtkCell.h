@@ -57,7 +57,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkCell : public vtkObject
 {
 public:
   vtkTypeMacro(vtkCell,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Initialize cell from outside with point ids and point
@@ -124,7 +124,7 @@ public:
    */
   virtual int RequiresExplicitFaceRepresentation() {return 0;}
   virtual void SetFaces(vtkIdType *vtkNotUsed(faces)) {}
-  virtual vtkIdType *GetFaces() {return NULL;}
+  virtual vtkIdType *GetFaces() {return nullptr;}
 
   /**
    * Get the point coordinates for the cell.
@@ -154,7 +154,9 @@ public:
   /**
    * For cell point i, return the actual point id.
    */
-  vtkIdType GetPointId(int ptId) {return this->PointIds->GetId(ptId);}
+  vtkIdType GetPointId(int ptId)
+    VTK_EXPECTS(0 <= ptId && ptId < GetPointIds()->GetNumberOfIds())
+    {return this->PointIds->GetId(ptId);}
 
   /**
    * Return the edge cell from the edgeId of the cell.
@@ -173,7 +175,7 @@ public:
    * (3D cell), edge (2D cell), or vertex (1D cell). If the return value of
    * the method is != 0, then the point is inside the cell.
    */
-  virtual int CellBoundary(int subId, double pcoords[3], vtkIdList *pts) = 0;
+  virtual int CellBoundary(int subId, const double pcoords[3], vtkIdList *pts) = 0;
 
   /**
    * Given a point x[3] return inside(=1), outside(=0) cell, or (-1)
@@ -192,16 +194,16 @@ public:
    * the cell within parametric limits but be "far" from the cell.  Thus the
    * value dist2 may be checked to determine true in/out.
    */
-  virtual int EvaluatePosition(double x[3], double* closestPoint,
+  virtual int EvaluatePosition(const double x[3], double closestPoint[3],
                                int& subId, double pcoords[3],
-                               double& dist2, double *weights) = 0;
+                               double& dist2, double weights[]) = 0;
 
   /**
    * Determine global coordinate (x[3]) from subId and parametric coordinates.
    * Also returns interpolation weights. (The number of weights is equal to
    * the number of points in the cell.)
    */
-  virtual void EvaluateLocation(int& subId, double pcoords[3],
+  virtual void EvaluateLocation(int& subId, const double pcoords[3],
                                 double x[3], double *weights) = 0;
 
   /**
@@ -210,9 +212,9 @@ public:
    * points list that merges points as they are inserted (i.e., prevents
    * duplicates). Contouring primitives can be vertices, lines, or
    * polygons. It is possible to interpolate point data along the edge
-   * by providing input and output point data - if outPd is NULL, then
+   * by providing input and output point data - if outPd is nullptr, then
    * no interpolation is performed. Also, if the output cell data is
-   * non-NULL, the cell data from the contoured cell is passed to the
+   * non-nullptr, the cell data from the contoured cell is passed to the
    * generated contouring primitives. (Note: the CopyAllocate() method
    * must be invoked on both the output cell and point data. The
    * cellId refers to the cell from which the cell data is copied.)
@@ -231,7 +233,7 @@ public:
    * The flag insideOut controls what part of the cell is considered inside -
    * normally cell points whose scalar value is greater than "value" are
    * considered inside. If insideOut is on, this is reversed. Also, if the
-   * output cell data is non-NULL, the cell data from the clipped cell is
+   * output cell data is non-nullptr, the cell data from the clipped cell is
    * passed to the generated contouring primitives. (Note: the CopyAllocate()
    * method must be invoked on both the output cell and point data. The
    * cellId refers to the cell from which the cell data is copied.)
@@ -250,7 +252,7 @@ public:
    * x[3] in data coordinates and also pcoords[3] in parametric coordinates. subId is the index
    * within the cell if a composed cell like a triangle strip.
    */
-  virtual int IntersectWithLine(double p1[3], double p2[3],
+  virtual int IntersectWithLine(const double p1[3], const double p2[3],
                                 double tol, double& t, double x[3],
                                 double pcoords[3], int& subId) = 0;
 
@@ -280,7 +282,7 @@ public:
    * ((d(vx)/dx),(d(vx)/dy),(d(vx)/dz), (d(vy)/dx),(d(vy)/dy), (d(vy)/dz),
    * (d(vz)/dx),(d(vz)/dy),(d(vz)/dz)).
    */
-  virtual void Derivatives(int subId, double pcoords[3], double *values,
+  virtual void Derivatives(int subId, const double pcoords[3], const double *values,
                            int dim, double *derivs) = 0;
 
 
@@ -295,7 +297,7 @@ public:
    * Compute cell bounding box (xmin,xmax,ymin,ymax,zmin,zmax). Return pointer
    * to array of six double values.
    */
-  double *GetBounds();
+  double *GetBounds() VTK_SIZEHINT(6);
 
 
   /**
@@ -320,7 +322,7 @@ public:
    * will occasionally allow cells to be picked who are not really
    * intersected "inside" the cell.)
    */
-  virtual double GetParametricDistance(double pcoords[3]);
+  virtual double GetParametricDistance(const double pcoords[3]);
 
 
   /**
@@ -337,22 +339,22 @@ public:
    * Return a contiguous array of parametric coordinates of the points
    * defining this cell. In other words, (px,py,pz, px,py,pz, etc..)  The
    * coordinates are ordered consistent with the definition of the point
-   * ordering for the cell. This method returns a non-NULL pointer when
+   * ordering for the cell. This method returns a non-nullptr pointer when
    * the cell is a primary type (i.e., IsPrimaryCell() is true). Note that
    * 3D parametric coordinates are returned no matter what the topological
    * dimension of the cell.
    */
-  virtual double *GetParametricCoords();
+  virtual double *GetParametricCoords() VTK_SIZEHINT(3*GetNumberOfPoints());
 
   /**
    * Compute the interpolation functions/derivatives
    * (aka shape functions/derivatives)
    * No-ops at this level. Typically overridden in subclasses.
    */
-  virtual void InterpolateFunctions(double vtkNotUsed(pcoords)[3], double* vtkNotUsed(weight))
+  virtual void InterpolateFunctions(const double vtkNotUsed(pcoords)[3], double* vtkNotUsed(weight))
   {
   }
-  virtual void InterpolateDerivs(double vtkNotUsed(pcoords)[3], double* vtkNotUsed(derivs))
+  virtual void InterpolateDerivs(const double vtkNotUsed(pcoords)[3], double* vtkNotUsed(derivs))
   {
   }
 
@@ -362,13 +364,13 @@ public:
 
 protected:
   vtkCell();
-  ~vtkCell() VTK_OVERRIDE;
+  ~vtkCell() override;
 
   double Bounds[6];
 
 private:
-  vtkCell(const vtkCell&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCell&) VTK_DELETE_FUNCTION;
+  vtkCell(const vtkCell&) = delete;
+  void operator=(const vtkCell&) = delete;
 };
 
 #endif

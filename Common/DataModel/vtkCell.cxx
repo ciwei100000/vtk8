@@ -21,8 +21,7 @@
 // Construct cell.
 vtkCell::vtkCell()
 {
-  this->Points = vtkPoints::New();
-  this->Points->SetDataTypeToDouble();
+  this->Points = vtkPoints::New(VTK_DOUBLE);
   this->PointIds = vtkIdList::New();
   // Consistent Register/Deletes (ShallowCopy uses Register.)
   this->Points->Register(this);
@@ -167,7 +166,7 @@ int vtkCell::GetParametricCenter(double pcoords[3])
 //----------------------------------------------------------------------------
 // This method works fine for all "rectangular" cells, not triangular
 // and tetrahedral topologies.
-double vtkCell::GetParametricDistance(double pcoords[3])
+double vtkCell::GetParametricDistance(const double pcoords[3])
 {
   int i;
   double pDist, pDistMax=0.0;
@@ -236,5 +235,5 @@ void vtkCell::PrintSelf(ostream& os, vtkIndent indent)
 // Usually overridden. Only composite cells do not override this.
 double *vtkCell::GetParametricCoords()
 {
-  return NULL;
+  return nullptr;
 }

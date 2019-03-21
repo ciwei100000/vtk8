@@ -281,7 +281,7 @@ void vtkEnzoReaderBlock::GetLevelBasedIds
   if ( this->ParentId != 0 )
   {
     // the parent is not the root and therefore we need to exploit the level-
-    // based Ids of the parent, of which the shifted verson is multiplied by
+    // based Ids of the parent, of which the shifted version is multiplied by
     // the refinement ratio
 
     vtkEnzoReaderBlock & parent = blocks[ this->ParentId ];
@@ -350,16 +350,16 @@ vtkEnzoReaderInternal::~vtkEnzoReaderInternal()
 {
   this->ReleaseDataArray();
   this->Init();
-  this->FileName = NULL;
+  this->FileName = nullptr;
 }
 
 //------------------------------------------------------------------------------
 void vtkEnzoReaderInternal::Init()
 {
   this->DataTime   = 0.0;
-  this->FileName   = NULL;
-  //this->TheReader  = NULL;
-  this->DataArray  = NULL;
+  this->FileName   = nullptr;
+  //this->TheReader  = nullptr;
+  this->DataArray  = nullptr;
   this->CycleIndex = 0;
 
   this->ReferenceBlock = 0;
@@ -385,20 +385,20 @@ void vtkEnzoReaderInternal::ReleaseDataArray()
   if( this->DataArray )
   {
     this->DataArray->Delete();
-    this->DataArray = NULL;
+    this->DataArray = nullptr;
   }
 }
 
 //------------------------------------------------------------------------------
 int vtkEnzoReaderInternal::GetBlockAttribute(
-    const char *atribute, int blockIdx, vtkDataSet *pDataSet )
+    const char *attribute, int blockIdx, vtkDataSet *pDataSet )
 {
 
   // this function must be called by GetBlock( ... )
   this->ReadMetaData();
 
-  if ( atribute == NULL || blockIdx < 0  ||
-       pDataSet == NULL || blockIdx >= this->NumberOfBlocks )
+  if ( attribute == nullptr || blockIdx < 0  ||
+       pDataSet == nullptr || blockIdx >= this->NumberOfBlocks )
   {
     return 0;
   }
@@ -411,28 +411,28 @@ int vtkEnzoReaderInternal::GetBlockAttribute(
   // blocks with particles (e.g., the reference one with the fewest cells)
   // contain it as a block attribute, whereas others without particles just
   // do not contain this block attribute.
-  int   succeded = 0;
-  if (  this->LoadAttribute( atribute, blockIdx ) &&
+  int   succeeded = 0;
+  if (  this->LoadAttribute( attribute, blockIdx ) &&
         ( pDataSet->GetNumberOfCells() ==
           this->DataArray->GetNumberOfTuples() )
      )
   {
-    succeded = 1;
+    succeeded = 1;
     pDataSet->GetCellData()->AddArray( this->DataArray );
     this->ReleaseDataArray();
   }
 
-  return succeded;
+  return succeeded;
 }
 
 //------------------------------------------------------------------------------
-int vtkEnzoReaderInternal::LoadAttribute( const char *atribute, int blockIdx )
+int vtkEnzoReaderInternal::LoadAttribute( const char *attribute, int blockIdx )
 {
   // TODO: implement this
   // called by GetBlockAttribute( ... ) or GetParticlesAttribute()
   this->ReadMetaData();
 
-  if ( atribute == NULL || blockIdx < 0  ||
+  if ( attribute == nullptr || blockIdx < 0  ||
        blockIdx >= this->NumberOfBlocks )
   {
     return 0;
@@ -476,21 +476,21 @@ int vtkEnzoReaderInternal::LoadAttribute( const char *atribute, int blockIdx )
 
   // disable error messages while looking for the attribute (if any) name
   // and enable error messages when it is done
-  void       * pContext = NULL;
+  void       * pContext = nullptr;
   H5E_auto_t   erorFunc;
   H5Eget_auto( &erorFunc, &pContext );
-  H5Eset_auto( NULL, NULL );
+  H5Eset_auto( nullptr, nullptr );
 
-  hid_t        attrIndx = H5Dopen( rootIndx, atribute );
+  hid_t        attrIndx = H5Dopen( rootIndx, attribute );
 
   H5Eset_auto( erorFunc, pContext );
-  pContext = NULL;
+  pContext = nullptr;
 
   // check if the data attribute exists
   if ( attrIndx < 0 )
   {
     vtkGenericWarningMacro(
-     "Attribute (" << atribute << ") data does not exist in file "
+     "Attribute (" << attribute << ") data does not exist in file "
      << blckFile.c_str() );
     H5Gclose( rootIndx );
     H5Fclose( fileIndx );
@@ -500,7 +500,7 @@ int vtkEnzoReaderInternal::LoadAttribute( const char *atribute, int blockIdx )
   // get cell dimensions and the valid number
   hsize_t cellDims[3];
   hid_t   spaceIdx = H5Dget_space( attrIndx );
-  H5Sget_simple_extent_dims( spaceIdx, cellDims, NULL );
+  H5Sget_simple_extent_dims( spaceIdx, cellDims, nullptr );
   hsize_t numbDims = H5Sget_simple_extent_ndims( spaceIdx );
 
   // number of attribute tuples = number of cells (or particles)
@@ -540,60 +540,54 @@ int vtkEnzoReaderInternal::LoadAttribute( const char *atribute, int blockIdx )
     float  * arrayPtr = static_cast < float * >
      (vtkArrayDownCast<vtkFloatArray>( this->DataArray )->GetPointer( 0 )  );
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
-  else
-  if (  H5Tequal( dataType, H5T_NATIVE_DOUBLE )  )
+  else if (  H5Tequal( dataType, H5T_NATIVE_DOUBLE )  )
   {
     this->DataArray = vtkDoubleArray::New();
     this->DataArray->SetNumberOfTuples( numTupls );
     double  * arrayPtr = static_cast < double * >
      (vtkArrayDownCast<vtkDoubleArray>( this->DataArray )->GetPointer( 0 )  );
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
-  else
-  if (  H5Tequal( dataType, H5T_NATIVE_INT )  )
+  else if (  H5Tequal( dataType, H5T_NATIVE_INT )  )
   {
     this->DataArray = vtkIntArray::New();
     this->DataArray->SetNumberOfTuples( numTupls );
     int  * arrayPtr = static_cast < int * >
      (vtkArrayDownCast<vtkIntArray>( this->DataArray )->GetPointer( 0 )  );
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
-  else
-  if (  H5Tequal( dataType, H5T_NATIVE_UINT )  )
+  else if (  H5Tequal( dataType, H5T_NATIVE_UINT )  )
   {
     this->DataArray = vtkUnsignedIntArray::New();
     this->DataArray->SetNumberOfTuples( numTupls );
     unsigned int  * arrayPtr = static_cast < unsigned int * >
      (vtkArrayDownCast<vtkUnsignedIntArray>( this->DataArray )->GetPointer( 0 )  );
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
-  else
-  if (  H5Tequal( dataType, H5T_NATIVE_SHORT )  )
+  else if (  H5Tequal( dataType, H5T_NATIVE_SHORT )  )
   {
     this->DataArray = vtkShortArray::New();
     this->DataArray->SetNumberOfTuples( numTupls );
     short  * arrayPtr = static_cast < short * >
      (vtkArrayDownCast<vtkShortArray>( this->DataArray )->GetPointer( 0 )  );
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
-  else
-  if (  H5Tequal( dataType, H5T_NATIVE_USHORT )  )
+  else if (  H5Tequal( dataType, H5T_NATIVE_USHORT )  )
   {
     this->DataArray = vtkUnsignedShortArray::New();
     this->DataArray->SetNumberOfTuples( numTupls );
     unsigned short  * arrayPtr = static_cast < unsigned short * >
      (vtkArrayDownCast<vtkUnsignedShortArray>( this->DataArray )->GetPointer( 0 ));
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
-  else
-  if (  H5Tequal( dataType, H5T_NATIVE_UCHAR )  )
+  else if (  H5Tequal( dataType, H5T_NATIVE_UCHAR )  )
   {
 
     this->DataArray = vtkUnsignedCharArray::New();
@@ -601,27 +595,25 @@ int vtkEnzoReaderInternal::LoadAttribute( const char *atribute, int blockIdx )
     unsigned char  * arrayPtr = static_cast < unsigned char * >
      (vtkArrayDownCast<vtkUnsignedCharArray>( this->DataArray )->GetPointer( 0 )  );
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
-  else
-  if (  H5Tequal( dataType, H5T_NATIVE_LONG )  )
+  else if (  H5Tequal( dataType, H5T_NATIVE_LONG )  )
   {
     this->DataArray = vtkLongArray::New();
     this->DataArray->SetNumberOfTuples( numTupls );
     long  * arrayPtr = static_cast < long * >
      (vtkArrayDownCast<vtkLongArray>( this->DataArray )->GetPointer( 0 )  );
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
-  else
-  if (  H5Tequal( dataType, H5T_NATIVE_LLONG )  )
+  else if (  H5Tequal( dataType, H5T_NATIVE_LLONG )  )
   {
     this->DataArray = vtkLongLongArray::New();
     this->DataArray->SetNumberOfTuples( numTupls );
     long long  * arrayPtr = static_cast < long long * >
      ( vtkArrayDownCast<vtkLongLongArray>( this->DataArray )->GetPointer( 0 )  );
     H5Dread( attrIndx, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, arrayPtr );
-    arrayPtr = NULL;
+    arrayPtr = nullptr;
   }
   else
   {
@@ -639,9 +631,9 @@ int vtkEnzoReaderInternal::LoadAttribute( const char *atribute, int blockIdx )
 
 
   // do not forget to provide a name for the array
-  this->DataArray->SetName( atribute );
+  this->DataArray->SetName( attribute );
 
-// This close statements cause a crash!
+// These close statements cause a crash!
 //  H5Tclose( dataType );
 //  H5Tclose( tRawType );
 //  H5Tclose( spaceIdx );
@@ -676,7 +668,7 @@ void vtkEnzoReaderInternal::ReadBlockStructures()
 
   int     levlId = 0;
   int     parent = 0;
-  std::string   theStr = "";
+  std::string   theStr;
 
   while ( stream )
   {
@@ -841,8 +833,7 @@ void vtkEnzoReaderInternal::ReadBlockStructures()
       this->Blocks[parent].ChildrenIds.push_back( tmpBlk.Index );
       this->NumberOfBlocks = static_cast < int > ( this->Blocks.size() ) - 1;
     }
-    else
-    if ( theStr == "Pointer:" )
+    else if ( theStr == "Pointer:" )
     {
       theStr = "";
       int    tmpInt;
@@ -872,8 +863,7 @@ void vtkEnzoReaderInternal::ReadBlockStructures()
         stream >> tmpInt;
       }
     }
-    else
-    if ( theStr == "Time" )
+    else if ( theStr == "Time" )
     {
       stream >> theStr; // '='
       stream >> this->DataTime;
@@ -904,7 +894,7 @@ void vtkEnzoReaderInternal::ReadGeneralParameters()
     return;
   }
 
-  std::string tmpStr( "" );
+  std::string tmpStr;
   while ( stream )
   {
     stream >> tmpStr;
@@ -914,14 +904,12 @@ void vtkEnzoReaderInternal::ReadGeneralParameters()
       stream >> tmpStr; // '='
       stream >> this->CycleIndex;
     }
-    else
-    if ( tmpStr == "InitialTime" )
+    else if ( tmpStr == "InitialTime" )
     {
       stream >> tmpStr; // '='
       stream >> this->DataTime;
     }
-    else
-    if ( tmpStr == "TopGridRank" )
+    else if ( tmpStr == "TopGridRank" )
     {
       stream >> tmpStr; // '='
       stream >> this->NumberOfDimensions;
@@ -961,7 +949,7 @@ void vtkEnzoReaderInternal::GetAttributeNames()
   int   wasFound = 0;       // any block with particles was found?
   int   blkIndex = 0;       // index of the block with fewest cells
                             // (either with or without particles)
-  int   numCells = INT_MAX; // number of cells of  a block
+  int   numCells = INT_MAX; // number of cells of a block
   int   numbBlks = static_cast < int > ( this->Blocks.size() );
 
   for ( int i = 1; i < numbBlks; i ++ )
@@ -1061,10 +1049,9 @@ void vtkEnzoReaderInternal::GetAttributeNames()
           this->ParticleAttributeNames.push_back( tempName );
         }
       }
-      else
-      if (   (  strlen( tempName )  >  16  ) &&
-             (  strncmp( tempName, "tracer_particles", 16 )  ==  0  )
-         )
+      else if (   (  strlen( tempName )  >  16  ) &&
+                  (  strncmp( tempName, "tracer_particles", 16 )  ==  0  )
+              )
       {
         // it's a tracer_particle variable and skip over coordinate arrays
         if (  strncmp( tempName, "tracer_particle_position_", 25 ) != 0  )
@@ -1110,7 +1097,7 @@ void vtkEnzoReaderInternal::CheckAttributeNames()
 
   int           numbPnts = polyData->GetNumberOfPoints();
   polyData->Delete();
-  polyData = NULL;
+  polyData = nullptr;
 
   // block attributes to be removed and / or exported
   std::vector < std::string > toRemove;
@@ -1126,7 +1113,7 @@ void vtkEnzoReaderInternal::CheckAttributeNames()
     // the actual number of tuples of a block attribute loaded from the
     // file for the reference block
     int   numTupls = 0;
-    if( this->DataArray != NULL )
+    if( this->DataArray != nullptr )
     {
       numTupls = this->DataArray->GetNumberOfTuples();
       this->ReleaseDataArray();

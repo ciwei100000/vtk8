@@ -8,9 +8,11 @@ vtk_module(vtkRenderingOpenVR
   DEPENDS
     vtksys
     vtkCommonCore
+    vtkCommonSystem
     vtkRenderingOpenGL2
     vtkRenderingVolumeOpenGL2
     vtkInteractionStyle
+    vtkInteractionWidgets
     vtkIOImage
     vtkIOXMLParser
   ${_impl}

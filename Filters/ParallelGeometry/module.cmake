@@ -1,7 +1,10 @@
 vtk_module(vtkFiltersParallelGeometry
+  IMPLEMENTS
+    vtkFiltersParallel
   GROUPS
     MPI
   TEST_DEPENDS
+    vtkFiltersParallelMPI
     vtkIOXML
     vtkIOParallel
     vtkIOParallelXML
@@ -15,6 +18,7 @@ vtk_module(vtkFiltersParallelGeometry
     vtkCommonCore
     vtkCommonExecutionModel
     vtkFiltersGeometry
+    vtkFiltersParallel
     vtkParallelMPI
   PRIVATE_DEPENDS
     vtkCommonDataModel

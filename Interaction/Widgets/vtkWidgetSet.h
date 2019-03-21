@@ -51,7 +51,7 @@
  * interaction such as:
  * \code
  * this->CallbackMapper->SetCallbackMethod(vtkCommand::LeftButtonPressEvent,
- *                         vtkEvent::NoModifier, 0, 0, NULL,
+ *                         vtkEvent::NoModifier, 0, 0, nullptr,
  *                         vtkPaintbrushWidget::BeginDrawStrokeEvent,
  *                         this, vtkPaintbrushWidget::BeginDrawCallback);
  * \endcode
@@ -121,15 +121,15 @@ public:
    * Standard methods for a VTK class.
    */
   vtkTypeMacro(vtkWidgetSet,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
   /**
    * Method for activating and deactivating all widgets in the group.
    */
-  virtual void SetEnabled(int);
-  vtkBooleanMacro(Enabled, int);
+  virtual void SetEnabled(vtkTypeBool);
+  vtkBooleanMacro(Enabled, vtkTypeBool);
   //@}
 
   /**
@@ -192,11 +192,11 @@ public:
 
 protected:
   vtkWidgetSet();
-  ~vtkWidgetSet() VTK_OVERRIDE;
+  ~vtkWidgetSet() override;
 
 private:
-  vtkWidgetSet(const vtkWidgetSet&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkWidgetSet&) VTK_DELETE_FUNCTION;
+  vtkWidgetSet(const vtkWidgetSet&) = delete;
+  void operator=(const vtkWidgetSet&) = delete;
 };
 
 #endif

@@ -75,7 +75,7 @@ class VTKRENDERINGANNOTATION_EXPORT vtkCaptionActor2D : public vtkActor2D
 {
 public:
   vtkTypeMacro(vtkCaptionActor2D,vtkActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkCaptionActor2D *New();
 
@@ -101,9 +101,9 @@ public:
   /**
    * Enable/disable the placement of a border around the text.
    */
-  vtkSetMacro(Border,int);
-  vtkGetMacro(Border,int);
-  vtkBooleanMacro(Border,int);
+  vtkSetMacro(Border,vtkTypeBool);
+  vtkGetMacro(Border,vtkTypeBool);
+  vtkBooleanMacro(Border,vtkTypeBool);
   //@}
 
   //@{
@@ -111,18 +111,18 @@ public:
    * Enable/disable drawing a "line" from the caption to the
    * attachment point.
    */
-  vtkSetMacro(Leader,int);
-  vtkGetMacro(Leader,int);
-  vtkBooleanMacro(Leader,int);
+  vtkSetMacro(Leader,vtkTypeBool);
+  vtkGetMacro(Leader,vtkTypeBool);
+  vtkBooleanMacro(Leader,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Indicate whether the leader is 2D (no hidden line) or 3D (z-buffered).
    */
-  vtkSetMacro(ThreeDimensionalLeader,int);
-  vtkGetMacro(ThreeDimensionalLeader,int);
-  vtkBooleanMacro(ThreeDimensionalLeader,int);
+  vtkSetMacro(ThreeDimensionalLeader,vtkTypeBool);
+  vtkGetMacro(ThreeDimensionalLeader,vtkTypeBool);
+  vtkBooleanMacro(ThreeDimensionalLeader,vtkTypeBool);
   //@}
 
   //@{
@@ -190,16 +190,16 @@ public:
    * Shallow copy of this scaled text actor. Overloads the virtual
    * vtkProp method.
    */
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE;
+  void ShallowCopy(vtkProp *prop) override;
 
   //@{
   /**
    * Enable/disable whether to attach the arrow only to the edge,
    * NOT the vertices of the caption border.
    */
-  vtkSetMacro(AttachEdgeOnly,int);
-  vtkGetMacro(AttachEdgeOnly,int);
-  vtkBooleanMacro(AttachEdgeOnly,int);
+  vtkSetMacro(AttachEdgeOnly,vtkTypeBool);
+  vtkGetMacro(AttachEdgeOnly,vtkTypeBool);
+  vtkBooleanMacro(AttachEdgeOnly,vtkTypeBool);
   //@}
 
   /**
@@ -209,7 +209,7 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   //@{
   /**
@@ -217,30 +217,30 @@ public:
    * DO NOT USE THIS METHOD OUTSIDE OF THE RENDERING PROCESS.
    * Draw the legend box to the screen.
    */
-  int RenderOpaqueGeometry(vtkViewport* viewport) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport* ) VTK_OVERRIDE {return 0;}
-  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  int RenderOpaqueGeometry(vtkViewport* viewport) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport* ) override {return 0;}
+  int RenderOverlay(vtkViewport* viewport) override;
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
 protected:
   vtkCaptionActor2D();
-  ~vtkCaptionActor2D() VTK_OVERRIDE;
+  ~vtkCaptionActor2D() override;
 
   vtkCoordinate *AttachmentPointCoordinate;
 
-  int   Border;
-  int   Leader;
-  int   ThreeDimensionalLeader;
+  vtkTypeBool   Border;
+  vtkTypeBool   Leader;
+  vtkTypeBool   ThreeDimensionalLeader;
   double LeaderGlyphSize;
   int   MaximumLeaderGlyphSize;
 
   int   Padding;
-  int   AttachEdgeOnly;
+  vtkTypeBool   AttachEdgeOnly;
 
 
 private:
@@ -268,8 +268,8 @@ private:
   vtkCaptionActor2DConnection* LeaderGlyphConnectionHolder;
 
 private:
-  vtkCaptionActor2D(const vtkCaptionActor2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCaptionActor2D&) VTK_DELETE_FUNCTION;
+  vtkCaptionActor2D(const vtkCaptionActor2D&) = delete;
+  void operator=(const vtkCaptionActor2D&) = delete;
 };
 
 

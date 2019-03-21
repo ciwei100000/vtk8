@@ -27,7 +27,7 @@
 // turned off.
 vtkViewport::vtkViewport()
 {
-  this->VTKWindow = NULL;
+  this->VTKWindow = nullptr;
 
   this->Background[0] = 0;
   this->Background[1] = 0;
@@ -70,15 +70,14 @@ vtkViewport::vtkViewport()
   this->Origin[0] = 0;
   this->Origin[1] = 0;
 
-  this->PickedProp = NULL;
-  this->PickFromProps = NULL;
-  this->PickResultProps = NULL;
-  this->IsPicking = 0;
-  this->CurrentPickId = 0;
+  this->PickedProp = nullptr;
+  this->PickFromProps = nullptr;
+  this->PickResultProps = nullptr;
   this->PickX1 = -1;
   this->PickY1 = -1;
   this->PickX2 = -1;
   this->PickY2 = -1;
+  this->PickedZ = 1.0;
 
   this->Props = vtkPropCollection::New();
   this->Actors2D = vtkActor2DCollection::New();
@@ -88,25 +87,25 @@ vtkViewport::vtkViewport()
 vtkViewport::~vtkViewport()
 {
   this->Actors2D->Delete();
-  this->Actors2D = NULL;
+  this->Actors2D = nullptr;
 
   this->RemoveAllViewProps();
   this->Props->Delete();
-  this->Props = NULL;
+  this->Props = nullptr;
 
-  if (this->VTKWindow != NULL)
+  if (this->VTKWindow != nullptr)
   {
     // renderer never reference counted the window.
     // loop is too hard to detect.
     // this->VTKWindow->UnRegister(this);
-    this->VTKWindow = NULL;
+    this->VTKWindow = nullptr;
   }
 
-  if ( this->PickedProp != NULL )
+  if ( this->PickedProp != nullptr )
   {
     this->PickedProp->UnRegister(this);
   }
-  if ( this->PickResultProps != NULL )
+  if ( this->PickResultProps != nullptr )
   {
     this->PickResultProps->Delete();
   }
@@ -198,17 +197,27 @@ void vtkViewport::DisplayToView()
 
     /* get physical window dimensions */
     const int *size = this->VTKWindow->GetSize();
-    if (size == NULL)
+    if (size == nullptr)
     {
       return;
     }
     sizex = size[0];
     sizey = size[1];
 
-    vx = 2.0 * (this->DisplayPoint[0] - sizex*this->Viewport[0])/
-      (sizex*(this->Viewport[2]-this->Viewport[0])) - 1.0;
-    vy = 2.0 * (this->DisplayPoint[1] - sizey*this->Viewport[1])/
-      (sizey*(this->Viewport[3]-this->Viewport[1])) - 1.0;
+    vx = 0.0;
+    if (sizex != 0.0)
+    {
+      vx = 2.0 * (this->DisplayPoint[0] - sizex*this->Viewport[0])/
+        (sizex*(this->Viewport[2]-this->Viewport[0])) - 1.0;
+    }
+
+    vy = 0.0;
+    if (sizey != 0.0)
+    {
+      vy = 2.0 * (this->DisplayPoint[1] - sizey*this->Viewport[1])/
+        (sizey*(this->Viewport[3]-this->Viewport[1])) - 1.0;
+    }
+
     vz = this->DisplayPoint[2];
 
     this->SetViewPoint(vx,vy,vz);
@@ -401,17 +410,17 @@ void vtkViewport::PrintSelf(ostream& os, vtkIndent indent)
      << " " << this->PickY1 << endl;
   os << indent << "Pick Position X2 Y2: " << this->PickX2
      << " " << this->PickY2 << endl;
-  os << indent << "IsPicking boolean: " << this->IsPicking << endl;
+  os << indent << "PickedZ: " << this->PickedZ << "\n";
   os << indent << "Props:\n";
   this->Props->PrintSelf(os,indent.GetNextIndent());
   os << indent << "PickResultProps:\n";
-  if ( this->PickResultProps != NULL )
+  if ( this->PickResultProps != nullptr )
   {
     this->PickResultProps->PrintSelf(os,indent.GetNextIndent());
   }
   else
   {
-    os << indent << "NULL\n";
+    os << indent << "nullptr\n";
   }
 
 }

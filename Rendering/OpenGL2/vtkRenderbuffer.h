@@ -34,11 +34,11 @@ class VTKRENDERINGOPENGL2_EXPORT vtkRenderbuffer : public vtkObject
 public:
   static vtkRenderbuffer* New();
   vtkTypeMacro(vtkRenderbuffer, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Returns if the context supports the required extensions.
-   * Extension will be loaded when the conetxt is set.
+   * Extension will be loaded when the context is set.
    */
   static bool IsSupported(vtkRenderWindow *renWin);
 
@@ -108,7 +108,7 @@ public:
 
 protected:
   vtkRenderbuffer();
-  ~vtkRenderbuffer() VTK_OVERRIDE;
+  ~vtkRenderbuffer() override;
 
   bool LoadRequiredExtensions(vtkRenderWindow *renWin);
   void Alloc();
@@ -126,8 +126,8 @@ private:
   vtkWeakPointer<vtkRenderWindow> Context;
 
 private:
-  vtkRenderbuffer(const vtkRenderbuffer&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRenderbuffer&) VTK_DELETE_FUNCTION;
+  vtkRenderbuffer(const vtkRenderbuffer&) = delete;
+  void operator=(const vtkRenderbuffer&) = delete;
 };
 
 #endif

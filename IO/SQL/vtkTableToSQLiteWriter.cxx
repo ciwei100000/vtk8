@@ -29,13 +29,11 @@ vtkStandardNewMacro(vtkTableToSQLiteWriter);
 //----------------------------------------------------------------------------
 vtkTableToSQLiteWriter::vtkTableToSQLiteWriter()
 {
-    this->Database = 0;
+    this->Database = nullptr;
 }
 
 //----------------------------------------------------------------------------
-vtkTableToSQLiteWriter::~vtkTableToSQLiteWriter()
-{
-}
+vtkTableToSQLiteWriter::~vtkTableToSQLiteWriter() = default;
 
 //----------------------------------------------------------------------------
 void vtkTableToSQLiteWriter::WriteData()
@@ -51,7 +49,7 @@ void vtkTableToSQLiteWriter::WriteData()
     vtkErrorMacro(<<"Wrong type of database for this writer");
     return;
   }
-  if(this->TableName == "")
+  if(this->TableName.empty())
   {
     vtkErrorMacro(<<"No table name specified!");
     return;
@@ -141,7 +139,6 @@ void vtkTableToSQLiteWriter::WriteData()
 
   //cleanup and return
   query->Delete();
-  return;
 }
 
 //----------------------------------------------------------------------------

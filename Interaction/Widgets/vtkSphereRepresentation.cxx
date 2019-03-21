@@ -55,12 +55,12 @@ vtkSphereRepresentation::vtkSphereRepresentation()
   this->Representation = VTK_SPHERE_WIREFRAME;
 
   // Set up the initial properties
-  this->SphereProperty = NULL;
-  this->SelectedSphereProperty = NULL;
-  this->HandleProperty = NULL;
-  this->SelectedHandleProperty = NULL;
-  this->HandleTextProperty = NULL;
-  this->RadialLineProperty = NULL;
+  this->SphereProperty = nullptr;
+  this->SelectedSphereProperty = nullptr;
+  this->HandleProperty = nullptr;
+  this->SelectedHandleProperty = nullptr;
+  this->HandleTextProperty = nullptr;
+  this->RadialLineProperty = nullptr;
   this->CreateDefaultProperties();
 
   // Build the representation of the widget
@@ -239,10 +239,13 @@ void vtkSphereRepresentation::HighlightHandle(int highlight)
 //------------------------------------------------------------------------------
 void vtkSphereRepresentation::RegisterPickers()
 {
-  this->Renderer->GetRenderWindow()->GetInteractor()->GetPickingManager()
-    ->AddPicker(this->HandlePicker, this);
-  this->Renderer->GetRenderWindow()->GetInteractor()->GetPickingManager()
-    ->AddPicker(this->SpherePicker, this);
+  vtkPickingManager* pm = this->GetPickingManager();
+  if (!pm)
+  {
+    return;
+  }
+  pm->AddPicker(this->HandlePicker, this);
+  pm->AddPicker(this->SpherePicker, this);
 }
 
 //----------------------------------------------------------------------
@@ -339,7 +342,7 @@ void vtkSphereRepresentation::WidgetInteraction(double e[2])
     vtkAssemblyPath* path = this->GetAssemblyPath(e[0], e[1], 0.,
                                                   this->SpherePicker);
 
-    if ( path != NULL )
+    if ( path != nullptr )
     {
       double pos[3], dir[3], c[3];
       this->SpherePicker->GetPickPosition(pos);
@@ -618,7 +621,7 @@ int vtkSphereRepresentation::ComputeInteractionState(int X, int Y, int vtkNotUse
   {
     path = this->GetAssemblyPath(X, Y, 0., this->HandlePicker);
 
-    if ( path != NULL )
+    if ( path != nullptr )
     {
       this->ValidPick = 1;
       this->InteractionState = vtkSphereRepresentation::MovingHandle;
@@ -632,7 +635,7 @@ int vtkSphereRepresentation::ComputeInteractionState(int X, int Y, int vtkNotUse
   {
     path = this->GetAssemblyPath(X, Y, 0., this->SpherePicker);
 
-    if ( path != NULL )
+    if ( path != nullptr )
     {
       this->ValidPick = 1;
       this->InteractionState = vtkSphereRepresentation::OnSphere;
@@ -796,7 +799,7 @@ int vtkSphereRepresentation::RenderOverlay(vtkViewport *v)
 }
 
 //----------------------------------------------------------------------------
-int vtkSphereRepresentation::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkSphereRepresentation::HasTranslucentPolygonalGeometry()
 {
   int result=0;
   this->BuildRepresentation();

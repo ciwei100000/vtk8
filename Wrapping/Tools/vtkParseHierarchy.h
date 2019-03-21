@@ -102,10 +102,16 @@ HierarchyEntry *vtkParseHierarchy_FindEntry(
   const HierarchyInfo *info, const char *classname);
 
 /**
+ * Like FindEntry, but begin search in a class or namespace scope.
+ */
+HierarchyEntry *vtkParseHierarchy_FindEntryEx(
+  const HierarchyInfo *info, const char *classname, const char *scope);
+
+/**
  * Get properties for the class.  Returns NULL if the property
  * is not set, and returns either an empty string or a value string
  * if the property is set. The properties supported are as follows:
- * "WRAP_EXCLUDE" and "ABSTRACT"
+ * "WRAP_EXCLUDE_PYTHON"
  */
 const char *vtkParseHierarchy_GetProperty(
   const HierarchyEntry *entry, const char *property);

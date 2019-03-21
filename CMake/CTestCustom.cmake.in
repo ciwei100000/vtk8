@@ -92,7 +92,6 @@ ENDIF()
 SET(CTEST_CUSTOM_WARNING_EXCEPTION
   ${CTEST_CUSTOM_WARNING_EXCEPTION}
   "vcruntime_exception.h\\(43\\): note: see declaration"
-  "Utilities/vtktiff/"
   "json/json"
   "shadows a member of 'OGRRawPoint'"
   "list.[0-9]+. : warning C4702: unreachable code"
@@ -161,7 +160,6 @@ SET(CTEST_CUSTOM_WARNING_EXCEPTION
   "[Qq]t.*warning C4714"
 
   # Specifically for HP compiler, mask out
-  "Utilities.(vtkjpeg|vtksqlite).*warning.*more strictly aligned type"
   "Filtering.vtkImageMultiple(Input|InputOutput)Filter.cxx.*warning.*more strictly aligned type"
   "IO.vtkJPEG(Reader|Writer).cxx.*warning.*more strictly aligned type"
   ".*warning.*relational operator.*always evaluates to.*"
@@ -190,60 +188,50 @@ SET(CTEST_CUSTOM_WARNING_EXCEPTION
   # warnings from some Open MPI headers/libs, cannot fix:
   "/openmpi/.*request_inln.h.*warning: declaration .struct MPI::Grequest_intercept_t. does not declare anything"
   "openmpi.*comm_inln.h.*warning: unused parameter"
+  "openmpi.*/cxx/op_inln.h.*warning: cast between incompatible function types from"
+
+  # remove the next line once this class is removed probably VTK 9.1
+  "vtkExtractArraysOverTime"
+
+  # warnings from some Eigen headers:
+  #
+  # Eigin has so many warnings using individual suppressions
+  # does not work. So many will be suppressed that it exceeds
+  # the limit ctest will show making it difficult to see
+  # the specifics of an unsuppressed warning unless you have
+  # access to the raw build logs. So we suppress everything
+  # that has eigin in the path. The old suppressions are left
+  # commented below should they be needed.
+  "[Ee]igen/src/.* note:"
+  "[Ee]igen/src/.* warning:"
+  "vtkeigen::"
+
+  # "[Ee]igen/src/.* note: \\(skipping"
+  # "[Ee]igen/src/.* note: expanded from macro"
+  # "[Ee]igen/src/.* note: implicit copy constructor for"
+  # "[Ee]igen/src/.* note: in expansion of macro"
+  # "[Ee]igen/src/.* note: in implicit copy constructor for"
+  # "[Ee]igen/src/.* note: in implicit move constructor for"
+  # "[Ee]igen/src/.* note: in instantiation of member function"
+  # "[Ee]igen/src/.* note: previous declaration is here"
+  # "[Ee]igen/src/.* note: shadowed declaration is here"
+  # "[Ee]igen/src/.* warning: cast from"
+  # "[Ee]igen/src/.* warning: 'm_maxThreads' was marked unused but was used"
+  # "[Ee]igen/src/.* warning: declaration of '.*' shadows"
+  # "[Ee]igen/src/.* warning: declaration shadows a typedef in"
+  # "[Ee]igen/src/.* warning: definition of implicit copy constructor for"
+  # "[Ee]igen/src/.* warning: enum constant in boolean context"
+  # "note: in instantiation of member function 'vtkeigen::"
+  # "note: in instantiation of function template specialization 'vtkeigen::"
+
+  # nested from an eigen macro
+  "include/assert.h.* note: expanded from macro 'assert'"
 
   # warnings from some python headers/libs, cannot fix:
   "warning: the use of .tmpnam_r. is dangerous, better use .mkstemp."
   "warning: the use of .tempnam. is dangerous, better use .mkstemp."
   "pyconfig.h.*warning: ._XOPEN_SOURCE. redefined"
   "features.h.*warning: this is the location of the previous definition"
-
-  # Mask out warnings on Utilities libraries vtkexpat,vtksqlite,vtklibproj4,
-  # vtkzlib, DICOMParser
-  "Utilities.vtkexpat.*warning.*assignment discards qualifiers from pointer target type"
-  "Utilities.vtkexpat.*warning: passing argument .* of .* as unsigned due to prototype"
-  "Utilities.vtkexpat.*warning: passing argument .* of .* with different width due to prototype"
-  "Utilities.vtkexpat.*warning: conversion to .* from .* may change the sign of the result"
-  "Utilities.vtkexpat.*warning: conversion to .* from .* may alter its value"
-  "Utilities.vtkexpat.*warning: passing argument .* of .* with different width due to prototype"
-  "Utilities.vtkexpat.*warning: negative integer implicitly converted to unsigned type"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning.*assignment discards qualifiers from pointer target type"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning.*initialization discards qualifiers from pointer target type"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning.*passing argument .* of .* discards qualifiers from pointer target type"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning.*ignoring return value of .*, declared with attribute warn_unused_result"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning.*passing argument .* of .* with different width due to prototype"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning.*passing argument .* of .* as .*signed due to prototype"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning.*[Ll]ong.double"
-  # gcc -Wsign-conversion
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: conversion to .* from .* may change the sign of the result"
- # gcc -Wsign-conversion
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: conversion of unsigned constant value to negative integer"
-  # gcc -Wconversion
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: conversion to .* from .* may alter its value"
-  # SunOS CC 5.6
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: statement not reached"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: integer overflow detected: op .*"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*note: expected .* but argument is of type .*"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: negative integer implicitly converted to unsigned type"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: assuming signed overflow"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: .* may be used uninitialized in this function"
-  "Utilities.vtksqlite.vtk_sqlite3.c.*warning: .* set but not used"
-  "Utilities.vtkexodus2.*warning.*assignment discards qualifiers from pointer target type"
-  "Utilities.vtkexodus2.*warning.*initialization discards qualifiers from pointer target type"
-  "Utilities.vtkexodus2.*warning.*assignment discards qualifiers from pointer target type"
-  "Utilities.vtkexodus2.*warning.*passing argument .* of .* as unsigned due to prototype"
-  "Utilities.vtkexodus2.*warning.*possible loss of data"
-  "Uitilties/vtkexodus2.*warning: .* set but not used"
-  # gcc -Wsign-conversion
-  "Utilities.vtkexodus2.*warning.*conversion to .* from .* may change the sign of the result"
-  # gcc -Wconversion
-  "Utilities.vtkexodus2.*warning.*conversion to .* from .* may alter its value"
-  # gcc -Wuninitialized
-  "Utilities.vtkexodus2.*warning: .* may be used uninitialized in this function"
-  "Utilities.vtkexodus2.*warning: return discards qualifiers from pointer target type"
-
-  # VPIC has endianness checks that are fragile, suppress warnings generated by them for now
-  "Utilities.VPIC.*warning"
-
 
   #boost
   "boost.*warning.*assignment operator could not be generated"
@@ -256,51 +244,10 @@ SET(CTEST_CUSTOM_WARNING_EXCEPTION
   "boost.*warning.*declaration of .* shadows a member of"
   "boost.*warning.*unused parameter"
   "boost.*warning.*comparison between signed and unsigned integer expressions"
+  "TestBoostAdapter.*warning.*edge_property.*may be used uninitialized"
 
-  "Utilities.vtklibproj4.*warning.*defined but not used"
-  "Utilities.vtklibproj4.*warning.*initialization discards qualifiers from pointer target type"
-  "Utilities.vtklibproj4.*warning.*assignment discards qualifiers from pointer target type"
-  "Utilities.vtklibproj4.*warning.*passing argument .* of .* discards qualifiers from pointer target type"
-  "Utilities.vtklibproj4.*warning.*ignoring return value of .*, declared with attribute warn_unused_result"
-  "Utilities.vtklibproj4.*warning.*passing argument .* of .* as .*signed due to prototype"
-  "Utilities.vtklibproj4.*warning.*conversion to .* from .* may change the sign of the result"
-  "Utilities.vtklibproj4.*note: expected .* but argument is of type .*"
-  "Utilities.vtkzlib.*warning: conversion to .* from .* may change the sign of the result"
-  "Utilities.vtkzlib.*warning: conversion to .* from .* may alter its value"
-  "Utilities.vtkzlib.*warning: passing argument .* of .* as unsigned due to prototype"
-  "Utilities.vtkpng.*warning: passing argument .* of .* as unsigned due to prototype"
-  "Utilities.vtkpng.*warning: conversion to .* from .* may change the sign of the result"
-  "Utilities.vtkpng.*warning: conversion to .* from .* may alter its value"
-  "Utilities.vtkpng.pngwutil.c.*warning: passing argument 2 of .vtk_png_write_chunk_start. discards qualifiers from pointer target type"
-  "Utilities.vtkpng.*warning: negative integer implicitly converted to unsigned type"
-  "Utilities.vtkpng.*warning: variable .* might be clobbered by"
-  "Utilities/vtkjpeg.*warning: conversion to .* from .* may change the sign of the result"
-  "Utilities/vtkjpeg.*warning: conversion to .* from .* may alter its value"
-  "Utilities/vtkjpeg.*.warning: .* set but not used"
-  "Utilities/DICOMParser.*warning: conversion to .* from .* may alter its value"
-  "Utilities/DICOMParser.*warning: conversion to .* from .* may change the sign of the result"
-  # gcc -Wsign-conversion
-  "Utilities/vtkmetaio.*warning: conversion to '.*' from '.*' may change the sign of the result"
-  # gcc -Wconversion
-  "Utilities/vtkmetaio.*warning: conversion to '.*' from '.*' may alter its value"
-  "Uitilties/vtkmetaio/.*warning: .* set but not used"
-  # gcc -Wsign-conversion
-  "Utilities/vtkalglib.*warning: conversion to .* from .* may change the sign of the result"
-  "Uitilties/vtkalglib/.*warning: .* set but not used"
-  # gcc -Wsign-conversion
-  "Utilities/ftgl/src/.*warning: conversion to .* from .* may change the sign of the result"
-  # gcc -Wconversion
-  "Utilities/ftgl/src/.*warning: conversion to .* from .* may alter its value"
-  # Sun cc5.6 - the code is designed to trigger an overflow
-  "Utilities/vtksqlite/vtk_sqlite.c.*warning: integer overflow detected"
   # bogus unreachable code warning in hashtable in kwsys
   "hashtable.hxx.*warning C4702: unreachable code"
-
-  # gcc -Wsign-conversion
-  "Utilities/mrmpi/.*warning: conversion to .* from .* may change the sign of the result"
-  # gcc -Wunused-result
-  "Utilities/mrmpi/.*warning: ignoring return value of .size_t fread.void.. size_t. size_t. FILE.... declared with attribute warn_unused_result"
-  "Utilities/vtklibproj4/.*warning: .* set but not used"
 
   # Qt Designer related warning
   "QtDesigner/extension.*warning: unused parameter"
@@ -327,6 +274,29 @@ SET(CTEST_CUSTOM_WARNING_EXCEPTION
   # which matches ctests regex as well
   "bootstrap class path not set in conjunction with -source"
   "1 warning"
+
+  # diy warnings
+  "vtkmdiy/io/utils.hpp\\(84\\): warning: result of call is not used"
+
+  # stephen and matt should be working on these. Suppress until they fix
+  # upstream and we update. Todo: check after Sept 1 2018 with Stephen and
+  # Matt if these are fixed.
+  #
+  "vtkmetaio/metaImage.cxx"
+  "vtkmetaio/metaArray.cxx"
+
+  # 3-rd party warnings from double-conversion
+  "vtkdoubleconversion.*unused function"
+
+  # warnings from ospray include.
+  "ospray/ospcommon"
+
+  # warnings as part of the doxygen documentation build
+  "no documentation block in"
+  "Utilities/Doxygen"
+  "Consider increasing DOT_GRAPH_MAX_NODES"
+  "based on cache misses the ideal setting for LOOKUP_CACHE_SIZE"
+
   )
 
 IF(APPLE)
@@ -338,8 +308,7 @@ ENDIF()
 
 SET(CTEST_CUSTOM_COVERAGE_EXCLUDE
   ${CTEST_CUSTOM_COVERAGE_EXCLUDE}
-  "vtk.*TCLInit.cxx"
-  "vtk[^\\.]+(Java|Python|Tcl).cxx"
+  "vtk[^\\.]+(Java|Python).cxx"
   ".*vtkOpenGLState.*" # debugging class
   ".*Testing.Cxx.*cxx"
   ".*Testing.Cxx.*h"
@@ -364,6 +333,16 @@ SET(CTEST_CUSTOM_WARNING_EXCEPTION
   )
 ENDIF()
 
+# If VTK_LEGACY_REMOVE is not set, then we're expecting code to use deprecated
+# API. Hence ignore all deprecation warnings.
+IF(NOT VTK_LEGACY_REMOVE AND NOT VTK_LEGACY_SILENT)
+SET(CTEST_CUSTOM_WARNING_EXCEPTION
+  ${CTEST_CUSTOM_WARNING_EXCEPTION}
+  ".*[W|w]arning:.* deprecated"
+  "[N|n]ote: expanded from macro"
+  "[N|n]ote:.* deprecated"
+  )
+ENDIF()
 # Temporarily: to show us *all* the remaining warnings on the
 # 64-bit Windows builds on one result page...
 #

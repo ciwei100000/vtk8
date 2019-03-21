@@ -53,7 +53,7 @@ class VTKFILTERSTEXTURE_EXPORT vtkTextureMapToCylinder : public vtkDataSetAlgori
 {
 public:
   vtkTypeMacro(vtkTextureMapToCylinder,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Create object with cylinder axis parallel to z-axis (points (0,0,-0.5)
@@ -83,9 +83,9 @@ public:
    * Turn on/off automatic cylinder generation. This means it automatically
    * finds the cylinder center and axis.
    */
-  vtkSetMacro(AutomaticCylinderGeneration,int);
-  vtkGetMacro(AutomaticCylinderGeneration,int);
-  vtkBooleanMacro(AutomaticCylinderGeneration,int);
+  vtkSetMacro(AutomaticCylinderGeneration,vtkTypeBool);
+  vtkGetMacro(AutomaticCylinderGeneration,vtkTypeBool);
+  vtkBooleanMacro(AutomaticCylinderGeneration,vtkTypeBool);
   //@}
 
   //@{
@@ -95,25 +95,25 @@ public:
    * angle variation from 0->180 and 180->0. Otherwise, the s-coordinate
    * ranges from 0->1 from 0->360 degrees.
    */
-  vtkSetMacro(PreventSeam,int);
-  vtkGetMacro(PreventSeam,int);
-  vtkBooleanMacro(PreventSeam,int);
+  vtkSetMacro(PreventSeam,vtkTypeBool);
+  vtkGetMacro(PreventSeam,vtkTypeBool);
+  vtkBooleanMacro(PreventSeam,vtkTypeBool);
   //@}
 
 protected:
   vtkTextureMapToCylinder();
-  ~vtkTextureMapToCylinder() VTK_OVERRIDE {}
+  ~vtkTextureMapToCylinder() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double Point1[3];
   double Point2[3];
-  int AutomaticCylinderGeneration;
-  int PreventSeam;
+  vtkTypeBool AutomaticCylinderGeneration;
+  vtkTypeBool PreventSeam;
 
 private:
-  vtkTextureMapToCylinder(const vtkTextureMapToCylinder&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkTextureMapToCylinder&) VTK_DELETE_FUNCTION;
+  vtkTextureMapToCylinder(const vtkTextureMapToCylinder&) = delete;
+  void operator=(const vtkTextureMapToCylinder&) = delete;
 };
 
 #endif

@@ -34,9 +34,7 @@ vtkBlankStructuredGridWithImage::vtkBlankStructuredGridWithImage()
 }
 
 //----------------------------------------------------------------------------
-vtkBlankStructuredGridWithImage::~vtkBlankStructuredGridWithImage()
-{
-}
+vtkBlankStructuredGridWithImage::~vtkBlankStructuredGridWithImage() = default;
 
 //----------------------------------------------------------------------------
 // Specify the input data or filter.
@@ -51,7 +49,7 @@ vtkImageData *vtkBlankStructuredGridWithImage::GetBlankingInput()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return NULL;
+    return nullptr;
   }
 
   return vtkImageData::SafeDownCast(

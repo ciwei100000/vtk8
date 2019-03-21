@@ -35,9 +35,7 @@ vtkThresholdTable::vtkThresholdTable() : MinValue(0), MaxValue(VTK_INT_MAX), Mod
 {
 }
 
-vtkThresholdTable::~vtkThresholdTable()
-{
-}
+vtkThresholdTable::~vtkThresholdTable() = default;
 
 void vtkThresholdTable::PrintSelf(ostream& os, vtkIndent indent)
 {
@@ -121,7 +119,7 @@ int vtkThresholdTable::RequestData(
   vtkInformationVector* outputVector)
 {
   vtkAbstractArray* arr = this->GetInputAbstractArrayToProcess(0, inputVector);
-  if (arr == NULL)
+  if (arr == nullptr)
   {
     vtkErrorMacro("An input array must be specified.");
     return 0;

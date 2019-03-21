@@ -3,8 +3,8 @@
 # documentation for backends in this file that will be displayed in
 # cmake-gui and ccmake.
 #
-# The OpenGL backend is the current default, and the OpenGL2 backend is
-# the new rendering code. This differs from groups in that only one backend
+# The OpenGL2 backend is the current default, and the OpenGL backend is
+# the legacy rendering code. This differs from groups in that only one backend
 # can be built/linked to at any given time. The backend modules should use a
 # naming convention where the backend name is the final word in the
 # module name, i.e. vtkRenderingOpenGL for OpenGL and vtkRenderingOpenGL2
@@ -23,9 +23,13 @@ if (${_index} EQUAL -1)
 
   # if it is in the cache as a bad value we need to reset it
   if(DEFINED VTK_RENDERING_BACKEND)
-    message(STATUS "The cache contains an illegal value for VTK_RENDERING_BACKEND, forcing it to the default value of '${VTK_RENDERING_BACKEND_DEFAULT}'.")
-    set(VTK_RENDERING_BACKEND "${VTK_RENDERING_BACKEND_DEFAULT}" CACHE STRING
-        "Choose the rendering backend." FORCE)
+    if(NOT VTK_RENDERING_BACKEND STREQUAL VTK_RENDERING_BACKEND_DEFAULT)
+      message(WARNING "There are no modules for VTK_RENDERING_BACKEND: "
+        "'${VTK_RENDERING_BACKEND}', forcing it to the default value of "
+        "'${VTK_RENDERING_BACKEND_DEFAULT}'.")
+      set(VTK_RENDERING_BACKEND "${VTK_RENDERING_BACKEND_DEFAULT}" CACHE STRING
+          "Choose the rendering backend." FORCE)
+    endif()
   else()
     # otherwise just initialize it to the default determined above
     message(STATUS "Setting rendering backend to '${VTK_RENDERING_BACKEND_DEFAULT}' as none was specified.")

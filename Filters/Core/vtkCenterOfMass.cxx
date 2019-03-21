@@ -91,20 +91,20 @@ int vtkCenterOfMass::RequestData(
   vtkInformationVector** inputVector,
   vtkInformationVector* vtkNotUsed(outputVector) )
 {
-  // Get the input and ouptut
+  // Get the input and output
   vtkInformation *inInfo = inputVector[0]->GetInformationObject(0);
   vtkPointSet* input = vtkPointSet::SafeDownCast(
     inInfo->Get(vtkDataObject::DATA_OBJECT()));
 
   vtkPoints *points = input->GetPoints();
 
-  if(points == 0 || points->GetNumberOfPoints() == 0)
+  if(points == nullptr || points->GetNumberOfPoints() == 0)
   {
     vtkErrorMacro("Input must have at least 1 point!");
     return 1;
   }
 
-  vtkDataArray *scalars = 0;
+  vtkDataArray *scalars = nullptr;
   if (this->UseScalarsAsWeights)
   {
     scalars = input->GetPointData()->GetScalars();

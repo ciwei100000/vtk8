@@ -60,7 +60,7 @@ VTKDIY2_POST_INCLUDE
 //    neighbors of each node.
 // 4) Find and send the Input points that lie inside a neighbor's Source bounds.
 //    The search is made faster by using a point lookup structure
-//    (RegularPartition or BalancedPartition bellow).
+//    (RegularPartition or BalancedPartition below).
 // 5) Perform resampling on local Input blocks.
 // 6) Perform resampling on points received from neighbors.
 // 7) Send the resampled points back to the neighbors they were received from.
@@ -78,7 +78,7 @@ vtkCxxSetObjectMacro(vtkPResampleWithDataSet, Controller, vtkMultiProcessControl
 
 //---------------------------------------------------------------------------
 vtkPResampleWithDataSet::vtkPResampleWithDataSet()
-  : Controller(NULL), UseBalancedPartitionForPointsLookup(false)
+  : Controller(nullptr), UseBalancedPartitionForPointsLookup(false)
 {
   this->SetController(vtkMultiProcessController::GetGlobalController());
 }
@@ -86,7 +86,7 @@ vtkPResampleWithDataSet::vtkPResampleWithDataSet()
 //----------------------------------------------------------------------------
 vtkPResampleWithDataSet::~vtkPResampleWithDataSet()
 {
-  this->SetController(NULL);
+  this->SetController(nullptr);
 }
 
 //----------------------------------------------------------------------------
@@ -153,7 +153,7 @@ public:
 class RegularPartition : public Partition
 {
 public:
-  void CreatePartition(const std::vector<vtkDataSet*> &blocks) VTK_OVERRIDE
+  void CreatePartition(const std::vector<vtkDataSet*> &blocks) override
   {
     // compute the bounds of the composite dataset
     size_t totalNumberOfPoints = 0;
@@ -183,7 +183,7 @@ public:
       return;
     }
 
-    // compute a regualr partitioning of the space
+    // compute a regular partitioning of the space
     int nbins = 1;
     double dim = 0; // the dimensionality of the dataset
     for (int i = 0; i < 3; ++i)
@@ -260,7 +260,7 @@ public:
     }
   }
 
-  void FindPointsInBounds(const double bounds[6], std::vector<Point> &points) const VTK_OVERRIDE
+  void FindPointsInBounds(const double bounds[6], std::vector<Point> &points) const override
   {
     if (this->Nodes.empty())
     {
@@ -352,7 +352,7 @@ private:
 class BalancedPartition : public Partition
 {
 public:
-  void CreatePartition(const std::vector<vtkDataSet*> &blocks) VTK_OVERRIDE
+  void CreatePartition(const std::vector<vtkDataSet*> &blocks) override
   {
     // count total number of points
     vtkIdType totalNumberOfPoints = 0;
@@ -400,7 +400,7 @@ public:
                          &this->Splits[0], &this->Splits[splitsSize], 0);
   }
 
-  void FindPointsInBounds(const double bounds[6], std::vector<Point> &points) const VTK_OVERRIDE
+  void FindPointsInBounds(const double bounds[6], std::vector<Point> &points) const override
   {
     int tag = 0;
     for (int i = 0; i < 3; ++i)
@@ -701,8 +701,7 @@ inline bool ComparePointsByBlockId(const Point &p1, const Point &p2)
 }
 
 // Send input points that overlap remote's source bounds
-void FindPointsToSend(DiyBlock *block, const diy::Master::ProxyWithLink& cp,
-                      void*)
+void FindPointsToSend(DiyBlock *block, const diy::Master::ProxyWithLink& cp)
 {
   diy::Link *link = cp.link();
   for (int l = 0; l < link->size(); ++l)
@@ -763,7 +762,7 @@ class EnqueueDataArray
 {
 public:
   EnqueueDataArray(const diy::Master::ProxyWithLink& cp, const diy::BlockID &dest)
-    : Proxy(&cp), Dest(dest), Masks(NULL), RBegin(0), REnd(0)
+    : Proxy(&cp), Dest(dest), Masks(nullptr), RBegin(0), REnd(0)
   {
   }
 
@@ -809,9 +808,8 @@ private:
 
 // Perform resampling of local and remote input points
 void PerformResampling(DiyBlock *block, const diy::Master::ProxyWithLink& cp,
-                       void *probep)
+                       vtkCompositeDataProbeFilter *prober)
 {
-  vtkCompositeDataProbeFilter *prober = static_cast<vtkCompositeDataProbeFilter*>(probep);
   diy::Link *link = cp.link();
 
   // local points
@@ -852,9 +850,9 @@ void PerformResampling(DiyBlock *block, const diy::Master::ProxyWithLink& cp,
         pts->InsertNextPoint(points[j].Position);
       }
       vtkNew<vtkUnstructuredGrid> ds;
-      ds->SetPoints(pts.GetPointer());
+      ds->SetPoints(pts);
 
-      prober->SetInputData(ds.GetPointer());
+      prober->SetInputData(ds);
       prober->Update();
       vtkIdType numberOfValidPoints = prober->GetValidPoints()->GetNumberOfTuples();
       if (numberOfValidPoints == 0)
@@ -916,7 +914,7 @@ void PerformResampling(DiyBlock *block, const diy::Master::ProxyWithLink& cp,
         ds->SetOrigin(points.Origin);
         ds->SetSpacing(points.Spacing);
 
-        prober->SetInputData(ds.GetPointer());
+        prober->SetInputData(ds);
         prober->Update();
         vtkIdType numberOfValidPoints = prober->GetValidPoints()->GetNumberOfTuples();
         if (numberOfValidPoints == 0)
@@ -971,7 +969,7 @@ class DequeueDataArray
 {
 public:
   DequeueDataArray(const diy::Master::ProxyWithLink &proxy, int sourceGID)
-    : Proxy(&proxy), SourceGID(sourceGID), PointIds(NULL)
+    : Proxy(&proxy), SourceGID(sourceGID), PointIds(nullptr)
   { }
 
   void SetPointIds(const std::vector<vtkIdType> &pointIds)
@@ -1003,10 +1001,8 @@ private:
 
 // receive resampled points
 void ReceiveResampledPoints(DiyBlock *block, const diy::Master::ProxyWithLink &cp,
-                            void *maskArrayNamePtr)
+                            const char *maskArrayName)
 {
-  const char *maskArrayName = reinterpret_cast<char*>(maskArrayNamePtr);
-
   int numBlocks = block->InputBlocks.size();
   std::vector<std::map<std::string, int> > arrayReceiveCounts(numBlocks);
 
@@ -1151,7 +1147,7 @@ int vtkPResampleWithDataSet::RequestData(vtkInformation *request,
     {
       if (vtkImageData::SafeDownCast(dsblocks[i]))
       {
-        dsblocks[i] = NULL;
+        dsblocks[i] = nullptr;
       }
     }
     block.PointsLookup->CreatePartition(dsblocks);
@@ -1175,17 +1171,16 @@ int vtkPResampleWithDataSet::RequestData(vtkInformation *request,
 
   this->Prober->SetSourceData(source);
   // find and send local points that overlap remote source blocks
-  master.foreach<DiyBlock>(&FindPointsToSend);
+  master.foreach(&FindPointsToSend);
   // the lookup structures are no longer required
   delete block.PointsLookup;
-  block.PointsLookup = NULL;
+  block.PointsLookup = nullptr;
   master.exchange();
   // perform resampling on local and remote points
-  master.foreach<DiyBlock>(&PerformResampling, this->Prober.GetPointer());
+  master.foreach([&] (DiyBlock* block_, const diy::Master::ProxyWithLink& cp) { PerformResampling(block_, cp, this->Prober.GetPointer()); });
   master.exchange();
   // receive resampled points and set the values in output
-  master.foreach<DiyBlock>(&ReceiveResampledPoints,
-                           this->Prober->GetValidPointMaskArrayName());
+  master.foreach([&] (DiyBlock* block_, const diy::Master::ProxyWithLink& cp) { ReceiveResampledPoints(block_, cp, this->Prober->GetValidPointMaskArrayName()); });
 
   if (this->MarkBlankPointsAndCells)
   {

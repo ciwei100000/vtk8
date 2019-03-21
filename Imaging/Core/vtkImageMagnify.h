@@ -34,7 +34,7 @@ class VTKIMAGINGCORE_EXPORT vtkImageMagnify : public vtkThreadedImageAlgorithm
 public:
   static vtkImageMagnify *New();
   vtkTypeMacro(vtkImageMagnify,vtkThreadedImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -50,23 +50,23 @@ public:
    * Turn interpolation on and off (pixel replication is used when off).
    * Initially, interpolation is off.
    */
-  vtkSetMacro(Interpolate,int);
-  vtkGetMacro(Interpolate,int);
-  vtkBooleanMacro(Interpolate,int);
+  vtkSetMacro(Interpolate,vtkTypeBool);
+  vtkGetMacro(Interpolate,vtkTypeBool);
+  vtkBooleanMacro(Interpolate,vtkTypeBool);
   //@}
 
 protected:
   vtkImageMagnify();
-  ~vtkImageMagnify()VTK_OVERRIDE {}
+  ~vtkImageMagnify() override {}
 
   int MagnificationFactors[3];
-  int Interpolate;
+  vtkTypeBool Interpolate;
   int RequestUpdateExtent(vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   int RequestInformation(vtkInformation *,
                                  vtkInformationVector **,
-                                 vtkInformationVector *) VTK_OVERRIDE;
+                                 vtkInformationVector *) override;
 
   void ThreadedRequestData(vtkInformation *request,
                            vtkInformationVector **inputVector,
@@ -74,13 +74,13 @@ protected:
                            vtkImageData ***inData,
                            vtkImageData **outData,
                            int outExt[6],
-                           int id) VTK_OVERRIDE;
+                           int id) override;
 
   void InternalRequestUpdateExtent(int *inExt, int *outExt);
 
 private:
-  vtkImageMagnify(const vtkImageMagnify&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageMagnify&) VTK_DELETE_FUNCTION;
+  vtkImageMagnify(const vtkImageMagnify&) = delete;
+  void operator=(const vtkImageMagnify&) = delete;
 };
 
 #endif

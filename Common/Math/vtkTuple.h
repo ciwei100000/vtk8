@@ -56,7 +56,7 @@ public:
   }
 
   /**
-   * Initalize the tuple's elements with the elements of the supplied array.
+   * Initialize the tuple's elements with the elements of the supplied array.
    * Note that the supplied pointer must contain at least as many elements as
    * the tuple, or it will result in access to out of bounds memory.
    */
@@ -89,7 +89,7 @@ public:
 
   //@{
   /**
-   * Get the value of the tuple at the index specifed. Does bounds
+   * Get the value of the tuple at the index specified. Does bounds
    * checking, similar to the at(i) method of C++ STL containers, but
    * only when the code is compiled in debug mode.
    */

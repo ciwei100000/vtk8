@@ -42,9 +42,7 @@ vtkTessellatedBoxSource::vtkTessellatedBoxSource()
 }
 
 // ----------------------------------------------------------------------------
-vtkTessellatedBoxSource::~vtkTessellatedBoxSource()
-{
-}
+vtkTessellatedBoxSource::~vtkTessellatedBoxSource() = default;
 
 // Duplicate point method.
 // Each face of the box is defined by the 3 points: an origin, a point along
@@ -63,7 +61,7 @@ static int boundingBoxQuads[6][3]={{0,4,2}, // -x face
                                    {4,5,6}};// +z face
 
 // Minimal number of points method.
-// Each  edge of the box is defined by two vertices in increasing id order.
+// Each edge of the box is defined by two vertices in increasing id order.
 // vertexId=edges[edge][lowestId=0, highestId=1]
 static int edges[12][2]={{0,1}, // 0
                          {0,2}, // 1
@@ -564,8 +562,8 @@ void vtkTessellatedBoxSource::BuildFace(vtkPoints *points,
                                           int changed)
 {
   assert("pre: positive_id" && firstPointId>=0);
-  assert("pre: points_exists" && points!=0);
-  assert("pre: polys_exists" && polys!=0);
+  assert("pre: points_exists" && points!=nullptr);
+  assert("pre: polys_exists" && polys!=nullptr);
 
   double direction[2][3];
 

@@ -23,7 +23,7 @@
  * unstructured grid.
  *
  * To use this filter you must specify an implicit function. You must also
- * specify whethter to extract cells laying inside or outside of the implicit
+ * specify whether to extract cells laying inside or outside of the implicit
  * function. (The inside of an implicit function is the negative values
  * region.) An option exists to extract cells that are neither inside or
  * outside (i.e., boundary).
@@ -47,7 +47,7 @@ class VTKFILTERSEXTRACTION_EXPORT vtkExtractGeometry : public vtkUnstructuredGri
 {
 public:
   vtkTypeMacro(vtkExtractGeometry,vtkUnstructuredGridAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with ExtractInside turned on.
@@ -57,7 +57,7 @@ public:
   /**
    * Return the MTime taking into account changes to the implicit function
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -73,9 +73,9 @@ public:
    * function (ExtractInside == 1) or outside of implicit function
    * (ExtractInside == 0).
    */
-  vtkSetMacro(ExtractInside,int);
-  vtkGetMacro(ExtractInside,int);
-  vtkBooleanMacro(ExtractInside,int);
+  vtkSetMacro(ExtractInside,vtkTypeBool);
+  vtkGetMacro(ExtractInside,vtkTypeBool);
+  vtkBooleanMacro(ExtractInside,vtkTypeBool);
   //@}
 
   //@{
@@ -83,31 +83,31 @@ public:
    * Boolean controls whether to extract cells that are partially inside.
    * By default, ExtractBoundaryCells is off.
    */
-  vtkSetMacro(ExtractBoundaryCells,int);
-  vtkGetMacro(ExtractBoundaryCells,int);
-  vtkBooleanMacro(ExtractBoundaryCells,int);
-  vtkSetMacro(ExtractOnlyBoundaryCells,int);
-  vtkGetMacro(ExtractOnlyBoundaryCells,int);
-  vtkBooleanMacro(ExtractOnlyBoundaryCells,int);
+  vtkSetMacro(ExtractBoundaryCells,vtkTypeBool);
+  vtkGetMacro(ExtractBoundaryCells,vtkTypeBool);
+  vtkBooleanMacro(ExtractBoundaryCells,vtkTypeBool);
+  vtkSetMacro(ExtractOnlyBoundaryCells,vtkTypeBool);
+  vtkGetMacro(ExtractOnlyBoundaryCells,vtkTypeBool);
+  vtkBooleanMacro(ExtractOnlyBoundaryCells,vtkTypeBool);
   //@}
 
 protected:
-  vtkExtractGeometry(vtkImplicitFunction *f=NULL);
-  ~vtkExtractGeometry() VTK_OVERRIDE;
+  vtkExtractGeometry(vtkImplicitFunction *f=nullptr);
+  ~vtkExtractGeometry() override;
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   vtkImplicitFunction *ImplicitFunction;
-  int ExtractInside;
-  int ExtractBoundaryCells;
-  int ExtractOnlyBoundaryCells;
+  vtkTypeBool ExtractInside;
+  vtkTypeBool ExtractBoundaryCells;
+  vtkTypeBool ExtractOnlyBoundaryCells;
 
 private:
-  vtkExtractGeometry(const vtkExtractGeometry&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtractGeometry&) VTK_DELETE_FUNCTION;
+  vtkExtractGeometry(const vtkExtractGeometry&) = delete;
+  void operator=(const vtkExtractGeometry&) = delete;
 };
 
 #endif

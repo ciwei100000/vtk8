@@ -43,7 +43,7 @@ public:
     view->AddObserver(vtkCommand::SelectionChangedEvent, this);
   }
 
-  void Execute(vtkObject*, unsigned long, void*) VTK_OVERRIDE
+  void Execute(vtkObject*, unsigned long, void*) override
   {
     for (unsigned int i = 0; i < this->Views.size(); i++)
     {
@@ -51,8 +51,8 @@ public:
     }
   }
 private:
-  ViewUpdater() { }
-  ~ViewUpdater() VTK_OVERRIDE { }
+  ViewUpdater() = default;
+  ~ViewUpdater() override = default;
   std::vector<vtkView*> Views;
 };
 

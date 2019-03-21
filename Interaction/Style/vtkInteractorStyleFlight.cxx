@@ -127,7 +127,7 @@ vtkInteractorStyleFlight::~vtkInteractorStyleFlight()
 //---------------------------------------------------------------------------
 void vtkInteractorStyleFlight::ForwardFly()
 {
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -226,7 +226,7 @@ void vtkInteractorStyleFlight::OnMouseMove()
     case VTKIS_FORWARDFLY:
     case VTKIS_REVERSEFLY:
       this->UpdateMouseSteering(cam);
-      this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
+      this->InvokeEvent(vtkCommand::InteractionEvent, nullptr);
       break;
   }
 }
@@ -237,7 +237,7 @@ void vtkInteractorStyleFlight::OnLeftButtonDown()
   int x = this->Interactor->GetEventPosition()[0];
   int y = this->Interactor->GetEventPosition()[1];
   this->FindPokedRenderer(x, y);
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -290,7 +290,7 @@ void vtkInteractorStyleFlight::OnRightButtonDown()
   int x = this->Interactor->GetEventPosition()[0];
   int y = this->Interactor->GetEventPosition()[1];
   this->FindPokedRenderer(x, y);
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -445,7 +445,7 @@ void vtkInteractorStyleFlight::OnChar()
 //---------------------------------------------------------------------------
 void vtkInteractorStyleFlight::JumpTo(double campos[3], double focpos[3])
 {
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -508,7 +508,7 @@ void vtkInteractorStyleFlight::UpdateMouseSteering(vtkCamera *cam)
   this->DeltaPitch = dy;
   this->DeltaYaw = dx;
 /*
-  Not happy with smooth flight yet, please levae this code here
+  Not happy with smooth flight yet, please leave this code here
   until I get around to experimenting : JB July 2002
 
   // dx and dy need to be converted to a new 'ideal' camera focal point
@@ -538,7 +538,7 @@ void vtkInteractorStyleFlight::UpdateSteering(vtkCamera *vtkNotUsed(cam))
   #define D2R 0.01745329251994329576923690768    // degrees to radians
   #define R2D 57.2957795130823208767981548141    // radians to degrees
 
-  Not happy with smooth flight yet, please levae this code here
+  Not happy with smooth flight yet, please leave this code here
   until I get around to experimenting : JB July 2002
 
   cam->OrthogonalizeViewUp();

@@ -33,16 +33,32 @@ class VTKIOGEOMETRY_EXPORT vtkOBJReader : public vtkAbstractPolyDataReader
 public:
   static vtkOBJReader *New();
   vtkTypeMacro(vtkOBJReader,vtkAbstractPolyDataReader);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
+
+  //@{
+  /**
+  * Get first comment in the file.
+  * Comment may be multiple lines. # and leading spaces are removed.
+  */
+  vtkGetStringMacro(Comment);
+  //@}
 
 protected:
   vtkOBJReader();
-  ~vtkOBJReader() VTK_OVERRIDE;
+  ~vtkOBJReader() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+
+  /**
+  * Set comment string. Internal use only.
+  */
+  vtkSetStringMacro(Comment);
+
+  char* Comment;
+
 private:
-  vtkOBJReader(const vtkOBJReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOBJReader&) VTK_DELETE_FUNCTION;
+  vtkOBJReader(const vtkOBJReader&) = delete;
+  void operator=(const vtkOBJReader&) = delete;
 };
 
 #endif

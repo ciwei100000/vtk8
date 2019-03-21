@@ -27,9 +27,7 @@ vtkInformationStringKey::vtkInformationStringKey(const char* name, const char* l
 }
 
 //----------------------------------------------------------------------------
-vtkInformationStringKey::~vtkInformationStringKey()
-{
-}
+vtkInformationStringKey::~vtkInformationStringKey() = default;
 
 //----------------------------------------------------------------------------
 void vtkInformationStringKey::PrintSelf(ostream& os, vtkIndent indent)
@@ -76,7 +74,7 @@ void vtkInformationStringKey::Set(vtkInformation* info, const char* value)
   }
   else
   {
-    this->SetAsObjectBase(info, 0);
+    this->SetAsObjectBase(info, nullptr);
   }
 }
 
@@ -91,7 +89,7 @@ const char* vtkInformationStringKey::Get(vtkInformation* info)
 {
   vtkInformationStringValue* v =
     static_cast<vtkInformationStringValue *>(this->GetAsObjectBase(info));
-  return v?v->Value.c_str():0;
+  return v?v->Value.c_str():nullptr;
 }
 
 //----------------------------------------------------------------------------

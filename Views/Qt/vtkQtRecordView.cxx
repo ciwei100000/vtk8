@@ -46,7 +46,7 @@ vtkQtRecordView::vtkQtRecordView()
   this->DataObjectToTable = vtkSmartPointer<vtkDataObjectToTable>::New();
   this->DataObjectToTable->SetFieldType(vtkDataObjectToTable::VERTEX_DATA);
   this->FieldType = vtkQtRecordView::VERTEX_DATA;
-  this->Text = NULL;
+  this->Text = nullptr;
   this->CurrentSelectionMTime = 0;
   this->LastInputMTime = 0;
   this->LastMTime = 0;
@@ -127,7 +127,7 @@ void vtkQtRecordView::Update()
   vtkSmartPointer<vtkSelection> cs;
   cs.TakeReference(vtkConvertSelection::ToSelectionType(
     rep->GetAnnotationLink()->GetCurrentSelection(),
-    table, vtkSelectionNode::INDICES, 0, vtkSelectionNode::ROW));
+    table, vtkSelectionNode::INDICES, nullptr, vtkSelectionNode::ROW));
   vtkSelectionNode *node = cs->GetNode(0);
   const vtkIdType column_count = table->GetNumberOfColumns();
 

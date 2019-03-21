@@ -41,8 +41,8 @@ vtkCxxSetObjectMacro(vtkImageResliceToColors,LookupTable,vtkScalarsToColors);
 vtkImageResliceToColors::vtkImageResliceToColors()
 {
   this->HasConvertScalars = 1;
-  this->LookupTable = NULL;
-  this->DefaultLookupTable = NULL;
+  this->LookupTable = nullptr;
+  this->DefaultLookupTable = nullptr;
   this->OutputFormat = VTK_RGBA;
   this->Bypass = 0;
 }
@@ -79,11 +79,10 @@ void vtkImageResliceToColors::PrintSelf(ostream& os, vtkIndent indent)
 vtkMTimeType vtkImageResliceToColors::GetMTime()
 {
   vtkMTimeType mTime=this->Superclass::GetMTime();
-  vtkMTimeType time;
 
   if (this->LookupTable && !this->Bypass)
   {
-    time = this->LookupTable->GetMTime();
+    vtkMTimeType time = this->LookupTable->GetMTime();
     mTime = ( time > mTime ? time : mTime );
   }
 

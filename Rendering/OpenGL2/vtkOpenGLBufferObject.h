@@ -16,6 +16,7 @@
 
 #include "vtkRenderingOpenGL2Module.h" // for export macro
 #include "vtkObject.h"
+#include <string> // used for std::string
 #include <vector> // used for method args
 
 class vtkCellArray;
@@ -34,7 +35,7 @@ class VTKRENDERINGOPENGL2_EXPORT vtkOpenGLBufferObject : public vtkObject
 public:
   static vtkOpenGLBufferObject *New();
   vtkTypeMacro(vtkOpenGLBufferObject, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   enum ObjectType
   {
@@ -55,7 +56,7 @@ public:
   /** Determine if the buffer object is ready to be used. */
   bool IsReady() const { return this->Dirty == false; }
 
-  /** Generate the the opengl buffer for this Handle */
+  /** Generate the opengl buffer for this Handle */
   bool GenerateBuffer(ObjectType type);
 
   /**
@@ -98,15 +99,15 @@ public:
 
 protected:
   vtkOpenGLBufferObject();
-  ~vtkOpenGLBufferObject() VTK_OVERRIDE;
+  ~vtkOpenGLBufferObject() override;
   bool  Dirty;
   std::string Error;
 
   bool UploadInternal(const void *buffer, size_t size, ObjectType objectType);
 
 private:
-  vtkOpenGLBufferObject(const vtkOpenGLBufferObject&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLBufferObject&) VTK_DELETE_FUNCTION;
+  vtkOpenGLBufferObject(const vtkOpenGLBufferObject&) = delete;
+  void operator=(const vtkOpenGLBufferObject&) = delete;
   struct Private;
   Private *Internal;
 };

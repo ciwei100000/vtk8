@@ -42,40 +42,35 @@ class vtkPainterCommunicator;
 class vtkPPainterCommunicator;
 class vtkPPixelExtentOps;
 
-#ifdef VTK_OPENGL2
 class vtkOpenGLHelper;
 class vtkOpenGLFramebufferObject;
-#else
-class vtkShaderProgram2;
-class vtkFrameBufferObject2;
-#endif
 
 class VTKRENDERINGPARALLELLIC_EXPORT vtkPSurfaceLICComposite : public vtkSurfaceLICComposite
 {
 public:
   static vtkPSurfaceLICComposite *New();
   vtkTypeMacro(vtkPSurfaceLICComposite, vtkSurfaceLICComposite);
-  virtual void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  virtual void PrintSelf(ostream &os, vtkIndent indent) override;
 
   /**
    * Set the rendering context. Must set prior to use. Reference is not
    * held, so caller must ensure the renderer is not destroyed during
    * use.
    */
-  virtual void SetContext(vtkOpenGLRenderWindow *rwin) VTK_OVERRIDE;
-  virtual vtkOpenGLRenderWindow *GetContext() VTK_OVERRIDE { return this->Context; }
+  virtual void SetContext(vtkOpenGLRenderWindow *rwin) override;
+  virtual vtkOpenGLRenderWindow *GetContext() override { return this->Context; }
 
   /**
    * Set the communicator for parallel communication. The Default is
    * COMM_NULL.
    */
-   virtual void SetCommunicator(vtkPainterCommunicator *comm) VTK_OVERRIDE;
+   virtual void SetCommunicator(vtkPainterCommunicator *comm) override;
 
   /**
    * Build programs to move data to the new decomp
    * THIS IS A COLLECTIVE OPERATION
    */
-  virtual int BuildProgram(float *vectors) VTK_OVERRIDE;
+  virtual int BuildProgram(float *vectors) override;
 
   /**
    * Move a single buffer from the geometry decomp to the LIC decomp.
@@ -85,7 +80,7 @@ public:
         void *pSendPBO,
         int dataType,
         int nComps,
-        vtkTextureObject *&newImage) VTK_OVERRIDE;
+        vtkTextureObject *&newImage) override;
 
   /**
    * Move a single buffer from the LIC decomp to the geometry decomp
@@ -95,7 +90,7 @@ public:
         void *pSendPBO,
         int dataType,
         int nComps,
-        vtkTextureObject *&newImage) VTK_OVERRIDE;
+        vtkTextureObject *&newImage) override;
 
 protected:
   vtkPSurfaceLICComposite();
@@ -123,7 +118,7 @@ private:
 
   /**
    * The efficiency of a decomposition is the ratio of useful pixels
-   * to guard pixels. If this factor shrinks bellow 1 there may be
+   * to guard pixels. If this factor shrinks below 1 there may be
    * an issue.
    */
   double EstimateDecompEfficiency(
@@ -204,13 +199,8 @@ private:
 
   vtkWeakPointer<vtkOpenGLRenderWindow> Context; // rendering context
 
-#ifdef VTK_OPENGL2
   vtkOpenGLFramebufferObject *FBO;               // Framebuffer object
   vtkOpenGLHelper *CompositeShader;
-#else
-  vtkFrameBufferObject2 *FBO;                    // buffer object
-  vtkShaderProgram2 *CompositeShader;            // shader program for compositing
-#endif
 
   std::deque<vtkPPixelTransfer> GatherProgram;   // ordered steps required to move data to new decomp
   std::deque<vtkPPixelTransfer> ScatterProgram;  // ordered steps required to unmove data from new decomp
@@ -218,8 +208,8 @@ private:
   friend VTKRENDERINGPARALLELLIC_EXPORT
   ostream &operator<<(ostream &os, vtkPSurfaceLICComposite &ss);
 
-  vtkPSurfaceLICComposite(const vtkPSurfaceLICComposite&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPSurfaceLICComposite&) VTK_DELETE_FUNCTION;
+  vtkPSurfaceLICComposite(const vtkPSurfaceLICComposite&) = delete;
+  void operator=(const vtkPSurfaceLICComposite&) = delete;
 };
 
 VTKRENDERINGPARALLELLIC_EXPORT

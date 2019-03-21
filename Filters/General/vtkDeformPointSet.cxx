@@ -43,9 +43,7 @@ vtkDeformPointSet::vtkDeformPointSet()
 }
 
 //----------------------------------------------------------------------------
-vtkDeformPointSet::~vtkDeformPointSet()
-{
-}
+vtkDeformPointSet::~vtkDeformPointSet() = default;
 
 //----------------------------------------------------------------------------
 void vtkDeformPointSet::SetControlMeshConnection(vtkAlgorithmOutput* algOutput)
@@ -64,7 +62,7 @@ vtkPolyData *vtkDeformPointSet::GetControlMeshData()
 {
   if (this->GetNumberOfInputConnections(1) < 1)
   {
-    return NULL;
+    return nullptr;
   }
 
   return vtkPolyData::SafeDownCast(
@@ -99,7 +97,7 @@ int vtkDeformPointSet::RequestData(
     return 0;
   }
 
-  // Pass the input attributes to the ouput
+  // Pass the input attributes to the output
   output->CopyStructure( input );
   output->GetPointData()->PassData(input->GetPointData());
   output->GetCellData()->PassData(input->GetCellData());
@@ -129,7 +127,7 @@ int vtkDeformPointSet::RequestData(
   outPts->SetNumberOfPoints(numberOfPointSetPoints);
   output->SetPoints(outPts);
 
-  // Start by determing whether weights must be computed or not
+  // Start by determining whether weights must be computed or not
   int abort=0;
   vtkIdType progressInterval=(numberOfPointSetPoints/10 + 1);
   int workLoad=1;

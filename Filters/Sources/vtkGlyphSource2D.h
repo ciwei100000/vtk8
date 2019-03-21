@@ -57,7 +57,7 @@ class VTKFILTERSSOURCES_EXPORT vtkGlyphSource2D : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkGlyphSource2D,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct a vertex glyph centered at the origin, scale 1.0, white in
@@ -105,9 +105,9 @@ public:
    * closed polygon defined by line segments). This only applies
    * to 2D closed glyphs.
    */
-  vtkSetMacro(Filled,int);
-  vtkGetMacro(Filled,int);
-  vtkBooleanMacro(Filled,int);
+  vtkSetMacro(Filled,vtkTypeBool);
+  vtkGetMacro(Filled,vtkTypeBool);
+  vtkBooleanMacro(Filled,vtkTypeBool);
   //@}
 
   //@{
@@ -116,9 +116,9 @@ public:
    * glyph. (This is in addition to the glyph. If the glyph type
    * is set to "Dash" there is no need to enable this flag.)
    */
-  vtkSetMacro(Dash,int);
-  vtkGetMacro(Dash,int);
-  vtkBooleanMacro(Dash,int);
+  vtkSetMacro(Dash,vtkTypeBool);
+  vtkGetMacro(Dash,vtkTypeBool);
+  vtkBooleanMacro(Dash,vtkTypeBool);
   //@}
 
   //@{
@@ -127,9 +127,9 @@ public:
    * is in addition to the glyph. If the glyph type is set to
    * "Cross" there is no need to enable this flag.)
    */
-  vtkSetMacro(Cross,int);
-  vtkGetMacro(Cross,int);
-  vtkBooleanMacro(Cross,int);
+  vtkSetMacro(Cross,vtkTypeBool);
+  vtkGetMacro(Cross,vtkTypeBool);
+  vtkBooleanMacro(Cross,vtkTypeBool);
   //@}
 
   //@{
@@ -183,17 +183,17 @@ public:
 
 protected:
   vtkGlyphSource2D();
-  ~vtkGlyphSource2D() VTK_OVERRIDE {}
+  ~vtkGlyphSource2D() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   double Center[3];
   double Scale;
   double Scale2;
   double Color[3];
-  int    Filled;
-  int    Dash;
-  int    Cross;
+  vtkTypeBool    Filled;
+  vtkTypeBool    Dash;
+  vtkTypeBool    Cross;
   int    GlyphType;
   double RotationAngle;
   int    Resolution;
@@ -229,8 +229,8 @@ protected:
                        vtkCellArray *polys, vtkUnsignedCharArray *colors);
 
 private:
-  vtkGlyphSource2D(const vtkGlyphSource2D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGlyphSource2D&) VTK_DELETE_FUNCTION;
+  vtkGlyphSource2D(const vtkGlyphSource2D&) = delete;
+  void operator=(const vtkGlyphSource2D&) = delete;
 };
 
 #endif

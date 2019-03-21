@@ -64,7 +64,7 @@ class VTKINFOVISBOOSTGRAPHALGORITHMS_EXPORT vtkBoostSplitTableField : public vtk
 public:
   static vtkBoostSplitTableField* New();
   vtkTypeMacro(vtkBoostSplitTableField, vtkTableAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   void ClearFields();
   void AddField(const char* field, const char* delimiters);
@@ -76,7 +76,7 @@ protected:
   int RequestData(
     vtkInformation*,
     vtkInformationVector**,
-    vtkInformationVector*);
+    vtkInformationVector*) override;
 
   vtkStringArray* Fields;
   vtkStringArray* Delimiters;
@@ -85,8 +85,8 @@ private:
 
   class implementation;
 
-  vtkBoostSplitTableField(const vtkBoostSplitTableField&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBoostSplitTableField&) VTK_DELETE_FUNCTION;
+  vtkBoostSplitTableField(const vtkBoostSplitTableField&) = delete;
+  void operator=(const vtkBoostSplitTableField&) = delete;
 };
 
 #endif

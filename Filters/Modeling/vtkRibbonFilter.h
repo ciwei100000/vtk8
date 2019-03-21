@@ -55,7 +55,7 @@ class VTKFILTERSMODELING_EXPORT vtkRibbonFilter : public vtkPolyDataAlgorithm
 {
 public:
   vtkTypeMacro(vtkRibbonFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct ribbon so that width is 0.1, the width does
@@ -86,9 +86,9 @@ public:
    * Turn on/off the variation of ribbon width with scalar value.
    * The default is Off
    */
-  vtkSetMacro(VaryWidth,int);
-  vtkGetMacro(VaryWidth,int);
-  vtkBooleanMacro(VaryWidth,int);
+  vtkSetMacro(VaryWidth,vtkTypeBool);
+  vtkGetMacro(VaryWidth,vtkTypeBool);
+  vtkBooleanMacro(VaryWidth,vtkTypeBool);
   //@}
 
   //@{
@@ -114,9 +114,9 @@ public:
    * Set a boolean to control whether to use default normals.
    * The default is Off
    */
-  vtkSetMacro(UseDefaultNormal,int);
-  vtkGetMacro(UseDefaultNormal,int);
-  vtkBooleanMacro(UseDefaultNormal,int);
+  vtkSetMacro(UseDefaultNormal,vtkTypeBool);
+  vtkGetMacro(UseDefaultNormal,vtkTypeBool);
+  vtkBooleanMacro(UseDefaultNormal,vtkTypeBool);
   //@}
 
   //@{
@@ -151,15 +151,15 @@ public:
 
 protected:
   vtkRibbonFilter();
-  ~vtkRibbonFilter() VTK_OVERRIDE;
+  ~vtkRibbonFilter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   double Width;
   double Angle;
-  int VaryWidth; //controls whether width varies with scalar data
+  vtkTypeBool VaryWidth; //controls whether width varies with scalar data
   double WidthFactor;
   double DefaultNormal[3];
-  int UseDefaultNormal;
+  vtkTypeBool UseDefaultNormal;
   int GenerateTCoords; //control texture coordinate generation
   double TextureLength; //this length is mapped to [0,1) texture space
 
@@ -181,8 +181,8 @@ protected:
   double Theta;
 
 private:
-  vtkRibbonFilter(const vtkRibbonFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRibbonFilter&) VTK_DELETE_FUNCTION;
+  vtkRibbonFilter(const vtkRibbonFilter&) = delete;
+  void operator=(const vtkRibbonFilter&) = delete;
 };
 
 #endif

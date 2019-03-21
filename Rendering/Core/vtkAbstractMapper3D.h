@@ -43,14 +43,14 @@ class VTKRENDERINGCORE_EXPORT vtkAbstractMapper3D : public vtkAbstractMapper
 {
 public:
   vtkTypeMacro(vtkAbstractMapper3D, vtkAbstractMapper);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Return bounding box (array of six doubles) of data expressed as
    * (xmin,xmax, ymin,ymax, zmin,zmax).
    * Update this->Bounds as a side effect.
    */
-  virtual double *GetBounds() = 0;
+  virtual double *GetBounds() VTK_SIZEHINT(6) = 0;
 
   /**
    * Get the bounds for this mapper as (Xmin,Xmax,Ymin,Ymax,Zmin,Zmax).
@@ -61,7 +61,7 @@ public:
   /**
    * Return the Center of this mapper's data.
    */
-  double *GetCenter();
+  double *GetCenter() VTK_SIZEHINT(3);
   void GetCenter(double center[3])
   {
       double *rc = this->GetCenter();
@@ -78,14 +78,14 @@ public:
    * Is this a ray cast mapper? A subclass would return 1 if the
    * ray caster is needed to generate an image from this mapper.
    */
-  virtual int IsARayCastMapper()
+  virtual vtkTypeBool IsARayCastMapper()
     { return 0; }
 
   /**
    * Is this a "render into image" mapper? A subclass would return 1 if the
    * mapper produces an image by rendering into a software image buffer.
    */
-  virtual int IsARenderIntoImageMapper()
+  virtual vtkTypeBool IsARenderIntoImageMapper()
     { return 0; }
 
   /**
@@ -95,21 +95,16 @@ public:
   void GetClippingPlaneInDataCoords(
     vtkMatrix4x4 *propMatrix, int i, double planeEquation[4]);
 
-  /**
-   * Get the number of clipping planes.
-   */
-  int GetNumberOfClippingPlanes();
-
 protected:
    vtkAbstractMapper3D();
-   ~vtkAbstractMapper3D() VTK_OVERRIDE {}
+   ~vtkAbstractMapper3D() override {}
 
   double Bounds[6];
   double Center[3];
 
 private:
-  vtkAbstractMapper3D(const vtkAbstractMapper3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAbstractMapper3D&) VTK_DELETE_FUNCTION;
+  vtkAbstractMapper3D(const vtkAbstractMapper3D&) = delete;
+  void operator=(const vtkAbstractMapper3D&) = delete;
 };
 
 #endif

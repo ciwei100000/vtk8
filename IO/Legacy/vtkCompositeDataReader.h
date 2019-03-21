@@ -34,13 +34,15 @@ class vtkMultiBlockDataSet;
 class vtkMultiPieceDataSet;
 class vtkNonOverlappingAMR;
 class vtkOverlappingAMR;
+class vtkPartitionedDataSet;
+class vtkPartitionedDataSetCollection;
 
 class VTKIOLEGACY_EXPORT vtkCompositeDataReader : public vtkDataReader
 {
 public:
   static vtkCompositeDataReader* New();
   vtkTypeMacro(vtkCompositeDataReader, vtkDataReader);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -51,28 +53,19 @@ public:
   void SetOutput(vtkCompositeDataSet *output);
   //@}
 
+  /**
+   * Actual reading happens here
+   */
+  int ReadMeshSimple(const std::string& fname,
+                     vtkDataObject* output) override;
+
 protected:
   vtkCompositeDataReader();
-  ~vtkCompositeDataReader() VTK_OVERRIDE;
+  ~vtkCompositeDataReader() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+  vtkDataObject* CreateOutput(vtkDataObject* currentOutput) override;
 
-  // Override ProcessRequest to handle request data object event
-  int ProcessRequest(vtkInformation *, vtkInformationVector **,
-                             vtkInformationVector *) VTK_OVERRIDE;
-
-  // Since the Outputs[0] has the same UpdateExtent format
-  // as the generic DataObject we can copy the UpdateExtent
-  // as a default behavior.
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
-
-  // Create output (a directed or undirected graph).
-  virtual int RequestDataObject(vtkInformation *, vtkInformationVector **,
-                                vtkInformationVector *);
-
-  int FillOutputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillOutputPortInformation(int, vtkInformation*) override;
 
   /**
    * Read the output type information.
@@ -83,12 +76,14 @@ protected:
   bool ReadCompositeData(vtkMultiBlockDataSet*);
   bool ReadCompositeData(vtkHierarchicalBoxDataSet*);
   bool ReadCompositeData(vtkOverlappingAMR*);
+  bool ReadCompositeData(vtkPartitionedDataSet*);
+  bool ReadCompositeData(vtkPartitionedDataSetCollection*);
   bool ReadCompositeData(vtkNonOverlappingAMR*);
   vtkDataObject* ReadChild();
 
 private:
-  vtkCompositeDataReader(const vtkCompositeDataReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCompositeDataReader&) VTK_DELETE_FUNCTION;
+  vtkCompositeDataReader(const vtkCompositeDataReader&) = delete;
+  void operator=(const vtkCompositeDataReader&) = delete;
 
 };
 

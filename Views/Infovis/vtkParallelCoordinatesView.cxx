@@ -163,7 +163,7 @@ vtkParallelCoordinatesView::ProcessEvents(vtkObject* caller, unsigned long event
 //  if (caller == this->GetInteractor() || caller == this->GetInteractorStyle())
   if (caller == this->GetInteractorStyle())
   {
-    vtkParallelCoordinatesInteractorStyle* style = vtkParallelCoordinatesInteractorStyle::SafeDownCast(this->GetInteractorStyle());;
+    vtkParallelCoordinatesInteractorStyle* style = vtkParallelCoordinatesInteractorStyle::SafeDownCast(this->GetInteractorStyle());
     vtkParallelCoordinatesRepresentation *rep = vtkParallelCoordinatesRepresentation::SafeDownCast(this->GetRepresentation());
 
     if (style && rep)
@@ -528,7 +528,7 @@ int vtkParallelCoordinatesView::SetBrushLine(int line, double *p1, double *p2)
   }
 
   vtkIdType npts=0;
-  vtkIdType *ptids=NULL;
+  vtkIdType *ptids=nullptr;
 
   this->GetBrushLine(line,npts,ptids);
 
@@ -558,7 +558,7 @@ void vtkParallelCoordinatesView::GetBrushLine(int line, vtkIdType &npts, vtkIdTy
 
 void vtkParallelCoordinatesView::Hover(unsigned long eventId)
 {
-  vtkParallelCoordinatesInteractorStyle* style = vtkParallelCoordinatesInteractorStyle::SafeDownCast(this->GetInteractorStyle());;
+  vtkParallelCoordinatesInteractorStyle* style = vtkParallelCoordinatesInteractorStyle::SafeDownCast(this->GetInteractorStyle());
   vtkParallelCoordinatesRepresentation *rep = vtkParallelCoordinatesRepresentation::SafeDownCast(this->GetRepresentation());
 
   double p1[2],p2[2];
@@ -612,7 +612,7 @@ void vtkParallelCoordinatesView::Hover(unsigned long eventId)
 
 void vtkParallelCoordinatesView::ManipulateAxes(unsigned long eventId)
 {
-  vtkParallelCoordinatesInteractorStyle* style = vtkParallelCoordinatesInteractorStyle::SafeDownCast(this->GetInteractorStyle());;
+  vtkParallelCoordinatesInteractorStyle* style = vtkParallelCoordinatesInteractorStyle::SafeDownCast(this->GetInteractorStyle());
   vtkParallelCoordinatesRepresentation *rep = vtkParallelCoordinatesRepresentation::SafeDownCast(this->GetRepresentation());
 
   double cursorPosition[2],cursorLastPosition[2],cursorStartPosition[2];
@@ -730,7 +730,7 @@ void vtkParallelCoordinatesView::SelectData(unsigned long eventId)
     }
     else if (eventId == vtkCommand::EndInteractionEvent)
     {
-      vtkIdType* ptids = NULL;
+      vtkIdType* ptids = nullptr;
       vtkIdType npts = 0;
       this->GetBrushLine(1,npts,ptids);
 
@@ -786,7 +786,7 @@ void vtkParallelCoordinatesView::SelectData(unsigned long eventId)
       // the first line is finished, so do the selection
       else
       {
-        vtkIdType* ptids = NULL;
+        vtkIdType* ptids = nullptr;
         vtkIdType npts = 0;
 
         double p1[3] = {0,0,0};

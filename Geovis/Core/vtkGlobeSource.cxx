@@ -44,6 +44,7 @@ vtkStandardNewMacro(vtkGlobeSource);
 //----------------------------------------------------------------------------
 vtkGlobeSource::vtkGlobeSource()
 {
+  VTK_LEGACY_BODY(vtkGlobeSource::vtkGlobeSource, "VTK 8.2");
   this->Origin[0] = this->Origin[1] = this->Origin[2] = 0.0;
   this->Radius = vtkGeoMath::EarthRadiusMeters();
   this->AutoCalculateCurtainHeight = true;
@@ -148,7 +149,7 @@ int vtkGlobeSource::RequestData(
       * this->Radius / 3600.0;
   }
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -336,7 +337,7 @@ int vtkGlobeSource::RequestData(
   }
 
 
-  // Update ourselves and release memeory
+  // Update ourselves and release memory
   //
   newPoints->Squeeze();
   output->SetPoints(newPoints);

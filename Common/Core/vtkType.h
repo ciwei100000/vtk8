@@ -125,6 +125,8 @@
 #define VTK_PISTON_DATA_OBJECT             34
 #define VTK_PATH                           35
 #define VTK_UNSTRUCTURED_GRID_BASE         36
+#define VTK_PARTITIONED_DATA_SET           37
+#define VTK_PARTITIONED_DATA_SET_COLLECTION 38
 
 /*--------------------------------------------------------------------------*/
 /* Define a casting macro for use by the constants below.  */
@@ -359,15 +361,17 @@ typedef int vtkIdType;
 
 /*--------------------------------------------------------------------------*/
 /* If not already defined, define vtkTypeBool. When VTK was started, some   */
-/* compilers did not yet support the bool type, and so VTK often used int   */
-/* where it should have used bool. Eventually vtkTypeBool will switch to    */
-/* real bool. */
+/* compilers did not yet support the bool type, and so VTK often used int,  */
+/* or more rarely unsigned int, where it should have used bool.             */
+/* Eventually vtkTypeBool will switch to real bool.                         */
 #ifndef VTK_TYPE_BOOL_TYPEDEFED
 # define VTK_TYPE_BOOL_TYPEDEFED
 # if 1
    typedef int vtkTypeBool;
+   typedef unsigned int vtkTypeUBool;
 # else
    typedef bool vtkTypeBool;
+   typedef bool vtkTypeUBool;
 # endif
 #endif
 

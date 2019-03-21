@@ -36,39 +36,39 @@ int vtkSplineRepresentationTest1(int , char * [] )
 
   vtkSmartPointer<vtkPolyData> pd =  vtkSmartPointer<vtkPolyData>::New();
   node1->GetPolyData(pd);
-  if (pd == NULL)
+  if (pd == nullptr)
   {
     std::cout << "Polydata is null" << std::endl;
   }
 
 
   vtkSmartPointer<vtkProperty> prop = node1->GetHandleProperty();
-  if (prop == NULL)
+  if (prop == nullptr)
   {
-    std::cout << "Handle Property is NULL." << std::endl;
+    std::cout << "Handle Property is nullptr." << std::endl;
   }
   prop = node1->GetSelectedHandleProperty();
-  if (prop == NULL)
+  if (prop == nullptr)
   {
-    std::cout << "Selected Handle Property is NULL." << std::endl;
+    std::cout << "Selected Handle Property is nullptr." << std::endl;
   }
 
   prop = node1->GetLineProperty();
-  if (prop == NULL)
+  if (prop == nullptr)
   {
-    std::cout << "Line Property is NULL." << std::endl;
+    std::cout << "Line Property is nullptr." << std::endl;
   }
   prop = node1->GetSelectedLineProperty();
-  if (prop == NULL)
+  if (prop == nullptr)
   {
-    std::cout << "Selected Line Property is NULL." << std::endl;
+    std::cout << "Selected Line Property is nullptr." << std::endl;
   }
 
   node1->SetNumberOfHandles(10);
   int numHandles = node1->GetNumberOfHandles();
   if (numHandles != 10)
   {
-    std::cerr << "Error in Setting numer of Handles to 10, got " << numHandles << std::endl;
+    std::cerr << "Error in Setting number of Handles to 10, got " << numHandles << std::endl;
     return EXIT_FAILURE;
   }
   node1->SetNumberOfHandles(-1);
@@ -170,7 +170,7 @@ int vtkSplineRepresentationTest1(int , char * [] )
     xyz[2] += 3.9;
   }
   vtkSmartPointer<vtkDoubleArray> da = node1->GetHandlePositions();
-  if (da == NULL)
+  if (da == nullptr)
   {
     std::cerr << "HandlePositions array is null!" << std::endl;
     return EXIT_FAILURE;
@@ -197,7 +197,7 @@ int vtkSplineRepresentationTest1(int , char * [] )
   points->SetPoint(1, -3.0, -6.8, 9.9);
   node1->InitializeHandles(points);
   da = node1->GetHandlePositions();
-  if (da == NULL)
+  if (da == nullptr)
   {
     std::cerr << "HandlePositions array is null after initing with vtkPoints!" << std::endl;
     return EXIT_FAILURE;

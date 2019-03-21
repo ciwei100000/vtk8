@@ -82,7 +82,7 @@ vtkStandardNewMacro(vtkPlotPie);
 vtkPlotPie::vtkPlotPie()
 {
   this->ColorSeries = vtkSmartPointer<vtkColorSeries>::New();
-  this->Points = 0;
+  this->Points = nullptr;
   this->Private = new vtkPlotPiePrivate();
   this->Dimensions[0] = this->Dimensions[1] = this->Dimensions[2] =
     this->Dimensions[3] = 0;
@@ -95,9 +95,9 @@ vtkPlotPie::~vtkPlotPie()
   if (this->Points)
   {
     this->Points->Delete();
-    this->Points = 0;
+    this->Points = nullptr;
   }
-  this->Private = 0;
+  this->Private = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -176,7 +176,7 @@ void vtkPlotPie::SetDimensions(int arg1, int arg2, int arg3, int arg4)
   }
 }
 
-void vtkPlotPie::SetDimensions(int arg[4])
+void vtkPlotPie::SetDimensions(const int arg[4])
 {
   this->SetDimensions(arg[0],arg[1],arg[2],arg[3]);
 }

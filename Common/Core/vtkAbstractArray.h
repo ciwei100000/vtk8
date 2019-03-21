@@ -76,7 +76,7 @@ class VTKCOMMONCORE_EXPORT vtkAbstractArray : public vtkObject
 {
 public:
   vtkTypeMacro(vtkAbstractArray,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Allocate memory for this array. Delete old storage only if necessary.
@@ -86,7 +86,7 @@ public:
    * If numValues is 0, all memory will be freed.
    * Return 1 on success, 0 on failure.
    */
-  virtual int Allocate(vtkIdType numValues, vtkIdType ext=1000) = 0;
+  virtual vtkTypeBool Allocate(vtkIdType numValues, vtkIdType ext=1000) = 0;
 
   /**
    * Release storage and reset array to initial state.
@@ -95,9 +95,9 @@ public:
 
   /**
    * Return the underlying data type. An integer indicating data type is
-   * returned as specified in vtkSetGet.h.
+   * returned as specified in vtkType.h.
    */
-  virtual int GetDataType() =0;
+  virtual int GetDataType() = 0;
 
   //@{
   /**
@@ -128,7 +128,7 @@ public:
   //@}
 
   /**
-   * Set the name for a component. Must be >= 1.
+   * Set the name for a component. `component` must be >= 0.
    */
   void SetComponentName( vtkIdType component, const char *name );
 
@@ -269,7 +269,7 @@ public:
    * given the ptIndices in the source array and associated interpolation
    * weights.
    * This method assumes that the two arrays are of the same type
-   * and strcuture.
+   * and structure.
    */
   virtual void InterpolateTuple(vtkIdType dstTupleIdx, vtkIdList *ptIndices,
                                 vtkAbstractArray* source,  double* weights) = 0;
@@ -302,7 +302,7 @@ public:
    * Requesting an array size of 0 will free all memory.
    * Returns 1 if resizing succeeded and 0 otherwise.
    */
-  virtual int Resize(vtkIdType numTuples) = 0;
+  virtual vtkTypeBool Resize(vtkIdType numTuples) = 0;
 
   //@{
   /**
@@ -331,7 +331,8 @@ public:
   {
     VTK_DATA_ARRAY_FREE,
     VTK_DATA_ARRAY_DELETE,
-    VTK_DATA_ARRAY_ALIGNED_FREE
+    VTK_DATA_ARRAY_ALIGNED_FREE,
+    VTK_DATA_ARRAY_USER_DEFINED
   };
 
   //@{
@@ -346,7 +347,10 @@ public:
    * will be used. If the delete method is VTK_DATA_ARRAY_DELETE, delete[]
    * will be used. If the delete method is VTK_DATA_ARRAY_ALIGNED_FREE
    * _aligned_free() will be used on windows, while free() will be used
-   * everywhere else.The default is FREE.
+   * everywhere else. If the delete method is VTK_DATA_ARRAY_USER_DEFINED
+   * a custom free function can be assigned to be called using SetArrayFreeFunction,
+   * if no custom function is assigned we will default to free().
+   * The default is FREE.
    * (Note not all subclasses can support deleteMethod.)
    */
   virtual void SetVoidArray(void *vtkNotUsed(array),
@@ -356,6 +360,14 @@ public:
                             int vtkNotUsed(deleteMethod))
     {this->SetVoidArray(array,size,save);};
   //@}
+
+  /**
+    * This method allows the user to specify a custom free function to be
+    * called when the array is deallocated. Calling this method will implicitly
+    * mean that the given free function will be called when the class
+    * cleans up or reallocates memory.
+  **/
+  virtual void SetArrayFreeFunction(void (*callback)(void *)) = 0;
 
   /**
    * This method copies the array data to the void pointer specified
@@ -435,19 +447,22 @@ public:
   /**
    * Retrieve value from the array as a variant.
    */
-  virtual vtkVariant GetVariantValue(vtkIdType valueIdx);
+  virtual vtkVariant GetVariantValue(vtkIdType valueIdx)
+    VTK_EXPECTS(0 <= valueIdx && valueIdx < GetNumberOfValues());
 
   /**
    * Insert a value into the array from a variant.  This method does
    * bounds checking.
    */
-  virtual void InsertVariantValue(vtkIdType valueIdx, vtkVariant value) = 0;
+  virtual void InsertVariantValue(vtkIdType valueIdx, vtkVariant value)
+    VTK_EXPECTS(0 <= valueIdx) = 0;
 
   /**
    * Set a value in the array from a variant.  This method does NOT do
    * bounds checking.
    */
-  virtual void SetVariantValue(vtkIdType valueIdx, vtkVariant value) = 0;
+  virtual void SetVariantValue(vtkIdType valueIdx, vtkVariant value)
+    VTK_EXPECTS(0 <= valueIdx && valueIdx < GetNumberOfValues()) = 0;
 
   /**
    * Tell the array explicitly that the data has changed.
@@ -537,18 +552,18 @@ public:
    * Inquire if this array has an instance of vtkInformation
    * already associated with it.
    */
-  bool HasInformation(){ return this->Information!=0; }
+  bool HasInformation(){ return this->Information!=nullptr; }
 
   /**
    * Copy information instance. Arrays use information objects
    * in a variety of ways. It is important to have flexibility in
-   * this regard because certain keys should not be coppied, while
+   * this regard because certain keys should not be copied, while
    * others must be.
 
    * NOTE: Subclasses must always call their superclass's CopyInformation
    * method, so that all classes in the hierarchy get a chance to remove
-   * keys they do not wish to be coppied. The subclass will not need to
-   * explicilty copy the keys as it's handled here.
+   * keys they do not wish to be copied. The subclass will not need to
+   * explicitly copy the keys as it's handled here.
    */
   virtual int CopyInformation(vtkInformation *infoFrom, int deep=1);
 
@@ -589,7 +604,7 @@ public:
   /**
    * Removes out-of-date PER_COMPONENT() and PER_FINITE_COMPONENT() values.
    */
-  void Modified() VTK_OVERRIDE;
+  void Modified() override;
 
   /**
    * A key used to hold discrete values taken on either by the tuples of the
@@ -644,7 +659,7 @@ public:
 protected:
   // Construct object with default tuple dimension (number of components) of 1.
   vtkAbstractArray();
-  ~vtkAbstractArray() VTK_OVERRIDE;
+  ~vtkAbstractArray() override;
 
   /**
    * Set an information object that can be used to annotate the array.
@@ -683,8 +698,8 @@ protected:
   vtkInternalComponentNames* ComponentNames; //names for each component
 
 private:
-  vtkAbstractArray(const vtkAbstractArray&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAbstractArray&) VTK_DELETE_FUNCTION;
+  vtkAbstractArray(const vtkAbstractArray&) = delete;
+  void operator=(const vtkAbstractArray&) = delete;
 };
 
 //@{

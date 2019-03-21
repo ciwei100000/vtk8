@@ -106,10 +106,10 @@ vtkDelaunayTetra *vtkTetraArray::Resize(vtkIdType sz)
     newSize = sz;
   }
 
-  if ( (newArray = new vtkDelaunayTetra[newSize]) == NULL )
+  if ( (newArray = new vtkDelaunayTetra[newSize]) == nullptr )
   {
     vtkGenericWarningMacro(<< "Cannot allocate memory\n");
-    return 0;
+    return nullptr;
   }
 
   if (this->Array)
@@ -143,8 +143,8 @@ vtkDelaunay3D::vtkDelaunay3D()
   this->BoundingTriangulation = 0;
   this->Offset = 2.5;
   this->OutputPointsPrecision = DEFAULT_PRECISION;
-  this->Locator = NULL;
-  this->TetraArray = NULL;
+  this->Locator = nullptr;
+  this->TetraArray = nullptr;
 
   // added for performance
   this->Tetras = vtkIdList::New();
@@ -161,7 +161,7 @@ vtkDelaunay3D::~vtkDelaunay3D()
   if ( this->Locator )
   {
     this->Locator->UnRegister(this);
-    this->Locator = NULL;
+    this->Locator = nullptr;
   }
   delete this->TetraArray;
 
@@ -177,7 +177,7 @@ static int GetTetraFaceNeighbor(vtkUnstructuredGrid *Mesh, vtkIdType tetraId,
                                 vtkIdType& nei);
 
 //--------------------------------------------------------------------------
-// Find all faces that enclose a point. (Enclosure means not satifying
+// Find all faces that enclose a point. (Enclosure means not satisfying
 // Delaunay criterion.) This method works in two distinct parts. First, the
 // tetrahedra containing the point are found (there may be more than one if
 // the point falls on an edge or face). Next, face neighbors of these points
@@ -445,7 +445,7 @@ int vtkDelaunay3D::RequestData(
 
   // Initialize; check input
   //
-  if ( (inPoints=input->GetPoints()) == NULL )
+  if ( (inPoints=input->GetPoints()) == nullptr )
   {
     vtkErrorMacro("<<Cannot triangulate; no input points");
     return 1;
@@ -558,7 +558,7 @@ int vtkDelaunay3D::RequestData(
     int hasNei, j, k;
     double x1[3], x2[3], x3[3];
     vtkDelaunayTetra *tetra;
-    static int edge[6][2] = {{0,1},{1,2},{2,0},{0,3},{1,3},{2,3}};
+    static const int edge[6][2] = {{0,1},{1,2},{2,0},{0,3},{1,3},{2,3}};
 
     edges = vtkEdgeTable::New();
     edges->InitEdgeInsertion(numPoints+6);
@@ -760,7 +760,7 @@ int vtkDelaunay3D::RequestData(
 // tetrahedronalizations of points. Its purpose is construct an initial
 // Delaunay triangulation into which to inject other points. You must
 // specify the center of a cubical bounding box and its length, as well
-// as the numer of points to insert. The method returns a pointer to
+// as the number of points to insert. The method returns a pointer to
 // an unstructured grid. Use this pointer to manipulate the mesh as
 // necessary. You must delete (with Delete()) the mesh when done.
 // Note: This initialization method places points forming bounding octahedron
@@ -785,7 +785,7 @@ vtkUnstructuredGrid *vtkDelaunay3D::InitPointInsertion(double center[3],
   bounds[2] = center[1] - length; bounds[3] = center[1] + length;
   bounds[4] = center[2] - length; bounds[5] = center[2] + length;
 
-  if ( this->Locator == NULL )
+  if ( this->Locator == nullptr )
   {
     this->CreateDefaultLocator();
   }
@@ -958,7 +958,7 @@ void vtkDelaunay3D::SetLocator(vtkIncrementalPointLocator *locator)
   if ( this->Locator )
   {
     this->Locator->UnRegister(this);
-    this->Locator = NULL;
+    this->Locator = nullptr;
   }
   if ( locator )
   {
@@ -972,7 +972,7 @@ void vtkDelaunay3D::SetLocator(vtkIncrementalPointLocator *locator)
 //--------------------------------------------------------------------------
 void vtkDelaunay3D::CreateDefaultLocator()
 {
-  if ( this->Locator == NULL )
+  if ( this->Locator == nullptr )
   {
     this->Locator = vtkPointLocator::New();
     vtkPointLocator::SafeDownCast( this->Locator )->SetDivisions(25,25,25);
@@ -1054,7 +1054,7 @@ void vtkDelaunay3D::PrintSelf(ostream& os, vtkIndent indent)
 void vtkDelaunay3D::EndPointInsertion()
 {
   delete [] this->References;
-  this->References = NULL;
+  this->References = nullptr;
 }
 
 //--------------------------------------------------------------------------
@@ -1063,7 +1063,7 @@ vtkMTimeType vtkDelaunay3D::GetMTime()
   vtkMTimeType mTime=this->Superclass::GetMTime();
   vtkMTimeType time;
 
-  if ( this->Locator != NULL )
+  if ( this->Locator != nullptr )
   {
     time = this->Locator->GetMTime();
     mTime = ( time > mTime ? time : mTime );

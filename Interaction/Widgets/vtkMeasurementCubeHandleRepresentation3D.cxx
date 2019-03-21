@@ -106,7 +106,7 @@ vtkMeasurementCubeHandleRepresentation3D::vtkMeasurementCubeHandleRepresentation
   this->LabelText->GetTextProperty()->SetFontSize( 20 );
   this->LabelText->GetTextProperty()->SetColor( 1.0, 1.0, 1.0 );
   this->LabelText->GetTextProperty()->SetJustificationToCentered();
-  this->LengthUnit = NULL;
+  this->LengthUnit = nullptr;
   this->SetLengthUnit("unit");
 
   // Cube parameters
@@ -127,7 +127,7 @@ vtkMeasurementCubeHandleRepresentation3D::vtkMeasurementCubeHandleRepresentation
 vtkMeasurementCubeHandleRepresentation3D
 ::~vtkMeasurementCubeHandleRepresentation3D()
 {
-  this->SetLengthUnit(NULL);
+  this->SetLengthUnit(nullptr);
   this->HandleTransformFilter->Delete();
   this->HandleTransform->Delete();
   this->HandleTransformMatrix->Delete();
@@ -142,8 +142,12 @@ vtkMeasurementCubeHandleRepresentation3D
 //----------------------------------------------------------------------
 void vtkMeasurementCubeHandleRepresentation3D::RegisterPickers()
 {
-  this->Renderer->GetRenderWindow()->GetInteractor()->GetPickingManager()
-    ->AddPicker(this->HandlePicker, this);
+  vtkPickingManager* pm = this->GetPickingManager();
+  if (!pm)
+  {
+    return;
+  }
+  pm->AddPicker(this->HandlePicker, this);
 }
 
 //----------------------------------------------------------------------
@@ -203,7 +207,7 @@ int vtkMeasurementCubeHandleRepresentation3D
   this->VisibilityOn(); //actor must be on to be picked
   vtkAssemblyPath* path = this->GetAssemblyPath(X, Y, 0., this->HandlePicker);
 
-  if ( path != NULL )
+  if ( path != nullptr )
   {
     this->InteractionState = vtkHandleRepresentation::Nearby;
   }
@@ -745,7 +749,7 @@ int vtkMeasurementCubeHandleRepresentation3D::RenderTranslucentPolygonalGeometry
 }
 
 //-----------------------------------------------------------------------------
-int vtkMeasurementCubeHandleRepresentation3D::HasTranslucentPolygonalGeometry()
+vtkTypeBool vtkMeasurementCubeHandleRepresentation3D::HasTranslucentPolygonalGeometry()
 {
   int result=0;
   this->BuildRepresentation();

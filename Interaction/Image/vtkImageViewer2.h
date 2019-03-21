@@ -77,7 +77,7 @@ class VTKINTERACTIONIMAGE_EXPORT vtkImageViewer2 : public vtkObject
 public:
   static vtkImageViewer2 *New();
   vtkTypeMacro(vtkImageViewer2,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Get the name of rendering window.
@@ -177,7 +177,7 @@ public:
   /**
    * Set/Get the position in screen coordinates of the rendering window.
    */
-  virtual int* GetPosition();
+  virtual int* GetPosition() VTK_SIZEHINT(2);
   virtual void SetPosition(int a,int b);
   virtual void SetPosition(int a[2]) { this->SetPosition(a[0],a[1]); }
   //@}
@@ -186,7 +186,7 @@ public:
   /**
    * Set/Get the size of the window in screen coordinates in pixels.
    */
-  virtual int* GetSize();
+  virtual int* GetSize() VTK_SIZEHINT(2);
   virtual void SetSize(int a, int b);
   virtual void SetSize(int a[2]) { this->SetSize(a[0],a[1]); }
   //@}
@@ -222,14 +222,14 @@ public:
    * be supported for every type of window and on some windows you may
    * need to invoke this prior to the first render.
    */
-  virtual void SetOffScreenRendering(int);
-  virtual int GetOffScreenRendering();
-  vtkBooleanMacro(OffScreenRendering,int);
+  virtual void SetOffScreenRendering(vtkTypeBool);
+  virtual vtkTypeBool GetOffScreenRendering();
+  vtkBooleanMacro(OffScreenRendering,vtkTypeBool);
   //@}
 
 protected:
   vtkImageViewer2();
-  ~vtkImageViewer2() VTK_OVERRIDE;
+  ~vtkImageViewer2() override;
 
   virtual void InstallPipeline();
   virtual void UnInstallPipeline();
@@ -253,8 +253,8 @@ protected:
   friend class vtkImageViewer2Callback;
 
 private:
-  vtkImageViewer2(const vtkImageViewer2&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageViewer2&) VTK_DELETE_FUNCTION;
+  vtkImageViewer2(const vtkImageViewer2&) = delete;
+  void operator=(const vtkImageViewer2&) = delete;
 };
 
 #endif

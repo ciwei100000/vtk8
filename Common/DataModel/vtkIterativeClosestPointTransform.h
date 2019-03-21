@@ -54,7 +54,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkIterativeClosestPointTransform : public vtkLi
 public:
   static vtkIterativeClosestPointTransform *New();
   vtkTypeMacro(vtkIterativeClosestPointTransform,vtkLinearTransform);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -77,7 +77,7 @@ public:
 
   //@{
   /**
-   * Set/Get the  maximum number of iterations. Default is 50.
+   * Set/Get the maximum number of iterations. Default is 50.
    */
   vtkSetMacro(MaximumNumberOfIterations, int);
   vtkGetMacro(MaximumNumberOfIterations, int);
@@ -95,9 +95,9 @@ public:
    * Force the algorithm to check the mean distance between two iterations.
    * Default is Off.
    */
-  vtkSetMacro(CheckMeanDistance, int);
-  vtkGetMacro(CheckMeanDistance, int);
-  vtkBooleanMacro(CheckMeanDistance, int);
+  vtkSetMacro(CheckMeanDistance, vtkTypeBool);
+  vtkGetMacro(CheckMeanDistance, vtkTypeBool);
+  vtkBooleanMacro(CheckMeanDistance, vtkTypeBool);
   //@}
 
   //@{
@@ -150,9 +150,9 @@ public:
    * Starts the process by translating source centroid to target centroid.
    * The default is Off.
    */
-  vtkSetMacro(StartByMatchingCentroids, int);
-  vtkGetMacro(StartByMatchingCentroids, int);
-  vtkBooleanMacro(StartByMatchingCentroids, int);
+  vtkSetMacro(StartByMatchingCentroids, vtkTypeBool);
+  vtkGetMacro(StartByMatchingCentroids, vtkTypeBool);
+  vtkBooleanMacro(StartByMatchingCentroids, vtkTypeBool);
   //@}
 
   //@{
@@ -167,12 +167,12 @@ public:
    * Invert the transformation.  This is done by switching the
    * source and target.
    */
-  void Inverse() VTK_OVERRIDE;
+  void Inverse() override;
 
   /**
    * Make another transform of the same type.
    */
-  vtkAbstractTransform *MakeTransform() VTK_OVERRIDE;
+  vtkAbstractTransform *MakeTransform() override;
 
 protected:
 
@@ -197,34 +197,34 @@ protected:
   /**
    * Get the MTime of this object also considering the locator.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   vtkIterativeClosestPointTransform();
-  ~vtkIterativeClosestPointTransform() VTK_OVERRIDE;
+  ~vtkIterativeClosestPointTransform() override;
 
-  void InternalUpdate() VTK_OVERRIDE;
+  void InternalUpdate() override;
 
   /**
    * This method does no type checking, use DeepCopy instead.
    */
-  void InternalDeepCopy(vtkAbstractTransform *transform) VTK_OVERRIDE;
+  void InternalDeepCopy(vtkAbstractTransform *transform) override;
 
   vtkDataSet* Source;
   vtkDataSet* Target;
   vtkCellLocator *Locator;
   int MaximumNumberOfIterations;
-  int CheckMeanDistance;
+  vtkTypeBool CheckMeanDistance;
   int MeanDistanceMode;
   double MaximumMeanDistance;
   int MaximumNumberOfLandmarks;
-  int StartByMatchingCentroids;
+  vtkTypeBool StartByMatchingCentroids;
 
   int NumberOfIterations;
   double MeanDistance;
   vtkLandmarkTransform *LandmarkTransform;
 private:
-  vtkIterativeClosestPointTransform(const vtkIterativeClosestPointTransform&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkIterativeClosestPointTransform&) VTK_DELETE_FUNCTION;
+  vtkIterativeClosestPointTransform(const vtkIterativeClosestPointTransform&) = delete;
+  void operator=(const vtkIterativeClosestPointTransform&) = delete;
 };
 
 #endif

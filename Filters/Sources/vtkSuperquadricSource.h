@@ -69,7 +69,7 @@ public:
   static vtkSuperquadricSource *New();
 
   vtkTypeMacro(vtkSuperquadricSource,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -157,9 +157,9 @@ public:
    * Set/Get whether or not the superquadric is toroidal (1) or ellipsoidal (0).
    * Initial value is 0.
    */
-  vtkBooleanMacro(Toroidal,int);
-  vtkGetMacro(Toroidal,int);
-  vtkSetMacro(Toroidal,int);
+  vtkBooleanMacro(Toroidal,vtkTypeBool);
+  vtkGetMacro(Toroidal,vtkTypeBool);
+  vtkSetMacro(Toroidal,vtkTypeBool);
   //@}
 
   //@{
@@ -174,15 +174,15 @@ public:
 
 protected:
   vtkSuperquadricSource(int res=16);
-  ~vtkSuperquadricSource() VTK_OVERRIDE {}
+  ~vtkSuperquadricSource() override {}
 
-  int Toroidal;
+  vtkTypeBool Toroidal;
   int AxisOfSymmetry;
   double Thickness;
   double Size;
   double PhiRoundness;
   double ThetaRoundness;
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
   double Center[3];
   double Scale[3];
   int ThetaResolution;
@@ -190,8 +190,8 @@ protected:
   int OutputPointsPrecision;
 
 private:
-  vtkSuperquadricSource(const vtkSuperquadricSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSuperquadricSource&) VTK_DELETE_FUNCTION;
+  vtkSuperquadricSource(const vtkSuperquadricSource&) = delete;
+  void operator=(const vtkSuperquadricSource&) = delete;
 };
 
 #endif

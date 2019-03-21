@@ -44,7 +44,8 @@
 #ifndef vtkDataSetAttributes_h
 #define vtkDataSetAttributes_h
 
-#include "vtkCommonDataModelModule.h" // For export macro
+#include "vtkCommonDataModelModule.h"      // For export macro
+#include "vtkDataSetAttributesFieldList.h" // for vtkDataSetAttributesFieldList
 #include "vtkFieldData.h"
 
 class vtkLookupTable;
@@ -58,13 +59,13 @@ public:
   static vtkDataSetAttributes *New();
 
   vtkTypeMacro(vtkDataSetAttributes,vtkFieldData);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
-   * Initialize all of the object's data to NULL
+   * Initialize all of the object's data to nullptr
    * Also, clear the copy flags.
    */
-  void Initialize() VTK_OVERRIDE;
+  void Initialize() override;
 
   /**
    * Attributes have a chance to bring themselves up to date; right
@@ -79,13 +80,13 @@ public:
    * copy from input data).
    * Ignores the copy flags but preserves them in the output.
    */
-  void DeepCopy(vtkFieldData *pd) VTK_OVERRIDE;
+  void DeepCopy(vtkFieldData *pd) override;
 
   /**
    * Shallow copy of data (i.e., use reference counting).
    * Ignores the copy flags but preserves them in the output.
    */
-  void ShallowCopy(vtkFieldData *pd) VTK_OVERRIDE;
+  void ShallowCopy(vtkFieldData *pd) override;
 
   // -- attribute types -----------------------------------------------------
 
@@ -266,7 +267,7 @@ public:
 
    * Returns -1 in the following cases:
 
-   * - aa is NULL (used to unset an attribute; not an error indicator)
+   * - aa is nullptr (used to unset an attribute; not an error indicator)
    * - aa is not a subclass of vtkDataArray, unless the attributeType
    * is vtkDataSetAttributes::PEDIGREEIDS (error indicator)
    * - aa has a number of components incompatible with the attribute type
@@ -296,7 +297,7 @@ public:
    * Remove an array (with the given name) from the list of arrays.
    */
   using vtkFieldData::RemoveArray;
-  void RemoveArray(int index) VTK_OVERRIDE;
+  void RemoveArray(int index) override;
   //@}
 
 
@@ -349,45 +350,45 @@ public:
   int GetCopyAttribute (int index, int ctype);
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void SetCopyScalars(int i, int ctype=ALLCOPY);
-  int GetCopyScalars(int ctype=ALLCOPY);
-  vtkBooleanMacro(CopyScalars, int);
+  void SetCopyScalars(vtkTypeBool i, int ctype=ALLCOPY);
+  vtkTypeBool GetCopyScalars(int ctype=ALLCOPY);
+  vtkBooleanMacro(CopyScalars, vtkTypeBool);
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void SetCopyVectors(int i, int ctype=ALLCOPY);
-  int GetCopyVectors(int ctype=ALLCOPY);
-  vtkBooleanMacro(CopyVectors, int);
+  void SetCopyVectors(vtkTypeBool i, int ctype=ALLCOPY);
+  vtkTypeBool GetCopyVectors(int ctype=ALLCOPY);
+  vtkBooleanMacro(CopyVectors, vtkTypeBool);
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void SetCopyNormals(int i, int ctype=ALLCOPY);
-  int GetCopyNormals(int ctype=ALLCOPY);
-  vtkBooleanMacro(CopyNormals, int);
+  void SetCopyNormals(vtkTypeBool i, int ctype=ALLCOPY);
+  vtkTypeBool GetCopyNormals(int ctype=ALLCOPY);
+  vtkBooleanMacro(CopyNormals, vtkTypeBool);
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void SetCopyTCoords(int i, int ctype=ALLCOPY);
-  int GetCopyTCoords(int ctype=ALLCOPY);
-  vtkBooleanMacro(CopyTCoords, int);
+  void SetCopyTCoords(vtkTypeBool i, int ctype=ALLCOPY);
+  vtkTypeBool GetCopyTCoords(int ctype=ALLCOPY);
+  vtkBooleanMacro(CopyTCoords, vtkTypeBool);
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void SetCopyTensors(int i, int ctype=ALLCOPY);
-  int GetCopyTensors(int ctype=ALLCOPY);
-  vtkBooleanMacro(CopyTensors, int);
+  void SetCopyTensors(vtkTypeBool i, int ctype=ALLCOPY);
+  vtkTypeBool GetCopyTensors(int ctype=ALLCOPY);
+  vtkBooleanMacro(CopyTensors, vtkTypeBool);
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void SetCopyGlobalIds(int i, int ctype=ALLCOPY);
-  int GetCopyGlobalIds(int ctype=ALLCOPY);
-  vtkBooleanMacro(CopyGlobalIds, int);
+  void SetCopyGlobalIds(vtkTypeBool i, int ctype=ALLCOPY);
+  vtkTypeBool GetCopyGlobalIds(int ctype=ALLCOPY);
+  vtkBooleanMacro(CopyGlobalIds, vtkTypeBool);
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void SetCopyPedigreeIds(int i, int ctype=ALLCOPY);
-  int GetCopyPedigreeIds(int ctype=ALLCOPY);
-  vtkBooleanMacro(CopyPedigreeIds, int);
+  void SetCopyPedigreeIds(vtkTypeBool i, int ctype=ALLCOPY);
+  vtkTypeBool GetCopyPedigreeIds(int ctype=ALLCOPY);
+  vtkBooleanMacro(CopyPedigreeIds, vtkTypeBool);
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void CopyAllOn(int ctype=ALLCOPY) VTK_OVERRIDE;
+  void CopyAllOn(int ctype=ALLCOPY) override;
 
   /// @copydoc vtkDataSetAttributes::SetCopyAttribute()
-  void CopyAllOff(int ctype=ALLCOPY) VTK_OVERRIDE;
+  void CopyAllOff(int ctype=ALLCOPY) override;
 
   // -- passthrough operations ----------------------------------------------
 
@@ -400,7 +401,7 @@ public:
    * that field (on or off), obey the flag, ignore (3) 3) obey
    * CopyAllOn/Off
    */
-  void PassData(vtkFieldData* fd) VTK_OVERRIDE;
+  void PassData(vtkFieldData* fd) override;
 
   // -- copytuple operations ------------------------------------------------
 
@@ -454,7 +455,7 @@ public:
    * has been invoked before using this method. When copying a field,
    * the following copying rules are
    * followed: 1) Check if a field is an attribute, if yes and if there
-   * is a COPYTUPLE copy flag for that attribute (on or off), obey the  flag
+   * is a COPYTUPLE copy flag for that attribute (on or off), obey the flag
    * for that attribute, ignore (2) and (3), 2) if there is a copy field for
    * that field (on or off), obey the flag, ignore (3) 3) obey
    * CopyAllOn/Off
@@ -546,7 +547,7 @@ public:
                        vtkDataSetAttributes *from2,
                        vtkIdType id, double t);
 
-  class FieldList;
+  using FieldList = vtkDataSetAttributesFieldList;
 
   // field list copy operations ------------------------------------------
 
@@ -591,11 +592,9 @@ public:
     int idx, vtkIdType toId,
     vtkIdList *ids, double *weights);
 
-  friend class vtkDataSetAttributes::FieldList;
-
 protected:
   vtkDataSetAttributes();
-  ~vtkDataSetAttributes() VTK_OVERRIDE;
+  ~vtkDataSetAttributes() override;
 
   void InternalCopyAllocate(vtkDataSetAttributes* pd,
                             int ctype,
@@ -604,15 +603,10 @@ protected:
                             int shallowCopyArrays=0,
                             bool createNewArrays=true);
 
-  void InternalCopyAllocate(
-    vtkDataSetAttributes::FieldList& list,
-    int ctype,
-    vtkIdType sze, vtkIdType ext);
-
   /**
-   * Initialize all of the object's data to NULL
+   * Initialize all of the object's data to nullptr
    */
-  void InitializeFields() VTK_OVERRIDE;
+  void InitializeFields() override;
 
   int AttributeIndices[NUM_ATTRIBUTES]; //index to attribute array in field data
   int CopyAttributeFlags[ALLCOPY][NUM_ATTRIBUTES]; //copy flag for attribute data
@@ -632,82 +626,10 @@ private:
   vtkFieldData::BasicIterator  ComputeRequiredArrays(vtkDataSetAttributes* pd, int ctype);
 
 private:
-  vtkDataSetAttributes(const vtkDataSetAttributes&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataSetAttributes&) VTK_DELETE_FUNCTION;
+  vtkDataSetAttributes(const vtkDataSetAttributes&) = delete;
+  void operator=(const vtkDataSetAttributes&) = delete;
 
-public:
-  // This public class is used to perform set operations, other misc.
-  // operations on fields. For example, vtkAppendFilter uses it to
-  // determine which attributes the input datasets share in common.
-  class vtkInternalComponentNames;
-  class VTKCOMMONDATAMODEL_EXPORT FieldList
-  {
-  public:
-    FieldList(int numInputs);
-    ~FieldList();
-    void PrintSelf(ostream &os, vtkIndent indent);
-
-    void InitializeFieldList(vtkDataSetAttributes* dsa);
-    void IntersectFieldList(vtkDataSetAttributes* dsa);
-
-    /**
-     * Similar to IntersectFieldList() except that it builds a union of the
-     * array list. To determine the active attributes, it still, however, takes
-     * an intersection.
-     * WARNING!!!-IntersectFieldList() and UnionFieldList() should not be
-     * intermixed.
-     */
-    void UnionFieldList(vtkDataSetAttributes* dsa);
-
-    //Determine whether data is available
-    int IsAttributePresent(int attrType); //true/false attributes specified
-
-    // Accessor methods.
-    int GetNumberOfFields() { return this->NumberOfFields; }
-    int GetFieldIndex(int i) { return this->FieldIndices[i]; }
-    const char* GetFieldName(int i) { return this->Fields[i]; }
-    int GetFieldComponents(int i) { return this->FieldComponents[i]; }
-    int GetDSAIndex(int index, int i) { return this->DSAIndices[index][i]; }
-
-    friend class vtkDataSetAttributes;
-
-  protected:
-    void SetFieldIndex(int i, int index)
-      { this->FieldIndices[i] = index; }
-  private:
-    FieldList(const FieldList&) VTK_DELETE_FUNCTION;
-    void operator=(const FieldList&) VTK_DELETE_FUNCTION;
-
-    void SetField(int index, vtkAbstractArray *da);
-    void RemoveField(const char *name);
-    void ClearFields();
-    void GrowBy(unsigned int delta);
-
-    int NumberOfFields; //the number of fields (including five named attributes)
-    // These keep track of what is common across datasets. The first
-    // six items are always named attributes.
-    char** Fields;                     // the names of the fields
-    int *FieldTypes;                   // the types of the fields
-    int *FieldComponents;              // the number of components in field
-    int *FieldIndices;                 // output data array index
-    vtkLookupTable **LUT;              // luts associated with each array
-    vtkInformation **FieldInformation; // Information map associated with each array
-
-    vtkInternalComponentNames **FieldComponentsNames;       // the name for each component in the field
-
-    vtkIdType NumberOfTuples; // a running total of values
-
-    //For every vtkDataSetAttributes that are processed, keep track of the
-    //indices into various things. The indices are organized so that the
-    //first NUM_ATTRIBUTES refer to attributes, the next refer to the
-    //non-attribute fields, for a total of NUM_ATTRIBUTES + NumberOfFields.
-    //CurrentInput is the current input being processed.
-    int **DSAIndices;
-    int NumberOfDSAIndices;
-    int CurrentInput;
-
-  };
-
+  friend class vtkDataSetAttributesFieldList;
 };
 
 #endif

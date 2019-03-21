@@ -114,7 +114,7 @@ struct Writer::InitContext
   }
 };
 
-// Dafault communicator is invalid
+// Default communicator is invalid
 MPI_Comm Writer::InitContext::GlobalComm = MPI_COMM_NULL;
 int Writer::InitContext::RefCount = 0;
 
@@ -156,7 +156,7 @@ struct Writer::WriterImpl
     { }
 
     virtual ~ScalarValueT() { }
-    virtual uint64_t GetInt() { return static_cast<uint64_t>(this->ValueT); }
+    uint64_t GetInt() override { return static_cast<uint64_t>(this->ValueT); }
 
     const T ValueT;
   };
@@ -368,7 +368,7 @@ void Writer::WriteScalar(const std::string& path, ADIOS_DATATYPES adiosType,
         *reinterpret_cast<const std::complex<double>*>(val));
       break;
     default:
-      v = NULL;
+      v = nullptr;
   }
 
   if(si->second->IsInt)

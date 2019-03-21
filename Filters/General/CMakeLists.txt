@@ -11,6 +11,7 @@ set(Module_SRCS
   vtkBrownianPoints.cxx
   vtkCellCenters.cxx
   vtkCellDerivatives.cxx
+  vtkCellValidator.cxx
   vtkClipClosedSurface.cxx
   vtkClipConvexPolyData.cxx
   vtkClipDataSet.cxx
@@ -28,6 +29,9 @@ set(Module_SRCS
   vtkDeformPointSet.cxx
   vtkDensifyPolyData.cxx
   vtkDicer.cxx
+  vtkDiscreteFlyingEdges2D.cxx
+  vtkDiscreteFlyingEdges3D.cxx
+  vtkDiscreteFlyingEdgesClipper2D.cxx
   vtkDiscreteMarchingCubes.cxx
   vtkEdgePoints.cxx
   vtkExtractSelectedFrustum.cxx
@@ -106,6 +110,7 @@ set(Module_SRCS
   vtkImageDataToPointSet.cxx
   vtkIntersectionPolyDataFilter.cxx
   vtkBooleanOperationPolyDataFilter.cxx
+  vtkLoopBooleanPolyDataFilter.cxx
   vtkDistancePolyDataFilter.cxx
 
   vtkOverlappingAMRLevelIdScalars.cxx
@@ -116,15 +121,6 @@ set(Module_SRCS
   vtkPassArrays.cxx
   vtkSplitColumnComponents.cxx
   vtkCellTreeLocator.cxx
-  )
-
-set_source_files_properties(
-  vtkApproximatingSubdivisionFilter
-  vtkDicer
-  vtkGraphWeightFilter
-  vtkInterpolatingSubdivisionFilter
-  vtkSubdivisionFilter
-  ABSTRACT
   )
 
 vtk_module_library(vtkFiltersGeneral ${Module_SRCS})

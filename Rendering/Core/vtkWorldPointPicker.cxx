@@ -21,9 +21,7 @@
 
 vtkStandardNewMacro(vtkWorldPointPicker);
 
-vtkWorldPointPicker::vtkWorldPointPicker()
-{
-}
+vtkWorldPointPicker::vtkWorldPointPicker() = default;
 
 // Perform pick operation with selection point provided. The z location
 // is recovered from the zBuffer. Always returns 0 since no actors are picked.
@@ -44,7 +42,7 @@ int vtkWorldPointPicker::Pick(double selectionX, double selectionY,
   this->SelectionPoint[2] = selectionZ;
 
   // Invoke start pick method if defined
-  this->InvokeEvent(vtkCommand::StartPickEvent,NULL);
+  this->InvokeEvent(vtkCommand::StartPickEvent,nullptr);
 
   z = renderer->GetZ (static_cast<int>(selectionX),
                       static_cast<int>(selectionY));
@@ -88,7 +86,7 @@ int vtkWorldPointPicker::Pick(double selectionX, double selectionY,
   }
 
   // Invoke end pick method if defined
-  this->InvokeEvent(vtkCommand::EndPickEvent,NULL);
+  this->InvokeEvent(vtkCommand::EndPickEvent,nullptr);
 
   return 0;
 }

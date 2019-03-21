@@ -17,7 +17,7 @@
  * @brief   edge preserving smoothing.
  *
  *
- * vtkImageAnisotropicDiffusion3D  diffuses an volume iteratively.
+ * vtkImageAnisotropicDiffusion3D diffuses an volume iteratively.
  * The neighborhood of the diffusion is determined by the instance
  * flags. if "Faces" is on, the 6 voxels adjoined by faces are included
  * in the neighborhood.  If "Edges" is on the 12 edge connected voxels
@@ -50,13 +50,13 @@ class VTKIMAGINGGENERAL_EXPORT vtkImageAnisotropicDiffusion3D : public vtkImageS
 public:
   static vtkImageAnisotropicDiffusion3D *New();
   vtkTypeMacro(vtkImageAnisotropicDiffusion3D,vtkImageSpatialAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
 
   /**
-   * This method sets the number of interations which also affects the
+   * This method sets the number of iterations which also affects the
    * input neighborhood needed to compute one output pixel.  Each iterations
-   * requires an extra pixel layer on the neighborhood.  This is only relavent
+   * requires an extra pixel layer on the neighborhood.  This is only relevant
    * when you are trying to stream or are requesting a sub extent of the "wholeExtent".
    */
   void SetNumberOfIterations(int num);
@@ -92,50 +92,50 @@ public:
   /**
    * Choose neighbors to diffuse (6 faces, 12 edges, 8 corners).
    */
-  vtkSetMacro(Faces,int);
-  vtkGetMacro(Faces,int);
-  vtkBooleanMacro(Faces,int);
-  vtkSetMacro(Edges,int);
-  vtkGetMacro(Edges,int);
-  vtkBooleanMacro(Edges,int);
-  vtkSetMacro(Corners,int);
-  vtkGetMacro(Corners,int);
-  vtkBooleanMacro(Corners,int);
+  vtkSetMacro(Faces,vtkTypeBool);
+  vtkGetMacro(Faces,vtkTypeBool);
+  vtkBooleanMacro(Faces,vtkTypeBool);
+  vtkSetMacro(Edges,vtkTypeBool);
+  vtkGetMacro(Edges,vtkTypeBool);
+  vtkBooleanMacro(Edges,vtkTypeBool);
+  vtkSetMacro(Corners,vtkTypeBool);
+  vtkGetMacro(Corners,vtkTypeBool);
+  vtkBooleanMacro(Corners,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Switch between gradient magnitude threshold and pixel gradient threshold.
    */
-  vtkSetMacro(GradientMagnitudeThreshold,int);
-  vtkGetMacro(GradientMagnitudeThreshold,int);
-  vtkBooleanMacro(GradientMagnitudeThreshold,int);
+  vtkSetMacro(GradientMagnitudeThreshold,vtkTypeBool);
+  vtkGetMacro(GradientMagnitudeThreshold,vtkTypeBool);
+  vtkBooleanMacro(GradientMagnitudeThreshold,vtkTypeBool);
   //@}
 
 protected:
   vtkImageAnisotropicDiffusion3D();
-  ~vtkImageAnisotropicDiffusion3D()VTK_OVERRIDE {}
+  ~vtkImageAnisotropicDiffusion3D() override {}
 
   int NumberOfIterations;
   double DiffusionThreshold;
   double DiffusionFactor;
   // to determine which neighbors to diffuse
-  int Faces;
-  int Edges;
-  int Corners;
+  vtkTypeBool Faces;
+  vtkTypeBool Edges;
+  vtkTypeBool Corners;
   // What threshold to use
-  int GradientMagnitudeThreshold;
+  vtkTypeBool GradientMagnitudeThreshold;
 
   void ThreadedRequestData(vtkInformation *request,
                            vtkInformationVector **inputVector,
                            vtkInformationVector *outputVector,
                            vtkImageData ***inData, vtkImageData **outData,
-                           int extent[6], int id) VTK_OVERRIDE;
+                           int extent[6], int id) override;
   void Iterate(vtkImageData *in, vtkImageData *out,
                double ar0, double ar1, double ar3, int *coreExtent, int count);
 private:
-  vtkImageAnisotropicDiffusion3D(const vtkImageAnisotropicDiffusion3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkImageAnisotropicDiffusion3D&) VTK_DELETE_FUNCTION;
+  vtkImageAnisotropicDiffusion3D(const vtkImageAnisotropicDiffusion3D&) = delete;
+  void operator=(const vtkImageAnisotropicDiffusion3D&) = delete;
 };
 
 #endif

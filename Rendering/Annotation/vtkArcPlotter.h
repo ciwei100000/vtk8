@@ -66,7 +66,7 @@ public:
   static vtkArcPlotter *New();
 
   vtkTypeMacro(vtkArcPlotter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -136,9 +136,9 @@ public:
    * By default, normals are automatically computed from the generating
    * polyline and camera.
    */
-  vtkSetMacro(UseDefaultNormal,int);
-  vtkGetMacro(UseDefaultNormal,int);
-  vtkBooleanMacro(UseDefaultNormal,int);
+  vtkSetMacro(UseDefaultNormal,vtkTypeBool);
+  vtkGetMacro(UseDefaultNormal,vtkTypeBool);
+  vtkBooleanMacro(UseDefaultNormal,vtkTypeBool);
   //@}
 
   //@{
@@ -162,16 +162,16 @@ public:
   /**
    * New GetMTime because of camera dependency.
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
 protected:
   vtkArcPlotter();
-  ~vtkArcPlotter() VTK_OVERRIDE;
+  ~vtkArcPlotter() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int  OffsetPoint(vtkIdType ptId, vtkPoints *inPts, double n[3],
-                   vtkPoints *newPts, double offset,
-                   double *range, double val);
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  vtkIdType OffsetPoint(vtkIdType ptId, vtkPoints *inPts, double n[3],
+                        vtkPoints *newPts, double offset,
+                        double *range, double val);
   int  ProcessComponents(vtkIdType numPts, vtkPointData *pd);
 
   vtkCamera *Camera;
@@ -181,7 +181,7 @@ protected:
   double     Height;
   double     Offset;
   float     DefaultNormal[3];
-  int       UseDefaultNormal;
+  vtkTypeBool       UseDefaultNormal;
   int       FieldDataArray;
 
 private:
@@ -194,8 +194,8 @@ private:
   int       EndComp;
 
 private:
-  vtkArcPlotter(const vtkArcPlotter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkArcPlotter&) VTK_DELETE_FUNCTION;
+  vtkArcPlotter(const vtkArcPlotter&) = delete;
+  void operator=(const vtkArcPlotter&) = delete;
 };
 
 #endif

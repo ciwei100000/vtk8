@@ -29,6 +29,7 @@
 
 #include "vtkRenderingOpenGL2Module.h" // For export macro
 #include "vtkObject.h"
+#include <string> // For string usage
 
 class vtkActor;
 class vtkImageData;
@@ -44,7 +45,7 @@ class VTKRENDERINGOPENGL2_EXPORT vtkOpenGLGL2PSHelper: public vtkObject
 public:
   static vtkOpenGLGL2PSHelper* New();
   vtkAbstractTypeMacro(vtkOpenGLGL2PSHelper, vtkObject)
-  void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
 
   //@{
   /**
@@ -111,7 +112,7 @@ public:
   /**
    * Parse the vertex information in tfc and inject primitives into GL2PS.
    * ren is used to obtain viewport information to complete the vertex
-   * tranformation into pixel coordinates, and act/col are used to color the
+   * transformation into pixel coordinates, and act/col are used to color the
    * vertices when tfc does not contain color information.
    */
   virtual void ProcessTransformFeedback(vtkTransformFeedback *tfc,
@@ -147,9 +148,9 @@ public:
    * path specification as a comment on supported backends.
    */
   virtual void DrawPath(vtkPath *path, double rasterPos[3], double windowPos[2],
-                        unsigned char rgba[4], double scale[2] = NULL,
+                        unsigned char rgba[4], double scale[2] = nullptr,
                         double rotateAngle = 0.0, float strokeWidth = -1,
-                        const char *label = NULL) = 0;
+                        const char *label = nullptr) = 0;
 
   /**
    * Transform the path using the actor's matrix and current GL state, then
@@ -158,7 +159,7 @@ public:
    */
   virtual void Draw3DPath(vtkPath *path, vtkMatrix4x4 *actorMatrix,
                           double rasterPos[3], unsigned char actorColor[4],
-                          vtkRenderer *ren, const char *label = NULL) = 0;
+                          vtkRenderer *ren, const char *label = nullptr) = 0;
 
   /**
    * Draw the image at pos.
@@ -170,7 +171,7 @@ protected:
   friend class vtkOpenGLGL2PSExporter;
 
   vtkOpenGLGL2PSHelper();
-  ~vtkOpenGLGL2PSHelper() VTK_OVERRIDE;
+  ~vtkOpenGLGL2PSHelper() override;
 
   vtkSetMacro(ActiveState, State)
   vtkSetMacro(TextAsPath, bool)
@@ -190,8 +191,8 @@ protected:
   unsigned short LineStipple;
 
 private:
-  vtkOpenGLGL2PSHelper(const vtkOpenGLGL2PSHelper &) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLGL2PSHelper &) VTK_DELETE_FUNCTION;
+  vtkOpenGLGL2PSHelper(const vtkOpenGLGL2PSHelper &) = delete;
+  void operator=(const vtkOpenGLGL2PSHelper &) = delete;
 };
 
 #endif // vtkOpenGLGL2PSHelper_h

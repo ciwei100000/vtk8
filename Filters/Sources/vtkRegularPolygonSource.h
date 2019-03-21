@@ -39,7 +39,7 @@ public:
    */
   static vtkRegularPolygonSource *New();
   vtkTypeMacro(vtkRegularPolygonSource,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
   //@}
 
   //@{
@@ -82,18 +82,18 @@ public:
   /**
    * Control whether a polygon is produced. By default, GeneratePolygon is enabled.
    */
-  vtkSetMacro(GeneratePolygon,int);
-  vtkGetMacro(GeneratePolygon,int);
-  vtkBooleanMacro(GeneratePolygon,int);
+  vtkSetMacro(GeneratePolygon,vtkTypeBool);
+  vtkGetMacro(GeneratePolygon,vtkTypeBool);
+  vtkBooleanMacro(GeneratePolygon,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Control whether a polyline is produced. By default, GeneratePolyline is enabled.
    */
-  vtkSetMacro(GeneratePolyline,int);
-  vtkGetMacro(GeneratePolyline,int);
-  vtkBooleanMacro(GeneratePolyline,int);
+  vtkSetMacro(GeneratePolyline,vtkTypeBool);
+  vtkGetMacro(GeneratePolyline,vtkTypeBool);
+  vtkBooleanMacro(GeneratePolyline,vtkTypeBool);
   //@}
 
   //@{
@@ -108,21 +108,21 @@ public:
 
 protected:
   vtkRegularPolygonSource();
-  ~vtkRegularPolygonSource() VTK_OVERRIDE {}
+  ~vtkRegularPolygonSource() override {}
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   int    NumberOfSides;
   double Center[3];
   double Normal[3];
   double Radius;
-  int    GeneratePolygon;
-  int    GeneratePolyline;
+  vtkTypeBool    GeneratePolygon;
+  vtkTypeBool    GeneratePolyline;
   int    OutputPointsPrecision;
 
 private:
-  vtkRegularPolygonSource(const vtkRegularPolygonSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRegularPolygonSource&) VTK_DELETE_FUNCTION;
+  vtkRegularPolygonSource(const vtkRegularPolygonSource&) = delete;
+  void operator=(const vtkRegularPolygonSource&) = delete;
 };
 
 #endif

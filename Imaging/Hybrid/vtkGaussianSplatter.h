@@ -88,7 +88,7 @@ class VTKIMAGINGHYBRID_EXPORT vtkGaussianSplatter : public vtkImageAlgorithm
 {
 public:
   vtkTypeMacro(vtkGaussianSplatter,vtkImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object with dimensions=(50,50,50); automatic computation of
@@ -154,9 +154,9 @@ public:
    * on, then the input normals affect the distribution of the splat. This
    * boolean is used in combination with the Eccentricity ivar.
    */
-  vtkSetMacro(NormalWarping,int);
-  vtkGetMacro(NormalWarping,int);
-  vtkBooleanMacro(NormalWarping,int);
+  vtkSetMacro(NormalWarping,vtkTypeBool);
+  vtkGetMacro(NormalWarping,vtkTypeBool);
+  vtkBooleanMacro(NormalWarping,vtkTypeBool);
   //@}
 
   //@{
@@ -175,9 +175,9 @@ public:
   /**
    * Turn on/off the scaling of splats by scalar value.
    */
-  vtkSetMacro(ScalarWarping,int);
-  vtkGetMacro(ScalarWarping,int);
-  vtkBooleanMacro(ScalarWarping,int);
+  vtkSetMacro(ScalarWarping,vtkTypeBool);
+  vtkGetMacro(ScalarWarping,vtkTypeBool);
+  vtkBooleanMacro(ScalarWarping,vtkTypeBool);
   //@}
 
   //@{
@@ -186,9 +186,9 @@ public:
    * to a specified cap value. This can be used to close surfaces
    * (after iso-surfacing) and create other effects.
    */
-  vtkSetMacro(Capping,int);
-  vtkGetMacro(Capping,int);
-  vtkBooleanMacro(Capping,int);
+  vtkSetMacro(Capping,vtkTypeBool);
+  vtkGetMacro(Capping,vtkTypeBool);
+  vtkBooleanMacro(Capping,vtkTypeBool);
   //@}
 
   //@{
@@ -284,26 +284,26 @@ public:
 
 protected:
   vtkGaussianSplatter();
-  ~vtkGaussianSplatter() VTK_OVERRIDE {}
+  ~vtkGaussianSplatter() override {}
 
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
   int RequestInformation (vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   int RequestData(vtkInformation *,
                           vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
+                          vtkInformationVector *) override;
   void Cap(vtkDoubleArray *s);
 
   int SampleDimensions[3]; // dimensions of volume to splat into
   double Radius; // maximum distance splat propagates (as fraction 0->1)
   double ExponentFactor; // scale exponent of gaussian function
   double ModelBounds[6]; // bounding box of splatting dimensions
-  int NormalWarping; // on/off warping of splat via normal
+  vtkTypeBool NormalWarping; // on/off warping of splat via normal
   double Eccentricity;// elliptic distortion due to normals
-  int ScalarWarping; // on/off warping of splat via scalar
+  vtkTypeBool ScalarWarping; // on/off warping of splat via scalar
   double ScaleFactor; // splat size influenced by scale factor
-  int Capping; // Cap side of volume to close surfaces
+  vtkTypeBool Capping; // Cap side of volume to close surfaces
   double CapValue; // value to use for capping
   int AccumulationMode; // how to combine scalar values
 
@@ -329,8 +329,8 @@ private:
   double NullValue;
 
 private:
-  vtkGaussianSplatter(const vtkGaussianSplatter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGaussianSplatter&) VTK_DELETE_FUNCTION;
+  vtkGaussianSplatter(const vtkGaussianSplatter&) = delete;
+  void operator=(const vtkGaussianSplatter&) = delete;
 };
 
 #endif

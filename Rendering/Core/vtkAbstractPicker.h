@@ -69,7 +69,7 @@ class VTKRENDERINGCORE_EXPORT vtkAbstractPicker : public vtkObject
 {
 public:
   vtkTypeMacro(vtkAbstractPicker,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -110,15 +110,31 @@ public:
   int Pick(double selectionPt[3], vtkRenderer *ren)
     {return this->Pick(selectionPt[0],selectionPt[1],selectionPt[2],ren);};
 
+  /**
+   * Perform pick operation with selection point provided. The
+   * selectionPt is in world coordinates.
+   * Return non-zero if something was successfully picked.
+   */
+  virtual int Pick3DPoint(double /* selectionPt */[3], vtkRenderer * /*ren*/)
+    { vtkErrorMacro("Pick3DPoint called without implementation"); return 0;};
+
+  /**
+   * Perform pick operation with selection point and orientation provided.
+   * The selectionPt is in world coordinates.
+   * Return non-zero if something was successfully picked.
+   */
+  virtual int Pick3DRay(double /* selectionPt */[3], double /* orient */ [4], vtkRenderer * /*ren*/)
+    { vtkErrorMacro("Pick3DRay called without implementation"); return 0;};
+
   //@{
   /**
    * Use these methods to control whether to limit the picking to this list
    * (rather than renderer's actors). Make sure that the pick list contains
    * actors that referred to by the picker's renderer.
    */
-  vtkSetMacro(PickFromList,int);
-  vtkGetMacro(PickFromList,int);
-  vtkBooleanMacro(PickFromList,int);
+  vtkSetMacro(PickFromList,vtkTypeBool);
+  vtkGetMacro(PickFromList,vtkTypeBool);
+  vtkBooleanMacro(PickFromList,vtkTypeBool);
   //@}
 
   /**
@@ -143,7 +159,7 @@ public:
 
 protected:
   vtkAbstractPicker();
-  ~vtkAbstractPicker() VTK_OVERRIDE;
+  ~vtkAbstractPicker() override;
 
   virtual void Initialize();
 
@@ -152,11 +168,11 @@ protected:
   double PickPosition[3]; //selection point in world coordinates
 
   // use the following to control picking from a list
-  int PickFromList;
+  vtkTypeBool PickFromList;
   vtkPropCollection *PickList;
 private:
-  vtkAbstractPicker(const vtkAbstractPicker&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAbstractPicker&) VTK_DELETE_FUNCTION;
+  vtkAbstractPicker(const vtkAbstractPicker&) = delete;
+  void operator=(const vtkAbstractPicker&) = delete;
 };
 
 #endif

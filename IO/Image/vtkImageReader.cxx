@@ -47,17 +47,17 @@ vtkImageReader::vtkImageReader()
   }
 
   this->DataMask = static_cast<vtkTypeUInt64>(~0UL);
-  this->Transform = NULL;
+  this->Transform = nullptr;
 
-  this->ScalarArrayName = NULL;
+  this->ScalarArrayName = nullptr;
   this->SetScalarArrayName("ImageFile");
 }
 
 //----------------------------------------------------------------------------
 vtkImageReader::~vtkImageReader()
 {
-  this->SetTransform(NULL);
-  this->SetScalarArrayName(NULL);
+  this->SetTransform(nullptr);
+  this->SetScalarArrayName(nullptr);
 }
 
 
@@ -392,7 +392,7 @@ void vtkImageReader::ExecuteDataWithInformation(vtkDataObject *output,
 {
   vtkImageData *data = this->AllocateOutputData(output, outInfo);
 
-  void *ptr = NULL;
+  void *ptr = nullptr;
 
   if (!this->FileName && !this->FilePattern)
   {
@@ -447,7 +447,7 @@ void vtkImageReader::ComputeTransformedSpacing (double Spacing[3])
   }
 }
 
-// if the spacing is negative we need to tranlate the origin
+// if the spacing is negative we need to translate the origin
 // basically O' = O + spacing*(dim-1) for any axis that would
 // have a negative spaing
 void vtkImageReader::ComputeTransformedOrigin (double origin[3])

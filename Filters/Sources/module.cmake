@@ -5,7 +5,9 @@ vtk_module(vtkFiltersSources
     vtkTestingCore
     vtkTestingRendering
     vtkInteractionStyle
-    vtkRendering${VTK_RENDERING_BACKEND}
+    vtkRenderingFreeType
+    vtkRenderingOpenGL2
+    vtkFiltersHyperTree
     vtkFiltersModeling
     vtkFiltersVerdict
     vtkIOXML

@@ -47,12 +47,12 @@ class VTKCOMMONCOMPUTATIONALGEOMETRY_EXPORT vtkParametricRandomHills :
 
   public:
     vtkTypeMacro(vtkParametricRandomHills, vtkParametricFunction);
-    void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+    void PrintSelf(ostream& os, vtkIndent indent) override;
 
     /**
      * Return the parametric dimension of the class.
      */
-    int GetDimension() VTK_OVERRIDE {return 2;}
+    int GetDimension() override {return 2;}
 
     /**
      * Construct a surface of random hills with the following parameters:
@@ -133,9 +133,9 @@ class VTKCOMMONCOMPUTATIONALGEOMETRY_EXPORT vtkParametricRandomHills :
      * surface.
      * Default is 1.
      */
-    vtkSetClampMacro(AllowRandomGeneration, int, 0, 1);
-    vtkGetMacro(AllowRandomGeneration, int);
-    vtkBooleanMacro(AllowRandomGeneration, int);
+    vtkSetClampMacro(AllowRandomGeneration, vtkTypeBool, 0, 1);
+    vtkGetMacro(AllowRandomGeneration, vtkTypeBool);
+    vtkBooleanMacro(AllowRandomGeneration, vtkTypeBool);
     //@}
 
     //@{
@@ -173,12 +173,12 @@ class VTKCOMMONCOMPUTATIONALGEOMETRY_EXPORT vtkParametricRandomHills :
      * \f$Pt = (x, y, z), Du = (dx/du, dy/du, dz/du), Dv = (dx/dv, dy/dv, dz/dv)\f$ .
      * Then the normal is \f$N = Du X Dv\f$ .
      */
-    void Evaluate(double uvw[3], double Pt[3], double Duvw[9]) VTK_OVERRIDE;
+    void Evaluate(double uvw[3], double Pt[3], double Duvw[9]) override;
 
     /**
      * Calculate a user defined scalar using one or all of uvw, Pt, Duvw.
 
-     * uvw are the parameters with Pt being the the Cartesian point,
+     * uvw are the parameters with Pt being the Cartesian point,
      * Duvw are the derivatives of this point with respect to u, v and w.
      * Pt, Duvw are obtained from Evaluate().
 
@@ -189,11 +189,11 @@ class VTKCOMMONCOMPUTATIONALGEOMETRY_EXPORT vtkParametricRandomHills :
      * instantiated function should return zero.
      */
     double EvaluateScalar(double uvw[3], double Pt[3],
-                          double Duvw[9]) VTK_OVERRIDE;
+                          double Duvw[9]) override;
 
   protected:
     vtkParametricRandomHills();
-    ~vtkParametricRandomHills() VTK_OVERRIDE;
+    ~vtkParametricRandomHills() override;
 
     // Variables
     int NumberOfHills;
@@ -204,7 +204,7 @@ class VTKCOMMONCOMPUTATIONALGEOMETRY_EXPORT vtkParametricRandomHills :
     double XVarianceScaleFactor;
     double YVarianceScaleFactor;
     double AmplitudeScaleFactor;
-    int AllowRandomGeneration;
+    vtkTypeBool AllowRandomGeneration;
 
     // These variables store the previous values of the above ones.
     int previousNumberOfHills;
@@ -218,8 +218,8 @@ class VTKCOMMONCOMPUTATIONALGEOMETRY_EXPORT vtkParametricRandomHills :
     int previousAllowRandomGeneration;
 
   private:
-    vtkParametricRandomHills(const vtkParametricRandomHills&) VTK_DELETE_FUNCTION;
-    void operator=(const vtkParametricRandomHills&) VTK_DELETE_FUNCTION;
+    vtkParametricRandomHills(const vtkParametricRandomHills&) = delete;
+    void operator=(const vtkParametricRandomHills&) = delete;
 
     /**
      * Initialise the random number generator.

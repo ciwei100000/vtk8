@@ -23,6 +23,7 @@
 #include "vtkNew.h"
 #include "vtkPointData.h"
 #include "vtkPolyDataMapper.h"
+#include "vtkProperty.h"
 #include "vtkRegressionTestImage.h"
 #include "vtkRenderer.h"
 #include "vtkRenderWindow.h"
@@ -51,13 +52,13 @@ namespace
     vtkNew<vtkRenderWindow> renWin;
     vtkNew<vtkRenderWindowInteractor> iren;
 
-    renWin->AddRenderer(ren.GetPointer());
-    iren->SetRenderWindow(renWin.GetPointer());
+    renWin->AddRenderer(ren);
+    iren->SetRenderWindow(renWin);
 
     //compute an elevation array
     vtkNew<vtkFloatArray> elevationPoints;
-    fillElevationArray(elevationPoints.GetPointer(), grid);
-    grid->GetPointData()->AddArray(elevationPoints.GetPointer());
+    fillElevationArray(elevationPoints, grid);
+    grid->GetPointData()->AddArray(elevationPoints);
 
     vtkNew<vtkTrivialProducer> producer;
     producer->SetOutput(grid);
@@ -80,13 +81,15 @@ namespace
     mapper->SetScalarRange(0.0, 100.0);
 
     vtkNew<vtkActor> actor;
-    actor->SetMapper(mapper.GetPointer());
+    actor->SetMapper(mapper);
+    actor->GetProperty()->SetAmbient(1.0);
+    actor->GetProperty()->SetDiffuse(0.0);
 
-    ren->AddActor(actor.GetPointer());
+    ren->AddActor(actor);
     ren->ResetCamera();
     renWin->Render();
 
-    int retVal = vtkRegressionTestImage(renWin.GetPointer());
+    int retVal = vtkRegressionTestImage(renWin);
     if(retVal == vtkRegressionTester::DO_INTERACTOR)
       {
       iren->Start();
@@ -107,5 +110,5 @@ int TestVTKMThreshold(int argc, char* argv[])
   grid->SetExtent(0, dim-1,0, dim-1,0, dim-1);
 
   //run the pipeline
-  return RunVTKPipeline(grid.GetPointer(), argc, argv);
+  return RunVTKPipeline(grid, argc, argv);
 }

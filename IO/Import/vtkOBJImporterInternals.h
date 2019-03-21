@@ -12,6 +12,7 @@
 
 #ifndef vtkOBJImporterInternals_h
 #define vtkOBJImporterInternals_h
+#ifndef __VTK_WRAP__
 
 #include <string>
 #include "vtkOBJImporter.h"
@@ -21,34 +22,22 @@
 #include <map>
 #include "vtkActor.h"
 
-const int OBJ_FILENAME_LENGTH = 8192;
-const int MATERIAL_NAME_SIZE  = 8192;
-
 struct vtkOBJImportedMaterial
 {
-  char name[MATERIAL_NAME_SIZE]; // use std::array<char,N> when got {gcc4.7+,vs2012+}
-  char texture_filename[OBJ_FILENAME_LENGTH];
+  std::string name;
+  std::string texture_filename;
   double amb[3];
   double diff[3];
   double spec[3];
+  double map_Kd_scale[3];
+  double map_Kd_offset[3];
+  int illum;
   double reflect;
   double refract;
   double trans;
-  double shiny;
+  double specularPower;
   double glossy;
   double refract_index;
-  double get_amb_coeff()
-  {
-    return sqrt( amb[0]*amb[0]+amb[1]*amb[1]+amb[2]*amb[2] );
-  }
-  double get_diff_coeff()
-  {
-    return sqrt( diff[0]*diff[0]+diff[1]*diff[1]+diff[2]*diff[2] );
-  }
-  double get_spec_coeff()
-  {
-    return sqrt( spec[0]*spec[0]+spec[1]*spec[1]+spec[2]*spec[2] );
-  }
   const char *GetClassName() {return "vtkOBJImportedMaterial";}
   vtkOBJImportedMaterial();
 };
@@ -63,13 +52,13 @@ class vtkOBJPolyDataProcessor : public vtkPolyDataAlgorithm
 public:
   static vtkOBJPolyDataProcessor *New();
   vtkTypeMacro(vtkOBJPolyDataProcessor,vtkPolyDataAlgorithm)
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   // Description:
   // Specify file name of Wavefront .obj file.
   void SetFileName(const char* arg)
   {
-    if (arg == NULL)
+    if (arg == nullptr)
     {
       return;
     }
@@ -81,7 +70,7 @@ public:
   }
   void SetMTLfileName( const char* arg )
   {
-    if (arg == NULL)
+    if (arg == nullptr)
     {
       return;
     }
@@ -149,9 +138,9 @@ public:
   void ReadVertices(bool gotFirstUseMaterialTag, char *pLine, float xyz, int lineNr, const double v_scale, bool everything_ok, vtkPoints* points, const bool use_scale);
 protected:
   vtkOBJPolyDataProcessor();
-  ~vtkOBJPolyDataProcessor() VTK_OVERRIDE;
+  ~vtkOBJPolyDataProcessor() override;
   int RequestData(vtkInformation *,
-                  vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE /*override*/;
+                  vtkInformationVector **, vtkInformationVector *) override /*override*/;
 
   vtkSetMacro(SuccessParsingFiles,int)
 
@@ -162,8 +151,8 @@ protected:
   int         SuccessParsingFiles;
 
 private:
-  vtkOBJPolyDataProcessor(const vtkOBJPolyDataProcessor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOBJPolyDataProcessor&) VTK_DELETE_FUNCTION;
+  vtkOBJPolyDataProcessor(const vtkOBJPolyDataProcessor&) = delete;
+  void operator=(const vtkOBJPolyDataProcessor&) = delete;
 };
 
 class vtkRenderWindow;
@@ -172,5 +161,6 @@ void  bindTexturedPolydataToRenderWindow( vtkRenderWindow* renderWindow,
                                           vtkRenderer* renderer,
                                           vtkOBJPolyDataProcessor* reader );
 
+#endif
 #endif
 // VTK-HeaderTest-Exclude: vtkOBJImporterInternals.h

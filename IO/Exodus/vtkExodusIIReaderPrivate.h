@@ -15,6 +15,7 @@
 #include "vtkIOExodusModule.h" // For export macro
 class vtkExodusIIReaderParser;
 class vtkMutableDirectedGraph;
+class vtkTypeInt64Array;
 
 /** This class holds metadata for an Exodus file.
   *
@@ -208,31 +209,31 @@ public:
                                  int attribIndex, int status );
 
   /// Generate an array containing the block or set ID associated with each cell.
-  vtkGetMacro(GenerateObjectIdArray,int);
-  vtkSetMacro(GenerateObjectIdArray,int);
+  vtkGetMacro(GenerateObjectIdArray,vtkTypeBool);
+  vtkSetMacro(GenerateObjectIdArray,vtkTypeBool);
   static const char* GetObjectIdArrayName() { return "ObjectId"; }
 
-  vtkSetMacro(GenerateGlobalElementIdArray,int);
-  vtkGetMacro(GenerateGlobalElementIdArray,int);
+  vtkSetMacro(GenerateGlobalElementIdArray,vtkTypeBool);
+  vtkGetMacro(GenerateGlobalElementIdArray,vtkTypeBool);
   static const char* GetGlobalElementIdArrayName() { return "GlobalElementId"; }
 
-  vtkSetMacro(GenerateGlobalNodeIdArray,int);
-  vtkGetMacro(GenerateGlobalNodeIdArray,int);
+  vtkSetMacro(GenerateGlobalNodeIdArray,vtkTypeBool);
+  vtkGetMacro(GenerateGlobalNodeIdArray,vtkTypeBool);
   static const char* GetGlobalNodeIdArrayName() { return "GlobalNodeId"; }
 
-  vtkSetMacro(GenerateImplicitElementIdArray,int);
-  vtkGetMacro(GenerateImplicitElementIdArray,int);
+  vtkSetMacro(GenerateImplicitElementIdArray,vtkTypeBool);
+  vtkGetMacro(GenerateImplicitElementIdArray,vtkTypeBool);
   static const char* GetImplicitElementIdArrayName() { return "ImplicitElementId"; }
 
-  vtkSetMacro(GenerateImplicitNodeIdArray,int);
-  vtkGetMacro(GenerateImplicitNodeIdArray,int);
+  vtkSetMacro(GenerateImplicitNodeIdArray,vtkTypeBool);
+  vtkGetMacro(GenerateImplicitNodeIdArray,vtkTypeBool);
   static const char* GetImplicitNodeIdArrayName() { return "ImplicitNodeId"; }
 
   /** Should we generate an array defined over all cells
     * (whether they are members of blocks or sets) indicating the source file?
     */
-  vtkSetMacro(GenerateFileIdArray,int);
-  vtkGetMacro(GenerateFileIdArray,int);
+  vtkSetMacro(GenerateFileIdArray,vtkTypeBool);
+  vtkGetMacro(GenerateFileIdArray,vtkTypeBool);
   static const char* GetFileIdArrayName() { return "FileId"; }
 
   /// Set/get the number that identifies this file in a series of files (defaults to 0).
@@ -244,8 +245,8 @@ public:
   static const char *GetGlobalVariableNamesArrayName()
     { return "GlobalVariableNames"; }
 
-  virtual void SetApplyDisplacements( int d );
-  vtkGetMacro(ApplyDisplacements,int);
+  virtual void SetApplyDisplacements( vtkTypeBool d );
+  vtkGetMacro(ApplyDisplacements,vtkTypeBool);
 
   virtual void SetDisplacementMagnitude( double s );
   vtkGetMacro(DisplacementMagnitude,double);
@@ -258,6 +259,9 @@ public:
 
   vtkSetMacro(AnimateModeShapes, int);
   vtkGetMacro(AnimateModeShapes, int);
+
+  vtkSetMacro(IgnoreFileTime, bool);
+  vtkGetMacro(IgnoreFileTime, bool);
 
   vtkDataArray* FindDisplacementVectors( int timeStep );
 
@@ -341,7 +345,7 @@ public:
     /// Cached cell connectivity arrays for mesh
     vtkUnstructuredGrid* CachedConnectivity;
 
-    BlockSetInfoType(){this->CachedConnectivity=0;}
+    BlockSetInfoType(){this->CachedConnectivity=nullptr;}
     BlockSetInfoType(const BlockSetInfoType& block);
     ~BlockSetInfoType();
     BlockSetInfoType& operator=(const BlockSetInfoType& block);
@@ -354,7 +358,7 @@ public:
     // number of boundaries per entry
     // The index is the dimensionality of the entry. 0=node, 1=edge, 2=face
     int BdsPerEntry[3];
-    int AttributesPerEntry;
+    vtkIdType AttributesPerEntry;
     std::vector<vtkStdString> AttributeNames;
     std::vector<int> AttributeStatus;
     // VTK cell type (a function of TypeName and BdsPerEntry...)
@@ -428,23 +432,23 @@ public:
   const char* GetPartName(int idx);
   const char* GetPartBlockInfo(int idx);
   int GetPartStatus(int idx);
-  int GetPartStatus(vtkStdString name);
+  int GetPartStatus(const vtkStdString& name);
   void SetPartStatus(int idx, int on);
-  void SetPartStatus(vtkStdString name, int flag);
+  void SetPartStatus(const vtkStdString& name, int flag);
 
   int GetNumberOfMaterials();
   const char* GetMaterialName(int idx);
   int GetMaterialStatus(int idx);
-  int GetMaterialStatus(vtkStdString name);
+  int GetMaterialStatus(const vtkStdString& name);
   void SetMaterialStatus(int idx, int on);
-  void SetMaterialStatus(vtkStdString name, int flag);
+  void SetMaterialStatus(const vtkStdString& name, int flag);
 
   int GetNumberOfAssemblies();
   const char* GetAssemblyName(int idx);
   int GetAssemblyStatus(int idx);
-  int GetAssemblyStatus(vtkStdString name);
+  int GetAssemblyStatus(const vtkStdString& name);
   void SetAssemblyStatus(int idx, int on);
-  void SetAssemblyStatus(vtkStdString name, int flag);
+  void SetAssemblyStatus(const vtkStdString& name, int flag);
 
   void SetFastPathObjectType(vtkExodusIIReader::ObjectType type)
     {this->FastPathObjectType = type;};
@@ -492,7 +496,7 @@ public:
 
 protected:
   vtkExodusIIReaderPrivate();
-  ~vtkExodusIIReaderPrivate() VTK_OVERRIDE;
+  ~vtkExodusIIReaderPrivate() override;
 
   /// Build SIL. This must be called only after RequestInformation().
   void BuildSIL();
@@ -601,7 +605,7 @@ protected:
   void InsertBlockPolyhedra(
     BlockInfoType* binfo,
     vtkIntArray* facesPerCell,
-    vtkIntArray* exoCellConn);
+    vtkIdTypeArray* exoCellConn);
 
   /// Insert cells from a specified block into a mesh
   void InsertBlockCells(
@@ -617,15 +621,15 @@ protected:
 
   /// Insert cells referenced by a node set.
   void InsertSetNodeCopies(
-    vtkIntArray* refs, int otyp, int obj, SetInfoType* sinfo );
+    vtkIdTypeArray* refs, int otyp, int obj, SetInfoType* sinfo );
 
   /// Insert cells referenced by an edge, face, or element set.
   void InsertSetCellCopies(
-    vtkIntArray* refs, int otyp, int obj, SetInfoType* sinfo );
+    vtkIdTypeArray* refs, int otyp, int obj, SetInfoType* sinfo );
 
   /// Insert cells referenced by a side set.
   void InsertSetSides(
-    vtkIntArray* refs, int otyp, int obj, SetInfoType* sinfo );
+    vtkIdTypeArray* refs, int otyp, int obj, SetInfoType* sinfo );
 
   /** Return an array for the specified cache key. If the array was not cached,
     * read it from the file.
@@ -732,7 +736,7 @@ protected:
    * "DISPX ", "DISPY ", "DISPZ " (note trailing spaces),
    * which prevented glomming and use of the vector field for displacements.
    */
-  void RemoveBeginningAndTrailingSpaces( int len, char **names );
+  void RemoveBeginningAndTrailingSpaces( int len, char **names, int maxNameLength );
 
   /// Delete any cached connectivity information (for all blocks and sets)
   void ClearConnectivityCaches();
@@ -801,13 +805,13 @@ protected:
     */
   double ModeShapeTime;
 
-  int GenerateObjectIdArray;
-  int GenerateGlobalIdArray;
-  int GenerateFileIdArray;
-  int GenerateGlobalElementIdArray;
-  int GenerateGlobalNodeIdArray;
-  int GenerateImplicitElementIdArray;
-  int GenerateImplicitNodeIdArray;
+  vtkTypeBool GenerateObjectIdArray;
+  vtkTypeBool GenerateGlobalIdArray;
+  vtkTypeBool GenerateFileIdArray;
+  vtkTypeBool GenerateGlobalElementIdArray;
+  vtkTypeBool GenerateGlobalNodeIdArray;
+  vtkTypeBool GenerateImplicitElementIdArray;
+  vtkTypeBool GenerateImplicitNodeIdArray;
 
   /** Defaults to 0. Set by vtkPExodusIIReader on each entry of ReaderList.
     * Used to generate the file ID array over all output cells.
@@ -820,10 +824,12 @@ protected:
   /// The size of the cache in MiB.
   double CacheSize;
 
-  int ApplyDisplacements;
+  vtkTypeBool ApplyDisplacements;
   float DisplacementMagnitude;
-  int HasModeShapes;
-  int AnimateModeShapes;
+  vtkTypeBool HasModeShapes;
+  vtkTypeBool AnimateModeShapes;
+
+  bool IgnoreFileTime;
 
   /** Should the reader output only points used by elements in the output mesh,
     * or all the points. Outputting all the points is much faster since the
@@ -861,8 +867,8 @@ protected:
 
   vtkMutableDirectedGraph* SIL;
 private:
-  vtkExodusIIReaderPrivate( const vtkExodusIIReaderPrivate& ) VTK_DELETE_FUNCTION;
-  void operator = ( const vtkExodusIIReaderPrivate& ) VTK_DELETE_FUNCTION;
+  vtkExodusIIReaderPrivate( const vtkExodusIIReaderPrivate& ) = delete;
+  void operator = ( const vtkExodusIIReaderPrivate& ) = delete;
 };
 
 #endif // vtkExodusIIReaderPrivate_h

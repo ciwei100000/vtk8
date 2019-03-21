@@ -1,7 +1,4 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
-if(POLICY CMP0020)
-  cmake_policy(SET CMP0020 NEW)
-endif()
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
 
 project(Infovis)
 
@@ -16,6 +13,7 @@ set(VTK_Modules
   vtkInfovisLayout
   vtkInteractionStyle
   vtkRenderingLabel
+  vtkRendering${VTK_RENDERING_BACKEND}
   vtkViewsInfovis
 )
 if(TARGET vtkGUISupportQt AND
@@ -54,14 +52,5 @@ if(vtkGUISupportQt_LOADED AND vtkViewsQt_LOADED)
   add_subdirectory(CustomLinkView)
   if(vtkIOSQL_LOADED)
     add_subdirectory(StatsView)
-  endif()
-endif()
-
-if(vtkInfovisParallel_LOADED)
-  add_executable(ParallelBFS ParallelBFS.cxx)
-  find_package(MPI REQUIRED)
-  target_link_libraries(ParallelBFS vtkParallel ${VTK_LIBRARIES} ${MPI_C_LIBRARIES})
-  if (MPI_CXX_LIBRARIES)
-    target_link_libraries(ParallelBFS ${MPI_CXX_LIBRARIES})
   endif()
 endif()

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
 
 
 PROJECT (AMR)
@@ -16,7 +16,7 @@ find_package(VTK COMPONENTS
   vtkIOLegacy
   vtkIOXML
   vtkInteractionStyle
-  vtkRendering${VTK_RENDERING_BACKEND}
+  vtkRenderingOpenGL2
   vtkTestingCore
 )
 include(${VTK_USE_FILE})

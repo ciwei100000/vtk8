@@ -28,17 +28,16 @@ vtkStandardNewMacro(vtkGeoGlobeSource);
 //----------------------------------------------------------------------------
 vtkGeoGlobeSource::vtkGeoGlobeSource()
 {
+  VTK_LEGACY_BODY(vtkGeoGlobeSource::vtkGeoGlobeSource, "VTK 8.2");
 }
 
 //----------------------------------------------------------------------------
-vtkGeoGlobeSource::~vtkGeoGlobeSource()
-{
-}
+vtkGeoGlobeSource::~vtkGeoGlobeSource() = default;
 
 //----------------------------------------------------------------------------
 bool vtkGeoGlobeSource::FetchRoot(vtkGeoTreeNode* r)
 {
-  vtkGeoTerrainNode* root = 0;
+  vtkGeoTerrainNode* root = nullptr;
   if (!(root = vtkGeoTerrainNode::SafeDownCast(r)))
   {
     vtkErrorMacro(<< "Can only fetch surface nodes from this source.");
@@ -69,12 +68,12 @@ bool vtkGeoGlobeSource::FetchRoot(vtkGeoTreeNode* r)
 //----------------------------------------------------------------------------
 bool vtkGeoGlobeSource::FetchChild(vtkGeoTreeNode* p, int index, vtkGeoTreeNode* c)
 {
-  vtkGeoTerrainNode* parent = 0;
+  vtkGeoTerrainNode* parent = nullptr;
   if (!(parent = vtkGeoTerrainNode::SafeDownCast(p)))
   {
     vtkErrorMacro(<< "Can only fetch surface nodes from this source.");
   }
-  vtkGeoTerrainNode* child = 0;
+  vtkGeoTerrainNode* child = nullptr;
   if (!(child = vtkGeoTerrainNode::SafeDownCast(c)))
   {
     vtkErrorMacro(<< "Can only fetch surface nodes from this source.");

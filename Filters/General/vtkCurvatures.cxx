@@ -234,7 +234,7 @@ void vtkCurvatures::GetGaussCurvature(vtkPolyData *output)
 
     double A, alpha0, alpha1, alpha2;
 
-    vtkIdType f, *vert=0;
+    vtkIdType f, *vert=nullptr;
     facets->InitTraversal();
     while (facets->GetNextCell(f,vert))
     {
@@ -416,7 +416,7 @@ int vtkCurvatures::RequestData(
   output->GetFieldData()->PassData(input->GetFieldData());
 
   //-------------------------------------------------------//
-  //    Set Curvatures as PointData  Scalars               //
+  //    Set Curvatures as PointData Scalars                //
   //-------------------------------------------------------//
 
   if ( this->CurvatureType == VTK_CURVATURE_GAUSS )

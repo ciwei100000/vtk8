@@ -43,11 +43,12 @@
 
 #include "vtkRenderingCoreModule.h" // For export macro
 #include "vtkWindow.h"
+#include "vtkNew.h" // For vtkNew
 
 class vtkFloatArray;
-class vtkPainterDeviceAdapter;
 class vtkProp;
 class vtkCollection;
+class vtkRenderTimerLog;
 class vtkRenderWindowInteractor;
 class vtkRenderer;
 class vtkRendererCollection;
@@ -81,7 +82,7 @@ class VTKRENDERINGCORE_EXPORT vtkRenderWindow : public vtkWindow
 {
 public:
   vtkTypeMacro(vtkRenderWindow,vtkWindow);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct an instance of  vtkRenderWindow with its screen size
@@ -116,6 +117,11 @@ public:
   virtual const char *GetRenderingBackend();
 
   /**
+   * Get the render timer log for this window.
+   */
+  vtkGetNewMacro(RenderTimer, vtkRenderTimerLog)
+
+  /**
    * Return the collection of renderers in the render window.
    */
   vtkRendererCollection *GetRenderers() {return this->Renderers;};
@@ -140,7 +146,7 @@ public:
    * Ask each renderer owned by this RenderWindow to render its image and
    * synchronize this process.
    */
-  void Render() VTK_OVERRIDE;
+  void Render() override;
 
   /**
    * Initialize the rendering process.
@@ -201,9 +207,9 @@ public:
   /**
    * Turn on/off rendering full screen window size.
    */
-  virtual void SetFullScreen(int) = 0;
-  vtkGetMacro(FullScreen,int);
-  vtkBooleanMacro(FullScreen,int);
+  virtual void SetFullScreen(vtkTypeBool) = 0;
+  vtkGetMacro(FullScreen,vtkTypeBool);
+  vtkBooleanMacro(FullScreen,vtkTypeBool);
   //@}
 
   //@{
@@ -212,9 +218,9 @@ public:
    * borders off, because that bypasses the window manager and can cause
    * undesirable behavior.
    */
-  vtkSetMacro(Borders,int);
-  vtkGetMacro(Borders,int);
-  vtkBooleanMacro(Borders,int);
+  vtkSetMacro(Borders,vtkTypeBool);
+  vtkGetMacro(Borders,vtkTypeBool);
+  vtkBooleanMacro(Borders,vtkTypeBool);
   //@}
 
   //@{
@@ -222,27 +228,27 @@ public:
    * Prescribe that the window be created in a stereo-capable mode. This
    * method must be called before the window is realized. Default is off.
    */
-  vtkGetMacro(StereoCapableWindow,int);
-  vtkBooleanMacro(StereoCapableWindow,int);
-  virtual void SetStereoCapableWindow(int capable);
+  vtkGetMacro(StereoCapableWindow,vtkTypeBool);
+  vtkBooleanMacro(StereoCapableWindow,vtkTypeBool);
+  virtual void SetStereoCapableWindow(vtkTypeBool capable);
   //@}
 
   //@{
   /**
    * Turn on/off stereo rendering.
    */
-  vtkGetMacro(StereoRender,int);
-  void SetStereoRender(int stereo);
-  vtkBooleanMacro(StereoRender,int);
+  vtkGetMacro(StereoRender,vtkTypeBool);
+  void SetStereoRender(vtkTypeBool stereo);
+  vtkBooleanMacro(StereoRender,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off the use of alpha bitplanes.
    */
-  vtkSetMacro(AlphaBitPlanes, int);
-  vtkGetMacro(AlphaBitPlanes, int);
-  vtkBooleanMacro(AlphaBitPlanes, int);
+  vtkSetMacro(AlphaBitPlanes, vtkTypeBool);
+  vtkGetMacro(AlphaBitPlanes, vtkTypeBool);
+  vtkBooleanMacro(AlphaBitPlanes, vtkTypeBool);
   //@}
 
   //@{
@@ -250,9 +256,9 @@ public:
    * Turn on/off point smoothing. Default is off.
    * This must be applied before the first Render.
    */
-  vtkSetMacro(PointSmoothing,int);
-  vtkGetMacro(PointSmoothing,int);
-  vtkBooleanMacro(PointSmoothing,int);
+  vtkSetMacro(PointSmoothing,vtkTypeBool);
+  vtkGetMacro(PointSmoothing,vtkTypeBool);
+  vtkBooleanMacro(PointSmoothing,vtkTypeBool);
   //@}
 
   //@{
@@ -260,9 +266,9 @@ public:
    * Turn on/off line smoothing. Default is off.
    * This must be applied before the first Render.
    */
-  vtkSetMacro(LineSmoothing,int);
-  vtkGetMacro(LineSmoothing,int);
-  vtkBooleanMacro(LineSmoothing,int);
+  vtkSetMacro(LineSmoothing,vtkTypeBool);
+  vtkGetMacro(LineSmoothing,vtkTypeBool);
+  vtkBooleanMacro(LineSmoothing,vtkTypeBool);
   //@}
 
   //@{
@@ -270,9 +276,9 @@ public:
    * Turn on/off polygon smoothing. Default is off.
    * This must be applied before the first Render.
    */
-  vtkSetMacro(PolygonSmoothing,int);
-  vtkGetMacro(PolygonSmoothing,int);
-  vtkBooleanMacro(PolygonSmoothing,int);
+  vtkSetMacro(PolygonSmoothing,vtkTypeBool);
+  vtkGetMacro(PolygonSmoothing,vtkTypeBool);
+  vtkBooleanMacro(PolygonSmoothing,vtkTypeBool);
   //@}
 
   //@{
@@ -295,7 +301,7 @@ public:
    * actually rendering in stereo mode.
    */
   vtkGetMacro(StereoType,int);
-  vtkSetMacro(StereoType,int);
+  void SetStereoType(int);
   void SetStereoTypeToCrystalEyes()
     {this->SetStereoType(VTK_STEREO_CRYSTAL_EYES);}
   void SetStereoTypeToRedBlue()
@@ -380,9 +386,9 @@ public:
   /**
    * Turn on/off buffer swapping between images.
    */
-  vtkSetMacro(SwapBuffers,int);
-  vtkGetMacro(SwapBuffers,int);
-  vtkBooleanMacro(SwapBuffers,int);
+  vtkSetMacro(SwapBuffers,vtkTypeBool);
+  vtkGetMacro(SwapBuffers,vtkTypeBool);
+  vtkBooleanMacro(SwapBuffers,vtkTypeBool);
   //@}
 
   //@{
@@ -399,9 +405,9 @@ public:
    * the diagonal.
    */
   virtual int SetPixelData(int x, int y, int x2, int y2, unsigned char *data,
-                           int front) = 0;
+                           int front, int right=0) = 0;
   virtual int SetPixelData(int x, int y, int x2, int y2,
-                           vtkUnsignedCharArray *data, int front) = 0;
+                           vtkUnsignedCharArray *data, int front, int right=0) = 0;
   //@}
 
   //@{
@@ -412,24 +418,24 @@ public:
    * method blends the data with the previous contents of the frame buffer
    * or completely replaces the frame buffer data.
    */
-  virtual float *GetRGBAPixelData(int x, int y, int x2, int y2, int front) = 0;
+  virtual float *GetRGBAPixelData(int x, int y, int x2, int y2, int front, int right=0) = 0;
   virtual int GetRGBAPixelData(int x, int y, int x2, int y2, int front,
-                               vtkFloatArray *data) = 0;
+                               vtkFloatArray *data, int right=0) = 0;
   virtual int SetRGBAPixelData(int x, int y, int x2, int y2, float *,
-                               int front, int blend=0) = 0;
+                               int front, int blend=0, int right=0) = 0;
   virtual int SetRGBAPixelData(int, int, int, int, vtkFloatArray*,
-                               int, int blend=0) = 0;
-  virtual void ReleaseRGBAPixelData(float *data)=0;
+                               int, int blend=0, int right=0) = 0;
+  virtual void ReleaseRGBAPixelData(float *data) = 0;
   virtual unsigned char *GetRGBACharPixelData(int x, int y, int x2, int y2,
-                                              int front) = 0;
+                                              int front, int right=0) = 0;
   virtual int GetRGBACharPixelData(int x, int y, int x2, int y2, int front,
-                                   vtkUnsignedCharArray *data) = 0;
+                                   vtkUnsignedCharArray *data, int right=0) = 0;
   virtual int SetRGBACharPixelData(int x,int y, int x2, int y2,
                                    unsigned char *data, int front,
-                                   int blend=0) = 0;
+                                   int blend=0, int right=0) = 0;
   virtual int SetRGBACharPixelData(int x, int y, int x2, int y2,
                                    vtkUnsignedCharArray *data, int front,
-                                   int blend=0) = 0;
+                                   int blend=0, int right=0) = 0;
   //@}
 
   //@{
@@ -455,53 +461,6 @@ public:
 
   //@{
   /**
-   * Set the number of frames for doing antialiasing. The default is
-   * zero. Typically five or six will yield reasonable results without
-   * taking too long.
-   */
-  vtkGetMacro(AAFrames,int);
-  vtkSetMacro(AAFrames,int);
-  //@}
-
-  //@{
-  /**
-   * Set the number of frames for doing focal depth. The default is zero.
-   * Depending on how your scene is organized you can get away with as
-   * few as four frames for focal depth or you might need thirty.
-   * One thing to note is that if you are using focal depth frames,
-   * then you will not need many (if any) frames for antialiasing.
-   */
-  vtkGetMacro(FDFrames,int);
-  virtual void SetFDFrames (int fdFrames);
-  //@}
-
-  //@{
-  /**
-   * Turn on/off using constant offsets for focal depth rendering.
-   * The default is off. When constants offsets are used, re-rendering
-   * the same scene using the same camera yields the same image; otherwise
-   * offsets are random numbers at each rendering that yields
-   * slightly different images.
-   */
-  vtkGetMacro(UseConstantFDOffsets,int);
-  vtkSetMacro(UseConstantFDOffsets,int);
-  //@}
-
-  //@{
-  /**
-   * Set the number of sub frames for doing motion blur. The default is zero.
-   * Once this is set greater than one, you will no longer see a new frame
-   * for every Render().  If you set this to five, you will need to do
-   * five Render() invocations before seeing the result. This isn't
-   * very impressive unless something is changing between the Renders.
-   * Changing this value may reset the current subframe count.
-   */
-  vtkGetMacro(SubFrames,int);
-  virtual void SetSubFrames(int subFrames);
-  //@}
-
-  //@{
-  /**
    * This flag is set if the window hasn't rendered since it was created
    */
   vtkGetMacro(NeverRendered,int);
@@ -519,9 +478,9 @@ public:
   virtual int CheckAbortStatus();
   //@}
 
-  vtkGetMacro(IsPicking,int);
-  vtkSetMacro(IsPicking,int);
-  vtkBooleanMacro(IsPicking,int);
+  vtkGetMacro(IsPicking,vtkTypeBool);
+  vtkSetMacro(IsPicking,vtkTypeBool);
+  vtkBooleanMacro(IsPicking,vtkTypeBool);
 
   /**
    * Check to see if a mouse button has been pressed.  All other events
@@ -581,24 +540,24 @@ public:
    * This Method detects loops of RenderWindow<->Interactor,
    * so objects are freed properly.
    */
-  void UnRegister(vtkObjectBase *o) VTK_OVERRIDE;
+  void UnRegister(vtkObjectBase *o) override;
 
   //@{
   /**
    * Dummy stubs for vtkWindow API.
    */
-  void SetDisplayId(void *) VTK_OVERRIDE = 0;
-  void SetWindowId(void *)  VTK_OVERRIDE = 0;
+  void SetDisplayId(void *) override = 0;
+  void SetWindowId(void *)  override  = 0;
   virtual void SetNextWindowId(void *) = 0;
-  void SetParentId(void *)  VTK_OVERRIDE = 0;
-  void *GetGenericDisplayId() VTK_OVERRIDE = 0;
-  void *GetGenericWindowId() VTK_OVERRIDE = 0;
-  void *GetGenericParentId() VTK_OVERRIDE = 0;
-  void *GetGenericContext() VTK_OVERRIDE = 0;
-  void *GetGenericDrawable() VTK_OVERRIDE = 0;
-  void SetWindowInfo(char *) VTK_OVERRIDE = 0;
-  virtual void SetNextWindowInfo(char *) = 0;
-  void SetParentInfo(char *) VTK_OVERRIDE = 0;
+  void SetParentId(void *)  override  = 0;
+  void *GetGenericDisplayId() override = 0;
+  void *GetGenericWindowId() override = 0;
+  void *GetGenericParentId() override = 0;
+  void *GetGenericContext() override = 0;
+  void *GetGenericDrawable() override = 0;
+  void SetWindowInfo(const char *) override = 0;
+  virtual void SetNextWindowInfo(const char *) = 0;
+  void SetParentInfo(const char *) override = 0;
   //@}
 
   /**
@@ -607,11 +566,24 @@ public:
    */
   virtual bool InitializeFromCurrentContext() { return false; };
 
+  //@{
+  /**
+   * Set/Get an already existing window that this window should
+   * share data with if possible. This must be set
+   * after the shared render window has been created and initialized
+   * but before this window has been initialized. Not all platforms
+   * support data sharing.
+   */
+  virtual void SetSharedRenderWindow(vtkRenderWindow *);
+  vtkGetObjectMacro(SharedRenderWindow, vtkRenderWindow);
+  virtual bool GetPlatformSupportsRenderWindowSharing() { return false; };
+  //@}
+
   /**
    * Attempt to make this window the current graphics context for the calling
    * thread.
    */
-  void MakeCurrent() VTK_OVERRIDE = 0;
+  void MakeCurrent() override = 0;
 
   /**
    * Tells if this window is the current graphics context for the calling
@@ -663,15 +635,6 @@ public:
 
   //@{
   /**
-   * Get the vtkPainterDeviceAdapter which can be used to paint on
-   * this render window.  Note the old OpenGL backend requires this
-   * method.
-   */
-  vtkGetObjectMacro(PainterDeviceAdapter, vtkPainterDeviceAdapter);
-  //@}
-
-  //@{
-  /**
    * Set / Get the number of multisamples to use for hardware antialiasing.
    */
   vtkSetMacro(MultiSamples,int);
@@ -682,9 +645,9 @@ public:
   /**
    * Set / Get the availability of the stencil buffer.
    */
-  vtkSetMacro(StencilCapable, int);
-  vtkGetMacro(StencilCapable, int);
-  vtkBooleanMacro(StencilCapable, int);
+  vtkSetMacro(StencilCapable, vtkTypeBool);
+  vtkGetMacro(StencilCapable, vtkTypeBool);
+  vtkBooleanMacro(StencilCapable, vtkTypeBool);
   //@}
 
   //@{
@@ -717,39 +680,40 @@ public:
   virtual int SetUseOffScreenBuffers(bool) { return 0; }
   virtual bool GetUseOffScreenBuffers() { return false; }
 
+  //@{
+  /**
+   * Set/Get if we want this window to use the sRGB color space.
+   * Some hardware/drivers do not fully support this.
+   */
+  vtkGetMacro(UseSRGBColorSpace, bool);
+  vtkSetMacro(UseSRGBColorSpace, bool);
+  vtkBooleanMacro(UseSRGBColorSpace, bool);
+  //@}
+
 protected:
   vtkRenderWindow();
-  ~vtkRenderWindow() VTK_OVERRIDE;
+  ~vtkRenderWindow() override;
 
   virtual void DoStereoRender();
-  virtual void DoFDRender();
-  virtual void DoAARender();
 
-  vtkPainterDeviceAdapter* PainterDeviceAdapter;
   vtkRendererCollection *Renderers;
-  int Borders;
-  int FullScreen;
+  vtkNew<vtkRenderTimerLog> RenderTimer;
+  vtkTypeBool Borders;
+  vtkTypeBool FullScreen;
   int OldScreen[5];
-  int PointSmoothing;
-  int LineSmoothing;
-  int PolygonSmoothing;
-  int StereoRender;
+  vtkTypeBool PointSmoothing;
+  vtkTypeBool LineSmoothing;
+  vtkTypeBool PolygonSmoothing;
+  vtkTypeBool StereoRender;
   int StereoType;
-  int StereoStatus; // used for keeping track of what's going on
-  int StereoCapableWindow;
-  int AlphaBitPlanes;
+  vtkTypeBool StereoCapableWindow;
+  vtkTypeBool AlphaBitPlanes;
   vtkRenderWindowInteractor *Interactor;
   unsigned char* StereoBuffer; // used for red blue stereo
   float *AccumulationBuffer;   // used for many techniques
   unsigned int AccumulationBufferSize;
-  int AAFrames;
-  int FDFrames;
-  int UseConstantFDOffsets; // to use the same offsets at each rendering
-  double *ConstantFDOffsets[2];
-  int SubFrames;               // number of sub frames
-  int CurrentSubFrame;         // what one are we on
-  unsigned char *ResultFrame;  // used for any non immediate rendering
-  int   SwapBuffers;
+  unsigned char *ResultFrame;
+  vtkTypeBool   SwapBuffers;
   double DesiredUpdateRate;
   int   AbortRender;
   int   InAbortCheck;
@@ -757,22 +721,26 @@ protected:
   int   NeverRendered;
   int   NumberOfLayers;
   int CurrentCursor;
-  int IsPicking;
+  vtkTypeBool IsPicking;
   float AnaglyphColorSaturation;
   int AnaglyphColorMask[2];
   int MultiSamples;
-  int StencilCapable;
+  vtkTypeBool StencilCapable;
   int CapturingGL2PSSpecialProps;
   int DeviceIndex;
+
+  bool UseSRGBColorSpace;
 
   /**
    * The universal time since the last abort check occurred.
    */
   double AbortCheckTime;
 
+  vtkRenderWindow *SharedRenderWindow;
+
 private:
-  vtkRenderWindow(const vtkRenderWindow&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkRenderWindow&) VTK_DELETE_FUNCTION;
+  vtkRenderWindow(const vtkRenderWindow&) = delete;
+  void operator=(const vtkRenderWindow&) = delete;
 };
 
 #endif

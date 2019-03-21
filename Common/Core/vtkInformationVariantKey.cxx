@@ -26,9 +26,7 @@ vtkInformationVariantKey::vtkInformationVariantKey(const char* name, const char*
 }
 
 //----------------------------------------------------------------------------
-vtkInformationVariantKey::~vtkInformationVariantKey()
-{
-}
+vtkInformationVariantKey::~vtkInformationVariantKey() = default;
 
 //----------------------------------------------------------------------------
 void vtkInformationVariantKey::PrintSelf(ostream& os, vtkIndent indent)
@@ -93,7 +91,7 @@ void vtkInformationVariantKey::ShallowCopy(vtkInformation* from, vtkInformation*
   }
   else
   {
-    this->SetAsObjectBase(to, 0); // doesn't exist in from, so remove the key
+    this->SetAsObjectBase(to, nullptr); // doesn't exist in from, so remove the key
   }
 }
 
@@ -116,5 +114,5 @@ vtkVariant* vtkInformationVariantKey::GetWatchAddress(vtkInformation* info)
   {
     return &v->Value;
   }
-  return 0;
+  return nullptr;
 }

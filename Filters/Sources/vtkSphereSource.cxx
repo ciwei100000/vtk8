@@ -62,7 +62,7 @@ int vtkSphereSource::RequestData(
   // get the info object
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the ouptut
+  // get the output
   vtkPolyData *output = vtkPolyData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
 
@@ -281,7 +281,7 @@ int vtkSphereSource::RequestData(
     this->UpdateProgress (0.70 + 0.30*i/static_cast<double>(localThetaResolution));
   }
 
-  // Update ourselves and release memeory
+  // Update ourselves and release memory
   //
   newPoints->Squeeze();
   output->SetPoints(newPoints);

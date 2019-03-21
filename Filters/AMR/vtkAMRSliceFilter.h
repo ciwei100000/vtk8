@@ -43,42 +43,38 @@ class VTKFILTERSAMR_EXPORT vtkAMRSliceFilter :
 public:
   static vtkAMRSliceFilter* New();
   vtkTypeMacro( vtkAMRSliceFilter, vtkOverlappingAMRAlgorithm );
-  void PrintSelf(ostream &os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent ) override;
 
   // Inline Gettters & Setters
-  vtkSetMacro(OffSetFromOrigin,double);
-  vtkGetMacro(OffSetFromOrigin,double);
 
   //@{
   /**
-   * Set/Get ForwardUpstream property
+   * Set/Get the offset-from-origin of the slicing plane.
    */
-  vtkSetMacro( ForwardUpstream, int );
-  vtkGetMacro( ForwardUpstream, int );
-  vtkBooleanMacro( ForwardUpstream, int );
-  //@}
-
-  //@{
-  /**
-   * Set/Get EnablePrefetching property
-   */
-  vtkSetMacro( EnablePrefetching, int );
-  vtkGetMacro( EnablePrefetching, int );
-  vtkBooleanMacro( EnablePrefetching, int );
+  vtkSetMacro(OffsetFromOrigin,double);
+  vtkGetMacro(OffsetFromOrigin,double);
   //@}
 
   //@{
   /**
    * Set/Get the maximum resolution used in this instance.
    */
-  vtkSetMacro(MaxResolution,int);
-  vtkGetMacro(MaxResolution,int);
+  vtkSetMacro(MaxResolution,unsigned int);
+  vtkGetMacro(MaxResolution,unsigned int);
   //@}
+
+  /**
+   * Tags to identify normals along the X, Y and Z directions.
+   */
+  enum NormalTag : int
+  {
+    X_NORMAL = 1, Y_NORMAL = 2, Z_NORMAL = 4
+  };
 
   //@{
   /**
-   * Set/Get the Axis normal. There are only 3 acceptable values
-   * 1-(X-Normal); 2-(Y-Normal); 3-(Z-Normal)
+   * Set/Get the Axis normal. The accpetable values are defined in the
+   * NormalTag enum.
    */
   vtkSetMacro(Normal,int);
   vtkGetMacro(Normal,int);
@@ -87,7 +83,7 @@ public:
   //@{
   /**
    * Set/Get a multiprocess controller for paralle processing.
-   * By default this parameter is set to NULL by the constructor.
+   * By default this parameter is set to nullptr by the constructor.
    */
   vtkSetMacro( Controller, vtkMultiProcessController* );
   vtkGetMacro( Controller, vtkMultiProcessController* );
@@ -95,9 +91,9 @@ public:
 
   // Standard Pipeline methods
   int RequestData(
-     vtkInformation*,vtkInformationVector**,vtkInformationVector*) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
-  int FillOutputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+     vtkInformation*,vtkInformationVector**,vtkInformationVector*) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
+  int FillOutputPortInformation(int port, vtkInformation *info) override;
 
   /**
    * Makes upstream request to a source, typically, a concrete instance of
@@ -106,17 +102,17 @@ public:
   int RequestInformation(
       vtkInformation *rqst,
       vtkInformationVector **inputVector,
-      vtkInformationVector *outputVector ) VTK_OVERRIDE;
+      vtkInformationVector *outputVector ) override;
 
   /**
    * Performs upstream requests to the reader
    */
   int RequestUpdateExtent(
-      vtkInformation*, vtkInformationVector**,vtkInformationVector* ) VTK_OVERRIDE;
+      vtkInformation*, vtkInformationVector**,vtkInformationVector* ) override;
 
 protected:
   vtkAMRSliceFilter();
-  ~vtkAMRSliceFilter() VTK_OVERRIDE;
+  ~vtkAMRSliceFilter() override;
 
   /**
    * Returns the cell index w.r.t. the given input grid which contains
@@ -172,26 +168,16 @@ protected:
    */
   vtkPlane* GetCutPlane( vtkOverlappingAMR *input );
 
-  /**
-   * Initializes the off-set to be at the center of the input data-set.
-   */
-  void InitializeOffSet(
-    vtkOverlappingAMR *inp, double *min, double *max );
-
-  double OffSetFromOrigin;
-  int    Normal; // 1=>X-Normal, 2=>Y-Normal, 3=>Z-Normal
-  bool   initialRequest;
-  int    MaxResolution;
+  double OffsetFromOrigin;
+  int    Normal;
+  unsigned int MaxResolution;
   vtkMultiProcessController *Controller;
-
-  int ForwardUpstream;
-  int EnablePrefetching;
 
   std::vector< int > BlocksToLoad;
 
 private:
-  vtkAMRSliceFilter( const vtkAMRSliceFilter& ) VTK_DELETE_FUNCTION;
-  void operator=( const vtkAMRSliceFilter& ) VTK_DELETE_FUNCTION;
+  vtkAMRSliceFilter( const vtkAMRSliceFilter& ) = delete;
+  void operator=( const vtkAMRSliceFilter& ) = delete;
 };
 
 #endif /* vtkAMRSliceFilter_h */

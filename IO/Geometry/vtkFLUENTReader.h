@@ -53,7 +53,7 @@ class VTKIOGEOMETRY_EXPORT vtkFLUENTReader : public vtkMultiBlockDataSetAlgorith
 public:
   static vtkFLUENTReader *New();
   vtkTypeMacro(vtkFLUENTReader,vtkMultiBlockDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -77,7 +77,7 @@ public:
   int GetNumberOfCellArrays(void);
 
   /**
-   * Get the name of the  cell array with the given index in
+   * Get the name of the cell array with the given index in
    * the input.
    */
   const char* GetCellArrayName(int index);
@@ -140,20 +140,20 @@ public:
 
 protected:
   vtkFLUENTReader();
-  ~vtkFLUENTReader() VTK_OVERRIDE;
+  ~vtkFLUENTReader() override;
   int RequestInformation(vtkInformation *,
-    vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector **, vtkInformationVector *) override;
   int RequestData(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
 
   //@{
   /**
    * Set/Get the byte swapping to explicitly swap the bytes of a file.
    * Not used when reading text files.
    */
-  vtkSetMacro(SwapBytes,int);
-  int GetSwapBytes() {return this->SwapBytes;}
-  vtkBooleanMacro(SwapBytes,int);
+  vtkSetMacro(SwapBytes,vtkTypeBool);
+  vtkTypeBool GetSwapBytes() {return this->SwapBytes;}
+  vtkBooleanMacro(SwapBytes,vtkTypeBool);
   //@}
 
   vtkDataArraySelection* CellDataArraySelection;
@@ -243,14 +243,14 @@ protected:
   stringVector *VectorVariableNames;
   intVector *VectorSubSectionIds;
 
-  int SwapBytes;
+  vtkTypeBool SwapBytes;
   int GridDimension;
   int DataPass;
   int NumberOfScalars;
   int NumberOfVectors;
 
 private:
-  vtkFLUENTReader(const vtkFLUENTReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkFLUENTReader&) VTK_DELETE_FUNCTION;
+  vtkFLUENTReader(const vtkFLUENTReader&) = delete;
+  void operator=(const vtkFLUENTReader&) = delete;
 };
 #endif

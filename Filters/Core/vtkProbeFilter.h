@@ -42,18 +42,20 @@
 #include "vtkDataSetAlgorithm.h"
 #include "vtkDataSetAttributes.h" // needed for vtkDataSetAttributes::FieldList
 
-class vtkIdTypeArray;
+class vtkAbstractCellLocator;
 class vtkCell;
 class vtkCharArray;
+class vtkIdTypeArray;
 class vtkImageData;
 class vtkPointData;
+class vtkStaticCellLocator;
 
 class VTKFILTERSCORE_EXPORT vtkProbeFilter : public vtkDataSetAlgorithm
 {
 public:
   static vtkProbeFilter *New();
   vtkTypeMacro(vtkProbeFilter,vtkDataSetAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -80,9 +82,9 @@ public:
    * the data is categorical, then the resultant data will be determined by
    * a nearest neighbor interpolation scheme.
    */
-  vtkSetMacro(CategoricalData,int);
-  vtkGetMacro(CategoricalData,int);
-  vtkBooleanMacro(CategoricalData,int);
+  vtkSetMacro(CategoricalData,vtkTypeBool);
+  vtkGetMacro(CategoricalData,vtkTypeBool);
+  vtkBooleanMacro(CategoricalData,vtkTypeBool);
   //@}
 
   //@{
@@ -96,9 +98,9 @@ public:
    * m of n is requested for update by the user, then only n of m needs to
    * be requested of the source.
    */
-  vtkSetMacro(SpatialMatch, int);
-  vtkGetMacro(SpatialMatch, int);
-  vtkBooleanMacro(SpatialMatch, int);
+  vtkSetMacro(SpatialMatch, vtkTypeBool);
+  vtkGetMacro(SpatialMatch, vtkTypeBool);
+  vtkBooleanMacro(SpatialMatch, vtkTypeBool);
   //@}
 
   //@{
@@ -124,18 +126,18 @@ public:
    * Shallow copy the input cell data arrays to the output.
    * Off by default.
    */
-  vtkSetMacro(PassCellArrays, int);
-  vtkBooleanMacro(PassCellArrays, int);
-  vtkGetMacro(PassCellArrays, int);
+  vtkSetMacro(PassCellArrays, vtkTypeBool);
+  vtkBooleanMacro(PassCellArrays, vtkTypeBool);
+  vtkGetMacro(PassCellArrays, vtkTypeBool);
   //@}
   //@{
   /**
    * Shallow copy the input point data arrays to the output
    * Off by default.
    */
-  vtkSetMacro(PassPointArrays, int);
-  vtkBooleanMacro(PassPointArrays, int);
-  vtkGetMacro(PassPointArrays, int);
+  vtkSetMacro(PassPointArrays, vtkTypeBool);
+  vtkBooleanMacro(PassPointArrays, vtkTypeBool);
+  vtkGetMacro(PassPointArrays, vtkTypeBool);
   //@}
 
 
@@ -144,9 +146,9 @@ public:
    * Set whether to pass the field-data arrays from the Input i.e. the input
    * providing the geometry to the output. On by default.
    */
-  vtkSetMacro(PassFieldArrays, int);
-  vtkBooleanMacro(PassFieldArrays, int);
-  vtkGetMacro(PassFieldArrays, int);
+  vtkSetMacro(PassFieldArrays, vtkTypeBool);
+  vtkBooleanMacro(PassFieldArrays, vtkTypeBool);
+  vtkGetMacro(PassFieldArrays, vtkTypeBool);
   //@}
 
   //@{
@@ -170,27 +172,25 @@ public:
   vtkGetMacro(ComputeTolerance, bool);
   //@}
 
+  //@{
+  /**
+   * Set/Get the prototype cell locator to use for probing the source dataset.
+   * By default, vtkStaticCellLocator will be used.
+   */
+   virtual void SetCellLocatorPrototype(vtkAbstractCellLocator*);
+   vtkGetObjectMacro(CellLocatorPrototype, vtkAbstractCellLocator);
+  //@}
+
 protected:
   vtkProbeFilter();
-  ~vtkProbeFilter() VTK_OVERRIDE;
-
-  int CategoricalData;
-
-  int PassCellArrays;
-  int PassPointArrays;
-  int PassFieldArrays;
-
-  int SpatialMatch;
-
-  double Tolerance;
-  bool ComputeTolerance;
+  ~vtkProbeFilter() override;
 
   int RequestData(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
   int RequestInformation(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
   int RequestUpdateExtent(vtkInformation *, vtkInformationVector **,
-    vtkInformationVector *) VTK_OVERRIDE;
+    vtkInformationVector *) override;
 
   /**
    * Call at end of RequestData() to pass attribute data respecting the
@@ -223,16 +223,28 @@ protected:
   void DoProbing(vtkDataSet *input, int srcIdx, vtkDataSet *source,
                  vtkDataSet *output);
 
+  vtkTypeBool CategoricalData;
+
+  vtkTypeBool PassCellArrays;
+  vtkTypeBool PassPointArrays;
+  vtkTypeBool PassFieldArrays;
+
+  vtkTypeBool SpatialMatch;
+
+  double Tolerance;
+  bool ComputeTolerance;
+
   char* ValidPointMaskArrayName;
   vtkIdTypeArray *ValidPoints;
   vtkCharArray* MaskPoints;
 
+  vtkAbstractCellLocator* CellLocatorPrototype;
 
   vtkDataSetAttributes::FieldList* CellList;
   vtkDataSetAttributes::FieldList* PointList;
 private:
-  vtkProbeFilter(const vtkProbeFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkProbeFilter&) VTK_DELETE_FUNCTION;
+  vtkProbeFilter(const vtkProbeFilter&) = delete;
+  void operator=(const vtkProbeFilter&) = delete;
 
   // Probe only those points that are marked as not-probed by the MaskPoints
   // array.

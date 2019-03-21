@@ -112,9 +112,7 @@ vtkParallelCoordinatesHistogramRepresentation::vtkParallelCoordinatesHistogramRe
   theme->Delete();
 }
 //------------------------------------------------------------------------------
-vtkParallelCoordinatesHistogramRepresentation::~vtkParallelCoordinatesHistogramRepresentation()
-{
-}
+vtkParallelCoordinatesHistogramRepresentation::~vtkParallelCoordinatesHistogramRepresentation() = default;
 //------------------------------------------------------------------------------
 // Histogram quad color is defined by theme->CellColor
 void vtkParallelCoordinatesHistogramRepresentation::ApplyViewTheme(vtkViewTheme* theme)
@@ -192,11 +190,11 @@ int vtkParallelCoordinatesHistogramRepresentation::RequestData(
 
     if (this->UseCurves)
     {
-      vtkParallelCoordinatesRepresentation::PlaceCurves(this->OutlierData,outlierTable,NULL);
+      vtkParallelCoordinatesRepresentation::PlaceCurves(this->OutlierData,outlierTable,nullptr);
     }
     else
     {
-      vtkParallelCoordinatesRepresentation::PlaceLines(this->OutlierData,outlierTable,NULL);
+      vtkParallelCoordinatesRepresentation::PlaceLines(this->OutlierData,outlierTable,nullptr);
     }
 
   }
@@ -501,7 +499,7 @@ int vtkParallelCoordinatesHistogramRepresentation::SetRangeAtPosition(int positi
   return 0;
 }
 //------------------------------------------------------------------------------
-void vtkParallelCoordinatesHistogramRepresentation::SetUseHistograms(int use)
+void vtkParallelCoordinatesHistogramRepresentation::SetUseHistograms(vtkTypeBool use)
 {
   if (use && this->UseHistograms != use)
   {
@@ -515,7 +513,7 @@ void vtkParallelCoordinatesHistogramRepresentation::SetUseHistograms(int use)
   this->Modified();
 }
 //------------------------------------------------------------------------------
-void vtkParallelCoordinatesHistogramRepresentation::SetShowOutliers(int show)
+void vtkParallelCoordinatesHistogramRepresentation::SetShowOutliers(vtkTypeBool show)
 {
   if (show && this->ShowOutliers != show)
   {

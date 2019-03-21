@@ -104,16 +104,18 @@ void vtkIOSRenderWindow::DestroyWindow()
 }
 
 int vtkIOSRenderWindow::ReadPixels(
-  const vtkRecti& rect, int front, int glFormat, int glType, void* data)
+  const vtkRecti& rect, int front, int glFormat, int glType, void* data,
+  int right)
 {
   if (glFormat != GL_RGB || glType != GL_UNSIGNED_BYTE)
   {
-    return this->Superclass::ReadPixels(rect, front, glFormat, glType, data);
+    return this->Superclass::ReadPixels(rect, front, glFormat, glType, data,
+                                        right);
   }
 
   // iOS has issues with getting RGB so we get RGBA
   unsigned char* uc4data = new unsigned char[rect.GetWidth() * rect.GetHeight() * 4];
-  int retVal = this->Superclass::ReadPixels(rect, front, GL_RGBA, GL_UNSIGNED_BYTE, uc4data);
+  int retVal = this->Superclass::ReadPixels(rect, front, GL_RGBA, GL_UNSIGNED_BYTE, uc4data, right);
 
   unsigned char* dPtr = reinterpret_cast<unsigned char*>(data);
   const unsigned char* lPtr = uc4data;
@@ -312,67 +314,6 @@ void vtkIOSRenderWindow::Frame()
 }
 
 //----------------------------------------------------------------------------
-// Update system if needed due to stereo rendering.
-void vtkIOSRenderWindow::StereoUpdate()
-{
-  // if stereo is on and it wasn't before
-  if (this->StereoRender && (!this->StereoStatus))
-  {
-    switch (this->StereoType)
-    {
-      case VTK_STEREO_CRYSTAL_EYES:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_RED_BLUE:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_ANAGLYPH:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_DRESDEN:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_INTERLACED:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_CHECKERBOARD:
-        this->StereoStatus = 1;
-        break;
-      case VTK_STEREO_SPLITVIEWPORT_HORIZONTAL:
-        this->StereoStatus = 1;
-        break;
-    }
-  }
-  else if ((!this->StereoRender) && this->StereoStatus)
-  {
-    switch (this->StereoType)
-    {
-      case VTK_STEREO_CRYSTAL_EYES:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_RED_BLUE:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_ANAGLYPH:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_DRESDEN:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_INTERLACED:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_CHECKERBOARD:
-        this->StereoStatus = 0;
-        break;
-      case VTK_STEREO_SPLITVIEWPORT_HORIZONTAL:
-        this->StereoStatus = 0;
-        break;
-    }
-  }
-}
-
-//----------------------------------------------------------------------------
 // Specify various window parameters.
 void vtkIOSRenderWindow::WindowConfigure()
 {
@@ -462,7 +403,7 @@ int *vtkIOSRenderWindow::GetPosition()
 
 //----------------------------------------------------------------------------
 // Change the window to fill the entire screen.
-void vtkIOSRenderWindow::SetFullScreen(int arg)
+void vtkIOSRenderWindow::SetFullScreen(vtkTypeBool arg)
 {
 }
 
@@ -471,7 +412,7 @@ void vtkIOSRenderWindow::SetFullScreen(int arg)
 // Set the variable that indicates that we want a stereo capable window
 // be created. This method can only be called before a window is realized.
 //
-void vtkIOSRenderWindow::SetStereoCapableWindow(int capable)
+void vtkIOSRenderWindow::SetStereoCapableWindow(vtkTypeBool capable)
 {
   if (this->GetContextId() == 0)
   {
@@ -601,9 +542,9 @@ void *vtkIOSRenderWindow::GetPixelFormat()
 
 
 //----------------------------------------------------------------------------
-void vtkIOSRenderWindow::SetWindowInfo(char *info)
+void vtkIOSRenderWindow::SetWindowInfo(const char *info)
 {
-  // The paramater is an ASCII string of a decimal number representing
+  // The parameter is an ASCII string of a decimal number representing
   // a pointer to the window. Convert it back to a pointer.
   ptrdiff_t tmp = 0;
   if (info)
@@ -615,9 +556,9 @@ void vtkIOSRenderWindow::SetWindowInfo(char *info)
 }
 
 //----------------------------------------------------------------------------
-void vtkIOSRenderWindow::SetParentInfo(char *info)
+void vtkIOSRenderWindow::SetParentInfo(const char *info)
 {
-  // The paramater is an ASCII string of a decimal number representing
+  // The parameter is an ASCII string of a decimal number representing
   // a pointer to the window. Convert it back to a pointer.
   ptrdiff_t tmp = 0;
   if (info)

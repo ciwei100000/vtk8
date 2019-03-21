@@ -24,7 +24,7 @@
 vtkStandardNewMacro(vtkImageRange3D);
 
 //----------------------------------------------------------------------------
-// Construct an instance of vtkImageRange3D fitler.
+// Construct an instance of vtkImageRange3D filter.
 // By default zero values are dilated.
 vtkImageRange3D::vtkImageRange3D()
 {
@@ -44,7 +44,7 @@ vtkImageRange3D::~vtkImageRange3D()
   if (this->Ellipse)
   {
     this->Ellipse->Delete();
-    this->Ellipse = NULL;
+    this->Ellipse = nullptr;
   }
 }
 

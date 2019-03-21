@@ -42,7 +42,7 @@ vtkDEMReader::vtkDEMReader()
   {
     this->WholeExtent[i] = 0;
   }
-  this->FileName = NULL;
+  this->FileName = nullptr;
   for (i = 0; i < 145; i++)
   {
     this->MapLabel[i] = '\0';
@@ -183,7 +183,7 @@ int vtkDEMReader::ReadTypeARecord ()
     return -1;
   }
 
-  if ((fp = fopen(this->FileName, "rb")) == NULL)
+  if ((fp = fopen(this->FileName, "rb")) == nullptr)
   {
     vtkErrorMacro(<< "File " << this->FileName << " not found");
     return -1;
@@ -340,7 +340,7 @@ void vtkDEMReader::ComputeExtentOriginAndSpacing (int extent[6],
   //
   extent[0] = 0; extent[1] = this->NumberOfColumns - 1;
   extent[2] = 0; extent[3] = this->NumberOfRows - 1;
-  extent[4] = 0; extent[5] = 0;;
+  extent[4] = 0; extent[5] = 0;
 
   //
   // compute the spacing in meters
@@ -402,7 +402,7 @@ int vtkDEMReader::ReadProfiles (vtkImageData *data)
     return -1;
   }
 
-  if ((fp = fopen(this->FileName, "rb")) == NULL)
+  if ((fp = fopen(this->FileName, "rb")) == nullptr)
   {
     vtkErrorMacro(<< "File " << this->FileName << " not found");
     return -1;

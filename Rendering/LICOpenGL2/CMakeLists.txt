@@ -12,17 +12,6 @@ set(Module_SRCS
   vtkTextureIO.cxx
   )
 
-set_source_files_properties(
-  vtkLICNoiseHelper.cxx
-  vtkSurfaceLICHelper.cxx
-  vtkPainterCommunicator.h
-  vtkSurfaceLICComposite.cxx
-  vtkTextureIO.cxx
-  PROPERTIES
-    WRAP_EXCLUDE 1
-    WRAP_EXCLUDE_PYTHON 1
-  )
-
 if (VTK_RENDERINGPARALLELLIC_SURFACELICPAINTER_TIMER)
   add_definitions("-DvtkSurfaceLICPainterTIME")
 endif()
@@ -46,24 +35,13 @@ set(shader_files
   )
 unset(shader_h_files)
 foreach(file ${shader_files})
-  get_filename_component(file_we ${file} NAME_WE)
-  set(src  ${CMAKE_CURRENT_SOURCE_DIR}/${file})
-  set(res  ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.cxx)
-  set(resh ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.h)
-  list(APPEND shader_h_files ${resh})
-  add_custom_command(
-    OUTPUT ${res} ${resh}
-    DEPENDS ${src} vtkEncodeString
-    COMMAND vtkEncodeString
-    ARGS ${res} ${src} ${file_we}
-      --build-header VTKRENDERINGLICOPENGL2_EXPORT vtkRenderingLICOpenGL2Module.h
-    )
-  list(APPEND Module_SRCS ${res})
-  set_source_files_properties(${file_we}
-    PROPERTIES
-      WRAP_EXCLUDE 1
-      WRAP_EXCLUDE_PYTHON 1
-    )
+  vtk_encode_string(
+    INPUT         "${file}"
+    EXPORT_SYMBOL "VTKRENDERINGLICOPENGL2_EXPORT"
+    EXPORT_HEADER "vtkRenderingLICOpenGL2Module.h"
+    HEADER_OUTPUT header
+    SOURCE_OUTPUT source)
+  list(APPEND Module_SRCS ${source})
 endforeach()
 
 

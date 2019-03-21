@@ -42,6 +42,8 @@
 #include "vtkCamera.h"
 #include "vtkAbstractCellLocator.h"
 
+#include <algorithm>
+
 vtkStandardNewMacro(vtkCellPicker);
 
 //----------------------------------------------------------------------------
@@ -136,9 +138,9 @@ void vtkCellPicker::ResetPickInfo()
 {
   // First, reset information from the superclass, since
   // vtkPicker does not have a ResetPickInfo method
-  this->DataSet = 0;
-  this->Mapper = 0;
-  this->CompositeDataSet = 0;
+  this->DataSet = nullptr;
+  this->Mapper = nullptr;
+  this->CompositeDataSet = nullptr;
   this->FlatBlockIndex = -1;
 
   // Reset all the information specific to this class
@@ -148,7 +150,7 @@ void vtkCellPicker::ResetPickInfo()
 //----------------------------------------------------------------------------
 void vtkCellPicker::ResetCellPickerInfo()
 {
-  this->Texture = 0;
+  this->Texture = nullptr;
 
   this->ClippingPlaneId = -1;
 
@@ -236,18 +238,57 @@ int vtkCellPicker::Pick(double selectionX, double selectionY,
 }
 
 //----------------------------------------------------------------------------
+int vtkCellPicker::Pick3DRay(
+  double pos[3],
+  double orient[4],
+  vtkRenderer *renderer)
+{
+  int pickResult = 0;
+
+  if ( (pickResult =
+      this->Superclass::Pick3DRay(pos, orient, renderer)) == 0)
+  {
+    // If no pick, set the PickNormal so that it points at the camera
+    vtkCamera *camera = renderer->GetActiveCamera();
+    double cameraPos[3];
+    camera->GetPosition(cameraPos);
+
+    if (camera->GetParallelProjection())
+    {
+      // For parallel projection, use -ve direction of projection
+      double cameraFocus[3];
+      camera->GetFocalPoint(cameraFocus);
+      this->PickNormal[0] = cameraPos[0] - cameraFocus[0];
+      this->PickNormal[1] = cameraPos[1] - cameraFocus[1];
+      this->PickNormal[2] = cameraPos[2] - cameraFocus[2];
+    }
+    else
+    {
+      // Get the vector from pick position to the camera
+      this->PickNormal[0] = cameraPos[0] - this->PickPosition[0];
+      this->PickNormal[1] = cameraPos[1] - this->PickPosition[1];
+      this->PickNormal[2] = cameraPos[2] - this->PickPosition[2];
+    }
+
+    vtkMath::Normalize(this->PickNormal);
+  }
+
+  return pickResult;
+}
+
+//----------------------------------------------------------------------------
 // Tolerance for parametric coordinate matching an intersection with a plane
 #define VTKCELLPICKER_PLANE_TOL 1e-14
 
-double vtkCellPicker::IntersectWithLine(double p1[3], double p2[3],
+double vtkCellPicker::IntersectWithLine(const double p1[3], const double p2[3],
                                           double tol,
                                           vtkAssemblyPath *path,
                                           vtkProp3D *prop,
                                           vtkAbstractMapper3D *m)
 {
-  vtkMapper *mapper = 0;
-  vtkAbstractVolumeMapper *volumeMapper = 0;
-  vtkImageMapper3D *imageMapper = 0;
+  vtkMapper *mapper = nullptr;
+  vtkAbstractVolumeMapper *volumeMapper = nullptr;
+  vtkImageMapper3D *imageMapper = nullptr;
 
   double tMin = VTK_DOUBLE_MAX;
   double t1 = 0.0;
@@ -349,7 +390,7 @@ double vtkCellPicker::IntersectActorWithLine(const double p1[3],
   int minSubId = -1;
   double minXYZ[3];
   minXYZ[0] = minXYZ[1] = minXYZ[2] = 0.0;
-  vtkAbstractCellLocator *locator = 0;
+  vtkAbstractCellLocator *locator = nullptr;
   vtkIdType flatIndex = -1;
 
 
@@ -408,15 +449,30 @@ double vtkCellPicker::IntersectActorWithLine(const double p1[3],
           // box not hit: no need to intersect...
           continue;
         }
-        vtkAbstractCellLocator* loc = 0;
+
+        double t = tMin;
+        vtkAbstractCellLocator* loc = nullptr;
+        vtkIdType cellId = -1;
+        int subId = -1;
+        double p = VTK_DOUBLE_MAX;
+        double xyz[3] = { 0., 0., 0. };
+        double pcoord[3] = { 0., 0., 0. };
         bool ok = this->IntersectDataSetWithLine(ds, p1, p2, t1, t2, tol,
-                                         loc, minCellId, minSubId,
-                                         tMin, pDistMin, minXYZ, minPCoords);
+                                                 loc, cellId, subId,
+                                                 t, p, xyz, pcoord);
         if ( ok )
         {
+          tMin = t;
+
           flatIndex = iter->GetCurrentFlatIndex();
           data = ds;
           locator = loc;
+
+          minCellId = cellId;
+          minSubId = subId;
+          pDistMin = p;
+          std::copy( xyz, xyz+3, minXYZ );
+          std::copy( pcoord, pcoord+3, minPCoords );
         }
       }
     }
@@ -461,8 +517,8 @@ double vtkCellPicker::IntersectActorWithLine(const double p1[3],
     this->Mapper = mapper;
 
     // Get the texture from the actor or the LOD
-    vtkActor *actor = 0;
-    vtkLODProp3D *lodActor = 0;
+    vtkActor *actor = nullptr;
+    vtkLODProp3D *lodActor = nullptr;
     if ( (actor = vtkActor::SafeDownCast(prop)) )
     {
       this->Texture = actor->GetTexture();
@@ -585,7 +641,7 @@ bool vtkCellPicker::IntersectDataSetWithLine(vtkDataSet* dataSet,
 
   // Use the locator if one exists for this data
   vtkCollectionSimpleIterator iter;
-  locator = 0;
+  locator = nullptr;
   this->Locators->InitTraversal(iter);
   while ( (locator = static_cast<vtkAbstractCellLocator *>(
            this->Locators->GetNextItemAsObject(iter))) )
@@ -595,6 +651,7 @@ bool vtkCellPicker::IntersectDataSetWithLine(vtkDataSet* dataSet,
       break;
     }
   }
+
   if (locator)
   {
     double t = tMin;
@@ -605,11 +662,10 @@ bool vtkCellPicker::IntersectDataSetWithLine(vtkDataSet* dataSet,
     if (locator->IntersectWithLine(q1, q2, tol, t, xyz, pcoords,
                                    subId, cellId, this->Cell))
     {
-
-      // Stretch tMin out to the original range
+      // Stretch t out to the original range
       if (t1 != 0.0 || t2 != 1.0)
       {
-        t = t1*(1.0 - tMin) + t2*t;
+        t = t1*(1.0 - t) + t2*t;
       }
 
       // If cell is a strip, then replace cell with a sub-cell
@@ -733,7 +789,7 @@ double vtkCellPicker::IntersectVolumeWithLine(const double p1[3],
 {
   vtkImageData *data = vtkImageData::SafeDownCast(mapper->GetDataSetInput());
 
-  if (data == 0)
+  if (data == nullptr)
   {
     // This picker only works with image inputs
     return VTK_DOUBLE_MAX;
@@ -770,9 +826,9 @@ double vtkCellPicker::IntersectVolumeWithLine(const double p1[3],
   }
 
   // Get the property from the volume or the LOD
-  vtkVolumeProperty *property = 0;
-  vtkVolume *volume = 0;
-  vtkLODProp3D *lodVolume = 0;
+  vtkVolumeProperty *property = nullptr;
+  vtkVolume *volume = nullptr;
+  vtkLODProp3D *lodVolume = nullptr;
   if ( (volume = vtkVolume::SafeDownCast(prop)) )
   {
     property = volume->GetProperty();
@@ -817,10 +873,10 @@ double vtkCellPicker::IntersectVolumeWithLine(const double p1[3],
   for (int component = 0; component < numIndependentComponents; component++)
   {
     vtkPiecewiseFunction *scalarOpacity =
-      (property ? property->GetScalarOpacity(component) : 0);
+      (property ? property->GetScalarOpacity(component) : nullptr);
     int disableGradientOpacity =
       (property ? property->GetDisableGradientOpacity(component) : 1);
-    vtkPiecewiseFunction *gradientOpacity = 0;
+    vtkPiecewiseFunction *gradientOpacity = nullptr;
     if (!disableGradientOpacity && this->UseVolumeGradientOpacity)
     {
       gradientOpacity = property->GetGradientOpacity(component);
@@ -1064,8 +1120,8 @@ double vtkCellPicker::IntersectImageWithLine(const double p1[3],
     bounds[2*k+1] = (bounds[2*k+1] - origin[k])/spacing[k];
     // It should be a multiple of 0.5, so round to closest multiple of 0.5
     // (this reduces the impact of roundoff error from the above computation)
-    bounds[2*k] = 0.5*vtkMath::Round(2.0*(bounds[2*k]));
-    bounds[2*k+1] = 0.5*vtkMath::Round(2.0*(bounds[2*k+1]));
+    bounds[2*k] = 0.5*std::round(2.0*(bounds[2*k]));
+    bounds[2*k+1] = 0.5*std::round(2.0*(bounds[2*k+1]));
     // Reverse if spacing is negative
     if (spacing[k] < 0)
     {
@@ -1078,7 +1134,7 @@ double vtkCellPicker::IntersectImageWithLine(const double p1[3],
   // Clip the ray with the extent
   int planeId, plane2Id;
   double tMin, tMax;
-  if (!vtkBox::IntersectWithLine(bounds, x1, x2, tMin, tMax, 0, 0,
+  if (!vtkBox::IntersectWithLine(bounds, x1, x2, tMin, tMax, nullptr, nullptr,
         planeId, plane2Id))
   {
     return VTK_DOUBLE_MAX;
@@ -1170,7 +1226,7 @@ double vtkCellPicker::IntersectProp3DWithLine(const double *, const double *,
 //----------------------------------------------------------------------------
 // Clip a line with a collection of clipping planes, or return zero if
 // the line does not intersect the volume enclosed by the planes.
-// The result of the clipping is retured in t1 and t2, which will have
+// The result of the clipping is returned in t1 and t2, which will have
 // values between 0 and 1.  The index of the frontmost intersected plane is
 // returned in planeId.
 
@@ -1257,7 +1313,7 @@ int vtkCellPicker::ClipLineWithExtent(const int extent[6],
   bounds[3] = extent[3]; bounds[4] = extent[4]; bounds[5] = extent[5];
 
   int p2;
-  return vtkBox::IntersectWithLine(bounds, x1, x2, t1, t2, 0, 0, planeId, p2);
+  return vtkBox::IntersectWithLine(bounds, x1, x2, t1, t2, nullptr, nullptr, planeId, p2);
 }
 
 //----------------------------------------------------------------------------

@@ -25,14 +25,12 @@
 #include "vtkRenderingOSPRayModule.h" // For export macro
 #include "vtkVolumeMapperNode.h"
 
+#include "ospray/ospray.h" // for ospray handle types
+
 class vtkAbstractArray;
 class vtkDataSet;
-
-namespace osp
-{
-  struct TransferFunction;
-  struct Volume;
-}
+class vtkVolume;
+class vtkOSPRayVolumeCache;
 
 class VTKRENDERINGOSPRAY_EXPORT vtkOSPRayVolumeMapperNode :
   public vtkVolumeMapperNode
@@ -40,12 +38,12 @@ class VTKRENDERINGOSPRAY_EXPORT vtkOSPRayVolumeMapperNode :
 public:
   static vtkOSPRayVolumeMapperNode* New();
   vtkTypeMacro(vtkOSPRayVolumeMapperNode, vtkVolumeMapperNode);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Make ospray calls to render me.
    */
-  virtual void Render(bool prepass) VTK_OVERRIDE;
+  virtual void Render(bool prepass) override;
 
   /**
    * TODO: fix me
@@ -59,23 +57,31 @@ protected:
   vtkOSPRayVolumeMapperNode();
   ~vtkOSPRayVolumeMapperNode();
 
+  /**
+   * updates internal OSPRay transfer function for volume
+   */
+  void UpdateTransferFunction(vtkVolume* vol, double *dataRange=nullptr);
+
   //TODO: SetAndGetters?
   int NumColors;
   double SamplingRate;
+  double SamplingStep;  //base sampling step of each voxel
+  bool UseSharedBuffers;
+  OSPData SharedData;
 
   vtkTimeStamp BuildTime;
   vtkTimeStamp PropertyTime;
 
-  osp::Volume* OSPRayVolume;
-  osp::TransferFunction* TransferFunction;
+  OSPGeometry OSPRayIsosurface;
+  OSPVolume OSPRayVolume;
+  OSPTransferFunction TransferFunction;
   std::vector<float> TFVals;
   std::vector<float> TFOVals;
 
-  vtkAbstractArray *GetArrayToProcess
-    (vtkDataSet* input, int& association);
+  vtkOSPRayVolumeCache *Cache;
 
 private:
-  vtkOSPRayVolumeMapperNode(const vtkOSPRayVolumeMapperNode&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOSPRayVolumeMapperNode&) VTK_DELETE_FUNCTION;
+  vtkOSPRayVolumeMapperNode(const vtkOSPRayVolumeMapperNode&) = delete;
+  void operator=(const vtkOSPRayVolumeMapperNode&) = delete;
 };
 #endif

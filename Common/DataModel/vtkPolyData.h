@@ -82,30 +82,30 @@ public:
   static vtkPolyData *New();
 
   vtkTypeMacro(vtkPolyData,vtkPointSet);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Return what type of dataset this is.
    */
-  int GetDataObjectType() VTK_OVERRIDE {return VTK_POLY_DATA;}
+  int GetDataObjectType() override {return VTK_POLY_DATA;}
 
   /**
    * Copy the geometric and topological structure of an input poly data object.
    */
-  void CopyStructure(vtkDataSet *ds) VTK_OVERRIDE;
+  void CopyStructure(vtkDataSet *ds) override;
 
   //@{
   /**
    * Standard vtkDataSet interface.
    */
-  vtkIdType GetNumberOfCells() VTK_OVERRIDE;
+  vtkIdType GetNumberOfCells() override;
   using vtkDataSet::GetCell;
-  vtkCell *GetCell(vtkIdType cellId) VTK_OVERRIDE;
-  void GetCell(vtkIdType cellId, vtkGenericCell *cell) VTK_OVERRIDE;
-  int GetCellType(vtkIdType cellId) VTK_OVERRIDE;
-  void GetCellBounds(vtkIdType cellId, double bounds[6]) VTK_OVERRIDE;
+  vtkCell *GetCell(vtkIdType cellId) override;
+  void GetCell(vtkIdType cellId, vtkGenericCell *cell) override;
+  int GetCellType(vtkIdType cellId) override;
+  void GetCellBounds(vtkIdType cellId, double bounds[6]) override;
   void GetCellNeighbors(vtkIdType cellId, vtkIdList *ptIds,
-                        vtkIdList *cellIds) VTK_OVERRIDE;
+                        vtkIdList *cellIds) override;
   //@}
 
   /**
@@ -115,23 +115,23 @@ public:
    * won't be duplicated in the output.
    */
   void CopyCells(vtkPolyData *pd, vtkIdList *idList,
-                 vtkPointLocator *locator = NULL);
+                 vtkPointLocator *locator = nullptr);
 
   /**
    * Copy a cells point ids into list provided. (Less efficient.)
    */
-  void GetCellPoints(vtkIdType cellId, vtkIdList *ptIds) VTK_OVERRIDE;
+  void GetCellPoints(vtkIdType cellId, vtkIdList *ptIds) override;
 
   /**
    * Efficient method to obtain cells using a particular point. Make sure that
    * routine BuildLinks() has been called.
    */
-  void GetPointCells(vtkIdType ptId, vtkIdList *cellIds) VTK_OVERRIDE;
+  void GetPointCells(vtkIdType ptId, vtkIdList *cellIds) override;
 
   /**
    * Compute the (X, Y, Z)  bounds of the data.
    */
-  void ComputeBounds() VTK_OVERRIDE;
+  void ComputeBounds() override;
 
   /**
    * Recover extra allocated memory when creating data whose initial size
@@ -139,12 +139,12 @@ public:
    * when using the CellArray::EstimateSize() method to create vertices,
    * lines, polygons, or triangle strips.
    */
-  void Squeeze() VTK_OVERRIDE;
+  void Squeeze() override;
 
   /**
    * Return the maximum cell size in this poly data.
    */
-  int GetMaxCellSize() VTK_OVERRIDE;
+  int GetMaxCellSize() override;
 
   /**
    * Set the cell array defining vertices.
@@ -193,7 +193,7 @@ public:
 
   //@{
   /**
-   * Return the number of primitives of a particular type held..
+   * Return the number of primitives of a particular type held.
    */
   vtkIdType GetNumberOfVerts();
   vtkIdType GetNumberOfLines();
@@ -230,7 +230,7 @@ public:
    * line, polygon, and triangle strip arrays have been supplied.
    * Note: will also insert VTK_PIXEL, but converts it to VTK_QUAD.
    */
-  vtkIdType InsertNextCell(int type, int npts, vtkIdType *pts);
+  vtkIdType InsertNextCell(int type, int npts, const vtkIdType pts[]) VTK_SIZEHINT(pts, npts);
 
   /**
    * Insert a cell of type VTK_VERTEX, VTK_POLY_VERTEX, VTK_LINE, VTK_POLY_LINE,
@@ -249,7 +249,7 @@ public:
 
   /**
    * Create data structure that allows random access of cells. BuildCells is
-   * expensive but necessary to make use of the faster  non-virtual implementations
+   * expensive but necessary to make use of the faster non-virtual implementations
    * of GetCell/GetCellPoints. One may check if cells need to be built via
    * NeedToBuilds before invoking. Cells always need to be built/re-built after
    * low level direct modifications to verts, lines, polys or strips cell arrays.
@@ -259,7 +259,7 @@ public:
   /**
    * Check if BuildCells is needed.
    */
-  bool NeedToBuildCells() { return this->Cells == 0; }
+  bool NeedToBuildCells() { return this->Cells == nullptr; }
 
   /**
    * Create upward links from points to cells that use each point. Enables
@@ -285,7 +285,7 @@ public:
    * Special (efficient) operations on poly data. Use carefully.
    */
   void GetPointCells(vtkIdType ptId, unsigned short& ncells,
-                     vtkIdType* &cells);
+                     vtkIdType* &cells) VTK_SIZEHINT(cells, ncells);
 
   /**
    * Get the neighbors at an edge. More efficient than the general
@@ -302,7 +302,7 @@ public:
    * built (with BuildCells()). The cell type is returned.
    */
   unsigned char GetCellPoints(vtkIdType cellId,
-      vtkIdType& npts, vtkIdType* &pts);
+      vtkIdType& npts, vtkIdType* &pts) VTK_SIZEHINT(pts, npts);
 
   /**
    * Get a pointer to the cell, ie [npts pid1 .. pidn]. More efficient
@@ -339,7 +339,7 @@ public:
    * built (i.e., BuildLinks() has not been executed). Use the operator
    * ReplaceLinkedCell() to replace a cell when cell structure has been built.
    */
-  void ReplaceCell(vtkIdType cellId, int npts, vtkIdType *pts);
+  void ReplaceCell(vtkIdType cellId, int npts, const vtkIdType pts[]) VTK_SIZEHINT(pts, npts);
 
   /**
    * Replace a point in the cell connectivity list with a different point.
@@ -386,7 +386,7 @@ public:
    * built). This method adds the cell and then updates the links from the
    * points to the cells. (Memory is allocated as necessary.)
    */
-  vtkIdType InsertNextLinkedCell(int type, int npts, vtkIdType *pts);
+  vtkIdType InsertNextLinkedCell(int type, int npts, const vtkIdType pts[]) VTK_SIZEHINT(pts, npts);
 
   /**
    * Replace one cell with another in cell structure. This operator updates the
@@ -396,7 +396,7 @@ public:
    * You may also want to consider using the operator ResizeCellList() if the
    * link list is changing size.
    */
-  void ReplaceLinkedCell(vtkIdType cellId, int npts, vtkIdType *pts);
+  void ReplaceLinkedCell(vtkIdType cellId, int npts, const vtkIdType pts[]) VTK_SIZEHINT(pts, npts);
 
   /**
    * Remove all references to cell in cell structure. This means the links from
@@ -439,7 +439,7 @@ public:
   /**
    * Restore object to initial state. Release memory back to system.
    */
-  void Initialize() VTK_OVERRIDE;
+  void Initialize() override;
 
   //@{
   /**
@@ -462,14 +462,14 @@ public:
    * arrays, etc. are not included in the return value). THIS METHOD
    * IS THREAD SAFE.
    */
-  unsigned long GetActualMemorySize() VTK_OVERRIDE;
+  unsigned long GetActualMemorySize() override;
 
   //@{
   /**
    * Shallow and Deep copy.
    */
-  void ShallowCopy(vtkDataObject *src) VTK_OVERRIDE;
-  void DeepCopy(vtkDataObject *src) VTK_OVERRIDE;
+  void ShallowCopy(vtkDataObject *src) override;
+  void DeepCopy(vtkDataObject *src) override;
   //@}
 
   /**
@@ -521,9 +521,23 @@ public:
   int GetScalarFieldCriticalIndex (vtkIdType pointId, int fieldId);
   int GetScalarFieldCriticalIndex (vtkIdType pointId, const char* fieldName);
 
+  /**
+   * Return the mesh (geometry/topology) modification time.
+   * This time is different from the usual MTime which also takes into
+   * account the modification of data arrays. This function can be used to
+   * track the changes on the mesh separately from the data arrays
+   * (eg. static mesh over time with transient data).
+   */
+  virtual vtkMTimeType GetMeshMTime();
+
+  /**
+   * Get MTime which also considers its cell array MTime.
+   */
+  vtkMTimeType GetMTime() override;
+
 protected:
   vtkPolyData();
-  ~vtkPolyData() VTK_OVERRIDE;
+  ~vtkPolyData() override;
 
   // constant cell objects returned by GetCell called.
   vtkVertex *Vertex;
@@ -563,8 +577,8 @@ private:
   void Cleanup();
 
 private:
-  vtkPolyData(const vtkPolyData&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPolyData&) VTK_DELETE_FUNCTION;
+  vtkPolyData(const vtkPolyData&) = delete;
+  void operator=(const vtkPolyData&) = delete;
 };
 
 inline void vtkPolyData::GetPointCells(vtkIdType ptId, unsigned short& ncells,
@@ -698,9 +712,9 @@ inline unsigned char vtkPolyData::GetCellPoints(
       break;
 
     default:
-      cells = NULL;
+      cells = nullptr;
       npts = 0;
-      pts = NULL;
+      pts = nullptr;
       return 0;
   }
   int loc = this->Cells->GetCellLocation(cellId);
@@ -732,8 +746,8 @@ inline unsigned char vtkPolyData::GetCell(
       break;
 
     default:
-      cells = NULL;
-      cell = NULL;
+      cells = nullptr;
+      cell = nullptr;
       return 0;
   }
   int loc = this->Cells->GetCellLocation(cellId);

@@ -39,7 +39,7 @@ typedef std::list<vtkHandleRepresentation*>::iterator vtkHandleListIterator;
 //----------------------------------------------------------------------
 vtkSeedRepresentation::vtkSeedRepresentation()
 {
-  this->HandleRepresentation  = NULL;
+  this->HandleRepresentation  = nullptr;
 
   // The representation for the seed handles
   this->Handles = new vtkHandleList;
@@ -77,10 +77,10 @@ vtkHandleRepresentation *vtkSeedRepresentation
   }
   else //create one
   {
-    if (this->HandleRepresentation == NULL)
+    if (this->HandleRepresentation == nullptr)
     {
       vtkErrorMacro("GetHandleRepresentation " << num << ", no handle representation has been set yet, cannot create a new handle.");
-      return NULL;
+      return nullptr;
     }
     vtkHandleRepresentation *rep = this->HandleRepresentation->NewInstance();
     rep->DeepCopy(this->HandleRepresentation);
@@ -100,6 +100,20 @@ void vtkSeedRepresentation::GetSeedWorldPosition(unsigned int seedNum, double po
   vtkHandleListIterator iter = this->Handles->begin();
   std::advance(iter,seedNum);
   (*iter)->GetWorldPosition(pos);
+}
+
+//----------------------------------------------------------------------------
+void vtkSeedRepresentation::SetSeedWorldPosition(unsigned int seedNum,
+                                                 double pos[3])
+{
+  if (seedNum >= this->Handles->size())
+  {
+    vtkErrorMacro("Trying to access non-existent handle");
+    return;
+  }
+  vtkHandleListIterator iter = this->Handles->begin();
+  std::advance(iter, seedNum);
+  (*iter)->SetWorldPosition(pos);
 }
 
 //----------------------------------------------------------------------
@@ -143,7 +157,7 @@ ComputeInteractionState(int vtkNotUsed(X), int vtkNotUsed(Y), int vtkNotUsed(mod
   vtkHandleListIterator iter;
   for ( i = 0, iter = this->Handles->begin(); iter != this->Handles->end(); ++iter, ++i )
   {
-    if ( *iter != NULL )
+    if ( *iter != nullptr )
     {
       if ( (*iter)->GetInteractionState() != vtkHandleRepresentation::Outside )
       {
@@ -166,6 +180,16 @@ int vtkSeedRepresentation::GetActiveHandle()
 }
 
 //----------------------------------------------------------------------
+void vtkSeedRepresentation::SetActiveHandle(int handleId)
+{
+  if (handleId >= static_cast<int>(this->Handles->size()))
+  {
+    return;
+  }
+  this->ActiveHandle = handleId;
+}
+
+//----------------------------------------------------------------------
 int vtkSeedRepresentation::CreateHandle(double e[2])
 {
   double pos[3];
@@ -175,7 +199,7 @@ int vtkSeedRepresentation::CreateHandle(double e[2])
 
   vtkHandleRepresentation *rep = this->GetHandleRepresentation(
     static_cast<int>(this->Handles->size()));
-  if (rep == NULL)
+  if (rep == nullptr)
   {
     vtkErrorMacro("CreateHandle: no handle representation set yet! Cannot create a new handle.");
     return -1;
@@ -189,7 +213,7 @@ int vtkSeedRepresentation::CreateHandle(double e[2])
 //----------------------------------------------------------------------
 void vtkSeedRepresentation::RemoveLastHandle()
 {
-  if ( this->Handles->size() < 1 )
+  if ( this->Handles->empty() )
   {
     return;
   }
@@ -225,7 +249,7 @@ void vtkSeedRepresentation::RemoveHandle( int n )
 //----------------------------------------------------------------------
 void vtkSeedRepresentation::RemoveActiveHandle()
 {
-  if ( this->Handles->size() < 1 )
+  if ( this->Handles->empty() )
   {
     return;
   }

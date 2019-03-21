@@ -25,9 +25,8 @@
 #include "vtkActor.h"
 #include "vtkObjectFactory.h"
 #include "vtkCommand.h"
-#include "vtkNew.h"
-#include "vtkPropPicker3D.h"
 #include "vtkMath.h"
+#include "vtkMatrix4x4.h"
 
 vtkStandardNewMacro(vtkRenderWindowInteractor3D);
 
@@ -38,21 +37,12 @@ vtkRenderWindowInteractor3D::vtkRenderWindowInteractor3D()
   this->MouseInWindow = 0;
   this->StartedMessageLoop = 0;
   vtkNew<vtkInteractorStyle3D> style;
-  this->SetInteractorStyle(style.Get());
+  this->SetInteractorStyle(style);
   this->Done = false;
 }
 
 //----------------------------------------------------------------------------
-vtkRenderWindowInteractor3D::~vtkRenderWindowInteractor3D()
-{
-}
-
-//----------------------------------------------------------------------
-// Creates an instance of vtkPropPicker by default
-vtkAbstractPropPicker *vtkRenderWindowInteractor3D::CreateDefaultPicker()
-{
-  return vtkPropPicker3D::New();
-}
+vtkRenderWindowInteractor3D::~vtkRenderWindowInteractor3D() = default;
 
 //----------------------------------------------------------------------------
 void vtkRenderWindowInteractor3D::Enable()
@@ -259,7 +249,7 @@ void vtkRenderWindowInteractor3D::MiddleButtonPressEvent()
       // did we just transition to multitouch?
       if (this->PointersDownCount == 2)
       {
-        this->InvokeEvent(vtkCommand::MiddleButtonReleaseEvent, NULL);
+        this->InvokeEvent(vtkCommand::MiddleButtonReleaseEvent, nullptr);
       }
       // handle the gesture
       this->RecognizeGesture(vtkCommand::MiddleButtonPressEvent);
@@ -267,7 +257,7 @@ void vtkRenderWindowInteractor3D::MiddleButtonPressEvent()
     }
   }
 
-  this->InvokeEvent(vtkCommand::MiddleButtonPressEvent, NULL);
+  this->InvokeEvent(vtkCommand::MiddleButtonPressEvent, nullptr);
 }
 
 //------------------------------------------------------------------
@@ -293,7 +283,7 @@ void vtkRenderWindowInteractor3D::MiddleButtonReleaseEvent()
       return;
     }
   }
-  this->InvokeEvent(vtkCommand::MiddleButtonReleaseEvent, NULL);
+  this->InvokeEvent(vtkCommand::MiddleButtonReleaseEvent, nullptr);
 }
 
 //------------------------------------------------------------------
@@ -318,7 +308,7 @@ void vtkRenderWindowInteractor3D::RightButtonPressEvent()
       // did we just transition to multitouch?
       if (this->PointersDownCount == 2)
       {
-        this->InvokeEvent(vtkCommand::RightButtonReleaseEvent, NULL);
+        this->InvokeEvent(vtkCommand::RightButtonReleaseEvent, nullptr);
       }
       // handle the gesture
       this->RecognizeGesture(vtkCommand::RightButtonPressEvent);
@@ -326,7 +316,7 @@ void vtkRenderWindowInteractor3D::RightButtonPressEvent()
     }
   }
 
-  this->InvokeEvent(vtkCommand::RightButtonPressEvent, NULL);
+  this->InvokeEvent(vtkCommand::RightButtonPressEvent, nullptr);
 }
 
 //------------------------------------------------------------------
@@ -352,5 +342,115 @@ void vtkRenderWindowInteractor3D::RightButtonReleaseEvent()
       return;
     }
   }
-  this->InvokeEvent(vtkCommand::RightButtonReleaseEvent, NULL);
+  this->InvokeEvent(vtkCommand::RightButtonReleaseEvent, nullptr);
+}
+
+//------------------------------------------------------------------
+void vtkRenderWindowInteractor3D::SetPhysicalEventPose(vtkMatrix4x4* poseMatrix, int pointerIndex)
+{
+  if (!poseMatrix || pointerIndex < 0 || pointerIndex >= VTKI_MAX_POINTERS)
+  {
+    return;
+  }
+
+  bool poseDifferent = false;
+  for (int i = 0; i < 4; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
+      if ( fabs(this->PhysicalEventPoses[pointerIndex]->GetElement(i, j) - poseMatrix->GetElement(i, j)) >= 1e-3 )
+      {
+        poseDifferent = true;
+        break;
+      }
+    }
+  }
+
+
+  if (poseDifferent)
+  {
+    this->LastPhysicalEventPoses[pointerIndex]->DeepCopy(PhysicalEventPoses[pointerIndex]);
+    this->PhysicalEventPoses[pointerIndex]->DeepCopy(poseMatrix);
+    this->Modified();
+  }
+}
+
+//------------------------------------------------------------------
+void vtkRenderWindowInteractor3D::SetWorldEventPose(vtkMatrix4x4* poseMatrix, int pointerIndex)
+{
+  if (!poseMatrix || pointerIndex < 0 || pointerIndex >= VTKI_MAX_POINTERS)
+  {
+    return;
+  }
+
+  bool poseDifferent = false;
+  for (int i = 0; i < 4; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
+      if ( fabs(this->WorldEventPoses[pointerIndex]->GetElement(i, j) - poseMatrix->GetElement(i, j)) >= 1e-3 )
+      {
+        poseDifferent = true;
+        break;
+      }
+    }
+  }
+
+
+  if (poseDifferent)
+  {
+    this->LastWorldEventPoses[pointerIndex]->DeepCopy(WorldEventPoses[pointerIndex]);
+    this->WorldEventPoses[pointerIndex]->DeepCopy(poseMatrix);
+    this->Modified();
+  }
+}
+
+//------------------------------------------------------------------
+void vtkRenderWindowInteractor3D::GetWorldEventPose(vtkMatrix4x4* poseMatrix, int pointerIndex)
+{
+  if (pointerIndex >= VTKI_MAX_POINTERS || !poseMatrix)
+  {
+    return;
+  }
+  poseMatrix->DeepCopy(WorldEventPoses[pointerIndex]);
+}
+
+//------------------------------------------------------------------
+void vtkRenderWindowInteractor3D::GetLastWorldEventPose(vtkMatrix4x4* poseMatrix, int pointerIndex)
+{
+  if (pointerIndex >= VTKI_MAX_POINTERS || !poseMatrix)
+  {
+    return;
+  }
+  poseMatrix->DeepCopy(LastWorldEventPoses[pointerIndex]);
+}
+
+//------------------------------------------------------------------
+void vtkRenderWindowInteractor3D::GetPhysicalEventPose(vtkMatrix4x4* poseMatrix, int pointerIndex)
+{
+  if (pointerIndex >= VTKI_MAX_POINTERS || !poseMatrix)
+  {
+    return;
+  }
+  poseMatrix->DeepCopy(PhysicalEventPoses[pointerIndex]);
+}
+
+//------------------------------------------------------------------
+void vtkRenderWindowInteractor3D::GetLastPhysicalEventPose(vtkMatrix4x4* poseMatrix, int pointerIndex)
+{
+  if (pointerIndex >= VTKI_MAX_POINTERS || !poseMatrix)
+  {
+    return;
+  }
+  poseMatrix->DeepCopy(LastPhysicalEventPoses[pointerIndex]);
+}
+
+//------------------------------------------------------------------
+void vtkRenderWindowInteractor3D::GetStartingPhysicalEventPose(vtkMatrix4x4* poseMatrix, int pointerIndex)
+{
+  if (pointerIndex >= VTKI_MAX_POINTERS || !poseMatrix)
+  {
+    return;
+  }
+  poseMatrix->DeepCopy(StartingPhysicalEventPoses[pointerIndex]);
 }

@@ -15,6 +15,7 @@
 //=============================================================================
 #include "vtkmGradient.h"
 
+#include "vtkCellData.h"
 #include "vtkDataSet.h"
 #include "vtkInformation.h"
 #include "vtkInformationVector.h"
@@ -38,8 +39,10 @@ vtkStandardNewMacro(vtkmGradient)
 
 namespace
 {
-struct GradientOutTypes
+struct GradientTypes
     : vtkm::ListTagBase<
+                        vtkm::Float32,
+                        vtkm::Float64,
                         vtkm::Vec<vtkm::Float32,3>,
                         vtkm::Vec<vtkm::Float64,3>,
                         vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3>,
@@ -49,23 +52,38 @@ struct GradientOutTypes
 };
 
 //------------------------------------------------------------------------------
-class vtkmGradientOutputFilterPolicy
-      : public vtkm::filter::PolicyBase<vtkmGradientOutputFilterPolicy>
+class vtkmGradientFilterPolicy
+      : public vtkm::filter::PolicyBase<vtkmGradientFilterPolicy>
   {
   public:
-    typedef GradientOutTypes FieldTypeList;
+    typedef GradientTypes FieldTypeList;
     typedef tovtkm::TypeListTagVTMOut FieldStorageList;
 
-    typedef tovtkm::CellListStructuredOutVTK StructuredCellSetList;
-    typedef tovtkm::CellListUnstructuredOutVTK UnstructuredCellSetList;
-    typedef tovtkm::CellListAllOutVTK AllCellSetList;
+    typedef tovtkm::CellListStructuredInVTK StructuredCellSetList;
+    typedef tovtkm::CellListUnstructuredInVTK UnstructuredCellSetList;
+    typedef tovtkm::CellListAllInVTK AllCellSetList;
 
     typedef vtkm::TypeListTagFieldVec3 CoordinateTypeList;
-    typedef tovtkm::PointListOutVTK CoordinateStorageList;
+    typedef tovtkm::PointListInVTK CoordinateStorageList;
 
     typedef vtkm::filter::PolicyDefault::DeviceAdapterList DeviceAdapterList;
   };
+
+vtkm::cont::DataSet CopyDataSetStructure(const vtkm::cont::DataSet& ds)
+{
+  vtkm::cont::DataSet cp;
+  for (vtkm::IdComponent i = 0; i < ds.GetNumberOfCoordinateSystems(); ++i)
+  {
+    cp.AddCoordinateSystem(ds.GetCoordinateSystem(i));
+  }
+  for (vtkm::IdComponent i = 0; i < ds.GetNumberOfCellSets(); ++i)
+  {
+    cp.AddCellSet(ds.GetCellSet(i));
+  }
+  return cp;
 }
+
+} // anonymous namespace
 
 //------------------------------------------------------------------------------
 vtkmGradient::vtkmGradient()
@@ -85,8 +103,8 @@ void vtkmGradient::PrintSelf(ostream& os, vtkIndent indent)
 
 //------------------------------------------------------------------------------
 int vtkmGradient::RequestData(vtkInformation* request,
-                                 vtkInformationVector** inputVector,
-                                 vtkInformationVector* outputVector)
+                              vtkInformationVector** inputVector,
+                              vtkInformationVector* outputVector)
 {
   vtkInformation* inInfo = inputVector[0]->GetInformationObject(0);
   vtkInformation* outInfo = outputVector->GetInformationObject(0);
@@ -101,167 +119,168 @@ int vtkmGradient::RequestData(vtkInformation* request,
   // grab the input array to process to determine the field want to compute
   // the gradient for
   int association = this->GetInputArrayAssociation(0, inputVector);
-  if(association != vtkDataObject::FIELD_ASSOCIATION_POINTS)
-  {
-    vtkWarningMacro(<< "VTK-m Gradient currently only support point based fields.\n"
-                    << "Falling back to vtkGradientFilter."
-                    );
-    return this->Superclass::RequestData(request, inputVector, outputVector);
-  }
-
-  // convert the input dataset to a vtkm::cont::DataSet
-  vtkm::cont::DataSet in = tovtkm::Convert(input);
-  // convert the array over to vtkm
   vtkDataArray* inputArray = this->GetInputArrayToProcess(0, inputVector);
-  vtkm::cont::Field field = tovtkm::Convert(inputArray, association);
-
-  const bool dataSetValid =
-      in.GetNumberOfCoordinateSystems() > 0 && in.GetNumberOfCellSets() > 0;
-  const bool fieldValid =
-      (field.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS) &&
-      (field.GetName() != std::string());
-
-  const bool fieldIsVec = (inputArray->GetNumberOfComponents() == 3);
-  const bool fieldIsScalar = inputArray->GetDataType() == VTK_FLOAT ||
-                             inputArray->GetDataType() == VTK_DOUBLE;
-
-  if(!(dataSetValid && fieldValid) || !fieldIsScalar)
+  if (inputArray == nullptr || inputArray->GetName() == nullptr ||
+      inputArray->GetName()[0] == '\0')
   {
-    vtkWarningMacro(<< "Unable convert dataset over to VTK-m.\n"
-                    << "Falling back to vtkGradientFilter."
-                    );
-    return this->Superclass::RequestData(request, inputVector, outputVector);
+    vtkErrorMacro("Invalid input array.");
+    return 0;
   }
 
-  vtkmInputFilterPolicy policy;
-  vtkm::filter::Gradient filter;
-  filter.SetComputePointGradient( !this->FasterApproximation );
+  try
+  {
+    // convert the input dataset to a vtkm::cont::DataSet. We explicitly drop
+    // all arrays from the conversion as this algorithm doesn't change topology
+    // and therefore doesn't need input fields converted through the VTK-m filter
+    auto in = tovtkm::Convert(input, tovtkm::FieldsFlag::None);
+    vtkm::cont::Field field = tovtkm::Convert(inputArray, association);
+    in.AddField(field);
 
+    const bool fieldIsPoint = field.GetAssociation() == vtkm::cont::Field::Association::POINTS;
+    const bool fieldIsCell = field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET;
+    const bool fieldIsVec = (inputArray->GetNumberOfComponents() == 3);
+    const bool fieldIsScalar = inputArray->GetDataType() == VTK_FLOAT ||
+                              inputArray->GetDataType() == VTK_DOUBLE;
+    const bool fieldValid = (fieldIsPoint || fieldIsCell) &&
+                            fieldIsScalar &&
+                            (field.GetName() != std::string());
 
-  if( fieldIsVec )
-    { //this properties are only valid when processing a vec<3> field
-    filter.SetComputeDivergence( this->ComputeDivergence != 0 );
-    filter.SetComputeVorticity( this->ComputeVorticity != 0 );
-    filter.SetComputeQCriterion( this->ComputeQCriterion != 0 );
+    if (!fieldValid)
+    {
+      vtkWarningMacro(<< "Unsupported field type\n"
+                      << "Falling back to vtkGradientFilter.");
+      return this->Superclass::RequestData(request, inputVector, outputVector);
     }
 
-  if(this->ResultArrayName)
-  {
-    filter.SetOutputFieldName( this->ResultArrayName );
-  }
+    vtkmGradientFilterPolicy policy;
+    auto passNoFields =
+      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_NONE);
+    vtkm::filter::Gradient filter;
+    filter.SetFieldsToPass(passNoFields);
+    filter.SetColumnMajorOrdering();
 
-  if(this->DivergenceArrayName)
-  {
-    filter.SetDivergenceName( this->DivergenceArrayName );
-  }
+    if (fieldIsVec)
+    { //this properties are only valid when processing a vec<3> field
+      filter.SetComputeDivergence(this->ComputeDivergence != 0);
+      filter.SetComputeVorticity(this->ComputeVorticity != 0);
+      filter.SetComputeQCriterion(this->ComputeQCriterion != 0);
+    }
 
-  if(this->VorticityArrayName)
-  {
-    filter.SetVorticityName( this->VorticityArrayName );
-  }
+    if (this->ResultArrayName)
+    {
+      filter.SetOutputFieldName(this->ResultArrayName);
+    }
 
-  if(this->QCriterionArrayName)
-  {
-    filter.SetQCriterionName( this->QCriterionArrayName );
-  }
-  else
-  {
-    filter.SetQCriterionName( "Q-criterion" );
-  }
+    if (this->DivergenceArrayName)
+    {
+      filter.SetDivergenceName(this->DivergenceArrayName);
+    }
 
-  vtkm::filter::ResultField result = filter.Execute(in, field, policy);
-  if(!result.IsValid())
+    if (this->VorticityArrayName)
+    {
+      filter.SetVorticityName(this->VorticityArrayName);
+    }
+
+    if (this->QCriterionArrayName)
+    {
+      filter.SetQCriterionName(this->QCriterionArrayName);
+    }
+    else
+    {
+      filter.SetQCriterionName("Q-criterion");
+    }
+
+    // Run the VTK-m Gradient Filter
+    // -----------------------------
+    vtkm::cont::DataSet result;
+    if (fieldIsPoint)
+    {
+      filter.SetComputePointGradient(!this->FasterApproximation);
+      filter.SetActiveField(field.GetName(), vtkm::cont::Field::Association::POINTS);
+      result = filter.Execute(in, policy);
+
+      //When we have faster approximation enabled the VTK-m gradient will output
+      //a cell field not a point field. So at that point we will need to convert
+      //back to a point field
+      if (this->FasterApproximation)
+      {
+        vtkm::filter::PointAverage cellToPoint;
+        cellToPoint.SetFieldsToPass(passNoFields);
+
+        auto c2pIn = result;
+        result = CopyDataSetStructure(result);
+
+        if (this->ComputeGradient)
+        {
+          cellToPoint.SetActiveField(
+            filter.GetOutputFieldName(), vtkm::cont::Field::Association::CELL_SET);
+          auto ds = cellToPoint.Execute(c2pIn, policy);
+          result.AddField(ds.GetField(0));
+        }
+        if (this->ComputeDivergence && fieldIsVec)
+        {
+          cellToPoint.SetActiveField(
+            filter.GetDivergenceName(), vtkm::cont::Field::Association::CELL_SET);
+          auto ds = cellToPoint.Execute(c2pIn, policy);
+          result.AddField(ds.GetField(0));
+        }
+        if (this->ComputeVorticity && fieldIsVec)
+        {
+          cellToPoint.SetActiveField(filter.GetVorticityName(),
+            vtkm::cont::Field::Association::CELL_SET);
+          auto ds = cellToPoint.Execute(c2pIn, policy);
+          result.AddField(ds.GetField(0));
+        }
+        if (this->ComputeQCriterion && fieldIsVec)
+        {
+          cellToPoint.SetActiveField(filter.GetQCriterionName(),
+            vtkm::cont::Field::Association::CELL_SET);
+          auto ds = cellToPoint.Execute(c2pIn, policy);
+          result.AddField(ds.GetField(0));
+        }
+      }
+    }
+    else
+    {
+      //we need to convert the field to be a point field
+      vtkm::filter::PointAverage cellToPoint;
+      cellToPoint.SetFieldsToPass(passNoFields);
+      cellToPoint.SetActiveField(field.GetName(), field.GetAssociation());
+      cellToPoint.SetOutputFieldName(field.GetName());
+      in = cellToPoint.Execute(in, policy);
+
+      filter.SetComputePointGradient(false);
+      filter.SetActiveField(field.GetName(), vtkm::cont::Field::Association::POINTS);
+      result = filter.Execute(in, policy);
+    }
+
+    // Remove gradient field from result if it was not requested.
+    auto requestedResult = result;
+    if (!this->ComputeGradient)
+    {
+      requestedResult = CopyDataSetStructure(result);
+      vtkm::Id numOfFields = static_cast<vtkm::Id>(result.GetNumberOfFields());
+      for (vtkm::Id i=0; i < numOfFields; ++i)
+      {
+        if (result.GetField(i).GetName() != filter.GetOutputFieldName())
+        {
+          requestedResult.AddField(result.GetField(i));
+        }
+      }
+    }
+
+    // convert arrays back to VTK
+    if (!fromvtkm::ConvertArrays(result, output))
+    {
+      vtkErrorMacro(<< "Unable to convert VTKm DataSet back to VTK");
+      return 0;
+    }
+  }
+  catch (const vtkm::cont::Error& e)
   {
-    vtkWarningMacro(<< "VTK-m gradient computation failed for an unknown reason.\n"
-                    << "Falling back to vtkGradientFilter."
-                    );
+    vtkWarningMacro(<< "VTK-m error: " << e.GetMessage()
+                    << "Falling back to serial implementation.");
     return this->Superclass::RequestData(request, inputVector, outputVector);
-  }
-
-  vtkm::cont::DataSet const& resultData = result.GetDataSet();
-  vtkDataArray* gradientArray = nullptr;
-  vtkDataArray* divergenceArray = nullptr;
-  vtkDataArray* vorticityArray = nullptr;
-  vtkDataArray* qcriterionArray = nullptr;
-
-  if(this->FasterApproximation)
-  {
-    //We need to convert this field back to a point field
-    //Which means converting cell data back to point data
-    vtkmGradientOutputFilterPolicy averagepolicy;
-    vtkm::filter::PointAverage cellToPoint;
-    cellToPoint.SetOutputFieldName(filter.GetOutputFieldName());
-    vtkm::filter::ResultField toPointResult = cellToPoint.Execute(in,
-                                                                  result.GetField(),
-                                                                  averagepolicy);
-    gradientArray = fromvtkm::Convert(toPointResult.GetField());
-
-    if(this->ComputeDivergence && fieldIsVec)
-      {
-      vtkm::filter::ResultField dresult =
-        cellToPoint.Execute(in, resultData.GetField(filter.GetDivergenceName()));
-      divergenceArray = fromvtkm::Convert(dresult.GetField());
-      }
-
-    if(this->ComputeVorticity  && fieldIsVec)
-      {
-      vtkm::filter::ResultField vresult =
-        cellToPoint.Execute(in, resultData.GetField(filter.GetVorticityName()));
-      vorticityArray = fromvtkm::Convert(vresult.GetField());
-      }
-
-    if(this->ComputeQCriterion && fieldIsVec)
-      {
-      vtkm::filter::ResultField qresult =
-        cellToPoint.Execute(in,resultData.GetField(filter.GetQCriterionName()));
-      qcriterionArray = fromvtkm::Convert(qresult.GetField());
-      }
-  }
-  else
-  {
-    gradientArray = fromvtkm::Convert(result.GetField());
-
-    if(this->ComputeDivergence && fieldIsVec)
-      {
-      divergenceArray = fromvtkm::Convert(resultData.GetField(filter.GetDivergenceName()));
-      }
-    if(this->ComputeVorticity && fieldIsVec)
-      {
-      vorticityArray = fromvtkm::Convert(resultData.GetField(filter.GetVorticityName()));
-      }
-    if(this->ComputeQCriterion && fieldIsVec)
-      {
-      qcriterionArray = fromvtkm::Convert(resultData.GetField(filter.GetQCriterionName()));
-      }
-  }
-
-  if(this->GetComputeGradient() && gradientArray)
-  {
-    output->GetPointData()->AddArray(gradientArray);
-    gradientArray->FastDelete();
-  }
-  else if(gradientArray)
-  { //gradient is the only array we unconditional convert so we have to handle
-    //the use case the user doesn't want it on the output data
-    gradientArray->Delete();
-  }
-
-  if(this->ComputeDivergence && divergenceArray)
-  {
-    output->GetPointData()->AddArray(divergenceArray);
-    divergenceArray->FastDelete();
-  }
-
-  if(this->ComputeVorticity && vorticityArray)
-  {
-    output->GetPointData()->AddArray(vorticityArray);
-    vorticityArray->FastDelete();
-  }
-
-  if(this->ComputeQCriterion && qcriterionArray)
-  {
-    output->GetPointData()->AddArray(qcriterionArray);
-    qcriterionArray->FastDelete();
   }
 
   return 1;

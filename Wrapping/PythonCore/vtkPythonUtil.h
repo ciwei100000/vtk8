@@ -22,10 +22,15 @@
 
 #include "vtkPython.h"
 #include "vtkPythonCompatibility.h"
-#include "PyVTKMutableObject.h"
+#include "PyVTKReference.h"
 #include "PyVTKNamespace.h"
 #include "PyVTKObject.h"
 #include "PyVTKSpecialObject.h"
+
+#if defined(_MSC_VER) // Visual Studio
+// some docstrings trigger "decimal digit terminates octal escape sequence"
+#pragma warning ( disable : 4125 )
+#endif
 
 class vtkPythonClassMap;
 class vtkPythonCommand;
@@ -91,22 +96,10 @@ public:
    * if necessary.  This function also passes ownership of the reference
    * to the PyObject.
    * Special behaviour: NULL is converted to Py_None.
+   *
+   * **Return value: New reference.**
    */
   static PyObject *GetObjectFromPointer(vtkObjectBase *ptr);
-
-  /**
-   * Extract the SIP wrapped object from a PyObject.  If the conversion cannot
-   * be done, an error indicator is set.
-   * Special behavior: Py_None is converted to NULL without no error.
-   */
-  static void *SIPGetPointerFromObject(PyObject *obj, const char *classname);
-
-  /**
-   * Convert a SIP wrapped object to a PyObject.
-   * Special behaviour: NULL is converted to Py_None.
-   */
-  static PyObject *SIPGetObjectFromPointer(
-    const void *ptr, const char* classname, bool is_new);
 
   /**
    * Try to convert some PyObject into a PyVTKObject, currently conversion
@@ -126,6 +119,15 @@ public:
    * counts are changed.
    */
   static void RemoveObjectFromMap(PyObject *obj);
+
+  /**
+   * Find the PyObject for a VTK object, return nullptr if not found.
+   * If the object is found, then it is returned as a new reference.
+   * Special behavior: If "ptr" is nullptr, then Py_None is returned.
+   *
+   * **Return value: New reference.**
+   */
+  static PyObject *FindObject(vtkObjectBase *ptr);
 
   /**
    * Add a special VTK type to the type lookup table, this allows us to
@@ -180,12 +182,6 @@ public:
   static PyTypeObject *FindEnum(const char *name);
 
   /**
-   * Utility function to build a docstring by concatenating a series
-   * of strings until a null string is found.
-   */
-  static PyObject *BuildDocString(const char *docstring[]);
-
-  /**
    * Utility function for creating SWIG-style mangled pointer string.
    */
   static char *ManglePointer(const void *ptr, const char *type);
@@ -214,8 +210,8 @@ public:
 private:
   vtkPythonUtil();
   ~vtkPythonUtil();
-  vtkPythonUtil(const vtkPythonUtil&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPythonUtil&) VTK_DELETE_FUNCTION;
+  vtkPythonUtil(const vtkPythonUtil&) = delete;
+  void operator=(const vtkPythonUtil&) = delete;
 
   vtkPythonObjectMap *ObjectMap;
   vtkPythonGhostMap *GhostMap;

@@ -78,7 +78,7 @@ class VTKRENDERINGANNOTATION_EXPORT vtkScalarBarActor : public vtkActor2D
 {
 public:
   vtkTypeMacro(vtkScalarBarActor, vtkActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate object with 64 maximum colors; 5 labels; %%-#6.3g label
@@ -91,22 +91,22 @@ public:
   /**
    * Draw the scalar bar and annotation text to the screen.
    */
-  int RenderOpaqueGeometry(vtkViewport* viewport) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport*) VTK_OVERRIDE { return 0; };
-  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  int RenderOpaqueGeometry(vtkViewport* viewport) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport*) override { return 0; };
+  int RenderOverlay(vtkViewport* viewport) override;
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
   /**
    * Release any graphics resources that are being consumed by this actor.
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow*) override;
 
   /**
    * Fills rect with the dimensions of the scalar bar in viewport coordinates.
@@ -134,9 +134,9 @@ public:
    * if Opacity is ON. You might also want to play with SetTextureGridWith
    * in that case. [Default: off]
    */
-  vtkSetMacro(UseOpacity, int);
-  vtkGetMacro(UseOpacity, int);
-  vtkBooleanMacro(UseOpacity, int);
+  vtkSetMacro(UseOpacity, vtkTypeBool);
+  vtkGetMacro(UseOpacity, vtkTypeBool);
+  vtkBooleanMacro(UseOpacity, vtkTypeBool);
   //@}
 
   //@{
@@ -220,7 +220,7 @@ public:
   /**
    * Shallow copy of a scalar bar actor. Overloads the virtual vtkProp method.
    */
-  void ShallowCopy(vtkProp* prop) VTK_OVERRIDE;
+  void ShallowCopy(vtkProp* prop) override;
 
   //@{
   /**
@@ -286,9 +286,9 @@ public:
    * Currently, this only affects rendering when \a IndexedLookup is true.
    * The default is true.
    */
-  vtkSetMacro(DrawAnnotations, int);
-  vtkGetMacro(DrawAnnotations, int);
-  vtkBooleanMacro(DrawAnnotations, int);
+  vtkSetMacro(DrawAnnotations, vtkTypeBool);
+  vtkGetMacro(DrawAnnotations, vtkTypeBool);
+  vtkBooleanMacro(DrawAnnotations, vtkTypeBool);
   //@}
 
   //@{
@@ -297,9 +297,9 @@ public:
    * This only affects rendering when \a DrawAnnotations is true.
    * The default is false.
    */
-  vtkSetMacro(DrawNanAnnotation, int);
-  vtkGetMacro(DrawNanAnnotation, int);
-  vtkBooleanMacro(DrawNanAnnotation, int);
+  vtkSetMacro(DrawNanAnnotation, vtkTypeBool);
+  vtkGetMacro(DrawNanAnnotation, vtkTypeBool);
+  vtkBooleanMacro(DrawNanAnnotation, vtkTypeBool);
   //@}
 
   //@{
@@ -348,9 +348,9 @@ public:
    * This only affects rendering when \a DrawAnnotations is true.
    * The default is false.
    */
-  vtkSetMacro(FixedAnnotationLeaderLineColor, int);
-  vtkGetMacro(FixedAnnotationLeaderLineColor, int);
-  vtkBooleanMacro(FixedAnnotationLeaderLineColor, int);
+  vtkSetMacro(FixedAnnotationLeaderLineColor, vtkTypeBool);
+  vtkGetMacro(FixedAnnotationLeaderLineColor, vtkTypeBool);
+  vtkBooleanMacro(FixedAnnotationLeaderLineColor, vtkTypeBool);
   //@}
 
   //@{
@@ -370,9 +370,9 @@ public:
    * labels will have their TextScaleMode set to viewport-based scaling,
    * which nonlinearly scales font size with the viewport size.
    */
-  vtkSetMacro(AnnotationTextScaling, int);
-  vtkGetMacro(AnnotationTextScaling, int);
-  vtkBooleanMacro(AnnotationTextScaling, int);
+  vtkSetMacro(AnnotationTextScaling, vtkTypeBool);
+  vtkGetMacro(AnnotationTextScaling, vtkTypeBool);
+  vtkBooleanMacro(AnnotationTextScaling, vtkTypeBool);
   //@}
 
   //@{
@@ -380,9 +380,9 @@ public:
    * Set/Get whether a background should be drawn around the scalar bar.
    * Default is off.
    */
-  vtkSetMacro(DrawBackground, int);
-  vtkGetMacro(DrawBackground, int);
-  vtkBooleanMacro(DrawBackground, int);
+  vtkSetMacro(DrawBackground, vtkTypeBool);
+  vtkGetMacro(DrawBackground, vtkTypeBool);
+  vtkBooleanMacro(DrawBackground, vtkTypeBool);
   //@}
 
   //@{
@@ -390,9 +390,9 @@ public:
    * Set/Get whether a frame should be drawn around the scalar bar.
    * Default is off.
    */
-  vtkSetMacro(DrawFrame, int);
-  vtkGetMacro(DrawFrame, int);
-  vtkBooleanMacro(DrawFrame, int);
+  vtkSetMacro(DrawFrame, vtkTypeBool);
+  vtkGetMacro(DrawFrame, vtkTypeBool);
+  vtkBooleanMacro(DrawFrame, vtkTypeBool);
   //@}
 
   //@{
@@ -400,18 +400,18 @@ public:
    * Set/Get whether the color bar should be drawn. If off, only the tickmarks
    * and text will be drawn. Default is on.
    */
-  vtkSetMacro(DrawColorBar, int);
-  vtkGetMacro(DrawColorBar, int);
-  vtkBooleanMacro(DrawColorBar, int);
+  vtkSetMacro(DrawColorBar, vtkTypeBool);
+  vtkGetMacro(DrawColorBar, vtkTypeBool);
+  vtkBooleanMacro(DrawColorBar, vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get whether the tick labels should be drawn. Default is on.
    */
-  vtkSetMacro(DrawTickLabels, int);
-  vtkGetMacro(DrawTickLabels, int);
-  vtkBooleanMacro(DrawTickLabels, int);
+  vtkSetMacro(DrawTickLabels, vtkTypeBool);
+  vtkGetMacro(DrawTickLabels, vtkTypeBool);
+  vtkBooleanMacro(DrawTickLabels, vtkTypeBool);
   //@}
 
   //@{
@@ -482,7 +482,7 @@ public:
 
 protected:
   vtkScalarBarActor();
-  ~vtkScalarBarActor() VTK_OVERRIDE;
+  ~vtkScalarBarActor() override;
 
   /**
    * Called from within \a RenderOpaqueGeometry when the internal state
@@ -716,20 +716,20 @@ protected:
   int NumberOfLabels;
   int NumberOfLabelsBuilt;
   int Orientation;
-  int DrawBackground; // off by default
-  int DrawFrame; // off by default
-  int DrawColorBar; // on by default
-  int DrawTickLabels; // on by default
-  int DrawAnnotations;
-  int DrawNanAnnotation;
-  int AnnotationTextScaling; // off by default
-  int FixedAnnotationLeaderLineColor;
+  vtkTypeBool DrawBackground; // off by default
+  vtkTypeBool DrawFrame; // off by default
+  vtkTypeBool DrawColorBar; // on by default
+  vtkTypeBool DrawTickLabels; // on by default
+  vtkTypeBool DrawAnnotations;
+  vtkTypeBool DrawNanAnnotation;
+  vtkTypeBool AnnotationTextScaling; // off by default
+  vtkTypeBool FixedAnnotationLeaderLineColor;
   vtkProperty2D* BackgroundProperty;
   vtkProperty2D* FrameProperty;
   char* Title;
   char* ComponentTitle;
   char* LabelFormat;
-  int UseOpacity; // off by default
+  vtkTypeBool UseOpacity; // off by default
   double TextureGridWidth;
   int TextPosition;
   char* NanAnnotation;
@@ -780,8 +780,8 @@ protected:
   //@}
 
 private:
-  vtkScalarBarActor(const vtkScalarBarActor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkScalarBarActor&) VTK_DELETE_FUNCTION;
+  vtkScalarBarActor(const vtkScalarBarActor&) = delete;
+  void operator=(const vtkScalarBarActor&) = delete;
 };
 
 #endif

@@ -69,29 +69,29 @@ class VTKVIEWSINFOVIS_EXPORT vtkParallelCoordinatesHistogramRepresentation : pub
 public:
   static vtkParallelCoordinatesHistogramRepresentation* New();
   vtkTypeMacro(vtkParallelCoordinatesHistogramRepresentation, vtkParallelCoordinatesRepresentation);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Apply the theme to this view.
    */
-  void ApplyViewTheme(vtkViewTheme* theme) VTK_OVERRIDE;
+  void ApplyViewTheme(vtkViewTheme* theme) override;
 
   //@{
   /**
    * Whether to use the histogram rendering mode or the superclass's line rendering mode
    */
-  virtual void SetUseHistograms(int);
-  vtkGetMacro(UseHistograms,int);
-  vtkBooleanMacro(UseHistograms,int);
+  virtual void SetUseHistograms(vtkTypeBool);
+  vtkGetMacro(UseHistograms,vtkTypeBool);
+  vtkBooleanMacro(UseHistograms,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Whether to compute and show outlier lines
    */
-  virtual void SetShowOutliers(int);
-  vtkGetMacro(ShowOutliers,int);
-  vtkBooleanMacro(ShowOutliers,int);
+  virtual void SetShowOutliers(vtkTypeBool);
+  vtkGetMacro(ShowOutliers,vtkTypeBool);
+  vtkBooleanMacro(ShowOutliers,vtkTypeBool);
   //@}
 
   //@{
@@ -123,31 +123,31 @@ public:
    * Calls superclass swap, and assures that only histograms affected by the
    * swap get recomputed.
    */
-  int SwapAxisPositions(int position1, int position2) VTK_OVERRIDE;
+  int SwapAxisPositions(int position1, int position2) override;
 
   /**
    * Calls the superclass method, and assures that only the two histograms
    * affect by this call get recomputed.
    */
-  int SetRangeAtPosition(int position, double range[2]) VTK_OVERRIDE;
+  int SetRangeAtPosition(int position, double range[2]) override;
 
 protected:
   vtkParallelCoordinatesHistogramRepresentation();
-  ~vtkParallelCoordinatesHistogramRepresentation() VTK_OVERRIDE;
+  ~vtkParallelCoordinatesHistogramRepresentation() override;
 
   int RequestData(
     vtkInformation*,
     vtkInformationVector**,
-    vtkInformationVector*) VTK_OVERRIDE;
+    vtkInformationVector*) override;
 
-  bool AddToView(vtkView* view) VTK_OVERRIDE;
+  bool AddToView(vtkView* view) override;
 
-  bool RemoveFromView(vtkView* view) VTK_OVERRIDE;
+  bool RemoveFromView(vtkView* view) override;
 
   /**
    * Flag deciding if histograms will be drawn.
    */
-  int UseHistograms;
+  vtkTypeBool UseHistograms;
 
   /**
    * The range applied to the lookup table used to draw histogram quads
@@ -165,7 +165,7 @@ protected:
   /**
    * Whether or not to draw outlier lines
    */
-  int ShowOutliers;
+  vtkTypeBool ShowOutliers;
 
   /**
    * How many outlier lines to draw, approximately.
@@ -181,18 +181,18 @@ protected:
    * Correctly forwards the superclass call to draw lines to the internal
    * PlaceHistogramLineQuads call.
    */
-  int PlaceLines(vtkPolyData* polyData, vtkTable* data, vtkIdTypeArray* idsToPlot) VTK_OVERRIDE;
+  int PlaceLines(vtkPolyData* polyData, vtkTable* data, vtkIdTypeArray* idsToPlot) override;
 
   /**
    * Correctly forwards the superclass call to draw curves to the internal
    * PlaceHistogramLineCurves call.
    */
-  int PlaceCurves(vtkPolyData* polyData, vtkTable* data, vtkIdTypeArray* idsToPlot) VTK_OVERRIDE;
+  int PlaceCurves(vtkPolyData* polyData, vtkTable* data, vtkIdTypeArray* idsToPlot) override;
 
   /**
    * Draw a selection node referencing the row ids of a table into a poly data object.
    */
-  int PlaceSelection(vtkPolyData* polyData, vtkTable* data, vtkSelectionNode* selectionNode) VTK_OVERRIDE;
+  int PlaceSelection(vtkPolyData* polyData, vtkTable* data, vtkSelectionNode* selectionNode) override;
 
   /**
    * Take the input 2D histogram images and draw one quad for each bin
@@ -210,8 +210,8 @@ protected:
    * Compute the number of axes and their individual ranges, as well
    * as histograms if requested.
    */
-  int ComputeDataProperties() VTK_OVERRIDE;
-  int UpdatePlotProperties(vtkStringArray*) VTK_OVERRIDE;
+  int ComputeDataProperties() override;
+  int UpdatePlotProperties(vtkStringArray*) override;
   //@}
 
   /**
@@ -226,8 +226,8 @@ protected:
   virtual vtkTable* GetOutlierData();
 
 private:
-  vtkParallelCoordinatesHistogramRepresentation(const vtkParallelCoordinatesHistogramRepresentation&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkParallelCoordinatesHistogramRepresentation&) VTK_DELETE_FUNCTION;
+  vtkParallelCoordinatesHistogramRepresentation(const vtkParallelCoordinatesHistogramRepresentation&) = delete;
+  void operator=(const vtkParallelCoordinatesHistogramRepresentation&) = delete;
 };
 
 #endif

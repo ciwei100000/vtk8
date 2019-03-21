@@ -34,29 +34,29 @@ class VTKFILTERSMODELING_EXPORT vtkOutlineFilter : public vtkPolyDataAlgorithm
 public:
   static vtkOutlineFilter *New();
   vtkTypeMacro(vtkOutlineFilter,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Generate solid faces for the box. This is off by default.
    */
-  vtkSetMacro(GenerateFaces, int);
-  vtkBooleanMacro(GenerateFaces, int);
-  vtkGetMacro(GenerateFaces, int);
+  vtkSetMacro(GenerateFaces, vtkTypeBool);
+  vtkBooleanMacro(GenerateFaces, vtkTypeBool);
+  vtkGetMacro(GenerateFaces, vtkTypeBool);
   //@}
 
 protected:
   vtkOutlineFilter();
-  ~vtkOutlineFilter() VTK_OVERRIDE;
+  ~vtkOutlineFilter() override;
 
-  int GenerateFaces;
+  vtkTypeBool GenerateFaces;
   vtkOutlineSource *OutlineSource;
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
 private:
-  vtkOutlineFilter(const vtkOutlineFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOutlineFilter&) VTK_DELETE_FUNCTION;
+  vtkOutlineFilter(const vtkOutlineFilter&) = delete;
+  void operator=(const vtkOutlineFilter&) = delete;
 };
 
 #endif

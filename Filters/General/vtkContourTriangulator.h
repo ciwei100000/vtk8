@@ -45,7 +45,7 @@ class VTKFILTERSGENERAL_EXPORT vtkContourTriangulator : public vtkPolyDataAlgori
 public:
   static vtkContourTriangulator *New();
   vtkTypeMacro(vtkContourTriangulator,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -60,9 +60,9 @@ public:
    * Note that triangulation failures are often minor, because they involve
    * tiny triangles that are too small to see.
    */
-  vtkSetMacro(TriangulationErrorDisplay, int);
-  vtkBooleanMacro(TriangulationErrorDisplay, int);
-  vtkGetMacro(TriangulationErrorDisplay, int);
+  vtkSetMacro(TriangulationErrorDisplay, vtkTypeBool);
+  vtkBooleanMacro(TriangulationErrorDisplay, vtkTypeBool);
+  vtkGetMacro(TriangulationErrorDisplay, vtkTypeBool);
   //@}
 
   /**
@@ -85,18 +85,18 @@ public:
 
 protected:
   vtkContourTriangulator();
-  ~vtkContourTriangulator() VTK_OVERRIDE;
+  ~vtkContourTriangulator() override;
 
   int RequestData(
     vtkInformation* request, vtkInformationVector** inputVector,
-    vtkInformationVector* outputVector) VTK_OVERRIDE;
+    vtkInformationVector* outputVector) override;
 
   int TriangulationError;
-  int TriangulationErrorDisplay;
+  vtkTypeBool TriangulationErrorDisplay;
 
 private:
-  vtkContourTriangulator(const vtkContourTriangulator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkContourTriangulator&) VTK_DELETE_FUNCTION;
+  vtkContourTriangulator(const vtkContourTriangulator&) = delete;
+  void operator=(const vtkContourTriangulator&) = delete;
 };
 
 #endif

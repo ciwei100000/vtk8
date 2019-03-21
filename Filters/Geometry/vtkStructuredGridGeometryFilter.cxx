@@ -55,10 +55,10 @@ int vtkStructuredGridGeometryFilter::RequestData(
   int *dims, dimension, dir[3], diff[3];
   int i, j, k, extent[6], *inExt;
   vtkIdType ptIds[4], idx, startIdx, startCellIdx, cellId;
-  vtkPoints *newPts=0;
-  vtkCellArray *newVerts=0;
-  vtkCellArray *newLines=0;
-  vtkCellArray *newPolys=0;
+  vtkPoints *newPts=nullptr;
+  vtkCellArray *newVerts=nullptr;
+  vtkCellArray *newLines=nullptr;
+  vtkCellArray *newPolys=nullptr;
   vtkIdType totPoints, pos, cellPos;
   int offset[3], cellOffset[3], numPolys;
   double x[3];
@@ -67,7 +67,7 @@ int vtkStructuredGridGeometryFilter::RequestData(
 
   vtkDebugMacro(<< "Extracting structured points geometry");
 
-  if ( input->GetPoints() == NULL)
+  if ( input->GetPoints() == nullptr)
   {
     vtkDebugMacro(<<"No data to extract");
     return 1;
@@ -351,20 +351,27 @@ int vtkStructuredGridGeometryFilter::RequestData(
         for (j=0; j < (diff[1]+1); j++)
         {
           pos = startIdx + j*offset[0] + k*offset[1];
+
+          // avoid accessing cells past the end of the grid
+          vtkIdType cellK = (k == dims[2] - 1) ? k - 1 : k;
+          vtkIdType cellJ = (j == dims[1] - 1) ? j - 1 : j;
+          cellPos = startCellIdx + (cellK*(dims[1] - 1) + cellJ)*(dims[0] - 1);
+
           for (i=0; i < (diff[0]+1); i++)
           {
             if ( input->IsPointVisible(pos+i) )
             {
+              vtkIdType cellI = (i == dims[0] - 1) ? i - 1 : i;
               input->GetPoint(pos+i, x);
               ptIds[0] = newPts->InsertNextPoint(x);
               outPD->CopyData(pd,pos+i,ptIds[0]);
               cellId = newVerts->InsertNextCell(1,ptIds);
-              outCD->CopyData(cd,pos+i,cellId);
+              outCD->CopyData(cd,cellPos + cellI, cellId);
             }
           }
         }
       }
-        break; /* end this case */
+      break; /* end this case */
 
   } // switch
 

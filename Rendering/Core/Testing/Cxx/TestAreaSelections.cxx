@@ -203,13 +203,13 @@ int TestAreaSelections(int argc, char* argv[])
   renWin->GetColorBufferSizes(rgba);
   if (rgba[0] < 8 || rgba[1] < 8 || rgba[2] < 8)
   {
-    cout <<"Color buffer depth must be atleast 8 bit. Currently: "
+    cout <<"Color buffer depth must be at least 8 bit. Currently: "
       << rgba[0] << ", " << rgba[1] << ", " << rgba[2] << endl;
     return 0;
   }
 
   areaPicker->AreaPick(51,78,82,273,renderer);
-  EndPick(NULL, 0, NULL, NULL);
+  EndPick(nullptr, 0, nullptr, nullptr);
   renWin->Render();
 
   int retVal = vtkRegressionTestImage( renWin );
@@ -218,10 +218,10 @@ int TestAreaSelections(int argc, char* argv[])
     iren->Start();
   }
 
-  renderer = 0;
-  SS1 = 0;
-  sMap = 0;
-  emptyPD = 0;
+  renderer = nullptr;
+  SS1 = nullptr;
+  sMap = nullptr;
+  emptyPD = nullptr;
 
   // Cleanup
   return !retVal;

@@ -45,6 +45,8 @@
 
 #include "vtkFiltersParallelModule.h" // For export macro
 #include "vtkKdTree.h"
+#include <string>  // Instead of using char*
+#include <vector>  // For automatic array memory management
 
 class vtkMultiProcessController;
 class vtkCommunicator;
@@ -58,8 +60,8 @@ public:
   vtkTypeMacro(vtkPKdTree, vtkKdTree);
 
 
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
-  void PrintTiming(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
+  void PrintTiming(ostream& os, vtkIndent indent) override;
   void PrintTables(ostream& os, vtkIndent indent);
 
   static vtkPKdTree *New();
@@ -70,7 +72,7 @@ public:
    * tree.  It must be called by all processes in the parallel
    * application, or it will hang.
    */
-  void BuildLocator() VTK_OVERRIDE;
+  void BuildLocator() override;
 
   /**
    * Get the total number of cells distributed across the data
@@ -154,13 +156,14 @@ public:
    * the processes id for that region.
    */
   const int* GetRegionAssignmentMap()
-    { return this->RegionAssignmentMap; }
+    { return &this->RegionAssignmentMap[0]; }
 
   //@{
   /**
    * / Returns the number of regions in the region assignment map.
    */
-  vtkGetMacro(RegionAssignmentMapLength, int);
+  int GetRegionAssignmentMapLength()
+  { return static_cast<int>(this->RegionAssignmentMap.size()); }
   //@}
 
   /**
@@ -228,7 +231,7 @@ public:
 
   /**
    * Adds the region IDs for which this process has data to
-   * the supplied vtkIntArray.  Retruns the number of regions.
+   * the supplied vtkIntArray.  Returns the number of regions.
    */
   int GetRegionListForProcess(int processId, vtkIntArray *regions);
 
@@ -255,7 +258,7 @@ public:
    * but whose cell centroid lies elsewhere.
 
    * The total number of cell IDs written to both lists is returned.
-   * Either list pointer passed in can be NULL, and it will be ignored.
+   * Either list pointer passed in can be nullptr, and it will be ignored.
    * If there are multiple data sets, you must specify which data set
    * you wish cell IDs for.
 
@@ -317,7 +320,7 @@ public:
 protected:
 
   vtkPKdTree();
-  ~vtkPKdTree() VTK_OVERRIDE;
+  ~vtkPKdTree() override;
 
   void SingleProcessBuildLocator();
   int MultiProcessBuildLocator(double *bounds);
@@ -330,7 +333,7 @@ private:
 
   vtkSubGroup *SubGroup;
 
-  static char *StrDupWithNew(const char *s);
+  void StrDupWithNew(const char *s, std::string& output);
 
   int NumProcesses;
   int MyId;
@@ -338,32 +341,31 @@ private:
   // basic tables - each region is the responsibility of one process, but
   //                one process may be assigned many regions
 
-  int *RegionAssignmentMap;        // indexed by region ID
-  int RegionAssignmentMapLength;
-  int **ProcessAssignmentMap;      // indexed by process ID
-  int *NumRegionsAssigned;         // indexed by process ID
+  std::vector<int> RegionAssignmentMap;        // indexed by region ID
+  std::vector<std::vector<int> > ProcessAssignmentMap;      // indexed by process ID
+  std::vector<int> NumRegionsAssigned;         // indexed by process ID
 
   int UpdateRegionAssignment();
 
   // basic tables reflecting the data that was read from disk
   // by each process
 
-  char *DataLocationMap;              // by process, by region
+  std::vector<char> DataLocationMap;              // by process, by region
 
-  int *NumProcessesInRegion;          // indexed by region ID
-  int **ProcessList;                  // indexed by region ID
+  std::vector<int> NumProcessesInRegion;          // indexed by region ID
+  std::vector<std::vector<int> > ProcessList;                  // indexed by region ID
 
-  int *NumRegionsInProcess;           // indexed by process ID
-  int **RegionList;                   // indexed by process ID
+  std::vector<int> NumRegionsInProcess;           // indexed by process ID
+  std::vector<std::vector<int> > ParallelRegionList;                   // indexed by process ID
 
-  vtkIdType **CellCountList;                // indexed by region ID
+  std::vector<std::vector<vtkIdType> > CellCountList;                // indexed by region ID
 
-  double *CellDataMin;           // global range for data arrays
-  double *CellDataMax;
-  double *PointDataMin;
-  double *PointDataMax;
-  char **CellDataName;
-  char **PointDataName;
+  std::vector<double> CellDataMin;           // global range for data arrays
+  std::vector<double> CellDataMax;
+  std::vector<double> PointDataMin;
+  std::vector<double> PointDataMax;
+  std::vector<std::string> CellDataName;
+  std::vector<std::string> PointDataName;
   int NumCellArrays;
   int NumPointArrays;
 
@@ -371,9 +373,9 @@ private:
 
   int BuildGlobalIndexLists(vtkIdType ncells);
 
-  vtkIdType *StartVal;
-  vtkIdType *EndVal;
-  vtkIdType *NumCells;
+  std::vector<vtkIdType> StartVal;
+  std::vector<vtkIdType> EndVal;
+  std::vector<vtkIdType> NumCells;
   vtkIdType TotalNumCells;
 
   // local share of points to be partitioned, and local cache
@@ -386,13 +388,15 @@ private:
   void ExchangeVals(int pos1, int pos2);
   void ExchangeLocalVals(int pos1, int pos2);
 
+  // keep PtArray and PtArray2 as dynamically allocated since it's set as a return
+  // value from parent class method
   float *PtArray;
   float *PtArray2;
-  float *CurrentPtArray;
-  float *NextPtArray;
+  float *CurrentPtArray; // just pointer to other memory but never allocated
+  float *NextPtArray; // just pointer to other memory but never allocated
   int PtArraySize;
 
-  int *SelectBuffer;
+  std::vector<int> SelectBuffer;
 
   // Parallel build of k-d tree
 
@@ -426,7 +430,7 @@ private:
   void BroadcastData(vtkKdNode *kd);
 #endif
 
-  float *DataBounds(int L, int K, int R);
+  void GetDataBounds(int L, int K, int R, float dataBounds[12]);
   void GetLocalMinMax(int L, int R, int me, float *min, float *max);
 
   static int FillOutTree(vtkKdNode *kd, int level);
@@ -440,20 +444,20 @@ private:
   int AllocateDoubleBuffer();
   void FreeDoubleBuffer();
   void SwitchDoubleBuffer();
-  int AllocateSelectBuffer();
+  void AllocateSelectBuffer();
   void FreeSelectBuffer();
 
   void InitializeGlobalIndexLists();
-  int AllocateAndZeroGlobalIndexLists();
+  void AllocateAndZeroGlobalIndexLists();
   void FreeGlobalIndexLists();
   void InitializeRegionAssignmentLists();
-  int AllocateAndZeroRegionAssignmentLists();
+  void AllocateAndZeroRegionAssignmentLists();
   void FreeRegionAssignmentLists();
   void InitializeProcessDataLists();
-  int AllocateAndZeroProcessDataLists();
+  void AllocateAndZeroProcessDataLists();
   void FreeProcessDataLists();
   void InitializeFieldArrayMinMax();
-  int AllocateAndZeroFieldArrayMinMax();
+  void AllocateAndZeroFieldArrayMinMax();
   void FreeFieldArrayMinMax();
 
   void ReleaseTables();
@@ -465,7 +469,7 @@ private:
 
   // Gather process/region data totals
 
-  int *CollectLocalRegionProcessData();
+  bool CollectLocalRegionProcessData(std::vector<int>&); // returns false for failure
   int BuildRegionProcessTables();
   int BuildFieldArrayMinMax();
   void AddEntry(int *list, int len, int id);
@@ -474,10 +478,11 @@ private:
 #endif
   static int BinarySearch(vtkIdType *list, int len, vtkIdType which);
 
-  static int FindNextLocalArrayIndex(const char *n, const char **names, int len, int start=0);
+  static int FindNextLocalArrayIndex(const char *n, const std::vector<std::string>& names,
+                                     int len, int start=0);
 
-  vtkPKdTree(const vtkPKdTree&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkPKdTree&) VTK_DELETE_FUNCTION;
+  vtkPKdTree(const vtkPKdTree&) = delete;
+  void operator=(const vtkPKdTree&) = delete;
 };
 
 #endif

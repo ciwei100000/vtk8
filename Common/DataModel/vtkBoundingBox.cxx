@@ -172,20 +172,68 @@ void vtkBoundingBox::SetMaxPoint(double x, double y, double z)
     this->MinPnt[2] = z;
   }
 }
+
+// ---------------------------------------------------------------------------
+void vtkBoundingBox::Inflate(double delX, double delY, double delZ)
+{
+  this->MinPnt[0] -= delX;
+  this->MaxPnt[0] += delX;
+  this->MinPnt[1] -= delY;
+  this->MaxPnt[1] += delY;
+  this->MinPnt[2] -= delZ;
+  this->MaxPnt[2] += delZ;
+}
+
 // ---------------------------------------------------------------------------
 void vtkBoundingBox::Inflate(double delta)
 {
-  this->MinPnt[0] -= delta;
-  this->MaxPnt[0] += delta;
-  this->MinPnt[1] -= delta;
-  this->MaxPnt[1] += delta;
-  this->MinPnt[2] -= delta;
-  this->MaxPnt[2] += delta;
+  this->Inflate(delta, delta, delta);
 }
+
+// ---------------------------------------------------------------------------
+// Adjust bounding box so that it contains a non-zero volume.  Note that zero
+// widths are expanded by the arbitrary 1% of the maximum width. If all
+// edge widths are zero, then the box is expanded by 0.5 in each direction.
+void vtkBoundingBox::Inflate()
+{
+  // First determine the maximum length of the side of the bounds. Keep track
+  // of zero width sides of the bounding box.
+  int nonZero[3], maxIdx=(-1);
+  double w, max=0.0;
+  for (int i=0; i<3; ++i)
+  {
+    if ( (w = (this->MaxPnt[i] - this->MinPnt[i])) > max )
+    {
+      max = w;
+      maxIdx = i;
+    }
+    nonZero[i] = (w > 0.0 ? 1 : 0);
+  }
+
+  // If the bounding box is degenerate, then bump out to arbitrary size.
+  if ( maxIdx < 0 )
+  {
+    this->Inflate(0.5);
+  }
+  else //any zero width sides are bumped out 1% of max side
+  {
+    double delta;
+    for (int i=0; i<3; ++i)
+    {
+      if ( ! nonZero[i] )
+      {
+        delta = 0.005 * max;
+        this->MinPnt[i] -= delta;
+        this->MaxPnt[i] += delta;
+      }
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 int vtkBoundingBox::IntersectBox(const vtkBoundingBox &bbox)
 {
-  // if either box is not valid don't do the opperation
+  // if either box is not valid don't do the operation
   if (!(this->IsValid() && bbox.IsValid()))
   {
     return 0;
@@ -329,45 +377,45 @@ double vtkBoundingBox::GetDiagonalLength() const
 // If the box is not valid, it stays unchanged.
 // If the scalar factor is negative, bounds are flipped: for example,
 // if (xMin,xMax)=(-2,4) and sx=-3, (xMin,xMax) becomes (-12,6).
-void vtkBoundingBox::Scale(double sx,
-                           double sy,
-                           double sz)
+void vtkBoundingBox::Scale(double sx, double sy, double sz)
 {
   if(this->IsValid())
   {
-      if(sx>=0.0)
-      {
-          this->MinPnt[0]*=sx;
-          this->MaxPnt[0]*=sx;
-      }
-      else
-      {
-          double tmp=this->MinPnt[0];
-          this->MinPnt[0]=sx*this->MaxPnt[0];
-          this->MaxPnt[0]=sx*tmp;
-      }
-      if(sy>=0.0)
-      {
-          this->MinPnt[1]*=sy;
-          this->MaxPnt[1]*=sy;
-      }
-      else
-      {
-          double tmp=this->MinPnt[1];
-          this->MinPnt[1]=sy*this->MaxPnt[1];
-          this->MaxPnt[1]=sy*tmp;
-      }
-      if(sz>=0.0)
-      {
-          this->MinPnt[2]*=sz;
-          this->MaxPnt[2]*=sz;
-      }
-      else
-      {
-          double tmp=this->MinPnt[2];
-          this->MinPnt[2]=sz*this->MaxPnt[2];
-          this->MaxPnt[2]=sz*tmp;
-      }
+    if(sx>=0.0)
+    {
+      this->MinPnt[0]*=sx;
+      this->MaxPnt[0]*=sx;
+    }
+    else
+    {
+      double tmp=this->MinPnt[0];
+      this->MinPnt[0]=sx*this->MaxPnt[0];
+      this->MaxPnt[0]=sx*tmp;
+    }
+
+    if(sy>=0.0)
+    {
+      this->MinPnt[1]*=sy;
+      this->MaxPnt[1]*=sy;
+    }
+    else
+    {
+      double tmp=this->MinPnt[1];
+      this->MinPnt[1]=sy*this->MaxPnt[1];
+      this->MaxPnt[1]=sy*tmp;
+    }
+
+    if(sz>=0.0)
+    {
+      this->MinPnt[2]*=sz;
+      this->MaxPnt[2]*=sz;
+    }
+    else
+    {
+      double tmp=this->MinPnt[2];
+      this->MinPnt[2]=sz*this->MaxPnt[2];
+      this->MaxPnt[2]=sz*tmp;
+    }
   }
 }
 
@@ -377,9 +425,127 @@ void vtkBoundingBox::Scale(double s[3])
   this->Scale(s[0],s[1],s[2]);
 }
 
+// ---------------------------------------------------------------------------
+void vtkBoundingBox::ScaleAboutCenter(double s)
+{
+  this->ScaleAboutCenter(s,s,s);
+}
 
 // ---------------------------------------------------------------------------
-// Desciption:
+// Scale the box around the bounding box center point.
+void vtkBoundingBox::ScaleAboutCenter(double sx, double sy, double sz)
+{
+  if(this->IsValid())
+  {
+    double center[3];
+    this->GetCenter(center);
+
+    this->MinPnt[0] = center[0] + sx*(this->MinPnt[0] - center[0]);
+    this->MaxPnt[0] = center[0] + sx*(this->MaxPnt[0] - center[0]);
+
+    this->MinPnt[1] = center[1] + sy*(this->MinPnt[1] - center[1]);
+    this->MaxPnt[1] = center[1] + sy*(this->MaxPnt[1] - center[1]);
+
+    this->MinPnt[2] = center[2] + sz*(this->MinPnt[2] - center[2]);
+    this->MaxPnt[2] = center[2] + sz*(this->MaxPnt[2] - center[2]);
+  }
+}
+
+// ---------------------------------------------------------------------------
+void vtkBoundingBox::ScaleAboutCenter(double s[3])
+{
+  this->ScaleAboutCenter(s[0],s[1],s[2]);
+}
+
+// ---------------------------------------------------------------------------
+// Compute the number of divisions given the current bounding box and a
+// target number of buckets/bins. Note that degenerate bounding boxes (i.e.,
+// one or more of the edges are zero length) are handled properly.
+vtkIdType vtkBoundingBox::
+ComputeDivisions(vtkIdType totalBins, double bounds[6], int divs[3]) const
+{
+  // This will always produce at least one bin
+  totalBins = (totalBins <= 0 ? 1 : totalBins);
+
+  // First determine the maximum length of the side of the bounds. Keep track
+  // of zero width sides of the bounding box.
+  int numNonZero=0, nonZero[3], maxIdx=(-1);
+  double max=0.0, lengths[3];
+  this->GetLengths(lengths);
+
+  // Use a finite tolerance when detecting zero width sides to ensure that
+  // numerical noise doesn't cause an explosion later on. We'll consider any
+  // length that's less than 0.1% of the average length to be zero:
+  double totLen = lengths[0] + lengths[1] + lengths[2];
+  const double zeroDetectionTolerance = totLen * (0.001 / 3.);
+
+  for (int i=0; i<3; ++i)
+  {
+    if ( lengths[i] > max )
+    {
+      maxIdx = i;
+    }
+    if ( lengths[i] > zeroDetectionTolerance )
+    {
+      nonZero[i] = 1;
+      numNonZero++;
+    }
+    else
+    {
+      nonZero[i] = 0;
+    }
+  }
+
+  // If the bounding box is degenerate, then one bin of arbitrary size
+  if ( numNonZero < 1 )
+  {
+    divs[0] = divs[1] = divs[2] = 1;
+    bounds[0] = this->MinPnt[0] - 0.5;
+    bounds[1] = this->MaxPnt[0] + 0.5;
+    bounds[2] = this->MinPnt[1] - 0.5;
+    bounds[3] = this->MaxPnt[1] + 0.5;
+    bounds[4] = this->MinPnt[2] - 0.5;
+    bounds[5] = this->MaxPnt[2] + 0.5;
+    return 1;
+  }
+
+  // Okay we need to compute the divisions roughly in proportion to the
+  // bounding box edge lengths.  The idea is to make the bins as close to a
+  // cube as possible. Ensure that the number of divisions is valid.
+  double f = static_cast<double>(totalBins);
+  f /= (nonZero[0] ? (lengths[0]/totLen) : 1.0);
+  f /= (nonZero[1] ? (lengths[1]/totLen) : 1.0);
+  f /= (nonZero[2] ? (lengths[2]/totLen) : 1.0);
+  f = pow (f,(1.0/static_cast<double>(numNonZero)));
+
+  for (int i=0; i < 3; ++i)
+  {
+    divs[i] = (nonZero[i] ? vtkMath::Floor(f*lengths[i]/totLen) : 1);
+    divs[i] = (divs[i] < 1 ? 1 : divs[i]);
+  }
+
+  // Now compute the final bounds, making sure it is a non-zero volume.
+  double delta = 0.5 * lengths[maxIdx] / static_cast<double>(divs[maxIdx]);
+  for (int i=0; i<3; ++i)
+  {
+    if ( nonZero[i] )
+    {
+      bounds[2*i] = this->MinPnt[i];
+      bounds[2*i+1] = this->MaxPnt[i];
+    }
+    else
+    {
+      bounds[2*i] = this->MinPnt[i] - delta;
+      bounds[2*i+1] = this->MaxPnt[i] + delta;
+    }
+  }
+
+  // Safe to return
+  return (divs[0] * divs[1] * divs[2]);
+}
+
+// ---------------------------------------------------------------------------
+// Description:
 // Intersect this box with the half space defined by plane.
 // Returns 1 if there is intersection---which implies that the box has been modified
 // Returns 0 otherwise

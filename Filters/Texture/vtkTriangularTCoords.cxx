@@ -49,9 +49,9 @@ int vtkTriangularTCoords::RequestData(
   vtkIdType numNewPts, numNewPolys, polyAllocSize;
   vtkFloatArray *newTCoords;
   vtkIdType newId, numCells, cellId;
-  vtkIdType *pts = 0;
+  vtkIdType *pts = nullptr;
   vtkIdType newIds[3];
-  vtkIdType npts = 0;;
+  vtkIdType npts = 0;
   int errorLogging = 1;
   vtkPoints *newPoints;
   vtkCellArray *newPolys;

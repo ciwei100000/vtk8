@@ -40,10 +40,10 @@ public:
 
   vtkOrientationMarkerWidgetObserver()
   {
-    this->OrientationMarkerWidget = 0;
+    this->OrientationMarkerWidget = nullptr;
   }
 
-  void Execute(vtkObject* wdg, unsigned long event, void *calldata) VTK_OVERRIDE
+  void Execute(vtkObject* wdg, unsigned long event, void *calldata) override
   {
       if (this->OrientationMarkerWidget)
       {
@@ -76,7 +76,7 @@ vtkOrientationMarkerWidget::vtkOrientationMarkerWidget()
   this->Renderer->InteractiveOff();
 
   this->Priority = 0.55;
-  this->OrientationMarker = NULL;
+  this->OrientationMarker = nullptr;
   this->State = vtkOrientationMarkerWidget::Outside;
   this->Interactive = 1;
 
@@ -103,6 +103,7 @@ vtkOrientationMarkerWidget::vtkOrientationMarkerWidget()
   this->OutlineActor->SetMapper( mapper );
   this->OutlineActor->SetPosition( 0, 0 );
   this->OutlineActor->SetPosition2( 1, 1 );
+  this->OutlineActor->VisibilityOff();
 
   points->Delete();
   mapper->Delete();
@@ -112,118 +113,123 @@ vtkOrientationMarkerWidget::vtkOrientationMarkerWidget()
 //-------------------------------------------------------------------------
 vtkOrientationMarkerWidget::~vtkOrientationMarkerWidget()
 {
+  if (this->Enabled)
+  {
+    this->TearDownWindowInteraction();
+  }
+
   this->Observer->Delete();
-  this->Observer = NULL;
+  this->Observer = nullptr;
   this->Renderer->Delete();
-  this->Renderer = NULL;
-  this->SetOrientationMarker( NULL );
+  this->Renderer = nullptr;
+  this->SetOrientationMarker( nullptr );
   this->OutlineActor->Delete();
   this->Outline->Delete();
 }
 
 //-------------------------------------------------------------------------
-void vtkOrientationMarkerWidget::SetEnabled(int enabling)
+void vtkOrientationMarkerWidget::SetEnabled(int value)
 {
   if (!this->Interactor)
   {
     vtkErrorMacro("The interactor must be set prior to enabling/disabling widget");
   }
 
-  if (enabling)
+  if (value != this->Enabled)
   {
-    if (this->Enabled)
+    if (value)
     {
-      return;
-    }
-
-    if (!this->OrientationMarker)
-    {
-      vtkErrorMacro("An orientation marker must be set prior to enabling/disabling widget");
-      return;
-    }
-
-    if (!this->CurrentRenderer)
-    {
-      this->SetCurrentRenderer( this->Interactor->FindPokedRenderer(
-        this->Interactor->GetLastEventPosition()[0],
-        this->Interactor->GetLastEventPosition()[1]));
-
-      if (this->CurrentRenderer == NULL)
+      if (!this->OrientationMarker)
       {
+        vtkErrorMacro("An orientation marker must be set prior to enabling/disabling widget");
         return;
       }
-    }
 
-    this->Enabled = 1;
-    this->UpdateInternalViewport();
-
-    vtkRenderWindow* renwin = this->CurrentRenderer->GetRenderWindow();
-    renwin->AddRenderer( this->Renderer );
-    if (renwin->GetNumberOfLayers() < 2)
-    {
-      renwin->SetNumberOfLayers( 2 );
-    }
-
-    this->CurrentRenderer->AddViewProp( this->OutlineActor );
-    this->OutlineActor->VisibilityOff();
-    this->Renderer->AddViewProp( this->OrientationMarker );
-    this->OrientationMarker->VisibilityOn();
-
-    if (this->Interactive)
-    {
-      vtkRenderWindowInteractor *i = this->Interactor;
-      if ( this->EventCallbackCommand )
+      if (!this->CurrentRenderer)
       {
-        i->AddObserver( vtkCommand::MouseMoveEvent,
-          this->EventCallbackCommand, this->Priority );
-        i->AddObserver( vtkCommand::LeftButtonPressEvent,
-          this->EventCallbackCommand, this->Priority );
-        i->AddObserver( vtkCommand::LeftButtonReleaseEvent,
-          this->EventCallbackCommand, this->Priority );
+        int *pos = this->Interactor->GetLastEventPosition();
+        this->SetCurrentRenderer(this->Interactor->FindPokedRenderer(pos[0], pos[1]));
+
+        if (this->CurrentRenderer == nullptr)
+        {
+          return;
+        }
       }
-    }
 
-    vtkCamera* pcam = this->CurrentRenderer->GetActiveCamera();
-    vtkCamera* cam = this->Renderer->GetActiveCamera();
-    if (pcam && cam)
+      this->UpdateInternalViewport();
+
+      this->SetupWindowInteraction();
+      this->Enabled = 1;
+      this->InvokeEvent(vtkCommand::EnableEvent, nullptr);
+    }
+    else
     {
-      cam->SetParallelProjection( pcam->GetParallelProjection() );
+      this->InvokeEvent(vtkCommand::DisableEvent, nullptr);
+      this->Enabled = 0;
+      this->TearDownWindowInteraction();
+      this->SetCurrentRenderer(nullptr);
     }
-
-    // We need to copy the camera before the compositing observer is called.
-    // Compositing temporarily changes the camera to display an image.
-    this->StartEventObserverId = this->CurrentRenderer->AddObserver(
-      vtkCommand::StartEvent, this->Observer, 1 );
-    this->InvokeEvent( vtkCommand::EnableEvent, NULL );
   }
-  else
+}
+
+//-------------------------------------------------------------------------
+void vtkOrientationMarkerWidget::SetupWindowInteraction()
+{
+  vtkRenderWindow* renwin = this->CurrentRenderer->GetRenderWindow();
+  renwin->AddRenderer(this->Renderer);
+  if (renwin->GetNumberOfLayers() < 2)
   {
-    if (!this->Enabled)
+    renwin->SetNumberOfLayers(2);
+  }
+
+  this->CurrentRenderer->AddViewProp(this->OutlineActor);
+
+  this->Renderer->AddViewProp(this->OrientationMarker);
+  this->OrientationMarker->VisibilityOn();
+
+  if (this->Interactive)
+  {
+    vtkRenderWindowInteractor *interactor = this->Interactor;
+    if (this->EventCallbackCommand)
     {
-      return;
+      interactor->AddObserver(vtkCommand::MouseMoveEvent, this->EventCallbackCommand, this->Priority);
+      interactor->AddObserver(vtkCommand::LeftButtonPressEvent, this->EventCallbackCommand, this->Priority);
+      interactor->AddObserver(vtkCommand::LeftButtonReleaseEvent, this->EventCallbackCommand, this->Priority);
     }
+  }
 
-    this->Enabled = 0;
-    this->Interactor->RemoveObserver( this->EventCallbackCommand );
+  vtkCamera* pcam = this->CurrentRenderer->GetActiveCamera();
+  vtkCamera* cam = this->Renderer->GetActiveCamera();
+  if (pcam && cam)
+  {
+    cam->SetParallelProjection(pcam->GetParallelProjection());
+  }
 
-    this->OrientationMarker->VisibilityOff();
-    this->Renderer->RemoveViewProp( this->OrientationMarker );
-    this->OutlineActor->VisibilityOff();
-    this->CurrentRenderer->RemoveViewProp( this->OutlineActor );
+  // We need to copy the camera before the compositing observer is called.
+  // Compositing temporarily changes the camera to display an image.
+  this->StartEventObserverId = this->CurrentRenderer->AddObserver(vtkCommand::StartEvent, this->Observer, 1);
+}
 
-    // if the render window is still around, remove our renderer from it
-    if (this->CurrentRenderer->GetRenderWindow())
-    {
-      this->CurrentRenderer->GetRenderWindow()->
-        RemoveRenderer( this->Renderer );
-    }
-    if ( this->StartEventObserverId != 0 )
-    {
-      this->CurrentRenderer->RemoveObserver( this->StartEventObserverId );
-    }
+//-------------------------------------------------------------------------
+void vtkOrientationMarkerWidget::TearDownWindowInteraction()
+{
+  if (this->StartEventObserverId != 0)
+  {
+    this->CurrentRenderer->RemoveObserver(this->StartEventObserverId);
+  }
 
-    this->InvokeEvent( vtkCommand::DisableEvent, NULL );
-    this->SetCurrentRenderer( NULL );
+  this->Interactor->RemoveObserver(this->EventCallbackCommand);
+
+  this->OrientationMarker->VisibilityOff();
+  this->Renderer->RemoveViewProp(this->OrientationMarker);
+
+  this->CurrentRenderer->RemoveViewProp(this->OutlineActor);
+
+  // if the render window is still around, remove our renderer from it
+  vtkRenderWindow* renwin = this->CurrentRenderer->GetRenderWindow();
+  if (renwin)
+  {
+    renwin->RemoveRenderer(this->Renderer);
   }
 }
 
@@ -406,7 +412,7 @@ void vtkOrientationMarkerWidget::OnLeftButtonDown()
 
   this->EventCallbackCommand->SetAbortFlag( 1 );
   this->StartInteraction();
-  this->InvokeEvent( vtkCommand::StartInteractionEvent, NULL );
+  this->InvokeEvent( vtkCommand::StartInteractionEvent, nullptr );
 }
 
 //-------------------------------------------------------------------------
@@ -427,7 +433,7 @@ void vtkOrientationMarkerWidget::OnLeftButtonUp()
 
   this->RequestCursorShape( VTK_CURSOR_DEFAULT );
   this->EndInteraction();
-  this->InvokeEvent( vtkCommand::EndInteractionEvent, NULL );
+  this->InvokeEvent( vtkCommand::EndInteractionEvent, nullptr );
   this->Interactor->Render();
 }
 
@@ -503,10 +509,11 @@ void vtkOrientationMarkerWidget::UpdateOutline()
   points->SetPoint( 1, vp[2]-1, vp[1]+1, 0 );
   points->SetPoint( 2, vp[2]-1, vp[3]-1, 0 );
   points->SetPoint( 3, vp[0]+1, vp[3]-1, 0 );
+  this->Outline->Modified();
 }
 
 //-------------------------------------------------------------------------
-void vtkOrientationMarkerWidget::SetInteractive(int interact)
+void vtkOrientationMarkerWidget::SetInteractive(vtkTypeBool interact)
 {
   if (this->Interactor && this->Enabled)
   {
@@ -592,7 +599,7 @@ void vtkOrientationMarkerWidget::OnMouseMove()
 
   this->UpdateOutline();
   this->EventCallbackCommand->SetAbortFlag( 1 );
-  this->InvokeEvent( vtkCommand::InteractionEvent, NULL );
+  this->InvokeEvent( vtkCommand::InteractionEvent, nullptr );
   this->Interactor->Render();
 }
 

@@ -15,6 +15,7 @@
 #include "vtkTransformFilter.h"
 
 #include "vtkCellData.h"
+#include "vtkDoubleArray.h"
 #include "vtkFloatArray.h"
 #include "vtkImageData.h"
 #include "vtkImageDataToPointSet.h"
@@ -36,13 +37,14 @@ vtkCxxSetObjectMacro(vtkTransformFilter,Transform,vtkAbstractTransform);
 
 vtkTransformFilter::vtkTransformFilter()
 {
-  this->Transform = NULL;
+  this->Transform = nullptr;
   this->OutputPointsPrecision = vtkAlgorithm::DEFAULT_PRECISION;
+  this->TransformAllInputVectors = false;
 }
 
 vtkTransformFilter::~vtkTransformFilter()
 {
-  this->SetTransform(NULL);
+  this->SetTransform(nullptr);
 }
 
 int vtkTransformFilter::FillInputPortInformation(int vtkNotUsed(port),
@@ -69,7 +71,7 @@ int vtkTransformFilter::RequestDataObject(vtkInformation *request,
     {
       vtkNew<vtkStructuredGrid> newOutput;
       outputVector->GetInformationObject(0)->Set(
-        vtkDataObject::DATA_OBJECT(), newOutput.GetPointer());
+        vtkDataObject::DATA_OBJECT(), newOutput);
     }
     return 1;
   }
@@ -123,10 +125,10 @@ int vtkTransformFilter::RequestData(
 
   vtkPoints *inPts;
   vtkPoints *newPts;
-  vtkDataArray *inVectors, *inCellVectors;;
-  vtkFloatArray *newVectors=NULL, *newCellVectors=NULL;
+  vtkDataArray *inVectors, *inCellVectors;
+  vtkDataArray *newVectors=nullptr, *newCellVectors=nullptr;
   vtkDataArray *inNormals, *inCellNormals;
-  vtkFloatArray *newNormals=NULL, *newCellNormals=NULL;
+  vtkDataArray *newNormals=nullptr, *newCellNormals=nullptr;
   vtkIdType numPts, numCells;
   vtkPointData *pd=input->GetPointData(), *outPD=output->GetPointData();
   vtkCellData *cd=input->GetCellData(), *outCD=output->GetCellData();
@@ -138,7 +140,7 @@ int vtkTransformFilter::RequestData(
 
   // Check input
   //
-  if ( this->Transform == NULL )
+  if ( this->Transform == nullptr )
   {
     vtkErrorMacro(<<"No transform defined!");
     return 1;
@@ -177,14 +179,14 @@ int vtkTransformFilter::RequestData(
   newPts->Allocate(numPts);
   if ( inVectors )
   {
-    newVectors = vtkFloatArray::New();
+    newVectors = this->CreateNewDataArray();
     newVectors->SetNumberOfComponents(3);
     newVectors->Allocate(3*numPts);
     newVectors->SetName(inVectors->GetName());
   }
   if ( inNormals )
   {
-    newNormals = vtkFloatArray::New();
+    newNormals = this->CreateNewDataArray();
     newNormals->SetNumberOfComponents(3);
     newNormals->Allocate(3*numPts);
     newNormals->SetName(inNormals->GetName());
@@ -194,16 +196,45 @@ int vtkTransformFilter::RequestData(
   // Loop over all points, updating position
   //
 
-  if ( inVectors || inNormals )
+  int nArrays = pd->GetNumberOfArrays();
+  vtkDataArray** inVrsArr = new vtkDataArray* [nArrays];
+  vtkDataArray** outVrsArr = new vtkDataArray* [nArrays];
+  int nInputVectors = 0;
+  if (this->TransformAllInputVectors)
+  {
+    for(int i = 0; i < nArrays; i++)
+    {
+      vtkDataArray* tmpArray = pd->GetArray(i);
+      if (tmpArray != inVectors && tmpArray != inNormals && tmpArray->GetNumberOfComponents() == 3)
+      {
+        inVrsArr[nInputVectors] = tmpArray;
+        vtkDataArray* tmpOutArray = this->CreateNewDataArray();
+        tmpOutArray->SetNumberOfComponents(3);
+        tmpOutArray->Allocate(3 * numPts);
+        tmpOutArray->SetName(tmpArray->GetName());
+        outVrsArr[nInputVectors] = tmpOutArray;
+        outPD->AddArray(tmpOutArray);
+        nInputVectors++;
+        tmpOutArray->Delete();
+      }
+    }
+  }
+
+  if ( inVectors || inNormals || nInputVectors > 0)
   {
     this->Transform->TransformPointsNormalsVectors(inPts,newPts,
                                                    inNormals,newNormals,
-                                                   inVectors,newVectors);
+                                                   inVectors,newVectors,
+                                                   nInputVectors,
+                                                   inVrsArr, outVrsArr);
   }
   else
   {
     this->Transform->TransformPoints(inPts,newPts);
   }
+
+  delete[] inVrsArr;
+  delete[] outVrsArr;
 
   this->UpdateProgress (.6);
 
@@ -214,15 +245,32 @@ int vtkTransformFilter::RequestData(
   {
     if ( inCellVectors )
     {
-      newCellVectors = vtkFloatArray::New();
+      newCellVectors = this->CreateNewDataArray();
       newCellVectors->SetNumberOfComponents(3);
       newCellVectors->Allocate(3*numCells);
       newCellVectors->SetName( inCellVectors->GetName() );
       lt->TransformVectors(inCellVectors,newCellVectors);
     }
+    if (this->TransformAllInputVectors)
+    {
+      for(int i = 0; i < cd->GetNumberOfArrays(); i++)
+      {
+        vtkDataArray* tmpArray = cd->GetArray(i);
+        if (tmpArray != inCellVectors && tmpArray != inCellNormals && tmpArray->GetNumberOfComponents() == 3)
+        {
+          vtkDataArray* tmpOutArray = this->CreateNewDataArray();
+          tmpOutArray->SetNumberOfComponents(3);
+          tmpOutArray->Allocate(3 * numCells);
+          tmpOutArray->SetName(tmpArray->GetName());
+          lt->TransformVectors(tmpArray, tmpOutArray);
+          outCD->AddArray(tmpOutArray);
+          tmpOutArray->Delete();
+        }
+      }
+    }
     if ( inCellNormals )
     {
-      newCellNormals = vtkFloatArray::New();
+      newCellNormals = this->CreateNewDataArray();
       newCellNormals->SetNumberOfComponents(3);
       newCellNormals->Allocate(3*numCells);
       newCellNormals->SetName( inCellNormals->GetName() );
@@ -264,9 +312,29 @@ int vtkTransformFilter::RequestData(
     newCellVectors->Delete();
     outCD->CopyVectorsOff();
   }
-
-  outPD->PassData(pd);
-  outCD->PassData(cd);
+  if (this->TransformAllInputVectors)
+  {
+    for (int i = 0; i < pd->GetNumberOfArrays(); i++)
+    {
+      if(!outPD->GetArray(pd->GetArray(i)->GetName()))
+      {
+        outPD->AddArray(pd->GetArray(i));
+      }
+    }
+    for (int i = 0; i < cd->GetNumberOfArrays(); i++)
+    {
+      if(!outCD->GetArray(cd->GetArray(i)->GetName()))
+      {
+        outCD->AddArray(cd->GetArray(i));
+      }
+    }
+    //TODO does order matters ?
+  }
+  else
+  {
+    outPD->PassData(pd);
+    outCD->PassData(cd);
+  }
 
   vtkFieldData* inFD = input->GetFieldData();
   if (inFD)
@@ -298,6 +366,18 @@ vtkMTimeType vtkTransformFilter::GetMTime()
   }
 
   return mTime;
+}
+
+vtkDataArray* vtkTransformFilter::CreateNewDataArray()
+{
+  switch(this->OutputPointsPrecision)
+  {
+    case vtkAlgorithm::DOUBLE_PRECISION:
+      return vtkDoubleArray::New();
+    case vtkAlgorithm::SINGLE_PRECISION:
+    default:
+      return vtkFloatArray::New();
+  }
 }
 
 void vtkTransformFilter::PrintSelf(ostream& os, vtkIndent indent)

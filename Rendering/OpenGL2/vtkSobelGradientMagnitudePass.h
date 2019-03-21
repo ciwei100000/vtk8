@@ -44,7 +44,7 @@
  * convolution with (1 2 1).
  * The second pass has two inputs, Gx1 and Gy1. Kernel (1 2 1)^T is applied
  * to Gx1 and kernel (-1 0 1)^T is applied to Gx2. It gives the values for
- * Gx and Gy. Thoses values are then used to compute the magnitude of the
+ * Gx and Gy. Those values are then used to compute the magnitude of the
  * gradient which is stored in the render target.
  * The gradient computation happens per component (R,G,B). A is arbitrarly set
  * to 1 (full opacity).
@@ -75,20 +75,20 @@ class VTKRENDERINGOPENGL2_EXPORT vtkSobelGradientMagnitudePass : public vtkImage
 public:
   static vtkSobelGradientMagnitudePass *New();
   vtkTypeMacro(vtkSobelGradientMagnitudePass,vtkImageProcessingPass);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Perform rendering according to a render state \p s.
    * \pre s_exists: s!=0
    */
-  void Render(const vtkRenderState *s) VTK_OVERRIDE;
+  void Render(const vtkRenderState *s) override;
 
   /**
    * Release graphics resources and ask components to release their own
    * resources.
    * \pre w_exists: w!=0
    */
-  void ReleaseGraphicsResources(vtkWindow *w) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *w) override;
 
  protected:
   /**
@@ -99,7 +99,7 @@ public:
   /**
    * Destructor.
    */
-  ~vtkSobelGradientMagnitudePass() VTK_OVERRIDE;
+  ~vtkSobelGradientMagnitudePass() override;
 
   /**
    * Graphics resources.
@@ -114,8 +114,8 @@ public:
   vtkOpenGLHelper *Program2; // shader to compute |G| from Gx1 and Gy1
 
  private:
-  vtkSobelGradientMagnitudePass(const vtkSobelGradientMagnitudePass&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSobelGradientMagnitudePass&) VTK_DELETE_FUNCTION;
+  vtkSobelGradientMagnitudePass(const vtkSobelGradientMagnitudePass&) = delete;
+  void operator=(const vtkSobelGradientMagnitudePass&) = delete;
 };
 
 #endif

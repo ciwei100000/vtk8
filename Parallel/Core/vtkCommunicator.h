@@ -16,7 +16,7 @@
  * @class   vtkCommunicator
  * @brief   Used to send/receive messages in a multiprocess environment.
  *
- * This is an abstact class which contains functionality for sending
+ * This is an abstract class which contains functionality for sending
  * and receiving inter-process messages. It contains methods for marshaling
  * an object into a string (currently used by the MPI communicator but
  * not the shared memory communicator).
@@ -53,7 +53,7 @@ class VTKPARALLELCORE_EXPORT vtkCommunicator : public vtkObject
 public:
 
   vtkTypeMacro(vtkCommunicator, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -357,7 +357,7 @@ public:
    * to the destination process.  The destination process receives the
    * messages and stores them in rank order.  The \c length argument
    * (which must be the same on all processes) is the length of the
-   * sendBuffers.  The \c recvBuffer (on te destination process) must be of
+   * sendBuffers.  The \c recvBuffer (on the destination process) must be of
    * length length*numProcesses.  Gather is the inverse operation of Scatter.
    */
   int Gather(const int *sendBuffer, int *recvBuffer,
@@ -551,11 +551,11 @@ public:
   //@}
   //@{
   /**
-   * For the first GatherV variant, \c recvLenghts and \c offsets known on
+   * For the first GatherV variant, \c recvLengths and \c offsets known on
    * \c destProcessId and are passed in as parameters
-   * For the second GatherV variant, \c recvLenghts and \c offsets are not known
-   * on \c destProcessId.  The \c recvLenghts is set using a gather operation
-   * and \c offsets is computed from \c recvLenghts. recvLengths has
+   * For the second GatherV variant, \c recvLengths and \c offsets are not known
+   * on \c destProcessId.  The \c recvLengths is set using a gather operation
+   * and \c offsets is computed from \c recvLengths. recvLengths has
    * \c NumberOfProcesses elements and \offsets has NumberOfProcesses + 1 elements.
    * The third variant is the same as the second variant but it does not expose
    * \c recvLength and \c offsets
@@ -1261,8 +1261,8 @@ public:
    */
   virtual int ComputeGlobalBounds(int processorId, int numProcesses,
                                   vtkBoundingBox *bounds,
-                                  int *rightHasBounds = 0,
-                                  int *leftHasBounds = 0,
+                                  int *rightHasBounds = nullptr,
+                                  int *leftHasBounds = nullptr,
                                   int hasBoundsTag = 288402,
                                   int localBoundsTag = 288403,
                                   int globalBoundsTag = 288404);
@@ -1270,7 +1270,7 @@ public:
   //@{
   /**
    * Some helper functions when dealing with heap tree - based
-   * algorthims - we don't need a function for getting the right
+   * algorithms - we don't need a function for getting the right
    * processor since it is 1 + theLeftProcessor
    */
   static int GetParentProcessor(int pid);
@@ -1290,8 +1290,8 @@ public:
   /**
    * Same as UnMarshalDataObject(vtkCharArray*, vtkDataObject*) except that this
    * method doesn't need to know the type of the data object a priori. It can
-   * deduce that from the contents of the \c buffer. May return NULL data object
-   * if \c buffer is NULL or empty.
+   * deduce that from the contents of the \c buffer. May return nullptr data object
+   * if \c buffer is nullptr or empty.
    */
   static vtkSmartPointer<vtkDataObject> UnMarshalDataObject(vtkCharArray* buffer);
 
@@ -1301,7 +1301,7 @@ protected:
   int ReadDataArray(vtkDataArray *object);
 
   vtkCommunicator();
-  ~vtkCommunicator() VTK_OVERRIDE;
+  ~vtkCommunicator() override;
 
   // Internal methods called by Send/Receive(vtkDataObject *... ) above.
   int SendElementalDataObject(vtkDataObject* data, int remoteHandle, int tag);
@@ -1310,7 +1310,7 @@ protected:
    * GatherV collects arrays in the process with id \c destProcessId.
    * Each process (including the destination) sends its sendArray to
    * the destination process.  The destination process receives the
-   * arrays and stores them in rank order in recvArrays.  The \c recvArays is an
+   * arrays and stores them in rank order in recvArrays.  The \c recvArrays is an
    * array containing  \c NumberOfProcesses elements. The \c recvArray allocates
    * and manages memory for \c recvArrays.
    */
@@ -1338,8 +1338,8 @@ protected:
   vtkIdType Count;
 
 private:
-  vtkCommunicator(const vtkCommunicator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkCommunicator&) VTK_DELETE_FUNCTION;
+  vtkCommunicator(const vtkCommunicator&) = delete;
+  void operator=(const vtkCommunicator&) = delete;
 };
 
 #endif // vtkCommunicator_h

@@ -73,24 +73,22 @@ vtkProp3DAxisFollower::vtkProp3DAxisFollower()
   this->ScreenOffsetVector[0]     = 0.0;
   this->ScreenOffsetVector[1]     = 10.0;
 
-  this->Axis                      = NULL;
-  this->Viewport                  = NULL;
+  this->Axis                      = nullptr;
+  this->Viewport                  = nullptr;
 
   this->TextUpsideDown            = -1;
   this->VisibleAtCurrentViewAngle = -1;
 }
 
 //----------------------------------------------------------------------
-vtkProp3DAxisFollower::~vtkProp3DAxisFollower()
-{
-}
+vtkProp3DAxisFollower::~vtkProp3DAxisFollower() = default;
 
 //----------------------------------------------------------------------
 void vtkProp3DAxisFollower::SetAxis(vtkAxisActor *axis)
 {
   if(!axis)
   {
-    vtkErrorMacro("Invalid or NULL axis\n");
+    vtkErrorMacro("Invalid or nullptr axis\n");
     return;
   }
 
@@ -106,7 +104,7 @@ void vtkProp3DAxisFollower::SetAxis(vtkAxisActor *axis)
 //----------------------------------------------------------------------
 vtkAxisActor* vtkProp3DAxisFollower::GetAxis()
 {
-  return this->Axis.GetPointer();
+  return this->Axis;
 }
 
 //----------------------------------------------------------------------
@@ -124,7 +122,7 @@ void vtkProp3DAxisFollower::SetViewport(vtkViewport* vp)
 //----------------------------------------------------------------------
 vtkViewport* vtkProp3DAxisFollower::GetViewport()
 {
-  return this->Viewport.GetPointer();
+  return this->Viewport;
 }
 
 //----------------------------------------------------------------------------
@@ -133,25 +131,25 @@ void vtkProp3DAxisFollower::CalculateOrthogonalVectors(double rX[3], double rY[3
 {
   if (!rX || !rY || !rZ)
   {
-    vtkErrorMacro("Invalid or NULL direction vectors\n");
+    vtkErrorMacro("Invalid or nullptr direction vectors\n");
     return;
   }
 
   if (!axis)
   {
-    vtkErrorMacro("Invalid or NULL axis\n");
+    vtkErrorMacro("Invalid or nullptr axis\n");
     return;
   }
 
   if (!dop)
   {
-    vtkErrorMacro("Invalid or NULL direction of projection vector\n");
+    vtkErrorMacro("Invalid or nullptr direction of projection vector\n");
     return;
   }
 
   if (!viewport)
   {
-    vtkErrorMacro("Invalid or NULL renderer\n");
+    vtkErrorMacro("Invalid or nullptr renderer\n");
     return;
   }
 
@@ -222,19 +220,19 @@ double vtkProp3DAxisFollower::AutoScale(vtkViewport *viewport, vtkCamera *camera
 
   if(!viewport)
   {
-    std::cerr << "Invalid or NULL viewport \n";
+    std::cerr << "Invalid or nullptr viewport \n";
     return newScale;
   }
 
   if(!camera)
   {
-    std::cerr << "Invalid or NULL camera \n";
+    std::cerr << "Invalid or nullptr camera \n";
     return newScale;
   }
 
   if(!position)
   {
-    std::cerr << "Invalid or NULL position \n";
+    std::cerr << "Invalid or nullptr position \n";
     return newScale;
   }
 
@@ -289,7 +287,7 @@ void vtkProp3DAxisFollower::ComputeMatrix()
     if(this->AutoCenter)
     {
       // Don't apply the user matrix when retrieving the center.
-      this->Device->SetUserMatrix(NULL);
+      this->Device->SetUserMatrix(nullptr);
 
       double* center = this->Device->GetCenter();
       pivotPoint[0] = center[0];
@@ -423,7 +421,7 @@ void vtkProp3DAxisFollower::ComputerAutoCenterTranslation(
 {
   if(!translation)
   {
-    vtkErrorMacro("ERROR: Invalid or NULL translation\n");
+    vtkErrorMacro("ERROR: Invalid or nullptr translation\n");
     return;
   }
 
@@ -453,8 +451,6 @@ void vtkProp3DAxisFollower::ComputerAutoCenterTranslation(
   {
     // Do nothing.
   }
-
-  return;
 }
 
 //----------------------------------------------------------------------
@@ -499,7 +495,7 @@ void vtkProp3DAxisFollower::ExecuteViewAngleVisibility(double normal[3])
 {
   if(!normal)
   {
-    vtkErrorMacro("ERROR: Invalid or NULL normal\n");
+    vtkErrorMacro("ERROR: Invalid or nullptr normal\n");
     return;
   }
 
@@ -545,7 +541,7 @@ void vtkProp3DAxisFollower::PrintSelf(ostream& os, vtkIndent indent)
 void vtkProp3DAxisFollower::ShallowCopy(vtkProp *prop)
 {
   vtkProp3DAxisFollower *f = vtkProp3DAxisFollower::SafeDownCast(prop);
-  if ( f != NULL )
+  if ( f != nullptr )
   {
     this->SetAutoCenter(f->GetAutoCenter());
     this->SetEnableDistanceLOD(f->GetEnableDistanceLOD());

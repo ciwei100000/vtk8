@@ -54,7 +54,7 @@ class VTKFILTERSSTATISTICS_EXPORT vtkBivariateLinearTableThreshold : public vtkT
 public:
   static vtkBivariateLinearTableThreshold* New();
   vtkTypeMacro(vtkBivariateLinearTableThreshold, vtkTableAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -169,9 +169,9 @@ public:
    * ColumnRanges[3]-ColumnRanges[2] = 1.0.  Used for scatter plot distance
    * calculations.  Be sure to set DistanceThreshold accordingly, when used.
    */
-  vtkSetMacro(UseNormalizedDistance,int);
-  vtkGetMacro(UseNormalizedDistance,int);
-  vtkBooleanMacro(UseNormalizedDistance,int);
+  vtkSetMacro(UseNormalizedDistance,vtkTypeBool);
+  vtkGetMacro(UseNormalizedDistance,vtkTypeBool);
+  vtkBooleanMacro(UseNormalizedDistance,vtkTypeBool);
   //@}
 
   /**
@@ -186,14 +186,14 @@ public:
 
 protected:
   vtkBivariateLinearTableThreshold();
-  ~vtkBivariateLinearTableThreshold() VTK_OVERRIDE;
+  ~vtkBivariateLinearTableThreshold() override;
 
   double ColumnRanges[2];
   double DistanceThreshold;
   int Inclusive;
   int LinearThresholdType;
   int NumberOfLineEquations;
-  int UseNormalizedDistance;
+  vtkTypeBool UseNormalizedDistance;
 
   vtkSmartPointer<vtkDoubleArray> LineEquations;
   class Internals;
@@ -202,10 +202,10 @@ protected:
   int RequestData(
     vtkInformation*,
     vtkInformationVector**,
-    vtkInformationVector*) VTK_OVERRIDE;
+    vtkInformationVector*) override;
 
-  int FillInputPortInformation( int port, vtkInformation* info ) VTK_OVERRIDE;
-  int FillOutputPortInformation( int port, vtkInformation* info ) VTK_OVERRIDE;
+  int FillInputPortInformation( int port, vtkInformation* info ) override;
+  int FillOutputPortInformation( int port, vtkInformation* info ) override;
 
   /**
    * Apply the current threshold to a vtkTable.  Fills acceptedIds on success.
@@ -235,8 +235,8 @@ protected:
   //@}
 
 private:
-  vtkBivariateLinearTableThreshold(const vtkBivariateLinearTableThreshold&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkBivariateLinearTableThreshold&) VTK_DELETE_FUNCTION;
+  vtkBivariateLinearTableThreshold(const vtkBivariateLinearTableThreshold&) = delete;
+  void operator=(const vtkBivariateLinearTableThreshold&) = delete;
 };
 
 #endif

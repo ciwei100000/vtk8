@@ -23,7 +23,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "vtkObjectFactory.h"
 #include "vtkTextCodecFactory.h"
 
-#include <utf8.h>
+#include <vtk_utf8.h>
 
 vtkStandardNewMacro(vtkUTF8TextCodec);
 
@@ -46,17 +46,17 @@ namespace
   class testIterator : public vtkTextCodec::OutputIterator
   {
   public:
-    testIterator& operator++(int) VTK_OVERRIDE {return *this;}
-    testIterator& operator*() VTK_OVERRIDE {return *this;}
-    testIterator& operator=(const vtkUnicodeString::value_type) VTK_OVERRIDE
+    testIterator& operator++(int) override {return *this;}
+    testIterator& operator*() override {return *this;}
+    testIterator& operator=(const vtkUnicodeString::value_type) override
       {return *this;}
 
-    testIterator() {}
-    ~testIterator() VTK_OVERRIDE {}
+    testIterator() = default;
+    ~testIterator() override = default;
 
   private:
-    testIterator(const testIterator&) VTK_DELETE_FUNCTION;
-    const testIterator& operator=(const testIterator&) VTK_DELETE_FUNCTION;
+    testIterator(const testIterator&) = delete;
+    testIterator& operator=(const testIterator&) = delete;
   };
 
 
@@ -149,9 +149,7 @@ vtkUTF8TextCodec::vtkUTF8TextCodec() : vtkTextCodec()
 }
 
 
-vtkUTF8TextCodec::~vtkUTF8TextCodec()
-{
-}
+vtkUTF8TextCodec::~vtkUTF8TextCodec() = default;
 
 
 void vtkUTF8TextCodec::PrintSelf(ostream& os, vtkIndent indent)

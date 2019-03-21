@@ -43,7 +43,7 @@ statement of authorship are reproduced on all copies.
  * calls SetupOutput() which allocates arrays and some temporary variables
  * for the primitive callbacks (OutputTriangle and OutputLine which are
  * called by AddATriangle and AddALine, respectively).  Each cell is given
- * an initial tesselation, which results in one or more calls to
+ * an initial tessellation, which results in one or more calls to
  * OutputTetrahedron, OutputTriangle or OutputLine to add elements to the
  * OutputMesh. Finally, Teardown() is called to free the filter's working
  * space.
@@ -69,7 +69,7 @@ class VTKFILTERSGENERAL_EXPORT vtkTessellatorFilter : public vtkUnstructuredGrid
 {
 public:
   vtkTypeMacro(vtkTessellatorFilter,vtkUnstructuredGridAlgorithm);
-  void PrintSelf( ostream& os, vtkIndent indent ) VTK_OVERRIDE;
+  void PrintSelf( ostream& os, vtkIndent indent ) override;
 
   static vtkTessellatorFilter* New();
 
@@ -79,7 +79,7 @@ public:
   virtual void SetSubdivider( vtkDataSetEdgeSubdivisionCriterion* );
   vtkGetObjectMacro(Subdivider, vtkDataSetEdgeSubdivisionCriterion);
 
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -123,16 +123,16 @@ public:
    * some extents with a vtkMergeFilter.
    * By default, the filter is off and vertices will not be shared.
    */
-  vtkGetMacro(MergePoints,int);
-  vtkSetMacro(MergePoints,int);
-  vtkBooleanMacro(MergePoints,int);
+  vtkGetMacro(MergePoints,vtkTypeBool);
+  vtkSetMacro(MergePoints,vtkTypeBool);
+  vtkBooleanMacro(MergePoints,vtkTypeBool);
   //@}
 
 protected:
   vtkTessellatorFilter();
-  ~vtkTessellatorFilter() VTK_OVERRIDE;
+  ~vtkTessellatorFilter() override;
 
-  int FillInputPortInformation(int port, vtkInformation* info) VTK_OVERRIDE;
+  int FillInputPortInformation(int port, vtkInformation* info) override;
 
   /**
    * Called by RequestData to set up a multitude of member variables used by
@@ -156,12 +156,12 @@ protected:
    */
   int RequestData(vtkInformation* request,
                   vtkInformationVector** inputVector,
-                  vtkInformationVector* outputVector) VTK_OVERRIDE;
+                  vtkInformationVector* outputVector) override;
 
   vtkStreamingTessellator* Tessellator;
   vtkDataSetEdgeSubdivisionCriterion* Subdivider;
   int OutputDimension;
-  int MergePoints;
+  vtkTypeBool MergePoints;
   vtkPointLocator* Locator;
 
   //@{
@@ -206,8 +206,8 @@ protected:
                           const double* );
 
 private:
-  vtkTessellatorFilter( const vtkTessellatorFilter& ) VTK_DELETE_FUNCTION;
-  void operator = ( const vtkTessellatorFilter& ) VTK_DELETE_FUNCTION;
+  vtkTessellatorFilter( const vtkTessellatorFilter& ) = delete;
+  void operator = ( const vtkTessellatorFilter& ) = delete;
 };
 
 inline int vtkTessellatorFilter::GetOutputDimension() const

@@ -46,7 +46,7 @@ vtkAMRVolumeMapper::vtkAMRVolumeMapper()
   this->Resampler = vtkAMRResampleFilter::New();
   this->HasMetaData = false;
   this->Resampler->SetDemandDrivenMode(0);
-  this->Grid = NULL;
+  this->Grid = nullptr;
   this->NumberOfSamples[0] = 128;
   this->NumberOfSamples[1] = 128;
   this->NumberOfSamples[2] = 128;
@@ -68,13 +68,13 @@ vtkAMRVolumeMapper::vtkAMRVolumeMapper()
 vtkAMRVolumeMapper::~vtkAMRVolumeMapper()
 {
   this->InternalMapper->Delete();
-  this->InternalMapper = NULL;
+  this->InternalMapper = nullptr;
   this->Resampler->Delete();
-  this->Resampler = NULL;
+  this->Resampler = nullptr;
   if (this->Grid)
   {
     this->Grid->Delete();
-    this->Grid = NULL;
+    this->Grid = nullptr;
   }
 }
 
@@ -109,7 +109,7 @@ void vtkAMRVolumeMapper::SetInputConnection (int port, vtkAlgorithmOutput *input
   if (this->Grid)
   {
     this->Grid->Delete();
-    this->Grid = NULL;
+    this->Grid = nullptr;
   }
 }
 //----------------------------------------------------------------------------
@@ -201,12 +201,12 @@ int vtkAMRVolumeMapper::GetBlendMode()
   return this->InternalMapper->GetBlendMode();
 }
 //----------------------------------------------------------------------------
-void vtkAMRVolumeMapper::SetCropping(int mode)
+void vtkAMRVolumeMapper::SetCropping(vtkTypeBool mode)
 {
   this->InternalMapper->SetCropping(mode);
 }
 //----------------------------------------------------------------------------
-int vtkAMRVolumeMapper::GetCropping()
+vtkTypeBool vtkAMRVolumeMapper::GetCropping()
 {
   return this->InternalMapper->GetCropping();
 }
@@ -279,14 +279,14 @@ void vtkAMRVolumeMapper::Render(vtkRenderer *ren, vtkVolume *vol)
       // If there is no meta data then the resample filter has not been updated
       // with the proper frustrun bounds else it would have been done when
       // processing request information
-      this->UpdateResampler(ren, NULL);
+      this->UpdateResampler(ren, nullptr);
     }
     if (this->GridNeedsToBeUpdated)
     {
       this->UpdateGrid();
     }
 
-    if (this->Grid == NULL)
+    if (this->Grid == nullptr)
     {
       // Could not create a grid
       return;
@@ -413,7 +413,7 @@ bool vtkAMRVolumeMapper::ComputeResamplerBoundsFrustumMethod(
 {
   vtkMath::UninitializeBounds(out_bounds);
 
-  // First we need to create a bouding box that represents the visible region
+  // First we need to create a bounding box that represents the visible region
   // of the camera in World Coordinates
 
   // In order to produce as tight of bounding box as possible we need to determine

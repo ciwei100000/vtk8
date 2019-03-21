@@ -58,7 +58,7 @@ public:
 // Constructor
 vtkClipConvexPolyData::vtkClipConvexPolyData()
 {
-  this->Planes=NULL;
+  this->Planes=nullptr;
   this->Internal=new vtkClipConvexPolyDataInternals;
 
 }
@@ -67,7 +67,7 @@ vtkClipConvexPolyData::vtkClipConvexPolyData()
 // Destructor
 vtkClipConvexPolyData::~vtkClipConvexPolyData()
 {
-  this->SetPlanes(NULL);
+  this->SetPlanes(nullptr);
   this->ClearInternals();
   delete this->Internal;
 }
@@ -79,7 +79,7 @@ vtkClipConvexPolyData::~vtkClipConvexPolyData()
 vtkMTimeType vtkClipConvexPolyData::GetMTime()
 {
   vtkMTimeType result=Superclass::GetMTime();
-  if(this->Planes!=0)
+  if(this->Planes!=nullptr)
   {
     vtkMTimeType planesTime=this->Planes->GetMTime();
     if(planesTime>result)
@@ -138,7 +138,7 @@ void vtkClipConvexPolyData::RemoveEmptyPolygons()
     done = true;
     for(unsigned int i=0; i<this->Internal->Polygons.size(); i++)
     {
-      if ( this->Internal->Polygons[i]->Vertices.size() == 0 )
+      if ( this->Internal->Polygons[i]->Vertices.empty() )
       {
         std::vector<vtkCCPDPolygon*>::iterator where =
           std::find(this->Internal->Polygons.begin(),
@@ -164,7 +164,7 @@ int vtkClipConvexPolyData::RequestData(
   vtkInformationVector *outputVector)
 {
   // Pre-conditions
-  if(this->Planes==0)
+  if(this->Planes==nullptr)
   {
     vtkErrorMacro("plane collection is null");
     return 0;
@@ -179,7 +179,7 @@ int vtkClipConvexPolyData::RequestData(
   vtkInformation *inInfo = inputVector[0]->GetInformationObject(0);
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // get the input and ouptut
+  // get the input and output
   vtkPolyData *input = vtkPolyData::SafeDownCast(
     inInfo->Get(vtkDataObject::DATA_OBJECT()));
   vtkPolyData *output = vtkPolyData::SafeDownCast(
@@ -343,7 +343,7 @@ void vtkClipConvexPolyData::ClipWithPlane( vtkPlane *plane, double tolerance )
         // Add p1 in if it is not clipped. If the whole polygon is unclipped
         // then we'll just add in each vertex in turn. If the whole polygon
         // is clipped we won't add in any vertices. If the polygon is
-        // clipped, we'll add in two new points corresponding the the
+        // clipped, we'll add in two new points corresponding the
         // crossing location of the plane on two edges of the polygon
         if ( p1D >= 0 )
         {
@@ -431,7 +431,7 @@ void vtkClipConvexPolyData::ClipWithPlane( vtkPlane *plane, double tolerance )
     // Check that all new arrays contain exactly 0 or 2 points
     for ( i = 0; i < this->Internal->Polygons.size(); i++ )
     {
-      if ( this->Internal->Polygons[i]->NewVertices.size() != 0 &&
+      if ( !this->Internal->Polygons[i]->NewVertices.empty() &&
            this->Internal->Polygons[i]->NewVertices.size() != 2 )
       {
         vtkErrorMacro( << "Horrible error - we have " <<
@@ -447,7 +447,7 @@ void vtkClipConvexPolyData::ClipWithPlane( vtkPlane *plane, double tolerance )
 
     for ( i = 0; !idxFound && i < this->Internal->Polygons.size(); i++ )
     {
-      idxFound=this->Internal->Polygons[i]->NewVertices.size() > 0;
+      idxFound=!this->Internal->Polygons[i]->NewVertices.empty();
       if(idxFound)
       {
         idx=i;
@@ -492,7 +492,7 @@ void vtkClipConvexPolyData::ClipWithPlane( vtkPlane *plane, double tolerance )
       for ( i = 0; i < this->Internal->Polygons.size(); i++ )
       {
           if ( i != lastPointIdx &&
-               this->Internal->Polygons[i]->NewVertices.size() > 0 )
+               !this->Internal->Polygons[i]->NewVertices.empty() )
           {
           for ( j = 0; j < 2; j++ )
           {

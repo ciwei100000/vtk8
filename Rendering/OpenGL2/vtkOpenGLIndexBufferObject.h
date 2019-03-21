@@ -31,7 +31,7 @@ class VTKRENDERINGOPENGL2_EXPORT vtkOpenGLIndexBufferObject :
 public:
   static vtkOpenGLIndexBufferObject *New();
   vtkTypeMacro(vtkOpenGLIndexBufferObject, vtkOpenGLBufferObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   // Sizes/offsets are all in bytes as OpenGL API expects them.
   size_t IndexCount; // Number of indices in the VBO
@@ -102,7 +102,7 @@ public:
   size_t CreateEdgeFlagIndexBuffer(
     vtkCellArray *cells, vtkDataArray *edgeflags);
 
-  // Create supporting arays that are needed when rendering cell data
+  // Create supporting arrays that are needed when rendering cell data
   // Some VTK cells have to be broken into smaller cells for OpenGL
   // When we have cell data we have to map cell attributes from the VTK
   // cell number to the actual OpenGL cell
@@ -129,11 +129,11 @@ public:
 
 protected:
   vtkOpenGLIndexBufferObject();
-  ~vtkOpenGLIndexBufferObject() VTK_OVERRIDE;
+  ~vtkOpenGLIndexBufferObject() override;
 
 private:
-  vtkOpenGLIndexBufferObject(const vtkOpenGLIndexBufferObject&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOpenGLIndexBufferObject&) VTK_DELETE_FUNCTION;
+  vtkOpenGLIndexBufferObject(const vtkOpenGLIndexBufferObject&) = delete;
+  void operator=(const vtkOpenGLIndexBufferObject&) = delete;
 };
 
 #endif

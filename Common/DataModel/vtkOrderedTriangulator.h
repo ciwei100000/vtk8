@@ -115,7 +115,7 @@ class VTKCOMMONDATAMODEL_EXPORT vtkOrderedTriangulator : public vtkObject
 {
 public:
   vtkTypeMacro(vtkOrderedTriangulator,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Construct object.
@@ -218,9 +218,9 @@ public:
    * (Note: the TemplateTriangulate() method works for complete
    * (interior) cells without extra points due to intersection, etc.)
    */
-  vtkSetMacro(UseTemplates,int);
-  vtkGetMacro(UseTemplates,int);
-  vtkBooleanMacro(UseTemplates,int);
+  vtkSetMacro(UseTemplates,vtkTypeBool);
+  vtkGetMacro(UseTemplates,vtkTypeBool);
+  vtkBooleanMacro(UseTemplates,vtkTypeBool);
   //@}
 
   //@{
@@ -230,9 +230,9 @@ public:
    * By default, presorted is off. (The point id is defined in
    * InsertPoint().)
    */
-  vtkSetMacro(PreSorted,int);
-  vtkGetMacro(PreSorted,int);
-  vtkBooleanMacro(PreSorted,int);
+  vtkSetMacro(PreSorted,vtkTypeBool);
+  vtkGetMacro(PreSorted,vtkTypeBool);
+  vtkBooleanMacro(PreSorted,vtkTypeBool);
   //@}
 
   //@{
@@ -240,9 +240,9 @@ public:
    * Tells the triangulator that a second sort id is provided
    * for each point and should also be considered when sorting.
    */
-  vtkSetMacro(UseTwoSortIds,int);
-  vtkGetMacro(UseTwoSortIds,int);
-  vtkBooleanMacro(UseTwoSortIds,int);
+  vtkSetMacro(UseTwoSortIds,vtkTypeBool);
+  vtkGetMacro(UseTwoSortIds,vtkTypeBool);
+  vtkBooleanMacro(UseTwoSortIds,vtkTypeBool);
   //@}
 
   /**
@@ -341,7 +341,7 @@ public:
 
 protected:
   vtkOrderedTriangulator();
-  ~vtkOrderedTriangulator() VTK_OVERRIDE;
+  ~vtkOrderedTriangulator() override;
 
 private:
   void       Initialize();
@@ -350,11 +350,11 @@ private:
   int        NumberOfPoints; //number of points inserted
   int        MaximumNumberOfPoints; //maximum possible number of points to be inserted
   double     Bounds[6];
-  int        PreSorted;
-  int        UseTwoSortIds;
+  vtkTypeBool        PreSorted;
+  vtkTypeBool        UseTwoSortIds;
   vtkHeap   *Heap;
 
-  int             UseTemplates;
+  vtkTypeBool             UseTemplates;
   int             CellType;
   int             NumberOfCellPoints;
   int             NumberOfCellEdges;
@@ -365,8 +365,8 @@ private:
   TemplateIDType  ComputeTemplateIndex();
 
 private:
-  vtkOrderedTriangulator(const vtkOrderedTriangulator&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkOrderedTriangulator&) VTK_DELETE_FUNCTION;
+  vtkOrderedTriangulator(const vtkOrderedTriangulator&) = delete;
+  void operator=(const vtkOrderedTriangulator&) = delete;
 };
 
 #endif

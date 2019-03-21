@@ -21,6 +21,7 @@
 #include "vtkOpenGLError.h"
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtkPainterCommunicator.h"
 #include "vtkPixelBufferObject.h"
 #include "vtkPointData.h"
@@ -180,6 +181,8 @@ void vtkSurfaceLICInterface::UpdateCommunicator(
 
 void vtkSurfaceLICInterface::PrepareForGeometry()
 {
+  vtkOpenGLState *ostate = this->Internals->Context->GetState();
+
   // save the active fbo and its draw buffer
   this->PrevDrawBuf = 0;
   glGetIntegerv(GL_DRAW_BUFFER, &this->PrevDrawBuf);
@@ -202,11 +205,11 @@ void vtkSurfaceLICInterface::PrepareForGeometry()
   // clear internal color and depth buffers
   // the LIC'er requires *all* fragments in the vector
   // texture to be initialized to 0
-  glDisable(GL_BLEND);
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_SCISSOR_TEST);
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
+  ostate->vtkglDisable(GL_BLEND);
+  ostate->vtkglEnable(GL_DEPTH_TEST);
+  ostate->vtkglDisable(GL_SCISSOR_TEST);
+  ostate->vtkglClearColor(0.0, 0.0, 0.0, 0.0);
+  ostate->vtkglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 }
 
 void vtkSurfaceLICInterface::CompletedGeometry()
@@ -463,7 +466,7 @@ void vtkSurfaceLICInterface::ApplyLIC()
 
     vtkPixelBufferObject *licPBO = this->Internals->LICImage->Download();
     void *pLicPBO = licPBO->MapPackedBuffer();
-    vtkTextureObject *newLicImage = NULL;
+    vtkTextureObject *newLicImage = nullptr;
     int iErr = this->Internals->Compositor->Scatter(pLicPBO, VTK_FLOAT, 4, newLicImage);
     if (iErr)
     {
@@ -471,7 +474,7 @@ void vtkSurfaceLICInterface::ApplyLIC()
     }
     licPBO->UnmapPackedBuffer();
     licPBO->Delete();
-    this->Internals->LICImage = NULL;
+    this->Internals->LICImage = nullptr;
     this->Internals->LICImage = newLicImage;
     newLicImage->Delete();
 
@@ -493,6 +496,7 @@ void vtkSurfaceLICInterface::ApplyLIC()
 void vtkSurfaceLICInterface::CombineColorsAndLIC()
 {
   vtkOpenGLRenderWindow *renWin = this->Internals->Context;
+  vtkOpenGLState *ostate = renWin->GetState();
 
   vtkPainterCommunicator *comm = this->GetCommunicator();
 
@@ -510,8 +514,8 @@ void vtkSurfaceLICInterface::CombineColorsAndLIC()
   vtkCheckFrameBufferStatusMacro(GL_FRAMEBUFFER);
 
   // clear the parts of the screen which we will modify
-  glEnable(GL_SCISSOR_TEST);
-  glClearColor(0.0, 0.0, 0.0, 0.0);
+  ostate->vtkglEnable(GL_SCISSOR_TEST);
+  ostate->vtkglClearColor(0.0, 0.0, 0.0, 0.0);
   size_t nBlocks = this->Internals->BlockExts.size();
   for (size_t e=0; e<nBlocks; ++e)
   {
@@ -522,10 +526,10 @@ void vtkSurfaceLICInterface::CombineColorsAndLIC()
     unsigned int extSize[2];
     ext.Size(extSize);
 
-    glScissor(ext[0], ext[2], extSize[0], extSize[1]);
-    glClear(GL_COLOR_BUFFER_BIT);
+    ostate->vtkglScissor(ext[0], ext[2], extSize[0], extSize[1]);
+    ostate->vtkglClear(GL_COLOR_BUFFER_BIT);
   }
-  glDisable(GL_SCISSOR_TEST);
+  ostate->vtkglDisable(GL_SCISSOR_TEST);
 
   this->Internals->VectorImage->Activate();
   this->Internals->GeometryImage->Activate();
@@ -591,7 +595,7 @@ void vtkSurfaceLICInterface::CombineColorsAndLIC()
     {
       vtkErrorMacro(
         << comm->GetRank()
-        << ": Invalid  range " << LMin << ", " << LMax
+        << ": Invalid range " << LMin << ", " << LMax
         << " for color contrast enhancement");
       LMin = 0.0;
       LMax = 1.0;
@@ -665,6 +669,7 @@ void vtkSurfaceLICInterface::CombineColorsAndLIC()
 void vtkSurfaceLICInterface::CopyToScreen()
 {
   vtkOpenGLRenderWindow *renWin = this->Internals->Context;
+  vtkOpenGLState *ostate = renWin->GetState();
 
   vtkPixelExtent viewExt(
       this->Internals->Viewsize[0],
@@ -672,10 +677,18 @@ void vtkSurfaceLICInterface::CopyToScreen()
 
   glBindFramebuffer(GL_FRAMEBUFFER, this->PrevFbo);
   glDrawBuffer(this->PrevDrawBuf);
-  vtkOpenGLFramebufferObject::InitializeViewport(
-        this->Internals->Viewsize[0],
+
+
+  ostate->vtkglDisable(GL_BLEND);
+  ostate->vtkglDisable(GL_SCISSOR_TEST);
+  ostate->vtkglEnable(GL_DEPTH_TEST);
+
+  // Viewport transformation for 1:1 'pixel=texel=data' mapping.
+  // Note this is not enough for 1:1 mapping, because depending on the
+  // primitive displayed (point,line,polygon), the rasterization rules
+  // are different.
+  ostate->vtkglViewport(0, 0, this->Internals->Viewsize[0],
         this->Internals->Viewsize[1]);
-  glEnable(GL_DEPTH_TEST);
 
   this->Internals->DepthImage->Activate();
   this->Internals->RGBColorImage->Activate();
@@ -714,7 +727,7 @@ void vtkSurfaceLICInterface::CopyToScreen()
 void vtkSurfaceLICInterface::ReleaseGraphicsResources(vtkWindow* win)
 {
   this->Internals->ReleaseGraphicsResources(win);
-  this->Internals->Context = NULL;
+  this->Internals->Context = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -733,70 +746,70 @@ void vtkSurfaceLICInterface::Set##_name (_type val)           \
 vtkSetMonitoredParameterMacro(
       GenerateNoiseTexture,
       int,
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       NoiseType,
       int,
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       NoiseTextureSize,
       int,
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       NoiseGrainSize,
       int,
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       MinNoiseValue,
       double,
       val = val < 0.0 ? 0.0 : val;
       val = val > 1.0 ? 1.0 : val;
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       MaxNoiseValue,
       double,
       val = val < 0.0 ? 0.0 : val;
       val = val > 1.0 ? 1.0 : val;
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       NumberOfNoiseLevels,
       int,
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       ImpulseNoiseProbability,
       double,
       val = val < 0.0 ? 0.0 : val;
       val = val > 1.0 ? 1.0 : val;
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       ImpulseNoiseBackgroundValue,
       double,
       val = val < 0.0 ? 0.0 : val;
       val = val > 1.0 ? 1.0 : val;
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 vtkSetMonitoredParameterMacro(
       NoiseGeneratorSeed,
       int,
-      this->Internals->Noise = NULL;
-      this->Internals->NoiseImage = NULL;)
+      this->Internals->Noise = nullptr;
+      this->Internals->NoiseImage = nullptr;)
 
 // compositor
 vtkSetMonitoredParameterMacro(
@@ -931,16 +944,16 @@ void vtkSurfaceLICInterface::SetNoiseDataSet(vtkImageData *data)
     return;
   }
   this->Internals->Noise = data;
-  this->Internals->NoiseImage = NULL;
+  this->Internals->NoiseImage = nullptr;
   this->Modified();
 }
 
 //----------------------------------------------------------------------------
 vtkImageData *vtkSurfaceLICInterface::GetNoiseDataSet()
 {
-  if (this->Internals->Noise == NULL)
+  if (this->Internals->Noise == nullptr)
   {
-    vtkImageData *noise = NULL;
+    vtkImageData *noise = nullptr;
     if ( this->GenerateNoiseTexture )
     {
       // report potential issues
@@ -977,7 +990,7 @@ vtkImageData *vtkSurfaceLICInterface::GetNoiseDataSet()
             this->ImpulseNoiseProbability,
             static_cast<float>(this->ImpulseNoiseBackgroundValue),
             this->NoiseGeneratorSeed);
-      if ( noiseValues == NULL )
+      if ( noiseValues == nullptr )
       {
         vtkErrorMacro("Failed to generate noise.");
       }
@@ -1003,9 +1016,9 @@ vtkImageData *vtkSurfaceLICInterface::GetNoiseDataSet()
     }
 
     this->Internals->Noise = noise;
-    this->Internals->NoiseImage = NULL;
+    this->Internals->NoiseImage = nullptr;
     noise->Delete();
-    noise = NULL;
+    noise = nullptr;
   }
 
   return this->Internals->Noise;
@@ -1061,7 +1074,7 @@ bool vtkSurfaceLICInterface::IsSupported(vtkRenderWindow *renWin)
 //----------------------------------------------------------------------------
 bool vtkSurfaceLICInterface::CanRenderSurfaceLIC(vtkActor *actor)
 {
-  // check the render context for GL fetaure support
+  // check the render context for GL feature support
   // note this also handles non-opengl render window
   if ( this->Internals->ContextNeedsUpdate
     && !vtkSurfaceLICInterface::IsSupported(this->Internals->Context) )
@@ -1095,7 +1108,7 @@ namespace {
     vtkOpenGLHelper **cbor, const char * vert,
     const char *frag)
   {
-  if (*cbor == NULL)
+  if (*cbor == nullptr)
   {
     *cbor = new vtkOpenGLHelper;
   }
@@ -1193,7 +1206,7 @@ void vtkSurfaceLICInterface::InitializeResources()
 //----------------------------------------------------------------------------
 bool vtkSurfaceLICInterface::NeedToUpdateCommunicator()
 {
-  // no comm or externally modfied parameters
+  // no comm or externally modified parameters
   if ( this->Internals->CommunicatorNeedsUpdate
     || this->Internals->ContextNeedsUpdate
     || !this->Internals->Communicator
@@ -1240,7 +1253,7 @@ void vtkSurfaceLICInterface::ValidateContext(vtkRenderer *renderer)
   {
     modified = true;
 
-    // udpate view size
+    // update view size
     this->Internals->Viewsize[0] = viewsize[0];
     this->Internals->Viewsize[1] = viewsize[1];
 

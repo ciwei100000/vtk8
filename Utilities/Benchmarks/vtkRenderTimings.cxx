@@ -16,6 +16,9 @@
 #include "vtkRenderTimings.h"
 //#include "vtkNew.h"
 
+#include <vtksys/SystemInformation.hxx>
+#include <vtksys/RegularExpression.hxx>
+
 #include "vtkAxis.h"
 #include "vtkChartLegend.h"
 #include "vtkChartXY.h"
@@ -125,20 +128,20 @@ void vtkRTTestSequence::Run()
     // Set up our results table, this will be used for our timings etc.
     summary->SetName(this->Test->GetSummaryResultName());
     secondSummary->SetName(this->Test->GetSecondSummaryResultName());
-    results->AddColumn(secondSummary.Get());
-    results->AddColumn(summary.Get());
+    results->AddColumn(secondSummary);
+    results->AddColumn(summary);
 
     // Set up a chart to show the data being generated in real time.
     chartView->GetRenderWindow()->SetSize(700, 500);
     chartView->GetRenderWindow()->SetPosition(700, 0);
-    chartView->GetScene()->AddItem(chart.Get());
+    chartView->GetScene()->AddItem(chart);
     vtkPlot *plot = chart->AddPlot(vtkChart::LINE);
-    plot->SetInputData(results.Get(), 0, 1);
+    plot->SetInputData(results, 0, 1);
     chart->GetAxis(vtkAxis::LEFT)->SetTitle(this->Test->GetSummaryResultName());
     chart->GetAxis(vtkAxis::LEFT)->LogScaleOn();
     chart->GetAxis(vtkAxis::BOTTOM)->SetTitle(this->Test->GetSecondSummaryResultName());
     chart->GetAxis(vtkAxis::BOTTOM)->LogScaleOn();
-    results->SetNumberOfRows(100);  // have to initialze this or it fails
+    results->SetNumberOfRows(100);  // have to initialize this or it fails
     }
 
   double remainingTime = this->TargetTime;
@@ -185,7 +188,7 @@ void vtkRTTestSequence::Run()
 void vtkRTTestSequence::ReportSummaryResults(ostream &ost)
 {
   double result = 0.0;
-  vtkRTTestResult *bestTestResult = NULL;
+  vtkRTTestResult *bestTestResult = nullptr;
   bool initialized = false;
   std::vector<vtkRTTestResult>::iterator trItr;
   for (trItr = this->TestResults.begin(); trItr != this->TestResults.end(); ++trItr)
@@ -218,7 +221,7 @@ void vtkRTTestSequence::ReportSummaryResults(ostream &ost)
     }
   ost << this->Test->GetName() << ":" << bestTestResult->SequenceNumber
     << ": " << result << " " << this->Test->GetSummaryResultName()
-    << " and " << static_cast<vtkIdType>(bestTestResult->Results[this->Test->GetSecondSummaryResultName()])
+    << " and " << (static_cast<vtkIdType>(10.0*bestTestResult->Results[this->Test->GetSecondSummaryResultName()])/10.0)
     << " " << this->Test->GetSecondSummaryResultName() << endl;
 }
 
@@ -340,7 +343,7 @@ int vtkRenderTimings::ParseCommandLineArguments( int argc, char *argv[] )
   this->Arguments.AddArgument("-se", argT::SPACE_ARGUMENT, &this->SequenceEnd,
     "Specify an ending index for test sequences. Even if there is time remaining "
     "a test sequence will not go beyond this value. You can combine this option "
-    "with -ss to run just one iteration of a sequece. For example you can "
+    "with -ss to run just one iteration of a sequence. For example you can "
     "use -ss 6 -se 6 to only run the 6th sequence. A value of 0 means that "
     "there is no limit (the time limit will still stop the tests).");
   this->Arguments.AddBooleanArgument("-list", &this->ListTests,

@@ -16,17 +16,19 @@
 
 #include "vtkAssemblyPath.h"
 #include "vtkCallbackCommand.h"
+#include "vtkEventData.h"
 #include "vtkMapper.h"
 #include "vtkMath.h"
 #include "vtkNew.h"
 #include "vtkObjectFactory.h"
 #include "vtkPlane.h"
-#include "vtkPropPicker3D.h"
+#include "vtkPropPicker.h"
 #include "vtkRenderWindowInteractor3D.h"
 #include "vtkProp3D.h"
 #include "vtkQuaternion.h"
 #include "vtkRenderer.h"
 #include "vtkMatrix3x3.h"
+#include "vtkTimerLog.h"
 #include "vtkTransform.h"
 #include "vtkCamera.h"
 
@@ -35,15 +37,15 @@ vtkStandardNewMacro(vtkInteractorStyle3D);
 //----------------------------------------------------------------------------
 vtkInteractorStyle3D::vtkInteractorStyle3D()
 {
-  this->InteractionProp = NULL;
-  this->InteractionPicker = vtkPropPicker3D::New();
+  this->InteractionProp = nullptr;
+  this->InteractionPicker = vtkPropPicker::New();
   this->TempMatrix3 = vtkMatrix3x3::New();
   this->TempMatrix4 = vtkMatrix4x4::New();
   this->AppliedTranslation[0] = 0;
   this->AppliedTranslation[1] = 0;
   this->AppliedTranslation[2] = 0;
   this->TempTransform = vtkTransform::New();
-  this->DollyMotionFactor = 2.0;
+  this->DollyPhysicalSpeed = 1.6666;
 }
 
 //----------------------------------------------------------------------------
@@ -56,80 +58,10 @@ vtkInteractorStyle3D::~vtkInteractorStyle3D()
 }
 
 //----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnMouseMove()
-{
-  int x = this->Interactor->GetEventPosition()[0];
-  int y = this->Interactor->GetEventPosition()[1];
-
-  switch (this->State)
-  {
-    case VTKIS_ROTATE:
-      this->FindPokedRenderer(x, y);
-      this->Rotate();
-      this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
-      break;
-    case VTKIS_DOLLY:
-      this->FindPokedRenderer(x, y);
-      this->Dolly();
-      this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
-      break;
-    case VTKIS_CLIP:
-      this->FindPokedRenderer(x, y);
-      this->Clip();
-      this->InvokeEvent(vtkCommand::InteractionEvent, NULL);
-      break;
-  }
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnLeftButtonDown()
-{
-  int x = this->Interactor->GetEventPosition()[0];
-  int y = this->Interactor->GetEventPosition()[1];
-
-  vtkRenderWindowInteractor3D *vriren =
-    vtkRenderWindowInteractor3D::SafeDownCast(this->Interactor);
-
-  double *wpos = vriren->GetWorldEventPosition(
-    vriren->GetPointerIndex());
-
-  this->FindPokedRenderer(x, y);
-  this->FindPickedActor(wpos[0], wpos[1], wpos[2]);
-  if (this->CurrentRenderer == NULL || this->InteractionProp == NULL)
-  {
-    return;
-  }
-
-  this->GrabFocus(this->EventCallbackCommand);
-  this->StartRotate();
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnLeftButtonUp()
-{
-  this->AppliedTranslation[0] = 0;
-  this->AppliedTranslation[1] = 0;
-  this->AppliedTranslation[2] = 0;
-
-  switch (this->State)
-  {
-    // in our case roate state is used for actor pose adjustments
-    case VTKIS_ROTATE:
-      this->EndRotate();
-      break;
-  }
-
-  if ( this->Interactor )
-  {
-    this->ReleaseFocus();
-  }
-}
-
-//----------------------------------------------------------------------------
 // We handle all adjustments here
-void vtkInteractorStyle3D::Rotate()
+void vtkInteractorStyle3D::PositionProp(vtkEventData *ed)
 {
-  if (this->CurrentRenderer == NULL || this->InteractionProp == NULL)
+  if (this->CurrentRenderer == nullptr || this->InteractionProp == nullptr)
   {
     return;
   }
@@ -137,8 +69,13 @@ void vtkInteractorStyle3D::Rotate()
   vtkRenderWindowInteractor3D *rwi =
     static_cast<vtkRenderWindowInteractor3D *>(this->Interactor);
 
-  double *wpos = rwi->GetWorldEventPosition(
-    rwi->GetPointerIndex());
+  if (ed->GetType() != vtkCommand::Move3DEvent)
+  {
+    return;
+  }
+  vtkEventDataDevice3D *edd = static_cast<vtkEventDataDevice3D *>(ed);
+  double wpos[3];
+  edd->GetWorldPosition(wpos);
 
   double *lwpos = rwi->GetLastWorldEventPosition(
     rwi->GetPointerIndex());
@@ -149,7 +86,7 @@ void vtkInteractorStyle3D::Rotate()
     trans[i] = wpos[i] - lwpos[i];
   }
 
-  if (this->InteractionProp->GetUserMatrix() != NULL)
+  if (this->InteractionProp->GetUserMatrix() != nullptr)
   {
     vtkTransform *t = this->TempTransform;
     t->PostMultiply();
@@ -203,26 +140,33 @@ void vtkInteractorStyle3D::PrintSelf(ostream& os, vtkIndent indent)
 }
 
 //----------------------------------------------------------------------------
-void vtkInteractorStyle3D::FindPickedActor(double x, double y, double z)
+void vtkInteractorStyle3D::FindPickedActor(double pos[3], double orient[4])
 {
-  this->InteractionPicker->Pick(x, y, z, this->CurrentRenderer);
+  if (!orient)
+  {
+    this->InteractionPicker->Pick3DPoint(pos, this->CurrentRenderer);
+  }
+  else
+  {
+    this->InteractionPicker->Pick3DRay(pos, orient, this->CurrentRenderer);
+  }
   vtkProp *prop = this->InteractionPicker->GetViewProp();
-  if (prop != NULL)
+  if (prop != nullptr)
   {
     this->InteractionProp = vtkProp3D::SafeDownCast(prop);
   }
   else
   {
-    this->InteractionProp = NULL;
+    this->InteractionProp = nullptr;
   }
 }
 
 //----------------------------------------------------------------------------
 void vtkInteractorStyle3D::Prop3DTransform(vtkProp3D *prop3D,
-                                                       double *boxCenter,
-                                                       int numRotation,
-                                                       double **rotate,
-                                                       double *scale)
+                                           double *boxCenter,
+                                           int numRotation,
+                                           double **rotate,
+                                           double *scale)
 {
   vtkMatrix4x4 *oldMatrix = this->TempMatrix4;
   prop3D->GetMatrix(oldMatrix);
@@ -232,7 +176,7 @@ void vtkInteractorStyle3D::Prop3DTransform(vtkProp3D *prop3D,
 
   vtkTransform *newTransform = this->TempTransform;
   newTransform->PostMultiply();
-  if (prop3D->GetUserMatrix() != NULL)
+  if (prop3D->GetUserMatrix() != nullptr)
   {
     newTransform->SetMatrix(prop3D->GetUserMatrix());
   }
@@ -256,12 +200,12 @@ void vtkInteractorStyle3D::Prop3DTransform(vtkProp3D *prop3D,
 
   newTransform->Translate(boxCenter[0], boxCenter[1], boxCenter[2]);
 
-  // now try to get the composit of translate, rotate, and scale
+  // now try to get the composite of translate, rotate, and scale
   newTransform->Translate(-(orig[0]), -(orig[1]), -(orig[2]));
   newTransform->PreMultiply();
   newTransform->Translate(orig[0], orig[1], orig[2]);
 
-  if (prop3D->GetUserMatrix() != NULL)
+  if (prop3D->GetUserMatrix() != nullptr)
   {
     prop3D->SetUserMatrix(newTransform->GetMatrix());
   }
@@ -273,42 +217,9 @@ void vtkInteractorStyle3D::Prop3DTransform(vtkProp3D *prop3D,
   }
 }
 
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnRightButtonDown()
+void vtkInteractorStyle3D::Dolly3D(vtkEventData *ed)
 {
-  int x = this->Interactor->GetEventPosition()[0];
-  int y = this->Interactor->GetEventPosition()[1];
-
-  this->FindPokedRenderer(x, y);
-  if (this->CurrentRenderer == NULL)
-  {
-    return;
-  }
-
-  this->GrabFocus(this->EventCallbackCommand);
-  this->StartDolly();
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnRightButtonUp()
-{
-  switch (this->State)
-  {
-    // in our case roate state is used for all adjustments
-    case VTKIS_DOLLY:
-      this->EndDolly();
-      break;
-  }
-
-  if ( this->Interactor )
-  {
-    this->ReleaseFocus();
-  }
-}
-
-void vtkInteractorStyle3D::Dolly()
-{
-  if (this->CurrentRenderer == NULL)
+  if (this->CurrentRenderer == nullptr)
   {
     return;
   }
@@ -316,8 +227,12 @@ void vtkInteractorStyle3D::Dolly()
   vtkRenderWindowInteractor3D *rwi =
     static_cast<vtkRenderWindowInteractor3D *>(this->Interactor);
 
-  double *wori = rwi->GetWorldEventOrientation(
-    rwi->GetPointerIndex());
+  if (ed->GetType() != vtkCommand::Move3DEvent)
+  {
+    return;
+  }
+  vtkEventDataDevice3D *edd = static_cast<vtkEventDataDevice3D *>(ed);
+  const double *wori = edd->GetWorldOrientation();
 
   // move HMD world in the direction of the controller
   vtkQuaternion<double> q1;
@@ -327,27 +242,38 @@ void vtkInteractorStyle3D::Dolly()
   double elem[3][3];
   q1.ToMatrix3x3(elem);
   double vdir[3] = {0.0,0.0,-1.0};
-  vtkMatrix3x3::MultiplyPoint(
-    elem[0],vdir,vdir);
+  vtkMatrix3x3::MultiplyPoint(elem[0],vdir,vdir);
 
   double *trans = rwi->GetPhysicalTranslation(
     this->CurrentRenderer->GetActiveCamera());
-  double distance = this->CurrentRenderer->GetActiveCamera()->GetDistance();
 
-  // The world coordinate speed of
-  // movement can be determined from the camera scale.
-  // movement speed is scaled by the touchpad
-  // y coordinate
+  // scale speed by thumb position on the touchpad along Y axis
+  float tpos[3];
+  rwi->GetTouchPadPosition(
+    edd->GetDevice(),
+    vtkEventDataDeviceInput::Unknown,
+    tpos);
+  if (fabs(tpos[0]) > fabs(tpos[1]))
+  {
+    // do not dolly if pressed direction is not up or down but left or right
+    return;
+  }
+  double speedScaleFactor = tpos[1]; // -1 to +1 (the Y axis of the trackpad)
+  double physicalScale = rwi->GetPhysicalScale();
 
-  float *tpos = rwi->GetTouchPadPosition();
-  // 2.0 so that the max is 2.0 times the average
-  // motion factor
-  double factor = tpos[1]*2.0*this->DollyMotionFactor/90.0;
+  this->LastDolly3DEventTime->StopTimer();
+  double distanceTravelled_World =
+    speedScaleFactor * this->DollyPhysicalSpeed /* m/sec */ *
+    physicalScale * /* world/physical */
+    this->LastDolly3DEventTime->GetElapsedTime() /* sec */;
+
+  this->LastDolly3DEventTime->StartTimer();
+
   rwi->SetPhysicalTranslation(
     this->CurrentRenderer->GetActiveCamera(),
-    trans[0]-vdir[0]*factor*distance,
-    trans[1]-vdir[1]*factor*distance,
-    trans[2]-vdir[2]*factor*distance);
+    trans[0]-vdir[0]*distanceTravelled_World,
+    trans[1]-vdir[1]*distanceTravelled_World,
+    trans[2]-vdir[2]*distanceTravelled_World);
 
   if (this->AutoAdjustCameraClippingRange)
   {
@@ -355,241 +281,40 @@ void vtkInteractorStyle3D::Dolly()
   }
 }
 
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnPinch()
-{
-  int pointer = this->Interactor->GetPointerIndex();
-
-  this->FindPokedRenderer(this->Interactor->GetEventPositions(pointer)[0],
-                          this->Interactor->GetEventPositions(pointer)[1]);
-
-  if ( this->CurrentRenderer == NULL )
-  {
-    return;
-  }
-
-  double dyf = this->Interactor->GetScale()/this->Interactor->GetLastScale();
-  vtkCamera *camera = this->CurrentRenderer->GetActiveCamera();
-  double distance = camera->GetDistance();
-
-  this->SetDistance(camera, distance/dyf);
-}
-
-void vtkInteractorStyle3D::SetDistance(vtkCamera *camera, double newDistance)
+void vtkInteractorStyle3D::SetScale(vtkCamera *camera, double newScale)
 {
   vtkRenderWindowInteractor3D *rwi =
     static_cast<vtkRenderWindowInteractor3D *>(this->Interactor);
 
   double *trans = rwi->GetPhysicalTranslation(camera);
-  double distance = camera->GetDistance();
+  double physicalScale = rwi->GetPhysicalScale();
   double *dop = camera->GetDirectionOfProjection();
   double *pos = camera->GetPosition();
   double hmd[3];
-  hmd[0] = (pos[0] + trans[0])/distance;
-  hmd[1] = (pos[1] + trans[1])/distance;
-  hmd[2] = (pos[2] + trans[2])/distance;
-
-  // cerr << "dyf " << dyf << "\n";
-  // rwi->SetPhysicalTranslation(camera,
-  //   trans[0],  trans[1] - distance + newDistance, trans[2]);
-  // trans = rwi->GetPhysicalTranslation(camera);
+  hmd[0] = (pos[0] + trans[0])/physicalScale;
+  hmd[1] = (pos[1] + trans[1])/physicalScale;
+  hmd[2] = (pos[2] + trans[2])/physicalScale;
 
   double newPos[3];
-  newPos[0] = hmd[0]*newDistance - trans[0];
-  newPos[1] = hmd[1]*newDistance - trans[1];
-  newPos[2] = hmd[2]*newDistance - trans[2];
+  newPos[0] = hmd[0]*newScale - trans[0];
+  newPos[1] = hmd[1]*newScale - trans[1];
+  newPos[2] = hmd[2]*newScale - trans[2];
 
+  // Note: New camera properties are overridden by virtual reality render
+  // window if head-mounted display is tracked
   camera->SetFocalPoint(
-    newPos[0] + dop[0]*newDistance,
-    newPos[1] + dop[1]*newDistance,
-    newPos[2] + dop[2]*newDistance);
+    newPos[0] + dop[0]*newScale,
+    newPos[1] + dop[1]*newScale,
+    newPos[2] + dop[2]*newScale);
   camera->SetPosition(
     newPos[0],
     newPos[1],
     newPos[2]);
 
+  rwi->SetPhysicalScale(newScale);
+
   if (this->AutoAdjustCameraClippingRange && this->CurrentRenderer)
   {
     this->CurrentRenderer->ResetCameraClippingRange();
   }
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnPan()
-{
-  int pointer = this->Interactor->GetPointerIndex();
-
-  this->FindPokedRenderer(this->Interactor->GetEventPositions(pointer)[0],
-                          this->Interactor->GetEventPositions(pointer)[1]);
-
-  if ( this->CurrentRenderer == NULL )
-  {
-    return;
-  }
-
-  vtkCamera *camera = this->CurrentRenderer->GetActiveCamera();
-
-  vtkRenderWindowInteractor3D *rwi =
-    static_cast<vtkRenderWindowInteractor3D *>(this->Interactor);
-
-  double *trans = rwi->GetTranslation3D();
-
-  double *ptrans = rwi->GetPhysicalTranslation(camera);
-  double distance = camera->GetDistance();
-  rwi->SetPhysicalTranslation(camera,
-    ptrans[0] - this->AppliedTranslation[0] + trans[0]*distance,
-    ptrans[1] - this->AppliedTranslation[1] + trans[1]*distance,
-    ptrans[2] - this->AppliedTranslation[2] + trans[2]*distance);
-  this->AppliedTranslation[0] = trans[0]*distance;
-  this->AppliedTranslation[1] = trans[1]*distance;
-  this->AppliedTranslation[2] = trans[2]*distance;
-
-  // clean up
-  if (this->Interactor->GetLightFollowCamera())
-  {
-    this->CurrentRenderer->UpdateLightsGeometryToFollowCamera();
-  }
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnMiddleButtonDown()
-{
-  int x = this->Interactor->GetEventPosition()[0];
-  int y = this->Interactor->GetEventPosition()[1];
-
-  this->FindPokedRenderer(x, y);
-  if (this->CurrentRenderer == NULL)
-  {
-    return;
-  }
-
-  this->GrabFocus(this->EventCallbackCommand);
-  this->StartClip();
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnMiddleButtonUp()
-{
-  switch (this->State)
-  {
-    case VTKIS_CLIP:
-      this->EndClip();
-      break;
-  }
-
-  if ( this->Interactor )
-  {
-    this->ReleaseFocus();
-  }
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::OnFourthButtonUp()
-{
-  this->Interactor->ExitCallback();
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::StartClip()
-{
-  if (this->State != VTKIS_NONE)
-  {
-    return;
-  }
-  this->StartState(VTKIS_CLIP);
-}
-
-//----------------------------------------------------------------------------
-void vtkInteractorStyle3D::EndClip()
-{
-  if (this->State != VTKIS_CLIP)
-  {
-    return;
-  }
-
-  vtkActorCollection *ac;
-  vtkActor *anActor, *aPart;
-  vtkAssemblyPath *path;
-  if(this->CurrentRenderer!=0)
-  {
-    ac = this->CurrentRenderer->GetActors();
-    vtkCollectionSimpleIterator ait;
-    for (ac->InitTraversal(ait); (anActor = ac->GetNextActor(ait)); )
-    {
-      for (anActor->InitPathTraversal(); (path=anActor->GetNextPath()); )
-      {
-        aPart=static_cast<vtkActor *>(path->GetLastNode()->GetViewProp());
-        aPart->GetMapper()->RemoveAllClippingPlanes();
-      }
-    }
-  }
-  else
-  {
-    vtkWarningMacro(<<"no current renderer on the interactor style.");
-  }
-
-  vtkRenderWindowInteractor3D *rwi =
-    static_cast<vtkRenderWindowInteractor3D *>(this->Interactor);
-  rwi->Render();
-
-  this->StopState();
-}
-
-//----------------------------------------------------------------------------
-// We handle all adjustments here
-void vtkInteractorStyle3D::Clip()
-{
-  vtkRenderWindowInteractor3D *rwi =
-    static_cast<vtkRenderWindowInteractor3D *>(this->Interactor);
-
-  if (this->CurrentRenderer == NULL
-    || rwi->GetPointerIndex() != 0)
-  {
-    return;
-  }
-
-  double *wpos = rwi->GetWorldEventPosition(0);
-  double *wori = rwi->GetWorldEventOrientation(0);
-  double ori[4];
-  ori[0] = vtkMath::RadiansFromDegrees(wori[0]);
-  ori[1] = wori[1];
-  ori[2] = wori[2];
-  ori[3] = wori[3];
-
-  // we have a position and a normal, that defines our plane
-  vtkNew<vtkPlane> plane;
-  plane->SetOrigin(wpos);
-
-  double r[3];
-  double up[3];
-  up[0] = 0;
-  up[1] = -1;
-  up[2] = 0;
-  vtkMath::RotateVectorByWXYZ(up, ori, r);
-  plane->SetNormal(r);
-
-  vtkActorCollection *ac;
-  vtkActor *anActor, *aPart;
-  vtkAssemblyPath *path;
-  if(this->CurrentRenderer!=0)
-  {
-    ac = this->CurrentRenderer->GetActors();
-    vtkCollectionSimpleIterator ait;
-    for (ac->InitTraversal(ait); (anActor = ac->GetNextActor(ait)); )
-    {
-      for (anActor->InitPathTraversal(); (path=anActor->GetNextPath()); )
-      {
-        aPart=static_cast<vtkActor *>(path->GetLastNode()->GetViewProp());
-        aPart->GetMapper()->RemoveAllClippingPlanes();
-        aPart->GetMapper()->AddClippingPlane(plane.Get());
-      }
-    }
-  }
-  else
-  {
-    vtkWarningMacro(<<"no current renderer on the interactor style.");
-  }
-  rwi->Render();
-
 }

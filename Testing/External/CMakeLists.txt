@@ -1,17 +1,6 @@
 # This project builds the test directories from all VTK modules as a separate
 # project outside the main VTK build tree as if they were an application.
-cmake_minimum_required(VERSION 2.8.5 FATAL_ERROR)
-
-foreach(p
-    CMP0020 # CMake 2.8.11
-    CMP0022 # CMake 2.8.12
-    CMP0025 # CMake 3.0
-    CMP0053 # CMake 3.1
-    )
-  if(POLICY ${p})
-    cmake_policy(SET ${p} NEW)
-  endif()
-endforeach()
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
 
 project(VTKTestExternal)
 if(VTK_SOURCE_DIR OR VTK_BINARY_DIR)
@@ -28,6 +17,7 @@ set(ExternalData_SOURCE_ROOT ${VTK_TOP_DIR})
 list(APPEND CMAKE_MODULE_PATH ${VTK_TOP_DIR}/CMake)
 include(vtkModuleMacros)
 include(vtkExternalData)
+include(vtkEncodeString)
 include(vtkTestingMacros)
 
 # Find the VTK build or install tree.  Assume the version matches exactly.

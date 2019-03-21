@@ -16,7 +16,6 @@
  * @class   vtkSynchronizedTemplates3D
  * @brief   generate isosurface from structured points
  *
- *
  * vtkSynchronizedTemplates3D is a 3D implementation of the synchronized
  * template algorithm. Note that vtkContourFilter will automatically
  * use this class when appropriate.
@@ -25,7 +24,8 @@
  * This filter is specialized to 3D images (aka volumes).
  *
  * @sa
- * vtkContourFilter vtkSynchronizedTemplates2D
+ * vtkContourFilter vtkFlyingEdges3D vtkMarchingCubes
+ * vtkSynchronizedTemplates2D vtkDiscreteFlyingEdges3D
 */
 
 #ifndef vtkSynchronizedTemplates3D_h
@@ -43,12 +43,12 @@ public:
   static vtkSynchronizedTemplates3D *New();
 
   vtkTypeMacro(vtkSynchronizedTemplates3D,vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Because we delegate to vtkContourValues
    */
-  vtkMTimeType GetMTime() VTK_OVERRIDE;
+  vtkMTimeType GetMTime() override;
 
   //@{
   /**
@@ -57,9 +57,9 @@ public:
    * processed by filters that modify topology or geometry, it may be
    * wise to turn Normals and Gradients off.
    */
-  vtkSetMacro(ComputeNormals,int);
-  vtkGetMacro(ComputeNormals,int);
-  vtkBooleanMacro(ComputeNormals,int);
+  vtkSetMacro(ComputeNormals,vtkTypeBool);
+  vtkGetMacro(ComputeNormals,vtkTypeBool);
+  vtkBooleanMacro(ComputeNormals,vtkTypeBool);
   //@}
 
   //@{
@@ -71,18 +71,18 @@ public:
    * will be processed by filters that modify topology or geometry, it
    * may be wise to turn Normals and Gradients off.
    */
-  vtkSetMacro(ComputeGradients,int);
-  vtkGetMacro(ComputeGradients,int);
-  vtkBooleanMacro(ComputeGradients,int);
+  vtkSetMacro(ComputeGradients,vtkTypeBool);
+  vtkGetMacro(ComputeGradients,vtkTypeBool);
+  vtkBooleanMacro(ComputeGradients,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Set/Get the computation of scalars.
    */
-  vtkSetMacro(ComputeScalars,int);
-  vtkGetMacro(ComputeScalars,int);
-  vtkBooleanMacro(ComputeScalars,int);
+  vtkSetMacro(ComputeScalars,vtkTypeBool);
+  vtkGetMacro(ComputeScalars,vtkTypeBool);
+  vtkBooleanMacro(ComputeScalars,vtkTypeBool);
   //@}
 
  //@{
@@ -90,9 +90,9 @@ public:
   * If this is enabled (by default), the output will be triangles
   * otherwise, the output will be the intersection polygons
   */
-  vtkSetMacro(GenerateTriangles,int);
-  vtkGetMacro(GenerateTriangles,int);
-  vtkBooleanMacro(GenerateTriangles,int);
+  vtkSetMacro(GenerateTriangles,vtkTypeBool);
+  vtkGetMacro(GenerateTriangles,vtkTypeBool);
+  vtkBooleanMacro(GenerateTriangles,vtkTypeBool);
  //@}
 
   /**
@@ -155,7 +155,7 @@ public:
 
   //@{
   /**
-   * Determines the chunk size fro streaming.  This filter will act like a
+   * Determines the chunk size for streaming.  This filter will act like a
    * collector: ask for many input pieces, but generate one output.  Limit is
    * in KBytes
    */
@@ -173,24 +173,24 @@ public:
 
 protected:
   vtkSynchronizedTemplates3D();
-  ~vtkSynchronizedTemplates3D() VTK_OVERRIDE;
+  ~vtkSynchronizedTemplates3D() override;
 
-  int ComputeNormals;
-  int ComputeGradients;
-  int ComputeScalars;
+  vtkTypeBool ComputeNormals;
+  vtkTypeBool ComputeGradients;
+  vtkTypeBool ComputeScalars;
   vtkContourValues *ContourValues;
 
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int FillInputPortInformation(int port, vtkInformation *info) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int FillInputPortInformation(int port, vtkInformation *info) override;
 
   int ArrayComponent;
 
-  int GenerateTriangles;
+  vtkTypeBool GenerateTriangles;
 
 private:
-  vtkSynchronizedTemplates3D(const vtkSynchronizedTemplates3D&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkSynchronizedTemplates3D&) VTK_DELETE_FUNCTION;
+  vtkSynchronizedTemplates3D(const vtkSynchronizedTemplates3D&) = delete;
+  void operator=(const vtkSynchronizedTemplates3D&) = delete;
 };
 
 
@@ -200,4 +200,3 @@ extern int VTKFILTERSCORE_EXPORT VTK_SYNCHRONIZED_TEMPLATES_3D_TABLE_1[];
 extern int VTKFILTERSCORE_EXPORT VTK_SYNCHRONIZED_TEMPLATES_3D_TABLE_2[];
 
 #endif
-

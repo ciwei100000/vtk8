@@ -92,10 +92,10 @@ vtkSphereWidget::vtkSphereWidget()
   this->Picker->PickFromListOn();
 
   // Set up the initial properties
-  this->SphereProperty = NULL;
-  this->SelectedSphereProperty = NULL;
-  this->HandleProperty = NULL;
-  this->SelectedHandleProperty = NULL;
+  this->SphereProperty = nullptr;
+  this->SelectedSphereProperty = nullptr;
+  this->HandleProperty = nullptr;
+  this->SelectedHandleProperty = nullptr;
   this->CreateDefaultProperties();
 }
 
@@ -154,7 +154,7 @@ void vtkSphereWidget::SetEnabled(int enabling)
         this->Interactor->FindPokedRenderer(
           this->Interactor->GetLastEventPosition()[0],
           this->Interactor->GetLastEventPosition()[1]));
-      if (this->CurrentRenderer == NULL)
+      if (this->CurrentRenderer == nullptr)
       {
         return;
       }
@@ -183,8 +183,9 @@ void vtkSphereWidget::SetEnabled(int enabling)
     this->HandleActor->SetProperty(this->HandleProperty);
     this->SelectRepresentation();
     this->SizeHandles();
+    this->RegisterPickers();
 
-    this->InvokeEvent(vtkCommand::EnableEvent,NULL);
+    this->InvokeEvent(vtkCommand::EnableEvent,nullptr);
   }
 
   else //disabling----------------------------------------------------------
@@ -205,8 +206,9 @@ void vtkSphereWidget::SetEnabled(int enabling)
     this->CurrentRenderer->RemoveActor(this->SphereActor);
     this->CurrentRenderer->RemoveActor(this->HandleActor);
 
-    this->InvokeEvent(vtkCommand::DisableEvent,NULL);
-    this->SetCurrentRenderer(NULL);
+    this->InvokeEvent(vtkCommand::DisableEvent,nullptr);
+    this->SetCurrentRenderer(nullptr);
+    this->UnRegisterPickers();
   }
 
   this->Interactor->Render();
@@ -407,7 +409,7 @@ void vtkSphereWidget::OnLeftButtonDown()
   // if no handles picked, then try to pick the sphere.
   vtkAssemblyPath* path = this->GetAssemblyPath(X, Y, 0., this->Picker);
 
-  if ( path == NULL )
+  if ( path == nullptr )
   {
     this->State = vtkSphereWidget::Outside;
     return;
@@ -425,7 +427,7 @@ void vtkSphereWidget::OnLeftButtonDown()
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->StartInteraction();
-  this->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  this->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   this->Interactor->Render();
 }
 
@@ -485,7 +487,7 @@ void vtkSphereWidget::OnMouseMove()
 
   // Interact, if desired
   this->EventCallbackCommand->SetAbortFlag(1);
-  this->InvokeEvent(vtkCommand::InteractionEvent,NULL);
+  this->InvokeEvent(vtkCommand::InteractionEvent,nullptr);
   this->Interactor->Render();
 }
 
@@ -504,7 +506,7 @@ void vtkSphereWidget::OnLeftButtonUp()
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->EndInteraction();
-  this->InvokeEvent(vtkCommand::EndInteractionEvent,NULL);
+  this->InvokeEvent(vtkCommand::EndInteractionEvent,nullptr);
   if (this->Interactor)
   {
     this->Interactor->Render();
@@ -535,7 +537,7 @@ void vtkSphereWidget::OnRightButtonDown()
   // if no handles picked, then pick the bounding box.
   vtkAssemblyPath* path = this->GetAssemblyPath(X, Y, 0., this->Picker);
 
-  if ( path == NULL )
+  if ( path == nullptr )
   {
     this->State = vtkSphereWidget::Outside;
     this->HighlightSphere(0);
@@ -548,7 +550,7 @@ void vtkSphereWidget::OnRightButtonDown()
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->StartInteraction();
-  this->InvokeEvent(vtkCommand::StartInteractionEvent,NULL);
+  this->InvokeEvent(vtkCommand::StartInteractionEvent,nullptr);
   this->Interactor->Render();
 }
 
@@ -567,7 +569,7 @@ void vtkSphereWidget::OnRightButtonUp()
 
   this->EventCallbackCommand->SetAbortFlag(1);
   this->EndInteraction();
-  this->InvokeEvent(vtkCommand::EndInteractionEvent,NULL);
+  this->InvokeEvent(vtkCommand::EndInteractionEvent,nullptr);
   if (this->Interactor)
   {
     this->Interactor->Render();
@@ -760,7 +762,12 @@ void vtkSphereWidget::SizeHandles()
 //------------------------------------------------------------------------------
 void vtkSphereWidget::RegisterPickers()
 {
-  this->Interactor->GetPickingManager()->AddPicker(this->Picker, this);
+  vtkPickingManager* pm = this->GetPickingManager();
+  if (!pm)
+  {
+    return;
+  }
+  pm->AddPicker(this->Picker, this);
 }
 
 //----------------------------------------------------------------------------

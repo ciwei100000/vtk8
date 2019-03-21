@@ -45,7 +45,7 @@ class VTKCOMMONCORE_EXPORT vtkAnimationCue: public vtkObject
 {
 public:
   vtkTypeMacro(vtkAnimationCue,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkAnimationCue* New();
 
@@ -115,7 +115,7 @@ public:
    * Triggers a Tick event if currenttime >= StartTime and
    * currenttime <= EndTime.
    * Whenever the state of the cue changes,
-   * either StartEvent or EndEvent is triggerred depending upon
+   * either StartEvent or EndEvent is triggered depending upon
    * whether the cue entered Active state or quit active state respectively.
    * The current time is relative to the start of the container Scene
    * (when in Relative time mode) or is normalized
@@ -179,7 +179,7 @@ public:
 
 protected:
   vtkAnimationCue();
-  ~vtkAnimationCue() VTK_OVERRIDE;
+  ~vtkAnimationCue() override;
 
   enum {
     UNINITIALIZED=0,
@@ -216,8 +216,8 @@ protected:
   //@}
 
 private:
-  vtkAnimationCue(const vtkAnimationCue&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkAnimationCue&) VTK_DELETE_FUNCTION;
+  vtkAnimationCue(const vtkAnimationCue&) = delete;
+  void operator=(const vtkAnimationCue&) = delete;
 };
 
 #endif

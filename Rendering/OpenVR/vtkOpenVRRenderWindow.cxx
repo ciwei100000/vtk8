@@ -21,6 +21,8 @@ https://github.com/ValveSoftware/openvr/blob/master/LICENSE
 #include "vtkCommand.h"
 #include "vtkFloatArray.h"
 #include "vtkIdList.h"
+#include "vtkMath.h"
+#include "vtkMatrix4x4.h"
 #include "vtkNew.h"
 #include "vtkObjectFactory.h"
 #include "vtkOpenGLError.h"
@@ -28,12 +30,14 @@ https://github.com/ValveSoftware/openvr/blob/master/LICENSE
 #include "vtkOpenGLRenderer.h"
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkOpenGLShaderCache.h"
+#include "vtkOpenGLState.h"
 #include "vtkOpenGLTexture.h"
 #include "vtkOpenGLVertexArrayObject.h"
 #include "vtkOpenGLVertexBufferObject.h"
 #include "vtkOpenVRCamera.h"
 #include "vtkOpenVRDefaultOverlay.h"
 #include "vtkOpenVRModel.h"
+#include "vtkOpenVRRenderer.h"
 #include "vtkPointData.h"
 #include "vtkPolyData.h"
 #include "vtkPolyDataMapper.h"
@@ -48,6 +52,17 @@ https://github.com/ValveSoftware/openvr/blob/master/LICENSE
 
 #include "vtkOpenGLError.h"
 
+// include what we need for the helper window
+#ifdef WIN32
+#include "vtkWin32OpenGLRenderWindow.h"
+#endif
+#ifdef VTK_USE_X
+#include "vtkXOpenGLRenderWindow.h"
+#endif
+#ifdef VTK_USE_COCOA
+#include "vtkCocoaOpenGLRenderWindow.h"
+#endif
+
 #if !defined(_WIN32) || defined(__CYGWIN__)
 # define stricmp strcasecmp
 #endif
@@ -58,8 +73,12 @@ vtkCxxSetObjectMacro(vtkOpenVRRenderWindow, DashboardOverlay, vtkOpenVROverlay);
 
 vtkOpenVRRenderWindow::vtkOpenVRRenderWindow()
 {
-  this->SetInitialViewDirection(0.0, 0.0, -1.0);
-  this->SetInitialViewUp(0.0, 1.0, 0.0);
+  this->SetPhysicalViewDirection(0.0, 0.0, -1.0);
+  this->SetPhysicalViewUp(0.0, 1.0, 0.0);
+  this->SetPhysicalTranslation(0.0, 0.0, 0.0);
+  this->PhysicalScale = 1.0;
+
+  this->TrackHMD = true;
 
   this->StereoCapableWindow = 1;
   this->StereoRender = 1;
@@ -67,12 +86,21 @@ vtkOpenVRRenderWindow::vtkOpenVRRenderWindow()
   this->Size[1] = 720;
   this->Position[0] = 100;
   this->Position[1] = 100;
-  this->OpenVRRenderModels = NULL;
-  this->HMD = NULL;
+  this->OpenVRRenderModels = nullptr;
+  this->HMD = nullptr;
   this->HMDTransform = vtkTransform::New();
-  this->ContextId = 0;
-  this->WindowId = 0;
   memset(this->TrackedDeviceToRenderModel, 0, sizeof(this->TrackedDeviceToRenderModel));
+
+#ifdef WIN32
+  this->HelperWindow = vtkWin32OpenGLRenderWindow::New();
+#endif
+#ifdef VTK_USE_X
+  this->HelperWindow = vtkXOpenGLRenderWindow::New();
+#endif
+#ifdef VTK_USE_COCOA
+  this->HelperWindow = vtkCocoaOpenGLRenderWindow::New();
+#endif
+
   this->DashboardOverlay = vtkOpenVRDefaultOverlay::New();
 }
 
@@ -83,7 +111,6 @@ vtkOpenVRRenderWindow::~vtkOpenVRRenderWindow()
     this->DashboardOverlay->Delete();
     this->DashboardOverlay = 0;
   }
-
   this->Finalize();
 
   vtkRenderer *ren;
@@ -91,21 +118,51 @@ vtkOpenVRRenderWindow::~vtkOpenVRRenderWindow()
   this->Renderers->InitTraversal(rit);
   while ( (ren = this->Renderers->GetNextRenderer(rit)) )
   {
-    ren->SetRenderWindow(NULL);
+    ren->SetRenderWindow(nullptr);
   }
   this->HMDTransform->Delete();
   this->HMDTransform = 0;
+
+  if (this->HelperWindow)
+  {
+    this->HelperWindow->Delete();
+    this->HelperWindow = 0;
+  }
 }
 
 // ----------------------------------------------------------------------------
 void vtkOpenVRRenderWindow::ReleaseGraphicsResources(vtkRenderWindow *renWin)
 {
+  // this->HelperWindow->ReleaseGraphicsResources(renWin);
   this->Superclass::ReleaseGraphicsResources(renWin);
   for( std::vector< vtkOpenVRModel * >::iterator i = this->VTKRenderModels.begin();
        i != this->VTKRenderModels.end(); ++i )
   {
     (*i)->ReleaseGraphicsResources(renWin);
   }
+}
+
+void vtkOpenVRRenderWindow::SetHelperWindow(vtkOpenGLRenderWindow *win)
+{
+  if (this->HelperWindow == win)
+  {
+    return;
+  }
+
+  if (this->HelperWindow)
+  {
+    this->ReleaseGraphicsResources(this);
+    this->HelperWindow->Delete();
+    this->HelperWindow = nullptr;
+  }
+
+  this->HelperWindow = win;
+  if (win)
+  {
+    win->Register(this);
+  }
+
+  this->Modified();
 }
 
 void vtkOpenVRRenderWindow::InitializeViewFromCamera(vtkCamera *srccam)
@@ -142,7 +199,7 @@ void vtkOpenVRRenderWindow::InitializeViewFromCamera(vtkCamera *srccam)
     (maxIdx == 0 ? (oldVup[0] > 0 ? 1 : -1) : 0.0),
     (maxIdx == 1 ? (oldVup[1] > 0 ? 1 : -1) : 0.0),
     (maxIdx == 2 ? (oldVup[2] > 0 ? 1 : -1) : 0.0));
-  this->SetInitialViewUp(
+  this->SetPhysicalViewUp(
     (maxIdx == 0 ? (oldVup[0] > 0 ? 1 : -1) : 0.0),
     (maxIdx == 1 ? (oldVup[1] > 0 ? 1 : -1) : 0.0),
     (maxIdx == 2 ? (oldVup[2] > 0 ? 1 : -1) : 0.0));
@@ -150,20 +207,21 @@ void vtkOpenVRRenderWindow::InitializeViewFromCamera(vtkCamera *srccam)
   double *oldFP = srccam->GetFocalPoint();
   double *cvup = cam->GetViewUp();
   cam->SetFocalPoint(oldFP);
-  cam->SetTranslation(
+  this->SetPhysicalTranslation(
       cvup[0]*distance - oldFP[0],
       cvup[1]*distance - oldFP[1],
       cvup[2]*distance - oldFP[2]);
+  this->SetPhysicalScale(distance);
 
   double *oldDOP = srccam->GetDirectionOfProjection();
   int dopMaxIdx = fabs(oldDOP[0]) > fabs(oldDOP[1]) ?
     (fabs(oldDOP[0]) > fabs(oldDOP[2]) ? 0 : 2) :
     (fabs(oldDOP[1]) > fabs(oldDOP[2]) ? 1 : 2);
-  this->SetInitialViewDirection(
+  this->SetPhysicalViewDirection(
     (dopMaxIdx == 0 ? (oldDOP[0] > 0 ? 1 : -1) : 0.0),
     (dopMaxIdx == 1 ? (oldDOP[1] > 0 ? 1 : -1) : 0.0),
     (dopMaxIdx == 2 ? (oldDOP[2] > 0 ? 1 : -1) : 0.0));
-  double *idop = this->GetInitialViewDirection();
+  double *idop = this->GetPhysicalViewDirection();
   cam->SetPosition(
     -idop[0]*distance + oldFP[0],
     -idop[1]*distance + oldFP[1],
@@ -181,7 +239,7 @@ std::string vtkOpenVRRenderWindow::GetTrackedDeviceString(
   vr::TrackedPropertyError *peError)
 {
   uint32_t unRequiredBufferLen =
-    pHmd->GetStringTrackedDeviceProperty( unDevice, prop, NULL, 0, peError );
+    pHmd->GetStringTrackedDeviceProperty( unDevice, prop, nullptr, 0, peError );
   if( unRequiredBufferLen == 0 )
   {
     return "";
@@ -210,10 +268,10 @@ vtkOpenVRModel *vtkOpenVRRenderWindow::FindOrLoadRenderModel(
   {
     vtkErrorMacro("Unable to load render model " << pRenderModel->GetName() );
     pRenderModel->Delete();
-    return NULL; // move on to the next tracked device
+    return nullptr; // move on to the next tracked device
   }
 
-  pRenderModel->SetShow(true);
+  pRenderModel->SetVisibility(true);
   this->VTKRenderModels.push_back( pRenderModel );
 
   return pRenderModel;
@@ -221,8 +279,8 @@ vtkOpenVRModel *vtkOpenVRRenderWindow::FindOrLoadRenderModel(
 
 void vtkOpenVRRenderWindow::RenderModels()
 {
-  bool bIsInputCapturedByAnotherProcess =
-    this->HMD->IsInputFocusCapturedByAnotherProcess();
+  vtkOpenGLState *ostate = this->GetState();
+  ostate->vtkglEnable(GL_DEPTH_TEST);
 
   // for each device
   for (uint32_t unTrackedDevice = vr::k_unTrackedDeviceIndex_Hmd + 1;
@@ -242,11 +300,12 @@ void vtkOpenVRRenderWindow::RenderModels()
       if( pRenderModel )
       {
         this->TrackedDeviceToRenderModel[ unTrackedDevice ] = pRenderModel;
+        pRenderModel->TrackedDevice = unTrackedDevice;
       }
     }
     // if we still have no model or it is not set to show
     if( !this->TrackedDeviceToRenderModel[ unTrackedDevice ]
-      || !this->TrackedDeviceToRenderModel[ unTrackedDevice ]->GetShow())
+      || !this->TrackedDeviceToRenderModel[ unTrackedDevice ]->GetVisibility())
     {
       continue;
     }
@@ -257,32 +316,26 @@ void vtkOpenVRRenderWindow::RenderModels()
       continue;
     }
 
-    if( bIsInputCapturedByAnotherProcess &&
-        this->HMD->GetTrackedDeviceClass( unTrackedDevice ) == vr::TrackedDeviceClass_Controller )
-    {
-      continue;
-    }
-
     this->TrackedDeviceToRenderModel[ unTrackedDevice ]->Render(this, pose);
   }
-}
-
-void vtkOpenVRRenderWindow::Clean()
-{
-  /* finish OpenGL rendering */
-  if (this->OwnContext && this->ContextId)
-  {
-    this->MakeCurrent();
-    this->ReleaseGraphicsResources(this);
-  }
-
-  this->ContextId = NULL;
 }
 
 // ----------------------------------------------------------------------------
 void vtkOpenVRRenderWindow::MakeCurrent()
 {
-  SDL_GL_MakeCurrent(this->WindowId, this->ContextId);
+  if (this->HelperWindow)
+  {
+    this->HelperWindow->MakeCurrent();
+  }
+}
+
+vtkOpenGLState *vtkOpenVRRenderWindow::GetState()
+{
+  if (this->HelperWindow)
+  {
+    return this->HelperWindow->GetState();
+  }
+  return this->State;
 }
 
 // ----------------------------------------------------------------------------
@@ -290,14 +343,13 @@ void vtkOpenVRRenderWindow::MakeCurrent()
 // Tells if this window is the current OpenGL context for the calling thread.
 bool vtkOpenVRRenderWindow::IsCurrent()
 {
-  return this->ContextId!=0 && this->ContextId==SDL_GL_GetCurrentContext();
+  return this->HelperWindow ? this->HelperWindow->IsCurrent() : false;
 }
 
 
 // ----------------------------------------------------------------------------
 void vtkOpenVRRenderWindow::SetSize(int x, int y)
 {
-  static int resizing = 0;
   if ((this->Size[0] != x) || (this->Size[1] != y))
   {
     this->Superclass::SetSize(x, y);
@@ -305,16 +357,6 @@ void vtkOpenVRRenderWindow::SetSize(int x, int y)
     if (this->Interactor)
     {
       this->Interactor->SetSize(x, y);
-    }
-
-    if (this->Mapped)
-    {
-      if (!resizing)
-      {
-        resizing = 1;
-        SDL_SetWindowSize(this->WindowId, this->Size[0], this->Size[1]);
-        resizing = 0;
-      }
     }
   }
 }
@@ -328,22 +370,11 @@ int *vtkOpenVRRenderWindow::GetScreenSize(void)
 
 void vtkOpenVRRenderWindow::SetPosition(int x, int y)
 {
-  static int resizing = 0;
-
   if ((this->Position[0] != x) || (this->Position[1] != y))
   {
     this->Modified();
     this->Position[0] = x;
     this->Position[1] = y;
-    if (this->Mapped)
-    {
-      if (!resizing)
-      {
-        resizing = 1;
-        SDL_SetWindowPosition(this->WindowId,x,y);
-        resizing = 0;
-      }
-    }
   }
 }
 
@@ -354,7 +385,7 @@ void vtkOpenVRRenderWindow::UpdateHMDMatrixPose()
     return;
   }
   vr::VRCompositor()->WaitGetPoses(this->TrackedDevicePose,
-    vr::k_unMaxTrackedDeviceCount, NULL, 0 );
+    vr::k_unMaxTrackedDeviceCount, nullptr, 0 );
 
   // update the camera values based on the pose
   if ( this->TrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid )
@@ -368,62 +399,82 @@ void vtkOpenVRRenderWindow::UpdateHMDMatrixPose()
       this->HMDTransform->Identity();
 
       // get the position and orientation of the HMD
-      vr::TrackedDevicePose_t &tdPose =
-        this->TrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd];
-      double pos[3];
+      vr::TrackedDevicePose_t &tdPose = this->TrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd];
 
-      // Vive to world axes
-      double *vup = this->InitialViewUp;
-      double *dop = this->InitialViewDirection;
-      double vright[3];
-      vtkMath::Cross(dop, vup, vright);
+      // Note: Scaling is applied through moving the camera closer to the focal point, because
+      // scaling of all actors is not feasible, and vtkCamera::ModelTransformMatrix is not supported
+      // throughout VTK (clipping issues etc.). To achieve this, a new coordinate system called
+      // NonScaledWorld is introduced. The relationship between Physical (in which the HMD pose
+      // is given by OpenVR) and NonScaledWorld is described by the PhysicalViewUp etc. member variables.
+      // After getting the HMD pose in Physical, those coordinates and axes are converted to the
+      // NonScaledWorld coordinate system, on which the PhysicalScaling trick of modifying the
+      // camera position is applied, resulting the World coordinate system.
 
-      // extract HMD axes
-      double hvright[3];
-      hvright[0] = tdPose.mDeviceToAbsoluteTracking.m[0][0];
-      hvright[1] = tdPose.mDeviceToAbsoluteTracking.m[1][0];
-      hvright[2] = tdPose.mDeviceToAbsoluteTracking.m[2][0];
-      double hvup[3];
-      hvup[0] = tdPose.mDeviceToAbsoluteTracking.m[0][1];
-      hvup[1] = tdPose.mDeviceToAbsoluteTracking.m[1][1];
-      hvup[2] = tdPose.mDeviceToAbsoluteTracking.m[2][1];
+      // construct physical to non-scaled world axes (scaling is used later to move camera closer)
+      double physicalZ_NonscaledWorld[3] = { -this->PhysicalViewDirection[0],
+                                             -this->PhysicalViewDirection[1],
+                                             -this->PhysicalViewDirection[2] };
+      double* physicalY_NonscaledWorld = this->PhysicalViewUp;
+      double physicalX_NonscaledWorld[3] = {0.0};
+      vtkMath::Cross(physicalY_NonscaledWorld, physicalZ_NonscaledWorld, physicalX_NonscaledWorld);
 
-      pos[0] = tdPose.mDeviceToAbsoluteTracking.m[0][3];
-      pos[1] = tdPose.mDeviceToAbsoluteTracking.m[1][3];
-      pos[2] = tdPose.mDeviceToAbsoluteTracking.m[2][3];
+      // extract HMD axes and position
+      double hmdX_Physical[3] = { tdPose.mDeviceToAbsoluteTracking.m[0][0],
+                                  tdPose.mDeviceToAbsoluteTracking.m[1][0],
+                                  tdPose.mDeviceToAbsoluteTracking.m[2][0] };
+      double hmdY_Physical[3] = { tdPose.mDeviceToAbsoluteTracking.m[0][1],
+                                  tdPose.mDeviceToAbsoluteTracking.m[1][1],
+                                  tdPose.mDeviceToAbsoluteTracking.m[2][1] };
+      double hmdPosition_Physical[3] = { tdPose.mDeviceToAbsoluteTracking.m[0][3],
+                                         tdPose.mDeviceToAbsoluteTracking.m[1][3],
+                                         tdPose.mDeviceToAbsoluteTracking.m[2][3] };
 
-      double distance = cam->GetDistance();
-      double *trans = cam->GetTranslation();
-
-      // convert position to world coordinates
-      double npos[3];
-      npos[0] = pos[0]*vright[0] + pos[1]*vup[0] - pos[2]*dop[0];
-      npos[1] = pos[0]*vright[1] + pos[1]*vup[1] - pos[2]*dop[1];
-      npos[2] = pos[0]*vright[2] + pos[1]*vup[2] - pos[2]*dop[2];
+      // convert position to non-scaled world coordinates
+      double hmdPosition_NonscaledWorld[3];
+      hmdPosition_NonscaledWorld[0] = hmdPosition_Physical[0]*physicalX_NonscaledWorld[0] +
+                                      hmdPosition_Physical[1]*physicalY_NonscaledWorld[0] +
+                                      hmdPosition_Physical[2]*physicalZ_NonscaledWorld[0];
+      hmdPosition_NonscaledWorld[1] = hmdPosition_Physical[0]*physicalX_NonscaledWorld[1] +
+                                      hmdPosition_Physical[1]*physicalY_NonscaledWorld[1] +
+                                      hmdPosition_Physical[2]*physicalZ_NonscaledWorld[1];
+      hmdPosition_NonscaledWorld[2] = hmdPosition_Physical[0]*physicalX_NonscaledWorld[2] +
+                                      hmdPosition_Physical[1]*physicalY_NonscaledWorld[2] +
+                                      hmdPosition_Physical[2]*physicalZ_NonscaledWorld[2];
       // now adjust for scale and translation
+      double hmdPosition_World[3] = {0.0};
       for (int i = 0; i < 3; i++)
       {
-        pos[i] = npos[i]*distance - trans[i];
+        hmdPosition_World[i] = hmdPosition_NonscaledWorld[i]*this->PhysicalScale - this->PhysicalTranslation[i];
       }
 
-      // convert axes to world coordinates
-      double fvright[3]; // final vright
-      fvright[0] = hvright[0]*vright[0] + hvright[1]*vup[0] - hvright[2]*dop[0];
-      fvright[1] = hvright[0]*vright[1] + hvright[1]*vup[1] - hvright[2]*dop[1];
-      fvright[2] = hvright[0]*vright[2] + hvright[1]*vup[2] - hvright[2]*dop[2];
-      double fvup[3]; // final vup
-      fvup[0] = hvup[0]*vright[0] + hvup[1]*vup[0] - hvup[2]*dop[0];
-      fvup[1] = hvup[0]*vright[1] + hvup[1]*vup[1] - hvup[2]*dop[1];
-      fvup[2] = hvup[0]*vright[2] + hvup[1]*vup[2] - hvup[2]*dop[2];
-      double fdop[3];
-      vtkMath::Cross(fvup, fvright, fdop);
+      // convert axes to non-scaled world coordinate system
+      double hmdX_NonscaledWorld[3] = { hmdX_Physical[0]*physicalX_NonscaledWorld[0] +
+                                        hmdX_Physical[1]*physicalY_NonscaledWorld[0] +
+                                        hmdX_Physical[2]*physicalZ_NonscaledWorld[0],
+                                        hmdX_Physical[0]*physicalX_NonscaledWorld[1] +
+                                        hmdX_Physical[1]*physicalY_NonscaledWorld[1] +
+                                        hmdX_Physical[2]*physicalZ_NonscaledWorld[1],
+                                        hmdX_Physical[0]*physicalX_NonscaledWorld[2] +
+                                        hmdX_Physical[1]*physicalY_NonscaledWorld[2] +
+                                        hmdX_Physical[2]*physicalZ_NonscaledWorld[2] };
+      double hmdY_NonscaledWorld[3] = { hmdY_Physical[0]*physicalX_NonscaledWorld[0] +
+                                        hmdY_Physical[1]*physicalY_NonscaledWorld[0] +
+                                        hmdY_Physical[2]*physicalZ_NonscaledWorld[0],
+                                        hmdY_Physical[0]*physicalX_NonscaledWorld[1] +
+                                        hmdY_Physical[1]*physicalY_NonscaledWorld[1] +
+                                        hmdY_Physical[2]*physicalZ_NonscaledWorld[1],
+                                        hmdY_Physical[0]*physicalX_NonscaledWorld[2] +
+                                        hmdY_Physical[1]*physicalY_NonscaledWorld[2] +
+                                        hmdY_Physical[2]*physicalZ_NonscaledWorld[2] };
+      double hmdZ_NonscaledWorld[3] = {0.0};
+      vtkMath::Cross(hmdY_NonscaledWorld, hmdX_NonscaledWorld, hmdZ_NonscaledWorld);
 
-      cam->SetPosition(pos);
-      cam->SetFocalPoint(
-        pos[0] + fdop[0]*distance,
-        pos[1] + fdop[1]*distance,
-        pos[2] + fdop[2]*distance);
-      cam->SetViewUp(fvup);
+      cam->SetPosition(hmdPosition_World);
+      cam->SetFocalPoint( hmdPosition_World[0] + hmdZ_NonscaledWorld[0]*this->PhysicalScale,
+                          hmdPosition_World[1] + hmdZ_NonscaledWorld[1]*this->PhysicalScale,
+                          hmdPosition_World[2] + hmdZ_NonscaledWorld[2]*this->PhysicalScale );
+      cam->SetViewUp(hmdY_NonscaledWorld);
+
       ren->UpdateLightsGeometryToFollowCamera();
     }
   }
@@ -431,13 +482,16 @@ void vtkOpenVRRenderWindow::UpdateHMDMatrixPose()
 
 void vtkOpenVRRenderWindow::Render()
 {
-  this->UpdateHMDMatrixPose();
+  if (this->TrackHMD)
+  {
+    this->UpdateHMDMatrixPose();
+  }
   this->vtkRenderWindow::Render();
 }
 
 void vtkOpenVRRenderWindow::StereoUpdate()
 {
-  // camera handles what we need
+  glBindFramebuffer( GL_FRAMEBUFFER, this->GetLeftRenderBufferId());
 }
 
 void vtkOpenVRRenderWindow::StereoMidpoint()
@@ -445,19 +499,22 @@ void vtkOpenVRRenderWindow::StereoMidpoint()
   // render the left eye models
   this->RenderModels();
 
-  glBindFramebuffer( GL_FRAMEBUFFER, 0 );
-  glDisable( GL_MULTISAMPLE );
+  this->GetState()->vtkglDisable( GL_MULTISAMPLE );
 
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, this->LeftEyeDesc.m_nRenderFramebufferId);
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->LeftEyeDesc.m_nResolveFramebufferId );
+  if ( this->HMD && this->SwapBuffers ) // picking does not swap and we don't show it
+  {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, this->LeftEyeDesc.m_nRenderFramebufferId);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->LeftEyeDesc.m_nResolveFramebufferId );
 
-  glBlitFramebuffer(0, 0, this->Size[0], this->Size[1],
-    0, 0, this->Size[0], this->Size[1],
-    GL_COLOR_BUFFER_BIT,
-    GL_LINEAR);
+    glBlitFramebuffer(0, 0, this->Size[0], this->Size[1],
+      0, 0, this->Size[0], this->Size[1],
+      GL_COLOR_BUFFER_BIT,
+      GL_LINEAR);
 
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0 );
+    vr::Texture_t leftEyeTexture = {(void*)(long)this->LeftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+    vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture );
+  }
+  glBindFramebuffer( GL_FRAMEBUFFER, this->GetRightRenderBufferId());
 }
 
 void  vtkOpenVRRenderWindow::StereoRenderComplete()
@@ -465,56 +522,38 @@ void  vtkOpenVRRenderWindow::StereoRenderComplete()
   // render the right eye models
   this->RenderModels();
 
-  glBindFramebuffer( GL_FRAMEBUFFER, 0 );
-  glDisable( GL_MULTISAMPLE );
-
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, this->RightEyeDesc.m_nRenderFramebufferId );
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->RightEyeDesc.m_nResolveFramebufferId );
-
-  glBlitFramebuffer(0, 0, this->Size[0], this->Size[1],
-    0, 0, this->Size[0], this->Size[1],
-    GL_COLOR_BUFFER_BIT,
-    GL_LINEAR);
-
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0 );
-
   // reset the camera to a neutral position
   vtkRenderer *ren = static_cast<vtkRenderer *>(
     this->GetRenderers()->GetItemAsObject(0));
-  if (ren)
+  if (ren && !ren->GetSelector())
   {
     vtkOpenVRCamera *cam =
       static_cast<vtkOpenVRCamera *>(ren->GetActiveCamera());
-    cam->ApplyEyePose(false, -1.0);
+    cam->ApplyEyePose(this, false, -1.0);
+  }
+
+  this->GetState()->vtkglDisable( GL_MULTISAMPLE );
+
+  // for now as fast as possible
+  if ( this->HMD && this->SwapBuffers) // picking does not swap and we don't show it
+  {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, this->RightEyeDesc.m_nRenderFramebufferId );
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->RightEyeDesc.m_nResolveFramebufferId );
+
+    glBlitFramebuffer(0, 0, this->Size[0], this->Size[1],
+      0, 0, this->Size[0], this->Size[1],
+      GL_COLOR_BUFFER_BIT,
+      GL_LINEAR);
+
+    vr::Texture_t rightEyeTexture = {(void*)(long)this->RightEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+    vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture );
   }
 }
 
 // End the rendering process and display the image.
+// handled in stereo render complete
 void vtkOpenVRRenderWindow::Frame(void)
 {
-  this->MakeCurrent();
-  if (!this->AbortRender && this->DoubleBuffer && this->SwapBuffers)
-  {
-    // for now as fast as possible
-    if ( this->HMD )
-    {
-      vr::Texture_t leftEyeTexture = {(void*)(long)this->LeftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-      vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture );
-      vr::Texture_t rightEyeTexture = {(void*)(long)this->RightEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-      vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture );
-    }
-
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, this->RightEyeDesc.m_nResolveFramebufferId );
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0 );
-    glBlitFramebuffer(0, 0, this->Size[0], this->Size[1],
-      0, 0, this->Size[0] / 2, this->Size[1] / 2,
-      GL_COLOR_BUFFER_BIT,
-      GL_LINEAR);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-
-    SDL_GL_SwapWindow( this->WindowId );
-  }
 }
 
 bool vtkOpenVRRenderWindow::CreateFrameBuffer( int nWidth, int nHeight, FramebufferDesc &framebufferDesc )
@@ -573,22 +612,16 @@ bool vtkOpenVRRenderWindow::CreateFrameBuffer( int nWidth, int nHeight, Framebuf
 // Initialize the rendering window.
 void vtkOpenVRRenderWindow::Initialize (void)
 {
-  if ( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER ) < 0 )
-  {
-    vtkErrorMacro("SDL could not initialize! SDL Error: " <<  SDL_GetError());
-    return;
-  }
-
   // Loading the SteamVR Runtime
   vr::EVRInitError eError = vr::VRInitError_None;
   this->HMD = vr::VR_Init( &eError, vr::VRApplication_Scene );
 
   if ( eError != vr::VRInitError_None )
   {
-    this->HMD = NULL;
+    this->HMD = nullptr;
     char buf[1024];
     snprintf( buf, sizeof( buf ), "Unable to init VR runtime: %s", vr::VR_GetVRInitErrorAsEnglishDescription( eError ) );
-    SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "VR_Init Failed", buf, NULL );
+    vtkErrorMacro(<< "VR_Init Failed" << buf);
     return;
   }
 
@@ -596,12 +629,12 @@ void vtkOpenVRRenderWindow::Initialize (void)
     vr::VR_GetGenericInterface( vr::IVRRenderModels_Version, &eError );
   if( !this->OpenVRRenderModels )
   {
-    this->HMD = NULL;
+    this->HMD = nullptr;
     vr::VR_Shutdown();
 
     char buf[1024];
     snprintf( buf, sizeof( buf ), "Unable to get render model interface: %s", vr::VR_GetVRInitErrorAsEnglishDescription( eError ) );
-    SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "VR_Init Failed", buf, NULL );
+    vtkErrorMacro(<< "VR_Init Failed" << buf);
     return;
   }
 
@@ -613,43 +646,21 @@ void vtkOpenVRRenderWindow::Initialize (void)
   this->Size[0] = renderWidth;
   this->Size[1] = renderHeight;
 
-  Uint32 unWindowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-  //Uint32 unWindowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN;
+  this->HelperWindow->SetDisplayId(this->GetGenericDisplayId());
+  this->HelperWindow->SetOffScreenRendering(1);
+  this->HelperWindow->Initialize();
 
-  SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 4 );
-  SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
-  //SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY );
-  SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
-
-  SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 0 );
-  SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0 );
-
-  this->WindowId = SDL_CreateWindow( this->WindowName,
-    this->Position[0], this->Position[1],
-    this->Size[0] / 2, this->Size[1] / 2,
-    unWindowFlags );
-  if (this->WindowId == NULL)
-  {
-    vtkErrorMacro("Window could not be created! SDL Error: " <<  SDL_GetError());
-    return;
-  }
-
-  this->ContextId = SDL_GL_CreateContext(this->WindowId);
-  if (this->ContextId == NULL)
-  {
-    vtkErrorMacro("OpenGL context could not be created! SDL Error: " <<  SDL_GetError() );
-    return;
-  }
+  this->MakeCurrent();
 
   this->OpenGLInit();
+
+  // some classes override the ivar in a getter :-(
+  this->MaximumHardwareLineWidth = this->HelperWindow->GetMaximumHardwareLineWidth();
+
   glDepthRange(0., 1.);
 
   // make sure vsync is off
-  if ( SDL_GL_SetSwapInterval( 0 ) < 0 )
-  {
-    vtkErrorMacro("Warning: Unable to set VSync! SDL Error: " << SDL_GetError() );
-    return;
-  }
+  // this->HelperWindow->SetSwapControl(0);
 
   m_strDriver = "No Driver";
   m_strDisplay = "No Display";
@@ -661,10 +672,12 @@ void vtkOpenVRRenderWindow::Initialize (void)
 
   std::string strWindowTitle = "VTK - " + m_strDriver + " " + m_strDisplay;
   this->SetWindowName(strWindowTitle.c_str());
-  SDL_SetWindowTitle( this->WindowId, this->WindowName );
 
   this->CreateFrameBuffer(this->Size[0], this->Size[1], this->LeftEyeDesc);
   this->CreateFrameBuffer(this->Size[0], this->Size[1], this->RightEyeDesc);
+
+  // use right eye render buffer for generic read pixel ops
+  this->DefaultFrameBufferId = this->LeftEyeDesc.m_nRenderFramebufferId;
 
   if ( !vr::VRCompositor() )
   {
@@ -677,12 +690,11 @@ void vtkOpenVRRenderWindow::Initialize (void)
 
 void vtkOpenVRRenderWindow::Finalize (void)
 {
-  this->Clean();
-
+  this->ReleaseGraphicsResources(this);
   if( this->HMD )
   {
     vr::VR_Shutdown();
-    this->HMD = NULL;
+    this->HMD = nullptr;
   }
 
   for( std::vector< vtkOpenVRModel * >::iterator i = this->VTKRenderModels.begin();
@@ -692,32 +704,37 @@ void vtkOpenVRRenderWindow::Finalize (void)
   }
   this->VTKRenderModels.clear();
 
-  if( this->ContextId )
+  if (this->HelperWindow && this->HelperWindow->GetGenericContext())
   {
+    this->HelperWindow->Finalize();
   }
-
-  if( this->WindowId )
-  {
-    SDL_DestroyWindow( this->WindowId );
-    this->WindowId = NULL;
-  }
-
-  SDL_Quit();
 }
 
 void vtkOpenVRRenderWindow::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
 
-  os << indent << "ContextId: " << this->ContextId << "\n";
-  os << indent << "Window Id: " << this->WindowId << "\n";
+  os << indent << "ContextId: " << this->HelperWindow->GetGenericContext() << "\n";
+  os << indent << "Window Id: " << this->HelperWindow->GetGenericWindowId() << "\n";
+}
+
+// Add a renderer to the list of renderers.
+void vtkOpenVRRenderWindow::AddRenderer(vtkRenderer *ren)
+{
+  if (ren && !vtkOpenVRRenderer::SafeDownCast(ren))
+  {
+    vtkErrorMacro("vtkOpenVRRenderWindow::AddRenderer: Failed to add renderer of type " << ren->GetClassName()
+       << ": A vtkOpenVRRenderer is expected");
+    return;
+  }
+  this->Superclass::AddRenderer(ren);
 }
 
 // Begin the rendering process.
 void vtkOpenVRRenderWindow::Start(void)
 {
   // if the renderer has not been initialized, do so now
-  if (!this->ContextId)
+  if (this->HelperWindow && !this->HMD)
   {
     this->Initialize();
   }
@@ -729,4 +746,186 @@ void vtkOpenVRRenderWindow::Start(void)
 void vtkOpenVRRenderWindow::RenderOverlay()
 {
   this->DashboardOverlay->Render();
+}
+
+vr::TrackedDeviceIndex_t vtkOpenVRRenderWindow::GetTrackedDeviceIndexForDevice(vtkEventDataDevice dev)
+{
+  if (dev == vtkEventDataDevice::HeadMountedDisplay)
+  {
+    return vr::k_unTrackedDeviceIndex_Hmd;
+  }
+  if (dev == vtkEventDataDevice::LeftController)
+  {
+    return this->HMD->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_LeftHand);
+  }
+  if (dev == vtkEventDataDevice::RightController)
+  {
+    return this->HMD->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
+  }
+  return vr::k_unTrackedDeviceIndexInvalid;
+}
+
+vtkOpenVRModel *vtkOpenVRRenderWindow::GetTrackedDeviceModel(vtkEventDataDevice dev)
+{
+  vr::TrackedDeviceIndex_t idx = this->GetTrackedDeviceIndexForDevice(dev);
+  if (idx != vr::k_unTrackedDeviceIndexInvalid)
+  {
+    return this->GetTrackedDeviceModel(idx);
+  }
+  return nullptr;
+}
+
+void vtkOpenVRRenderWindow::GetTrackedDevicePose(
+  vtkEventDataDevice dev, vr::TrackedDevicePose_t **pose)
+{
+  vr::TrackedDeviceIndex_t idx = this->GetTrackedDeviceIndexForDevice(dev);
+  *pose = nullptr;
+  if (idx < vr::k_unMaxTrackedDeviceCount)
+  {
+    *pose = &(this->TrackedDevicePose[idx]);
+  }
+}
+
+void vtkOpenVRRenderWindow::SetPhysicalViewDirection(double x, double y, double z)
+{
+  if ( this->PhysicalViewDirection[0] != x
+    || this->PhysicalViewDirection[1] != y
+    || this->PhysicalViewDirection[2] != z )
+  {
+    this->PhysicalViewDirection[0] = x;
+    this->PhysicalViewDirection[1] = y;
+    this->PhysicalViewDirection[2] = z;
+    this->InvokeEvent(vtkOpenVRRenderWindow::PhysicalToWorldMatrixModified);
+    this->Modified();
+  }
+}
+
+void vtkOpenVRRenderWindow::SetPhysicalViewDirection(double dir[3])
+{
+  this->SetPhysicalViewDirection(dir[0], dir[1], dir[2]);
+}
+
+void vtkOpenVRRenderWindow::SetPhysicalViewUp(double x, double y, double z)
+{
+  if ( this->PhysicalViewUp[0] != x
+    || this->PhysicalViewUp[1] != y
+    || this->PhysicalViewUp[2] != z )
+  {
+    this->PhysicalViewUp[0] = x;
+    this->PhysicalViewUp[1] = y;
+    this->PhysicalViewUp[2] = z;
+    this->InvokeEvent(vtkOpenVRRenderWindow::PhysicalToWorldMatrixModified);
+    this->Modified();
+  }
+}
+
+void vtkOpenVRRenderWindow::SetPhysicalViewUp(double dir[3])
+{
+  this->SetPhysicalViewUp(dir[0], dir[1], dir[2]);
+}
+
+void vtkOpenVRRenderWindow::SetPhysicalTranslation(double x, double y, double z)
+{
+  if ( this->PhysicalTranslation[0] != x
+    || this->PhysicalTranslation[1] != y
+    || this->PhysicalTranslation[2] != z )
+  {
+    this->PhysicalTranslation[0] = x;
+    this->PhysicalTranslation[1] = y;
+    this->PhysicalTranslation[2] = z;
+    this->InvokeEvent(vtkOpenVRRenderWindow::PhysicalToWorldMatrixModified);
+    this->Modified();
+  }
+}
+
+void vtkOpenVRRenderWindow::SetPhysicalTranslation(double trans[3])
+{
+  this->SetPhysicalTranslation(trans[0], trans[1], trans[2]);
+}
+
+void vtkOpenVRRenderWindow::SetPhysicalScale(double scale)
+{
+  if (this->PhysicalScale != scale)
+  {
+    this->PhysicalScale = scale;
+    this->InvokeEvent(vtkOpenVRRenderWindow::PhysicalToWorldMatrixModified);
+    this->Modified();
+  }
+}
+
+void vtkOpenVRRenderWindow::SetPhysicalToWorldMatrix(vtkMatrix4x4* matrix)
+{
+  if (!matrix)
+  {
+    return;
+  }
+  vtkNew<vtkMatrix4x4> currentPhysicalToWorldMatrix;
+  this->GetPhysicalToWorldMatrix(currentPhysicalToWorldMatrix);
+  bool matrixDifferent = false;
+  for (int i = 0; i < 4; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
+      if ( fabs(matrix->GetElement(i, j) - currentPhysicalToWorldMatrix->GetElement(i, j)) >= 1e-3 )
+      {
+        matrixDifferent = true;
+        break;
+      }
+    }
+  }
+  if (!matrixDifferent)
+  {
+    return;
+  }
+
+  vtkNew<vtkTransform> hmdToWorldTransform;
+  hmdToWorldTransform->SetMatrix(matrix);
+
+  double translation[3] = {0.0};
+  hmdToWorldTransform->GetPosition(translation);
+  this->PhysicalTranslation[0] = (-1.0) * translation[0];
+  this->PhysicalTranslation[1] = (-1.0) * translation[1];
+  this->PhysicalTranslation[2] = (-1.0) * translation[2];
+
+  double scale[3] = {0.0};
+  hmdToWorldTransform->GetScale(scale);
+  this->PhysicalScale = scale[0];
+
+  this->PhysicalViewUp[0] = matrix->GetElement(0,1);
+  this->PhysicalViewUp[1] = matrix->GetElement(1,1);
+  this->PhysicalViewUp[2] = matrix->GetElement(2,1);
+  vtkMath::Normalize(this->PhysicalViewUp);
+  this->PhysicalViewDirection[0] = (-1.0) * matrix->GetElement(0,2);
+  this->PhysicalViewDirection[1] = (-1.0) * matrix->GetElement(1,2);
+  this->PhysicalViewDirection[2] = (-1.0) * matrix->GetElement(2,2);
+  vtkMath::Normalize(this->PhysicalViewDirection);
+
+  this->InvokeEvent(vtkOpenVRRenderWindow::PhysicalToWorldMatrixModified);
+  this->Modified();
+}
+
+void vtkOpenVRRenderWindow::GetPhysicalToWorldMatrix(vtkMatrix4x4* physicalToWorldMatrix)
+{
+  if (!physicalToWorldMatrix)
+  {
+    return;
+  }
+
+  physicalToWorldMatrix->Identity();
+
+  // construct physical to non-scaled world axes (scaling is applied later)
+  double physicalZ_NonscaledWorld[3] = { -this->PhysicalViewDirection[0],
+                                         -this->PhysicalViewDirection[1],
+                                         -this->PhysicalViewDirection[2] };
+  double* physicalY_NonscaledWorld = this->PhysicalViewUp;
+  double physicalX_NonscaledWorld[3] = {0.0};
+  vtkMath::Cross(physicalY_NonscaledWorld, physicalZ_NonscaledWorld, physicalX_NonscaledWorld);
+
+  for (int row=0;row<3;++row)
+  {
+    physicalToWorldMatrix->SetElement(row, 0, physicalX_NonscaledWorld[row]*this->PhysicalScale);
+    physicalToWorldMatrix->SetElement(row, 1, physicalY_NonscaledWorld[row]*this->PhysicalScale);
+    physicalToWorldMatrix->SetElement(row, 2, physicalZ_NonscaledWorld[row]*this->PhysicalScale);
+    physicalToWorldMatrix->SetElement(row, 3, -this->PhysicalTranslation[row]);
+  }
 }

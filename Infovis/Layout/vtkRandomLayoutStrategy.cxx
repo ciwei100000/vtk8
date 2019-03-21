@@ -43,9 +43,7 @@ vtkRandomLayoutStrategy::vtkRandomLayoutStrategy()
   this->ThreeDimensionalLayout = 1;
 }
 
-vtkRandomLayoutStrategy::~vtkRandomLayoutStrategy()
-{
-}
+vtkRandomLayoutStrategy::~vtkRandomLayoutStrategy() = default;
 
 // Random graph layout method
 // Fixme: Temporary Hack
@@ -53,7 +51,7 @@ void vtkRandomLayoutStrategy::Layout() {};
 
 void vtkRandomLayoutStrategy::SetGraph(vtkGraph *graph)
 {
-  if (graph == NULL)
+  if (graph == nullptr)
   {
     return;
   }

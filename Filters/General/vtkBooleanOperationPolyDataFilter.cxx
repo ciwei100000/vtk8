@@ -42,9 +42,7 @@ vtkBooleanOperationPolyDataFilter::vtkBooleanOperationPolyDataFilter() :
 }
 
 //-----------------------------------------------------------------------------
-vtkBooleanOperationPolyDataFilter::~vtkBooleanOperationPolyDataFilter()
-{
-}
+vtkBooleanOperationPolyDataFilter::~vtkBooleanOperationPolyDataFilter() = default;
 
 //-----------------------------------------------------------------------------
 void vtkBooleanOperationPolyDataFilter::SortPolyData(vtkPolyData* input,
@@ -111,6 +109,11 @@ int vtkBooleanOperationPolyDataFilter::RequestData(vtkInformation*        vtkNot
   PolyDataIntersection->SplitFirstOutputOn();
   PolyDataIntersection->SplitSecondOutputOn();
   PolyDataIntersection->Update();
+
+  if (PolyDataIntersection->GetStatus() != 1)
+  {
+    return 0;
+  }
 
   outputIntersection->CopyStructure(PolyDataIntersection->GetOutput());
   outputIntersection->GetPointData()->PassData(PolyDataIntersection->GetOutput()->GetPointData());
@@ -287,7 +290,7 @@ void vtkBooleanOperationPolyDataFilter
   vtkPointData* outPD = out->GetPointData();
   vtkCellData*  outCD = out->GetCellData();
 
-  vtkFloatArray *outNormals = NULL;
+  vtkFloatArray *outNormals = nullptr;
   if ( reverseCells )
   {
     outNormals = vtkArrayDownCast<vtkFloatArray>( outPD->GetArray("Normals") );
@@ -295,7 +298,7 @@ void vtkBooleanOperationPolyDataFilter
 
   vtkIdType numPts = in->GetNumberOfPoints();
 
-  if ( out->GetPoints() == NULL)
+  if ( out->GetPoints() == nullptr)
   {
     vtkSmartPointer< vtkPoints > points = vtkSmartPointer< vtkPoints >::New();
     out->SetPoints( points );

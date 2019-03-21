@@ -43,13 +43,13 @@ vtkCxxSetObjectMacro(vtkPComputeHistogram2DOutliers, Controller, vtkMultiProcess
 //------------------------------------------------------------------------------
 vtkPComputeHistogram2DOutliers::vtkPComputeHistogram2DOutliers()
 {
-  this->Controller = 0;
+  this->Controller = nullptr;
   this->SetController(vtkMultiProcessController::GetGlobalController());
 }
 //------------------------------------------------------------------------------
 vtkPComputeHistogram2DOutliers::~vtkPComputeHistogram2DOutliers()
 {
-  this->SetController(0);
+  this->SetController(nullptr);
 }
 //------------------------------------------------------------------------------
 void vtkPComputeHistogram2DOutliers::PrintSelf(ostream& os, vtkIndent indent)
@@ -79,7 +79,7 @@ int vtkPComputeHistogram2DOutliers::RequestData(
     return 0;
   }
 
-  // get the ouptut
+  // get the output
   vtkInformation *outTableInfo = outputVector->GetInformationObject(OUTPUT_SELECTED_TABLE_DATA);
   vtkTable* outputTable = vtkTable::SafeDownCast(
     outTableInfo->Get(vtkDataObject::DATA_OBJECT()));

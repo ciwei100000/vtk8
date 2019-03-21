@@ -32,6 +32,8 @@
 #include "vtkIOLegacyModule.h" // For export macro
 #include "vtkWriter.h"
 
+#include <locale> // For locale settings
+
 class vtkCellArray;
 class vtkDataArray;
 class vtkDataSet;
@@ -46,7 +48,7 @@ class VTKIOLEGACY_EXPORT vtkDataWriter : public vtkWriter
 {
 public:
   vtkTypeMacro(vtkDataWriter,vtkWriter);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Created object with default header, ASCII format, and default names for
@@ -66,9 +68,9 @@ public:
   /**
    * Enable writing to an OutputString instead of the default, a file.
    */
-  vtkSetMacro(WriteToOutputString,int);
-  vtkGetMacro(WriteToOutputString,int);
-  vtkBooleanMacro(WriteToOutputString,int);
+  vtkSetMacro(WriteToOutputString,vtkTypeBool);
+  vtkGetMacro(WriteToOutputString,vtkTypeBool);
+  vtkBooleanMacro(WriteToOutputString,vtkTypeBool);
   //@}
 
   //@{
@@ -77,7 +79,7 @@ public:
    * and can be retrieved with these methods.  The string is deleted during
    * the next call to write ...
    */
-  vtkGetMacro(OutputStringLength, int);
+  vtkGetMacro(OutputStringLength, vtkIdType);
   vtkGetStringMacro(OutputString);
   unsigned char *GetBinaryOutputString()
   {
@@ -92,7 +94,7 @@ public:
   vtkStdString GetOutputStdString();
 
   /**
-   * This convenience method returns the string, sets the IVAR to NULL,
+   * This convenience method returns the string, sets the IVAR to nullptr,
    * so that the user is responsible for deleting the string.
    * I am not sure what the name should be, so it may change in the future.
    */
@@ -217,7 +219,7 @@ public:
   //@}
 
   /**
-   * Open a vtk data file. Returns NULL if error.
+   * Open a vtk data file. Returns nullptr if error.
    */
   virtual ostream *OpenVTKFile();
 
@@ -290,13 +292,13 @@ public:
 
 protected:
   vtkDataWriter();
-  ~vtkDataWriter() VTK_OVERRIDE;
+  ~vtkDataWriter() override;
 
-  int WriteToOutputString;
+  vtkTypeBool WriteToOutputString;
   char *OutputString;
-  int OutputStringLength;
+  vtkIdType OutputStringLength;
 
-  void WriteData() VTK_OVERRIDE; //dummy method to allow this class to be instantiated and delegated to
+  void WriteData() override; //dummy method to allow this class to be instantiated and delegated to
 
   char *FileName;
   char *Header;
@@ -314,6 +316,8 @@ protected:
   char* GlobalIdsName;
   char* PedigreeIdsName;
   char* EdgeFlagsName;
+
+  std::locale CurrentLocale;
 
   int WriteArray(ostream *fp, int dataType, vtkAbstractArray *data, const char *format,
                  vtkIdType num, vtkIdType numComp);
@@ -334,8 +338,8 @@ protected:
   int WriteInformation(ostream *fp, vtkInformation *info);
 
 private:
-  vtkDataWriter(const vtkDataWriter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataWriter&) VTK_DELETE_FUNCTION;
+  vtkDataWriter(const vtkDataWriter&) = delete;
+  void operator=(const vtkDataWriter&) = delete;
 };
 
 #endif

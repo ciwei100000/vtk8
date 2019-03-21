@@ -59,7 +59,7 @@ class VTKRENDERINGANNOTATION_EXPORT vtkLegendBoxActor : public vtkActor2D
 {
 public:
   vtkTypeMacro(vtkLegendBoxActor,vtkActor2D);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Instantiate object with a rectangle in normaled view coordinates
@@ -100,7 +100,7 @@ public:
   vtkPolyData*  GetEntrySymbol(int i);
   vtkImageData* GetEntryIcon(int i);
   const char*   GetEntryString(int i);
-  double*       GetEntryColor(int i);
+  double*       GetEntryColor(int i) VTK_SIZEHINT(3);
 
   //@{
   /**
@@ -115,9 +115,9 @@ public:
    * Set/Get the flag that controls whether a border will be drawn
    * around the legend box.
    */
-  vtkSetMacro(Border, int);
-  vtkGetMacro(Border, int);
-  vtkBooleanMacro(Border, int);
+  vtkSetMacro(Border, vtkTypeBool);
+  vtkGetMacro(Border, vtkTypeBool);
+  vtkBooleanMacro(Border, vtkTypeBool);
   //@}
 
   //@{
@@ -129,9 +129,9 @@ public:
    * Note: the legend box is guaranteed to lie within the original border
    * definition.
    */
-  vtkSetMacro(LockBorder, int);
-  vtkGetMacro(LockBorder, int);
-  vtkBooleanMacro(LockBorder, int);
+  vtkSetMacro(LockBorder, vtkTypeBool);
+  vtkGetMacro(LockBorder, vtkTypeBool);
+  vtkBooleanMacro(LockBorder, vtkTypeBool);
   //@}
 
   //@{
@@ -139,9 +139,9 @@ public:
    * Set/Get the flag that controls whether a box will be drawn/filled
    * corresponding to the legend box.
    */
-  vtkSetMacro(Box, int);
-  vtkGetMacro(Box, int);
-  vtkBooleanMacro(Box, int);
+  vtkSetMacro(Box, vtkTypeBool);
+  vtkGetMacro(Box, vtkTypeBool);
+  vtkBooleanMacro(Box, vtkTypeBool);
   //@}
 
   /**
@@ -164,18 +164,18 @@ public:
    * is used to color the symbol. If off, the color of the
    * vtkLegendBoxActor is used.
    */
-  vtkSetMacro(ScalarVisibility,int);
-  vtkGetMacro(ScalarVisibility,int);
-  vtkBooleanMacro(ScalarVisibility,int);
+  vtkSetMacro(ScalarVisibility,vtkTypeBool);
+  vtkGetMacro(ScalarVisibility,vtkTypeBool);
+  vtkBooleanMacro(ScalarVisibility,vtkTypeBool);
   //@}
 
   //@{
   /**
    * Turn on/off background.
    */
-  vtkSetMacro(UseBackground, int);
-  vtkGetMacro(UseBackground, int);
-  vtkBooleanMacro(UseBackground, int);
+  vtkSetMacro(UseBackground, vtkTypeBool);
+  vtkGetMacro(UseBackground, vtkTypeBool);
+  vtkBooleanMacro(UseBackground, vtkTypeBool);
   //@}
 
   //@{
@@ -200,7 +200,7 @@ public:
    * Shallow copy of this scaled text actor. Overloads the virtual
    * vtkProp method.
    */
-  void ShallowCopy(vtkProp *prop) VTK_OVERRIDE;
+  void ShallowCopy(vtkProp *prop) override;
 
   /**
    * WARNING: INTERNAL METHOD - NOT INTENDED FOR GENERAL USE
@@ -209,7 +209,7 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow *) VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow *) override;
 
   //@{
   /**
@@ -217,29 +217,29 @@ public:
    * DO NOT USE THIS METHOD OUTSIDE OF THE RENDERING PROCESS.
    * Draw the legend box to the screen.
    */
-  int RenderOpaqueGeometry(vtkViewport* viewport) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport* ) VTK_OVERRIDE {return 0;};
-  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  int RenderOpaqueGeometry(vtkViewport* viewport) override;
+  int RenderTranslucentPolygonalGeometry(vtkViewport* ) override {return 0;};
+  int RenderOverlay(vtkViewport* viewport) override;
   //@}
 
   /**
    * Does this prop have some translucent polygonal geometry?
    */
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
 protected:
   vtkLegendBoxActor();
-  ~vtkLegendBoxActor() VTK_OVERRIDE;
+  ~vtkLegendBoxActor() override;
 
   void InitializeEntries();
 
   vtkPolyData createTexturedPlane();
 
-  int   Border;
-  int   Box;
+  vtkTypeBool   Border;
+  vtkTypeBool   Box;
   int   Padding;
-  int   LockBorder;
-  int   ScalarVisibility;
+  vtkTypeBool   LockBorder;
+  vtkTypeBool   ScalarVisibility;
   double BoxOpacity;
 
   // Internal actors, mappers, data to represent the legend
@@ -271,7 +271,7 @@ protected:
   vtkTextProperty            *EntryTextProperty;
 
   // Background plane.
-  int                         UseBackground;
+  vtkTypeBool                         UseBackground;
   double                      BackgroundOpacity;
   double                      BackgroundColor[3];
   vtkPlaneSource             *Background;
@@ -286,8 +286,8 @@ protected:
   vtkTimeStamp  BuildTime;
 
 private:
-  vtkLegendBoxActor(const vtkLegendBoxActor&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkLegendBoxActor&) VTK_DELETE_FUNCTION;
+  vtkLegendBoxActor(const vtkLegendBoxActor&) = delete;
+  void operator=(const vtkLegendBoxActor&) = delete;
 };
 
 

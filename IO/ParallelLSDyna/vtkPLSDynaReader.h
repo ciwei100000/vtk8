@@ -60,7 +60,7 @@
  * - Where exactly may breaks to a new file occur in the pre-state
  * information? At each section?
  * - Will state data sections (node/cell data, element deletion, sph data,
- * rigid body motion) be moved to  the beginning of a new file if their data
+ * rigid body motion) be moved to the beginning of a new file if their data
  * will be too large for a given file, or are all the sections
  * counted together as a single state (makes more sense for keeping time
  * word at start of every file).
@@ -79,7 +79,7 @@
  * surfaces? It appears that the nodes and connectivity of the road surface
  * are given separately (p.13) while on p.7 the Material
  *   Type Data subsection says that shells in a rigid body will just have a
- * certain material ID but be  interspersed among deformable shell elements.
+ * certain material ID but be interspersed among deformable shell elements.
  * - Word 37 of the control section serves two possible purposes... it can
  * mean NMSPH or EDLOPT.
  *   I assume that different versions of the code use that word differently.
@@ -131,13 +131,13 @@ class VTKIOPARALLELLSDYNA_EXPORT vtkPLSDynaReader : public vtkLSDynaReader
 {
 public:
   vtkTypeMacro(vtkPLSDynaReader,vtkLSDynaReader);
-  virtual void PrintSelf(ostream &os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream &os, vtkIndent indent) override;
   static vtkPLSDynaReader *New();
 
   /**
-   * Determine if the file can be readed with this reader.
+   * Determine if the file can be read with this reader.
    */
-  virtual int CanReadFile( const char* fname ) VTK_OVERRIDE;
+  int CanReadFile( const char* fname ) override;
 
   //@{
   /**
@@ -149,17 +149,17 @@ public:
 
 protected:
   vtkPLSDynaReader();
-  virtual ~vtkPLSDynaReader();
+  ~vtkPLSDynaReader() override;
 
-  virtual int RequestInformation( vtkInformation*, vtkInformationVector**, vtkInformationVector* ) VTK_OVERRIDE;
-  virtual int RequestData( vtkInformation*, vtkInformationVector**, vtkInformationVector* ) VTK_OVERRIDE;
+  int RequestInformation( vtkInformation*, vtkInformationVector**, vtkInformationVector* ) override;
+  int RequestData( vtkInformation*, vtkInformationVector**, vtkInformationVector* ) override;
 
-  virtual int ReadTopology() VTK_OVERRIDE;
+  int ReadTopology() override;
 
 private:
 
-  vtkPLSDynaReader( const vtkPLSDynaReader& ) VTK_DELETE_FUNCTION;
-  void operator = ( const vtkPLSDynaReader& ) VTK_DELETE_FUNCTION;
+  vtkPLSDynaReader( const vtkPLSDynaReader& ) = delete;
+  void operator = ( const vtkPLSDynaReader& ) = delete;
 
   void GetPartRanges(vtkIdType* mins,vtkIdType* maxs);
 

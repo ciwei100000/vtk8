@@ -42,9 +42,7 @@ vtkExtractSelectedLocations::vtkExtractSelectedLocations()
 }
 
 //----------------------------------------------------------------------------
-vtkExtractSelectedLocations::~vtkExtractSelectedLocations()
-{
-}
+vtkExtractSelectedLocations::~vtkExtractSelectedLocations() = default;
 
 //----------------------------------------------------------------------------
 int vtkExtractSelectedLocations::RequestData(
@@ -57,7 +55,7 @@ int vtkExtractSelectedLocations::RequestData(
   vtkInformation *inInfo = inputVector[0]->GetInformationObject(0);
   vtkInformation *outInfo = outputVector->GetInformationObject(0);
 
-  // verify the input, selection and ouptut
+  // verify the input, selection and output
   vtkDataSet *input = vtkDataSet::SafeDownCast(
     inInfo->Get(vtkDataObject::DATA_OBJECT()));
   if ( ! input )
@@ -74,7 +72,7 @@ int vtkExtractSelectedLocations::RequestData(
 
   vtkSelection *sel = vtkSelection::SafeDownCast(
     selInfo->Get(vtkDataObject::DATA_OBJECT()));
-  vtkSelectionNode *node = 0;
+  vtkSelectionNode *node = nullptr;
   if (sel->GetNumberOfNodes() == 1)
   {
     node = sel->GetNode(0);
@@ -260,8 +258,8 @@ int vtkExtractSelectedLocations::ExtractCells(
   // Reverse the "in" flag
   flag = -flag;
 
-  vtkIdList *ptIds = NULL;
-  char* cellCounter = NULL;
+  vtkIdList *ptIds = nullptr;
+  char* cellCounter = nullptr;
   if (invert)
   {
     ptIds = vtkIdList::New();
@@ -283,7 +281,7 @@ int vtkExtractSelectedLocations::ExtractCells(
   vtkIdType ptId, cellId, locArrayIndex;
   for (locArrayIndex = 0; locArrayIndex < numLocs; locArrayIndex++)
   {
-    cellId = input->FindCell(locArray->GetTuple(locArrayIndex), NULL, cell,
+    cellId = input->FindCell(locArray->GetTuple(locArrayIndex), nullptr, cell,
                              0, 0.0, subId, pcoords, weights);
     if ((cellId >= 0) && (cellInArray->GetValue(cellId) != flag))
     {
@@ -430,7 +428,7 @@ int vtkExtractSelectedLocations::ExtractPoints(
   // Reverse the "in" flag
   flag = -flag;
 
-  vtkPointLocator* locator = NULL;
+  vtkPointLocator* locator = nullptr;
 
   if (input->IsA("vtkPointSet"))
   {
@@ -444,60 +442,67 @@ int vtkExtractSelectedLocations::ExtractPoints(
   double dist2;
   vtkIdType j, ptId, cellId, locArrayIndex;
   double epsSquared = epsilon*epsilon;
-  for (locArrayIndex = 0; locArrayIndex < numLocs; locArrayIndex++)
+  if (numPts > 0)
   {
-    if (locator != NULL)
+    for (locArrayIndex = 0; locArrayIndex < numLocs; locArrayIndex++)
     {
-      ptId = locator->FindClosestPointWithinRadius(epsilon, locArray->GetTuple(locArrayIndex), dist2);
-    }
-    else
-    {
-      double *L = locArray->GetTuple(locArrayIndex);
-      ptId = input->FindPoint(locArray->GetTuple(locArrayIndex));
-      if (ptId >=0)
+      if (locator != nullptr)
       {
-        double *X = input->GetPoint(ptId);
-        double dx = X[0]-L[0];
-        dx = dx * dx;
-        double dy = X[1]-L[1];
-        dy = dy * dy;
-        double dz = X[2]-L[2];
-        dz = dz * dz;
-        if (dx+dy+dz > epsSquared)
-        {
-          ptId = -1;
-        }
+        ptId = locator->FindClosestPointWithinRadius(epsilon, locArray->GetTuple(locArrayIndex), dist2);
       }
-    }
-
-    if ((ptId >= 0) && (pointInArray->GetValue(ptId) != flag))
-    {
-      pointInArray->SetValue(ptId, flag);
-      if (containingCells)
+      else
       {
-        input->GetPointCells(ptId, ptCells);
-        for (i = 0; i < ptCells->GetNumberOfIds(); ++i)
+        double *L = locArray->GetTuple(locArrayIndex);
+        ptId = input->FindPoint(locArray->GetTuple(locArrayIndex));
+        if (ptId >=0)
         {
-          cellId = ptCells->GetId(i);
-          if (!passThrough && !invert && cellInArray->GetValue(cellId) != flag)
+          double *X = input->GetPoint(ptId);
+          double dx = X[0]-L[0];
+          dx = dx * dx;
+          double dy = X[1]-L[1];
+          dy = dy * dy;
+          double dz = X[2]-L[2];
+          dz = dz * dz;
+          if (dx+dy+dz > epsSquared)
           {
-            input->GetCellPoints(cellId, cellPts);
-            for (j = 0; j < cellPts->GetNumberOfIds(); ++j)
-            {
-              pointInArray->SetValue(cellPts->GetId(j), flag);
-            }
+            ptId = -1;
           }
-          cellInArray->SetValue(cellId, flag);
+        }
+      }
+
+      if ((ptId >= 0) && (pointInArray->GetValue(ptId) != flag))
+      {
+        pointInArray->SetValue(ptId, flag);
+        if (containingCells)
+        {
+          input->GetPointCells(ptId, ptCells);
+          for (i = 0; i < ptCells->GetNumberOfIds(); ++i)
+          {
+            cellId = ptCells->GetId(i);
+            if (!passThrough && !invert && cellInArray->GetValue(cellId) != flag)
+            {
+              input->GetCellPoints(cellId, cellPts);
+              for (j = 0; j < cellPts->GetNumberOfIds(); ++j)
+              {
+                pointInArray->SetValue(cellPts->GetId(j), flag);
+              }
+            }
+            cellInArray->SetValue(cellId, flag);
+          }
         }
       }
     }
+  }
+  else
+  {
+    ptId = -1;
   }
 
   ptCells->Delete();
   cellPts->Delete();
   if (locator)
   {
-    locator->SetDataSet(NULL);
+    locator->SetDataSet(nullptr);
     locator->Delete();
   }
 

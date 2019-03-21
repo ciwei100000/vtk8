@@ -21,7 +21,7 @@
  * space leaping is used to skip large empty regions in the scalar
  * opacity and/or the gradient opacity transfer functions. Depending on
  * the various options set by vtkFixedPointVolumeRayCastMapper, the class
- * will internally invoke one of the many optmized routines to compute the
+ * will internally invoke one of the many optimized routines to compute the
  * min/max/gradient-max values within a fixed block size, trying to
  * compute everything in a single multi-threaded pass through the data
  *
@@ -41,7 +41,7 @@ class VTKRENDERINGVOLUME_EXPORT vtkVolumeRayCastSpaceLeapingImageFilter : public
 {
 public:
   vtkTypeMacro(vtkVolumeRayCastSpaceLeapingImageFilter,vtkThreadedImageAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   static vtkVolumeRayCastSpaceLeapingImageFilter *New();
 
@@ -65,18 +65,18 @@ public:
   /**
    * Compute gradient opacity ?
    */
-  vtkSetMacro( ComputeGradientOpacity, int );
-  vtkGetMacro( ComputeGradientOpacity, int );
-  vtkBooleanMacro( ComputeGradientOpacity, int );
+  vtkSetMacro( ComputeGradientOpacity, vtkTypeBool );
+  vtkGetMacro( ComputeGradientOpacity, vtkTypeBool );
+  vtkBooleanMacro( ComputeGradientOpacity, vtkTypeBool );
   //@}
 
   //@{
   /**
    * Compute the min max structure ?.
    */
-  vtkSetMacro( ComputeMinMax, int );
-  vtkGetMacro( ComputeMinMax, int );
-  vtkBooleanMacro( ComputeMinMax, int );
+  vtkSetMacro( ComputeMinMax, vtkTypeBool );
+  vtkGetMacro( ComputeMinMax, vtkTypeBool );
+  vtkBooleanMacro( ComputeMinMax, vtkTypeBool );
   //@}
 
   //@{
@@ -84,9 +84,9 @@ public:
    * Update the gradient opacity flags. (The scalar opacity flags are always
    * updated upon execution of this filter.)
    */
-  vtkSetMacro( UpdateGradientOpacityFlags, int );
-  vtkGetMacro( UpdateGradientOpacityFlags, int );
-  vtkBooleanMacro( UpdateGradientOpacityFlags, int );
+  vtkSetMacro( UpdateGradientOpacityFlags, vtkTypeBool );
+  vtkGetMacro( UpdateGradientOpacityFlags, vtkTypeBool );
+  vtkBooleanMacro( UpdateGradientOpacityFlags, vtkTypeBool );
   //@}
 
   /**
@@ -154,7 +154,7 @@ public:
   //@{
   /**
    * Get the first non-zero scalar opacity and gradient opacity indices for
-   * each independent copmonent
+   * each independent component
    * INTERNAL - Do not use.
    */
   unsigned short * GetMinNonZeroScalarIndex();
@@ -195,7 +195,7 @@ public:
 
 protected:
   vtkVolumeRayCastSpaceLeapingImageFilter();
-  ~vtkVolumeRayCastSpaceLeapingImageFilter() VTK_OVERRIDE;
+  ~vtkVolumeRayCastSpaceLeapingImageFilter() override;
 
   int               IndependentComponents;
   vtkTimeStamp      LastMinMaxBuildTime;
@@ -204,9 +204,9 @@ protected:
   float             TableShift[4];
   float             TableScale[4];
   int               TableSize[4];
-  int               ComputeGradientOpacity;
-  int               ComputeMinMax;
-  int               UpdateGradientOpacityFlags;
+  vtkTypeBool               ComputeGradientOpacity;
+  vtkTypeBool               ComputeMinMax;
+  vtkTypeBool               UpdateGradientOpacityFlags;
   unsigned short *  MinNonZeroScalarIndex;
   unsigned char  *  MinNonZeroGradientMagnitudeIndex;
   unsigned char  ** GradientMagnitude;
@@ -223,19 +223,19 @@ protected:
    */
   int RequestUpdateExtent(vtkInformation *,
                                   vtkInformationVector **,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   void ThreadedRequestData(       vtkInformation *request,
                                   vtkInformationVector **inputVector,
                                   vtkInformationVector *outputVector,
                                   vtkImageData ***inData,
                                   vtkImageData **outData,
-                                  int outExt[6], int id) VTK_OVERRIDE;
+                                  int outExt[6], int id) override;
   int RequestData(        vtkInformation* request,
                                   vtkInformationVector** inputVector,
-                                  vtkInformationVector* outputVector) VTK_OVERRIDE;
+                                  vtkInformationVector* outputVector) override;
   int RequestInformation( vtkInformation *,
                                   vtkInformationVector**,
-                                  vtkInformationVector *) VTK_OVERRIDE;
+                                  vtkInformationVector *) override;
   //@}
 
   /**
@@ -268,14 +268,14 @@ protected:
    */
   void AllocateOutputData(vtkImageData *out,
                                   vtkInformation* outInfo,
-                                  int *uExtent) VTK_OVERRIDE;
+                                  int *uExtent) override;
   vtkImageData *AllocateOutputData(vtkDataObject *out,
-                                           vtkInformation *outInfo) VTK_OVERRIDE;
+                                           vtkInformation *outInfo) override;
   //@}
 
 private:
-  vtkVolumeRayCastSpaceLeapingImageFilter(const vtkVolumeRayCastSpaceLeapingImageFilter&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkVolumeRayCastSpaceLeapingImageFilter&) VTK_DELETE_FUNCTION;
+  vtkVolumeRayCastSpaceLeapingImageFilter(const vtkVolumeRayCastSpaceLeapingImageFilter&) = delete;
+  void operator=(const vtkVolumeRayCastSpaceLeapingImageFilter&) = delete;
 };
 
 #endif

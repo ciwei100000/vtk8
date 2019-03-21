@@ -51,9 +51,7 @@ vtkTemporalInterpolator::vtkTemporalInterpolator()
 }
 
 //----------------------------------------------------------------------------
-vtkTemporalInterpolator::~vtkTemporalInterpolator()
-{
-}
+vtkTemporalInterpolator::~vtkTemporalInterpolator() = default;
 
 //----------------------------------------------------------------------------
 void vtkTemporalInterpolator::PrintSelf(ostream& os, vtkIndent indent)
@@ -134,7 +132,7 @@ int vtkTemporalInterpolator::RequestInformation (
   // find time on input
   //
   int     numTimes = 0;
-  double *inTimes  = NULL;
+  double *inTimes  = nullptr;
   double  outRange[2];
 
   if (inInfo->Has(vtkStreamingDemandDrivenPipeline::TIME_STEPS()))
@@ -171,6 +169,7 @@ int vtkTemporalInterpolator::RequestInformation (
 
     // Generate list of new output time step values
     std::vector<double> OutputTimeValues;
+    OutputTimeValues.reserve(NumberOfOutputTimeSteps);
     for (int i=0; i<NumberOfOutputTimeSteps; i++)
     {
       OutputTimeValues.push_back(
@@ -234,7 +233,7 @@ int vtkTemporalInterpolator::RequestData(
   {
     vtkDataObject* data0 = inData->GetBlock(0);
     vtkDataObject* data1 = inData->GetBlock(1);
-    if (data0==NULL && data1==NULL)
+    if (data0==nullptr && data1==nullptr)
     {
       vtkErrorMacro("Null data set");
       return 0;
@@ -394,7 +393,7 @@ vtkDataObject *vtkTemporalInterpolator
       {
         vtkErrorMacro(<<"Unexpected error during interpolation");
         // need to clear up memory we may have allocated and lost :(
-        return NULL;
+        return nullptr;
       }
     }
     return output;
@@ -402,7 +401,7 @@ vtkDataObject *vtkTemporalInterpolator
   else
   {
     vtkErrorMacro("We cannot yet interpolate this type of dataset");
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -425,7 +424,7 @@ vtkDataSet *vtkTemporalInterpolator
   vtkPointSet *outPointSet = vtkPointSet::SafeDownCast(output);
   if (inPointSet1 && inPointSet2)
   {
-    vtkDataArray *outarray = NULL;
+    vtkDataArray *outarray = nullptr;
     vtkPoints *outpoints;
 
     if (inPointSet1->GetNumberOfPoints()>0 && inPointSet2->GetNumberOfPoints()>0)
@@ -482,7 +481,7 @@ vtkDataSet *vtkTemporalInterpolator
   for (int s=0; s < input[0]->GetPointData()->GetNumberOfArrays(); ++s)
   {
     std::vector<vtkDataArray*> arrays;
-    char *scalarname = NULL;
+    char *scalarname = nullptr;
     for (int i=0; i<2; ++i)
     {
       //
@@ -490,7 +489,7 @@ vtkDataSet *vtkTemporalInterpolator
       // differently on each time step, so we will fetch them by name if
       // possible.
       //
-      if (i==0 || (scalarname==NULL))
+      if (i==0 || (scalarname==nullptr))
       {
         vtkDataArray *dataarray = input[i]->GetPointData()->GetArray(s);
         scalarname = dataarray->GetName();
@@ -539,7 +538,7 @@ vtkDataSet *vtkTemporalInterpolator
   {
     // copy the structure
     std::vector<vtkDataArray*> arrays;
-    char *scalarname = NULL;
+    char *scalarname = nullptr;
     for (int i=0; i<2; ++i)
     {
       //
@@ -547,7 +546,7 @@ vtkDataSet *vtkTemporalInterpolator
       // differently on each time step, so we will fetch them by name if
       // possible.
       //
-      if (i==0 || (scalarname==NULL))
+      if (i==0 || (scalarname==nullptr))
       {
         vtkDataArray *dataarray = input[i]->GetCellData()->GetArray(s);
         scalarname = dataarray->GetName();
@@ -642,10 +641,10 @@ vtkDataArray *vtkTemporalInterpolator
   {
     vtkTemplateMacro(vtkTemporalInterpolatorExecute
                      (this, ratio, output, arrays, Nc, N,
-                      static_cast<VTK_TT *>(0)));
+                      static_cast<VTK_TT *>(nullptr)));
     default:
       vtkErrorMacro(<< "Execute: Unknown ScalarType");
-      return 0;
+      return nullptr;
   }
 
   return output;

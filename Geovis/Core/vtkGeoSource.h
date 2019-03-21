@@ -51,13 +51,14 @@ class vtkGeoTreeNode;
 class vtkMultiThreader;
 class vtkMutexLock;
 
+#if !defined(VTK_LEGACY_REMOVE)
 class VTKGEOVISCORE_EXPORT vtkGeoSource : public vtkObject
 {
 public:
   vtkTypeMacro(vtkGeoSource,vtkObject);
 
   vtkGeoSource();
-  ~vtkGeoSource() VTK_OVERRIDE;
+  ~vtkGeoSource() override;
 
   //@{
   /**
@@ -96,7 +97,7 @@ public:
   /**
    * Return the projection transformation used by this source.
    */
-  virtual vtkAbstractTransform* GetTransform() { return NULL; }
+  virtual vtkAbstractTransform* GetTransform() { return nullptr; }
 
 protected:
 
@@ -124,8 +125,9 @@ protected:
   implementation* Implementation;
 
 private:
-  vtkGeoSource(const vtkGeoSource&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkGeoSource&) VTK_DELETE_FUNCTION;
+  vtkGeoSource(const vtkGeoSource&) = delete;
+  void operator=(const vtkGeoSource&) = delete;
 };
 
+#endif //VTK_LEGACY_REMOVE
 #endif // vtkGeoSource_h

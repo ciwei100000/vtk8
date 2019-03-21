@@ -45,7 +45,7 @@ class VTKRENDERINGCORE_EXPORT vtkViewport : public vtkObject
 {
 public:
   vtkTypeMacro(vtkViewport,vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /**
    * Add a prop to the list of props. Does nothing if the prop is
@@ -187,7 +187,7 @@ public:
   /**
    * Return the center of this viewport in display coordinates.
    */
-  virtual double *GetCenter();
+  virtual double *GetCenter() VTK_SIZEHINT(2);
 
   /**
    * Is a given display point in this Viewport's viewport.
@@ -242,12 +242,16 @@ public:
   virtual void NormalizedDisplayToViewport(double &x, double &y);
   virtual void ViewportToNormalizedViewport(double &u, double &v);
   virtual void NormalizedViewportToView(double &x, double &y, double &z);
-  virtual void ViewToWorld(double &, double &, double &) {}
+  virtual void ViewToPose(double &, double &, double &) {}
+  virtual void PoseToWorld(double &, double &, double &) {}
   virtual void DisplayToLocalDisplay(double &x, double &y);
   virtual void NormalizedDisplayToDisplay(double &u, double &v);
   virtual void ViewportToNormalizedDisplay(double &x, double &y);
   virtual void NormalizedViewportToViewport(double &u, double &v);
   virtual void ViewToNormalizedViewport(double &x, double &y, double &z);
+  virtual void PoseToView(double &, double &, double &) {}
+  virtual void WorldToPose(double &, double &, double &) {}
+  virtual void ViewToWorld(double &, double &, double &) {}
   virtual void WorldToView(double &, double &, double &) {}
   //@}
 
@@ -257,8 +261,8 @@ public:
    * if the window has not yet been realized, GetSize() and GetOrigin()
    * return (0,0).
    */
-  virtual int *GetSize();
-  virtual int *GetOrigin();
+  virtual int *GetSize() VTK_SIZEHINT(2);
+  virtual int *GetOrigin() VTK_SIZEHINT(2);
   void GetTiledSize(int *width, int *height);
   virtual void GetTiledSizeAndOrigin(int *width, int *height,
                                      int *lowerLeftX, int *lowerLeftY);
@@ -315,53 +319,31 @@ public:
   double GetPickY1() const {return this->PickY1;}
   double GetPickX2() const {return this->PickX2;}
   double GetPickY2() const {return this->PickY2;}
-  vtkGetMacro(IsPicking, int);
-  vtkGetMacro(CurrentPickId, unsigned int);
-  void SetCurrentPickId(unsigned int a) {this->CurrentPickId = a;};
   vtkGetObjectMacro(PickResultProps, vtkPropCollection);
   //@}
 
   /**
    * Return the Z value for the last picked Prop.
    */
-  virtual double GetPickedZ() = 0;
+  virtual double GetPickedZ() { return this->PickedZ; };
 
 protected:
   // Create a vtkViewport with a black background, a white ambient light,
   // two-sided lighting turned on, a viewport of (0,0,1,1), and back face
   // culling turned off.
   vtkViewport();
-  ~vtkViewport() VTK_OVERRIDE;
-
-  // Picking functions to be implemented by sub-classes
-  // Perform the main picking loop
-  virtual void DevicePickRender() = 0;
-  // Enter a pick mode
-  virtual void StartPick(unsigned int pickFromSize) = 0;
-  // Set the pick id to the next id before drawing an object
-  virtual void UpdatePickId() = 0;
-  // Exit Pick mode
-  virtual void DonePick() = 0;
-  // Return the id of the picked object, only valid after a call to DonePick
-  virtual unsigned int GetPickedId() = 0;
-  // Return the number of objects picked, only valid after a call to DonePick
-  virtual unsigned int GetNumPickedIds() = 0;
-  // Put no more than atMost picked object ids into the callerBuffer and
-  // return the number of picked objects returned.
-  virtual int GetPickedIds(unsigned int atMost, unsigned int *callerBuffer) = 0;
+  ~vtkViewport() override;
 
   // Ivars for picking
   // Store a picked Prop (contained in an assembly path)
   vtkAssemblyPath* PickedProp;
   vtkPropCollection* PickFromProps;
   vtkPropCollection* PickResultProps;
-  // Boolean flag to determine if picking is enabled for this render
-  int IsPicking;
-  unsigned int CurrentPickId;
   double PickX1;
   double PickY1;
   double PickX2;
   double PickY2;
+  double PickedZ;
   // End Ivars for picking
 
   vtkPropCollection *Props;
@@ -384,8 +366,8 @@ protected:
 
 
 private:
-  vtkViewport(const vtkViewport&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkViewport&) VTK_DELETE_FUNCTION;
+  vtkViewport(const vtkViewport&) = delete;
+  void operator=(const vtkViewport&) = delete;
 };
 
 

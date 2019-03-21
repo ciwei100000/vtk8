@@ -41,7 +41,7 @@ class VTKIOLEGACY_EXPORT vtkDataObjectReader : public vtkDataReader
 public:
   static vtkDataObjectReader *New();
   vtkTypeMacro(vtkDataObjectReader,vtkDataReader);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
@@ -52,16 +52,20 @@ public:
   void SetOutput(vtkDataObject *);
   //@}
 
+  /**
+   * Actual reading happens here
+   */
+  int ReadMeshSimple(const std::string& fname,
+                     vtkDataObject* output) override;
+
 protected:
   vtkDataObjectReader();
-  ~vtkDataObjectReader() VTK_OVERRIDE;
+  ~vtkDataObjectReader() override;
 
-  int RequestData(vtkInformation *, vtkInformationVector **,
-                          vtkInformationVector *) VTK_OVERRIDE;
-  int FillOutputPortInformation(int, vtkInformation*) VTK_OVERRIDE;
+  int FillOutputPortInformation(int, vtkInformation*) override;
 private:
-  vtkDataObjectReader(const vtkDataObjectReader&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkDataObjectReader&) VTK_DELETE_FUNCTION;
+  vtkDataObjectReader(const vtkDataObjectReader&) = delete;
+  void operator=(const vtkDataObjectReader&) = delete;
 };
 
 #endif

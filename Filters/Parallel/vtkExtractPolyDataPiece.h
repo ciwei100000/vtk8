@@ -32,24 +32,24 @@ class VTKFILTERSPARALLEL_EXPORT vtkExtractPolyDataPiece : public vtkPolyDataAlgo
 public:
   static vtkExtractPolyDataPiece *New();
   vtkTypeMacro(vtkExtractPolyDataPiece, vtkPolyDataAlgorithm);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   //@{
   /**
    * Turn on/off creating ghost cells (on by default).
    */
-  vtkSetMacro(CreateGhostCells, int);
-  vtkGetMacro(CreateGhostCells, int);
-  vtkBooleanMacro(CreateGhostCells, int);
+  vtkSetMacro(CreateGhostCells, vtkTypeBool);
+  vtkGetMacro(CreateGhostCells, vtkTypeBool);
+  vtkBooleanMacro(CreateGhostCells, vtkTypeBool);
   //@}
 
 protected:
   vtkExtractPolyDataPiece();
-  ~vtkExtractPolyDataPiece() VTK_OVERRIDE {}
+  ~vtkExtractPolyDataPiece() override {}
 
   // Usual data generation method
-  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
-  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) VTK_OVERRIDE;
+  int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
+  int RequestUpdateExtent(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
 
   // A method for labeling which piece the cells belong to.
   void ComputeCellTags(vtkIntArray *cellTags, vtkIdList *pointOwnership,
@@ -57,10 +57,10 @@ protected:
 
   void AddGhostLevel(vtkPolyData *input, vtkIntArray *cellTags, int ghostLevel);
 
-  int CreateGhostCells;
+  vtkTypeBool CreateGhostCells;
 private:
-  vtkExtractPolyDataPiece(const vtkExtractPolyDataPiece&) VTK_DELETE_FUNCTION;
-  void operator=(const vtkExtractPolyDataPiece&) VTK_DELETE_FUNCTION;
+  vtkExtractPolyDataPiece(const vtkExtractPolyDataPiece&) = delete;
+  void operator=(const vtkExtractPolyDataPiece&) = delete;
 };
 
 #endif
