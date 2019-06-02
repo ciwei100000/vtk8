@@ -1,6 +1,7 @@
 20_soversion-sharedlib.patch
 30_matplotlib.patch
 50_use_system_utf8.patch
+60_remove_mpi4py_dependency.patch
 70_fix_ftbfs_gcc49.patch
 100_javac-heap.patch
 101_java_install_path.patch
