@@ -4,8 +4,6 @@ Upstream-Name: Visualization Toolkit
 Files-Excluded:
   Web/*
   Examples/GUI/Win32
-  ThirdParty/xdmf3
-  IO/Xdmf3
   ThirdParty/expat/vtkexpat
   ThirdParty/freetype/vtkfreetype
   ThirdParty/gl2ps/vtkgl2ps
@@ -126,6 +124,14 @@ License: Unicode
 
 Files: ThirdParty/xdmf2/vtkxdmf2/libsrc/*
 Copyright: 2002 US Army Research Laboratory
+License: other
+ This software is distributed WITHOUT ANY WARRANTY; without
+ even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the above copyright notice
+ for more information.
+
+Files: ThirdParty/xdmf3/vtkxdmf3/*
+Copyright: 2011 US Army Research Laboratory
 License: other
  This software is distributed WITHOUT ANY WARRANTY; without
  even the implied warranty of MERCHANTABILITY or FITNESS
