@@ -51,13 +51,14 @@ extra_flags +=  \
 	-DVTK_Group_MPI=ON \
 	-DVTK_Group_Tk=ON \
 	-DVTK_Group_Views=ON \
-	-DVTK_BUILD_ALL_MODULES=ON \
 	-DMPI_CXX_INCLUDE_PATH="/usr/include/mpi" \
 	-DVTK_INSTALL_LIBRARY_DIR="/usr/lib/$(DEB_HOST_MULTIARCH)" \
 	-DCMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed" \
 	-DCMAKE_MODULE_LINKER_FLAGS="-Wl,--as-needed" \
 	-DCMAKE_SHARED_LINKER_FLAGS="-Wl,--as-needed" \
-	-DModule_vtkRenderingExternal=ON
+	-DModule_vtkRenderingExternal=ON \
+	-DModule_vtkAcceleratorsVTKm=OFF
+	# -DVTK_BUILD_ALL_MODULES=ON \
 
 extra_flags += -DVTK_QT_VERSION=5	-DVTK_Group_Qt=ON
 
