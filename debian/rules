@@ -17,7 +17,8 @@ export JAVA_HOME=/usr/lib/jvm/default-java
 	dh $@ --buildsystem=cmake --builddirectory=$(BUILDDIR) --with python3 --with javahelper
 
 extra_flags +=  \
-  -DCMAKE_VERBOSE_MAKEFILE=ON \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+	-DCMAKE_VERBOSE_MAKEFILE=ON \
 	-DCMAKE_C_COMPILER=mpicc \
 	-DCMAKE_CXX_COMPILER=mpic++ \
 	-DBUILD_DOCUMENTATION=$(BUILDDOC) \
@@ -58,7 +59,6 @@ extra_flags +=  \
 	-DCMAKE_SHARED_LINKER_FLAGS="-Wl,--as-needed" \
 	-DModule_vtkRenderingExternal=ON \
 	-DModule_vtkAcceleratorsVTKm=OFF
-	# -DVTK_BUILD_ALL_MODULES=ON \
 
 extra_flags += -DVTK_QT_VERSION=5	-DVTK_Group_Qt=ON
 
