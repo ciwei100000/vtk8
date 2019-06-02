@@ -14,7 +14,7 @@ Testing/Core/vtkTesting*.h usr/include/vtk-8.2
 Testing/Rendering/vtkRegressionTestImage.h usr/include/vtk-8.2/
 Testing/Rendering/vtkTesting*.h usr/include/vtk-8.2
 Wrapping/Java/JavaDependencies.cmake.in usr/lib/cmake/vtk-8.2/
-debian/build/lib/cmake/vtk-8.2/Modules/*-Headers.cmake	usr/lib/cmake/vtk-8.2/Modules/
+# debian/build/lib/cmake/vtk-8.2/Modules/*-Headers.cmake	usr/lib/cmake/vtk-8.2/Modules/
 usr/include/vtk-8.2                    usr/include
 usr/lib/*/*.so
 usr/lib/cmake/vtk-8.2
