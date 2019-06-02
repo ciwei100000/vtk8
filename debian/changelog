@@ -18,4 +18,9 @@ vtk8 (8.2.0+dfsg1-1) UNRELEASED; urgency=medium
      109_use_parallel_hdf5.patch
      111_search_multiarch_paths_for_libproj.patch
 
+  [ Nico Schlömer ]
+  * Update to 8.2.0
+  * remove obsolete patches, configure options
+  * rework utf-8 patch
+
  -- Johannes Schauer <josch@debian.org>  Fri, 03 Nov 2017 19:59:42 +0100
