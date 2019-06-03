@@ -73,9 +73,9 @@ Build-Depends-Indep: doxygen-latex,
                      libjs-mathjax,
                      gnuplot-nox
 Standards-Version: 4.0.0
-Vcs-Browser: https://anonscm.debian.org/cgit/debian-science/packages/vtk8.git
-Vcs-Git: https://anonscm.debian.org/git/debian-science/packages/vtk8.git
-Homepage: http://www.vtk.org/
+Vcs-Browser: https://salsa.debian.org/science-team/vtk8
+Vcs-Git: https://salsa.debian.org/science-team/vtk8.git
+Homepage: https://www.vtk.org/
 X-Python3-Version: current
 
 Package: libvtk8-dev
@@ -223,7 +223,7 @@ Depends: libvtk8 (= ${binary:Version}),
          libvtk8-qt (= ${binary:Version}),
          python3-mpi4py,
          ${misc:Depends},
-         ${python:Depends},
+         ${python3:Depends},
          ${shlibs:Depends}
 Suggests: mayavi2,
           vtk8-doc,
