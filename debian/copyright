@@ -4,16 +4,19 @@ Upstream-Name: Visualization Toolkit
 Files-Excluded:
   Web/*
   Examples/GUI/Win32
+  ThirdParty/doubleconversion/vtkdoubleconversion/
   ThirdParty/expat/vtkexpat
   ThirdParty/freetype/vtkfreetype
   ThirdParty/gl2ps/vtkgl2ps
   ThirdParty/hdf5/vtkhdf5
   ThirdParty/jpeg/vtkjpeg
-  ThirdParty/libproj4/vtklibproj4
   ThirdParty/jsoncpp/vtkjsoncpp
+  ThirdParty/libproj4/vtklibproj4
   ThirdParty/libxml2/vtklibxml2
+  ThirdParty/lz4/vtklz4
+  ThirdParty/lzma/vtklzma
   ThirdParty/netcdf/vtknetcdf
-  ThirdParty/oggtheora/vtkoggtheora
+  ThirdParty/ogg/vtkogg
   ThirdParty/png/vtkpng
   ThirdParty/sqlite/vtksqlite
   ThirdParty/tiff/vtktiff
