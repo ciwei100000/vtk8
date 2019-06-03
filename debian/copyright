@@ -16,7 +16,6 @@ Files-Excluded:
   ThirdParty/lz4/vtklz4
   ThirdParty/lzma/vtklzma
   ThirdParty/netcdf/vtknetcdf
-  ThirdParty/ogg/vtkogg
   ThirdParty/png/vtkpng
   ThirdParty/sqlite/vtksqlite
   ThirdParty/tiff/vtktiff
