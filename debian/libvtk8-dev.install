@@ -17,5 +17,5 @@ Wrapping/Java/JavaDependencies.cmake.in usr/lib/cmake/vtk-8.2/
 # debian/build/lib/cmake/vtk-8.2/Modules/*-Headers.cmake	usr/lib/cmake/vtk-8.2/Modules/
 usr/include/vtk-8.2                    usr/include
 usr/lib/*/*.so
-usr/lib/cmake/vtk-8.2
+usr/lib/*/cmake/vtk-8.2
 usr/share/doc/vtk-8.2/doxygen/* /usr/share/vtk-8.2/doxygen/
