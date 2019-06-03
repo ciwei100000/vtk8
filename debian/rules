@@ -31,6 +31,7 @@ extra_flags +=  \
 	-DVTK_WRAP_PYTHON=ON \
 	  -DVTK_PYTHON_VERSION:STRING=3 \
 	\
+	-DVTK_USE_SYSTEM_EIGEN=ON \
 	-DVTK_USE_SYSTEM_EXPAT=ON \
 	-DVTK_USE_SYSTEM_FREETYPE=ON \
 	-DVTK_USE_SYSTEM_GL2PS=ON \
@@ -100,7 +101,6 @@ override_dh_auto_install:
 	# mv $(CURDIR)/debian/tmp/usr/bin/vtk $(CURDIR)/debian/tmp/usr/bin/vtk8
 	find $(CURDIR)/debian/tmp/ -name "*.pyc" | xargs rm -f
 	find $(CURDIR)/debian/tmp/ -name "*.pyo" | xargs rm -f
-	# sed -i -e "9 a\ append libPath /${DEB_HOST_MULTIARCH}" $(CURDIR)/debian/tmp/usr/lib/tcltk/vtk-8.2/pkgIndex.tcl
 
 override_dh_install-arch:
 	dh_install -a
@@ -108,7 +108,7 @@ override_dh_install-arch:
 	find $(CURDIR)/debian/libvtk8/ -name "*Qt*" -exec rm {} \;
 	find $(CURDIR)/debian/libvtk8-dev/ -name "libvtkRenderingPythonTkWidgets.so" -exec rm {} \;
 	find $(CURDIR)/debian/libvtk8-dev/usr/include/ -name "Q*" -exec rm {} \;
-	chmod 755 $(CURDIR)/debian/libvtk8-dev/usr/share/doc/vtk-8.2/doxygen/*.pl
+	# chmod 755 $(CURDIR)/debian/libvtk8-dev/usr/share/doc/vtk-8.2/doxygen/*.pl
 	# mkdir -p  $(CURDIR)/debian/python3-vtk8/usr/lib/$(DEB_HOST_MULTIARCH)/python3.7/site-packages/ && \
 	#   cd $(CURDIR)/debian/python3-vtk8/usr/lib/$(DEB_HOST_MULTIARCH)/python3.7/site-packages/ && \
 	#   ln -s /usr/lib/python3/dist-packages/vtk vtk

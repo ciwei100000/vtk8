@@ -10,12 +10,12 @@ Filters/Statistics/vtkStatisticsAlgorithmPrivate.h usr/include/vtk-8.2/
 IO/Import/vtk3DS.h usr/include/vtk-8.2/
 Testing/Core/vtkTestDriver.h usr/include/vtk-8.2
 Testing/Core/vtkTestUtilities.h usr/include/vtk-8.2/
-Testing/Core/vtkTesting*.h usr/include/vtk-8.2
+Testing/Core/vtkTesting*.h usr/include/vtk-8.2/
 Testing/Rendering/vtkRegressionTestImage.h usr/include/vtk-8.2/
 Testing/Rendering/vtkTesting*.h usr/include/vtk-8.2
 Wrapping/Java/JavaDependencies.cmake.in usr/lib/cmake/vtk-8.2/
 # debian/build/lib/cmake/vtk-8.2/Modules/*-Headers.cmake	usr/lib/cmake/vtk-8.2/Modules/
-usr/include/vtk-8.2                    usr/include
+usr/include/vtk-8.2 usr/include
 usr/lib/*/*.so
 usr/lib/*/cmake/vtk-8.2
 usr/share/doc/vtk-8.2/doxygen/* /usr/share/vtk-8.2/doxygen/
