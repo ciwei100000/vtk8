@@ -83,8 +83,8 @@ override_dh_auto_build-indep:
 	# remove .md5 files
 	find $(BUILDDIR)/Utilities/Doxygen/doc/html/ -name "*.md5" | xargs rm -f
 
-override_dh_auto_build-arch: 
-	dh_auto_build 
+override_dh_auto_build-arch:
+	dh_auto_build
 
 override_dh_auto_install:
 	pwd

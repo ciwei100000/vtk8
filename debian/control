@@ -6,12 +6,12 @@ Uploaders: Anton Gladky <gladk@debian.org>,
 Section: graphics
 Testsuite: autopkgtest
 Priority: optional
-Build-Depends-Arch: debhelper (>= 9),
+Build-Depends-Arch: debhelper (>= 12),
                     cmake (>= 3.2.0),
                     javahelper,
 Build-Depends: chrpath,
                default-jdk,
-               default-libmysqlclient-dev, 
+               default-libmysqlclient-dev,
                dh-python,
                libftgl-dev,
                hdf5-tools,
@@ -81,7 +81,7 @@ X-Python3-Version: current
 Package: libvtk8-dev
 Architecture: any
 Section: libdevel
-Depends: default-libmysqlclient-dev, 
+Depends: default-libmysqlclient-dev,
          libavcodec-dev,
          libavformat-dev,
          libavutil-dev,
@@ -189,12 +189,12 @@ Depends: ${java:Depends},
          ${shlibs:Depends}
 Breaks: libvtk6-jni
 Replaces: libvtk6-jni
-Description: Visualization Toolkit - A high level 3D visualization library - java
+Description: Visualization Toolkit - A high level 3D visualization library - JNI files
  The Visualization Toolkit (VTK) is an object oriented, high level
  library that allows one to easily write C++ programs, Tcl, Python and
  Java scripts that do 3D visualization.
  .
- This package provides the VTK Java language support.
+ This package provides the Java Native Interface files.
 
 Package: libvtk8-java
 Architecture: any
@@ -249,7 +249,7 @@ Description: Tcl bindings for VTK
  The Visualization Toolkit (VTK) is an open-source software system
  for 3D computer graphics, image processing, and visualization.
  .
- This package provides the shared libraries and executable that enable 
+ This package provides the shared libraries and executable that enable
  one to use VTK from Tcl/Tk scripts.
 
 Package: vtk8
@@ -283,7 +283,6 @@ Description: VTK class reference documentation
 
 Package: vtk8-examples
 Architecture: all
-Section: graphics
 Depends: ${misc:Depends}
 Suggests: libvtk8-dev,
           python3,
