@@ -4,7 +4,6 @@ Uploaders: Anton Gladky <gladk@debian.org>,
            Gert Wollny <gewo@debian.org>,
            Nico Schlömer <nico.schloemer@gmail.com>
 Section: graphics
-Testsuite: autopkgtest
 Priority: optional
 Build-Depends-Arch: debhelper (>= 12),
                     cmake (>= 3.2.0),
@@ -81,7 +80,6 @@ Standards-Version: 4.0.0
 Vcs-Browser: https://salsa.debian.org/science-team/vtk8
 Vcs-Git: https://salsa.debian.org/science-team/vtk8.git
 Homepage: https://www.vtk.org/
-X-Python3-Version: current
 
 Package: libvtk8-dev
 Architecture: any
