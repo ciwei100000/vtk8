@@ -127,8 +127,12 @@ Depends: default-libmysqlclient-dev,
          ${shlibs:Depends}
 Suggests: vtk8-doc,
           vtk8-examples
-Conflicts: libvtk5-dev
-Replaces: libvtk5-dev
+Conflicts: libvtk5-dev,
+           libvtk6-dev,
+           libvtk7-dev
+Replaces: libvtk5-dev,
+          libvtk6-dev,
+          libvtk7-dev
 Description: VTK header files
  The Visualization Toolkit (VTK) is an open-source software system
  for 3D computer graphics, image processing, and visualization.
@@ -189,8 +193,10 @@ Section: java
 Depends: ${java:Depends},
          ${misc:Depends},
          ${shlibs:Depends}
-Breaks: libvtk6-jni
-Replaces: libvtk6-jni
+Breaks: libvtk6-jni,
+        libvtk7-jni
+Replaces: libvtk6-jni,
+          libvtk7-jni
 Description: VTK - Java Native Interface (JNI) files
  The Visualization Toolkit (VTK) is an object oriented, high level
  library that allows one to easily write C++ programs, Tcl, Python and
@@ -209,8 +215,10 @@ Suggests: java-virtual-machine,
           libvtk8-dev (= ${binary:Version}),
           vtk8-doc,
           vtk8-examples
-Replaces: libvtk6-java
-Breaks: libvtk6-java
+Replaces: libvtk6-java,
+          libvtk7-java
+Breaks: libvtk6-java,
+        libvtk7-java
 Description: VTK - Java language support
  The Visualization Toolkit (VTK) is an object oriented, high level
  library that allows one to easily write C++ programs, Tcl, Python and
@@ -230,8 +238,10 @@ Depends: libvtk8 (= ${binary:Version}),
 Suggests: mayavi2,
           vtk8-doc,
           vtk8-examples
-Breaks: python3-vtk6
-Replaces: python3-vtk6
+Breaks: python3-vtk6,
+        python3-vtk7
+Replaces: python3-vtk6,
+          python3-vtk7
 Description: Python bindings for VTK
  The Visualization Toolkit (VTK) is an open-source software system
  for 3D computer graphics, image processing, and visualization.
