@@ -195,7 +195,7 @@ Depends: ${java:Depends},
          ${shlibs:Depends}
 Breaks: libvtk6-jni
 Replaces: libvtk6-jni
-Description: Visualization Toolkit - A high level 3D visualization library - JNI files
+Description: VTK - Java Native Interface (JNI) files
  The Visualization Toolkit (VTK) is an object oriented, high level
  library that allows one to easily write C++ programs, Tcl, Python and
  Java scripts that do 3D visualization.
@@ -215,7 +215,7 @@ Suggests: java-virtual-machine,
           vtk8-examples
 Replaces: libvtk6-java
 Breaks: libvtk6-java
-Description: Visualization Toolkit - A high level 3D visualization library - java
+Description: VTK - Java language support
  The Visualization Toolkit (VTK) is an object oriented, high level
  library that allows one to easily write C++ programs, Tcl, Python and
  Java scripts that do 3D visualization.
