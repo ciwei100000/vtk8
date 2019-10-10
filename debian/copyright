@@ -27,6 +27,7 @@ Files-Excluded:
   ThirdParty/ZopeInterface
   ThirdParty/mpi4py
   ThirdParty/Twisted
+  ThirdParty/xdmf3
   Rendering/VolumeOpenGL
 
 Files: *
