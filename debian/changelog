@@ -22,5 +22,6 @@ vtk8 (8.2.0+dfsg1-1) UNRELEASED; urgency=medium
   * Update to 8.2.0
   * remove obsolete patches, configure options
   * rework utf-8 patch
+  * Update standard to 4.4.1 (no changes)
 
  -- Johannes Schauer <josch@debian.org>  Fri, 03 Nov 2017 19:59:42 +0100
