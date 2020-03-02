@@ -1,6 +1,7 @@
 # remove Python files here and privide a symlink in the python package
 # usr/lib/*/python3.6/site-packages/vtk/*Qt*
 usr/lib/*/*Qt*.so
-# usr/lib/cmake/vtk-8.2/Modules/*Qt*
+usr/lib/*/cmake/vtk-8.2/Modules/*Qt*
 usr/include/vtk-8.2/*Qt*
 usr/include/vtk-8.2/Q*
+usr/lib/*/qt5/plugins/designer/libQVTKWidgetPlugin.so

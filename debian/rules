@@ -10,27 +10,53 @@ else
   BUILDDOC = ON
 endif
 
+ifeq ($(DEB_BUILD_ARCH),i386)
+  # Tests are permanently failing, try force rounding to normal double 
+  # accuracy
+  export DEB_CXXFLAGS_MAINT_APPEND=-ffloat-store
+endif 
+
+ifeq ($(DEB_BUILD_ARCH),$(filter $(DEB_BUILD_ARCH),hppa hurd-i386))
+        JAVA_VERSION=1.5
+else
+        JAVA_VERSION=1.8
+endif
+
+noqt_archs="" 
+ifeq ($(DEB_BUILD_ARCH),$(filter $(DEB_BUILD_ARCH), $(noqt_archs)))
+        extra_flags=-DVTK_Group_Qt=OFF \
+                    -DModule_vtkWrappingTools=ON \
+                    -DModule_vtkRenderingSceneGraph=ON \
+                    -DModule_vtkIOExportOpenGL2=ON \
+                    -DModule_vtkPython=ON \
+                    -DVTK_BUILD_ALL_MODULES=OFF
+else
+        extra_flags += -DVTK_QT_VERSION=5 \
+                       -DVTK_Group_Qt=ON \
+                       -DVTK_BUILD_ALL_MODULES=ON
+endif
+
+
 # export JAVA_HOME to help FindJava.cmake and FindJNI.cmake
 export JAVA_HOME=/usr/lib/jvm/default-java
 
 %:
-	dh $@ --buildsystem=cmake --builddirectory=$(BUILDDIR) --with python3 --with javahelper
+	dh $@ --buildsystem=cmake --builddirectory=$(BUILDDIR) --with python3 --with javahelper --parallel
 
 extra_flags +=  \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-	-DCMAKE_VERBOSE_MAKEFILE=ON \
+  -DCMAKE_VERBOSE_MAKEFILE=ON \
 	-DCMAKE_C_COMPILER=mpicc \
 	-DCMAKE_CXX_COMPILER=mpic++ \
 	-DBUILD_DOCUMENTATION=$(BUILDDOC) \
 	-DBUILD_EXAMPLES=ON \
 	-DBUILD_SHARED_LIBS=ON \
 	-DBUILD_TESTING=OFF \
+        -DVTK_JAVA_SOURCE_VERSION=$(JAVA_VERSION) \
+        -DVTK_JAVA_TARGET_VERSION=$(JAVA_VERSION) \
 	-DVTK_USE_TK=ON \
-	\
 	-DVTK_WRAP_JAVA=ON \
 	-DVTK_WRAP_PYTHON=ON \
 	  -DVTK_PYTHON_VERSION:STRING=3 \
-	\
 	-DVTK_USE_SYSTEM_DOUBLECONVERSION=ON \
 	-DVTK_USE_SYSTEM_EIGEN=ON \
 	-DVTK_USE_SYSTEM_EXPAT=ON \
@@ -50,23 +76,20 @@ extra_flags +=  \
 	-DVTK_USE_SYSTEM_PNG=ON \
 	-DVTK_USE_SYSTEM_SQLITE=ON \
 	-DVTK_USE_SYSTEM_TIFF=ON \
-	-DVTK_USE_SYSTEM_XDMF3=ON \
 	-DVTK_USE_SYSTEM_ZLIB=ON \
-	\
 	-DVTK_EXTRA_COMPILER_WARNINGS=ON \
 	-DVTK_Group_Imaging=ON \
 	-DVTK_Group_MPI=ON \
 	-DVTK_Group_Tk=ON \
 	-DVTK_Group_Views=ON \
-	-DMPI_CXX_INCLUDE_PATH="/usr/include/mpi" \
 	-DVTK_INSTALL_LIBRARY_DIR="/usr/lib/$(DEB_HOST_MULTIARCH)" \
 	-DCMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed" \
 	-DCMAKE_MODULE_LINKER_FLAGS="-Wl,--as-needed" \
 	-DCMAKE_SHARED_LINKER_FLAGS="-Wl,--as-needed" \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCXX_VISIBILITY_PRESET=ON \
 	-DModule_vtkRenderingExternal=ON \
-	-DModule_vtkAcceleratorsVTKm=OFF
 
-extra_flags += -DVTK_QT_VERSION=5	-DVTK_Group_Qt=ON
 
 override_dh_auto_configure:
 ifneq (,$(filter $(DEB_HOST_ARCH),$(noqt_archs)))
@@ -98,22 +121,29 @@ override_dh_auto_install:
 	perl -pi -e "s|{dir}/JavaDependencies.cmake.in\"|{VTK_DIR}/JavaDependencies.cmake.in\"|" debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/cmake/vtk-8.2/vtkWrapJava.cmake
 	# Correct headers for paraview
 	mv $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/vtk.jar $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/vtk8.jar
-	mv $(CURDIR)/debian/build/bin/vtkpython $(CURDIR)/debian/build/bin/vtk8python
+	#mv $(CURDIR)/debian/build/bin/vtkpython $(CURDIR)/debian/build/bin/vtk8python
 	sed -i -e "s/FATAL_ERROR/STATUS/g" $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/cmake/vtk-8.2/VTKTargets.cmake
-	chrpath -d $(CURDIR)/debian/build/bin/vtk8python
-	# chrpath -d $(CURDIR)/debian/build/bin/pvtk
+	chrpath -d $(CURDIR)/debian/build/bin/vtkpython
+	#chrpath -d $(CURDIR)/debian/build/bin/pvtk
 	chrpath -d $(CURDIR)/debian/build/bin/pvtkpython
-	# mv $(CURDIR)/debian/tmp/usr/bin/vtk $(CURDIR)/debian/tmp/usr/bin/vtk8
 	find $(CURDIR)/debian/tmp/ -name "*.pyc" | xargs rm -f
 	find $(CURDIR)/debian/tmp/ -name "*.pyo" | xargs rm -f
+	# Qt stuff
+	mkdir -p $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/qt5/plugins/designer
+	mv $(CURDIR)/debian/tmp/usr/plugins/designer/*.so $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/qt5/plugins/designer
 
 override_dh_install-arch:
 	dh_install -a
 	find $(CURDIR)/debian/libvtk8-dev/ -name "*Qt*" -exec rm {} \;
 	find $(CURDIR)/debian/libvtk8/ -name "*Qt*" -exec rm {} \;
-	find $(CURDIR)/debian/libvtk8-dev/ -name "libvtkRenderingPythonTkWidgets.so" -exec rm {} \;
+	#find $(CURDIR)/debian/libvtk8-dev/ -name "libvtkRenderingPythonTkWidgets.so" -exec rm {} \;
 	find $(CURDIR)/debian/libvtk8-dev/usr/include/ -name "Q*" -exec rm {} \;
-	# chmod 755 $(CURDIR)/debian/libvtk8-dev/usr/share/doc/vtk-8.2/doxygen/*.pl
+	chmod 755 $(CURDIR)/debian/libvtk8-dev/usr/share/vtk-8.2/doxygen/*.pl
+	rm -rf $(CURDIR)/debian/libvtk8-dev/usr/share/vtk-8.2/doxygen/html
+	rm -rf $(CURDIR)/debian/libvtk8-doc/usr/share/doc/vtk8-doc/html/_formulas.log
 	# mkdir -p  $(CURDIR)/debian/python3-vtk8/usr/lib/$(DEB_HOST_MULTIARCH)/python3.7/site-packages/ && \
 	#   cd $(CURDIR)/debian/python3-vtk8/usr/lib/$(DEB_HOST_MULTIARCH)/python3.7/site-packages/ && \
 	#   ln -s /usr/lib/python3/dist-packages/vtk vtk
+	
+	
+override_dh_shlibdeps:

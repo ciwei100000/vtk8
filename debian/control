@@ -120,7 +120,6 @@ Depends: default-libmysqlclient-dev,
          mpi-default-dev,
          python3-vtk8 (= ${binary:Version}),
          tcl-dev,
-         tcl-vtk8 (= ${binary:Version}),
          tk-dev,
          vtk8 (= ${binary:Version}),
          x11proto-core-dev,
@@ -169,6 +168,7 @@ Suggests: mpi-default-bin,
           vtk8-doc,
           vtk8-examples
 Replaces: libvtk5.8,
+          libvtk6.3,
           libvtk7.1
 Description: VTK libraries
  The Visualization Toolkit (VTK) is an open-source software system
@@ -201,7 +201,7 @@ Replaces: libvtk6-jni,
           libvtk7-jni
 Description: VTK - Java Native Interface (JNI) files
  The Visualization Toolkit (VTK) is an object oriented, high level
- library that allows one to easily write C++ programs, Tcl, Python and
+ library that allows one to easily write C++ programs, Python and
  Java scripts that do 3D visualization.
  .
  This package provides the Java Native Interface files.
@@ -223,7 +223,7 @@ Breaks: libvtk6-java,
         libvtk7-java
 Description: VTK - Java language support
  The Visualization Toolkit (VTK) is an object oriented, high level
- library that allows one to easily write C++ programs, Tcl, Python and
+ library that allows one to easily write C++ programs,Python and
  Java scripts that do 3D visualization.
  .
  This package provides the VTK Java language support.
@@ -240,7 +240,8 @@ Depends: libvtk8 (= ${binary:Version}),
 Suggests: mayavi2,
           vtk8-doc,
           vtk8-examples
-Breaks: python3-vtk6,
+Breaks: python-vtk6,
+        python3-vtk6,
         python3-vtk7
 Replaces: python3-vtk6,
           python3-vtk7
@@ -250,22 +251,6 @@ Description: Python bindings for VTK
  .
  This package provides the python3 bindings for VTK.
 
-Package: tcl-vtk8
-Architecture: any
-Section: interpreters
-Depends: libvtk8 (= ${binary:Version}),
-         libvtk8-qt (= ${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends}
-Suggests: vtk8-doc,
-          vtk8-examples
-Description: Tcl bindings for VTK
- The Visualization Toolkit (VTK) is an open-source software system
- for 3D computer graphics, image processing, and visualization.
- .
- This package provides the shared libraries and executable that enable
- one to use VTK from Tcl/Tk scripts.
-
 Package: vtk8
 Architecture: any
 Section: interpreters
@@ -274,6 +259,10 @@ Depends: libvtk8 (= ${binary:Version}),
          ${shlibs:Depends}
 Suggests: vtk8-doc,
           vtk8-examples
+Breaks: vtk6,
+        vtk7
+Replaces: vtk6,
+          vtk7
 Description: Binaries for VTK8
  The Visualization Toolkit (VTK) is an open-source software system
  for 3D computer graphics, image processing, and visualization.
@@ -301,7 +290,6 @@ Depends: ${misc:Depends}
 Suggests: libvtk8-dev,
           python3,
           python3-vtk8,
-          tcl-vtk8,
           tclsh,
           vtk8-doc
 Description: VTK examples

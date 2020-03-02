@@ -1,3 +1,0 @@
-# Upstream does not provide manpages
-tcl-vtk8: binary-without-manpage
-tcl-vtk8: hardening-no-relro
