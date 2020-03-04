@@ -144,6 +144,3 @@ override_dh_install-arch:
 	# mkdir -p  $(CURDIR)/debian/python3-vtk8/usr/lib/$(DEB_HOST_MULTIARCH)/python3.7/site-packages/ && \
 	#   cd $(CURDIR)/debian/python3-vtk8/usr/lib/$(DEB_HOST_MULTIARCH)/python3.7/site-packages/ && \
 	#   ln -s /usr/lib/python3/dist-packages/vtk vtk
-	
-	
-override_dh_shlibdeps:
