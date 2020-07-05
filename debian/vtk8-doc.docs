@@ -1,5 +1,4 @@
 debian/tmp/usr/share/doc/vtk-8.2/doxygen
 debian/tmp/usr/share/doc/vtk-8.2/verdict
-debian/tmp/usr/share/doc/vtk-8.2/Copyright.txt
 debian/build/Utilities/Doxygen/doc/html
 debian/tmp/usr/share/vtkm-1.2

@@ -131,6 +131,7 @@ override_dh_auto_install:
 	# Qt stuff
 	mkdir -p $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/qt5/plugins/designer
 	mv $(CURDIR)/debian/tmp/usr/plugins/designer/*.so $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/qt5/plugins/designer
+	rm -rf $(CURDIR)/debian/tmp/usr/share/doc/vtk-8.2/doxygen/html
 
 override_dh_install-arch:
 	dh_install -a
