@@ -1,3 +1,11 @@
+vtk8 (8.2.0+dfsg1-1+c2) unstable; urgency=medium
+
+  * Fixed vtk8-doc path
+  
+  * Fixed the CMake Paths
+
+ -- ciwei100000 <ciwei100000@gmail.com>  Sun, 05 Jul 2020 17:14:05 -0700
+
 vtk8 (8.2.0+dfsg1-1+c1) unstable; urgency=medium
 
   * Fix some dependency issues
