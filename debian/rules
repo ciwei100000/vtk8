@@ -82,7 +82,7 @@ extra_flags +=  \
 	-DVTK_Group_MPI=ON \
 	-DVTK_Group_Tk=ON \
 	-DVTK_Group_Views=ON \
-	-DVTK_INSTALL_LIBRARY_DIR="/usr/lib/$(DEB_HOST_MULTIARCH)" \
+	-DVTK_INSTALL_LIBRARY_DIR="lib/$(DEB_HOST_MULTIARCH)" \
 	-DCMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed" \
 	-DCMAKE_MODULE_LINKER_FLAGS="-Wl,--as-needed" \
 	-DCMAKE_SHARED_LINKER_FLAGS="-Wl,--as-needed" \
@@ -119,6 +119,12 @@ override_dh_auto_install:
 	dh_auto_install -X.pyc -X.pyo
 	# Modify vtkWrapJava.cmake to properly upload JavaDependencies.cmake.in	from $VTK_DIR
 	perl -pi -e "s|{dir}/JavaDependencies.cmake.in\"|{VTK_DIR}/JavaDependencies.cmake.in\"|" debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/cmake/vtk-8.2/vtkWrapJava.cmake
+	# copy JavaDependencies.cmake.in to $VTK_DIR
+	cp $(CURDIR)/Wrapping/Java/JavaDependencies.cmake.in $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/cmake/vtk-8.2/
+	# copy the cmake files to the proper location
+	cp $(CURDIR)/CMake/TopologicalSort.cmake $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/cmake/vtk-8.2/
+	cp $(CURDIR)/CMake/vtkGroups.cmake $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/cmake/vtk-8.2/
+	cp $(CURDIR)/CMake/vtkTesting*.cmake $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/cmake/vtk-8.2/
 	# Correct headers for paraview
 	mv $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/vtk.jar $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/vtk8.jar
 	#mv $(CURDIR)/debian/build/bin/vtkpython $(CURDIR)/debian/build/bin/vtk8python
@@ -126,11 +132,14 @@ override_dh_auto_install:
 	chrpath -d $(CURDIR)/debian/build/bin/vtkpython
 	#chrpath -d $(CURDIR)/debian/build/bin/pvtk
 	chrpath -d $(CURDIR)/debian/build/bin/pvtkpython
+	# remove python tmp files
 	find $(CURDIR)/debian/tmp/ -name "*.pyc" | xargs rm -f
 	find $(CURDIR)/debian/tmp/ -name "*.pyo" | xargs rm -f
 	# Qt stuff
 	mkdir -p $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/qt5/plugins/designer
+	# move qt vtk plugins to the proper location
 	mv $(CURDIR)/debian/tmp/usr/plugins/designer/*.so $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/qt5/plugins/designer
+	# remove duplicate docs
 	rm -rf $(CURDIR)/debian/tmp/usr/share/doc/vtk-8.2/doxygen/html
 
 override_dh_install-arch:
@@ -144,4 +153,4 @@ override_dh_install-arch:
 	rm -rf $(CURDIR)/debian/libvtk8-doc/usr/share/doc/vtk8-doc/html/_formulas.log
 	# mkdir -p  $(CURDIR)/debian/python3-vtk8/usr/lib/$(DEB_HOST_MULTIARCH)/python3.7/site-packages/ && \
 	#   cd $(CURDIR)/debian/python3-vtk8/usr/lib/$(DEB_HOST_MULTIARCH)/python3.7/site-packages/ && \
-	#   ln -s /usr/lib/python3/dist-packages/vtk vtk
+	#   ln -s /lib/python3/dist-packages/usr/vtk vtk

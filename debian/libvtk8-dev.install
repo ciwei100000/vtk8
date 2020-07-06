@@ -2,9 +2,12 @@
 # to get paraview debian/build properly on top of vtk we now add this as a symlink
 # in the python3-vtk8 package
 # /usr/lib/*/python3.6/site-packages/vtk/*
-CMake/TopologicalSort.cmake usr/lib/cmake/vtk-8.2/
-CMake/vtkGroups.cmake usr/lib/cmake/vtk-8.2/
-CMake/vtkTesting*.cmake	usr/lib/cmake/vtk-8.2/
+
+## the following three cmake file is copied in debian/rules instead of here
+#    CMake/TopologicalSort.cmake usr/lib/cmake/vtk-8.2/
+#    CMake/vtkGroups.cmake usr/lib/cmake/vtk-8.2/
+#    CMake/vtkTesting*.cmake usr/lib/cmake/vtk-8.2/
+#
 Common/DataModel/vtkMarchingCubesTriangleCases.h usr/include/vtk-8.2/
 Filters/Statistics/vtkStatisticsAlgorithmPrivate.h usr/include/vtk-8.2/
 IO/Import/vtk3DS.h usr/include/vtk-8.2/
@@ -13,8 +16,13 @@ Testing/Core/vtkTestUtilities.h usr/include/vtk-8.2/
 Testing/Core/vtkTesting*.h usr/include/vtk-8.2/
 Testing/Rendering/vtkRegressionTestImage.h usr/include/vtk-8.2/
 Testing/Rendering/vtkTesting*.h usr/include/vtk-8.2
-Wrapping/Java/JavaDependencies.cmake.in usr/lib/cmake/vtk-8.2/
+
+## JavaDependencies.cmake.in is copied in debian/rules instead of here
+#     Wrapping/Java/JavaDependencies.cmake.in usr/lib/cmake/vtk-8.2/
+#
+
 # debian/build/lib/cmake/vtk-8.2/Modules/*-Headers.cmake	usr/lib/cmake/vtk-8.2/Modules/
+
 usr/include/vtk-8.2 usr/include
 usr/lib/*/*.so
 usr/lib/*.so
