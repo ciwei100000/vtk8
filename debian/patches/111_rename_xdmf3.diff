@@ -1,0 +1,82 @@
+Description: Rename the library name xdmf3 to Xdmf to match the actual library name
+             of libxdmf-dev
+Author: ciwei100000 <ciwei100000@gmail.com> 
+
+
+
+--- a/ThirdParty/xdmf3/CMakeLists.txt
++++ b/ThirdParty/xdmf3/CMakeLists.txt
+@@ -3,7 +3,7 @@ include_directories(${Boost_INCLUDE_DIRS})
+ set(${vtk-module}_SYSTEM_INCLUDE_DIRS
+     ${Boost_INCLUDE_DIRS})
+ 
+-vtk_module_third_party(xdmf3
++vtk_module_third_party(Xdmf
+   LIBRARIES vtkxdmf3
+   INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/vtkxdmf3
+
+
+--- a/ThirdParty/xdmf3/vtk_xdmf3.h.in
++++ /dev/null
+@@ -1,28 +0,0 @@
+-/*=========================================================================
+-
+-  Program:   Visualization Toolkit
+-  Module:    vtk_xdmf2.h
+-
+-  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
+-  All rights reserved.
+-  See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
+-
+-     This software is distributed WITHOUT ANY WARRANTY; without even
+-     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+-     PURPOSE.  See the above copyright notice for more information.
+-
+-=========================================================================*/
+-#ifndef vtk_xdmf3_h
+-#define vtk_xdmf3_h
+-
+-/* Use the xdmf library configured for VTK.  */
+-#cmakedefine VTK_USE_SYSTEM_XDMF3
+-
+-#ifdef VTK_USE_SYSTEM_XDMF3
+-//TODO:
+-//# include <xdmf.h>
+-#else
+-//#include <vtkxdmf3/xdmf3.h>
+-#endif
+-
+-#endif
+
+--- /dev/null
++++ b/ThirdParty/xdmf3/vtk_xdmf.h.in
+@@ -0,0 +1,28 @@
++/*=========================================================================
++
++  Program:   Visualization Toolkit
++  Module:    vtk_xdmf2.h
++
++  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
++  All rights reserved.
++  See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
++
++     This software is distributed WITHOUT ANY WARRANTY; without even
++     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
++     PURPOSE.  See the above copyright notice for more information.
++
++=========================================================================*/
++#ifndef vtk_xdmf3_h
++#define vtk_xdmf3_h
++
++/* Use the xdmf library configured for VTK.  */
++#cmakedefine VTK_USE_SYSTEM_XDMF3
++
++#ifdef VTK_USE_SYSTEM_XDMF3
++//TODO:
++//# include <xdmf.h>
++#else
++//#include <vtkxdmf3/xdmf3.h>
++#endif
++
++#endif

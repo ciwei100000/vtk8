@@ -9,3 +9,4 @@
 106_install_doxygen_scripts_in_nodoc_build.patch
 108_Doxygen-use-mathjax.patch
 110_do_not_link_against_socket.patch
+111_rename_xdmf3.diff
