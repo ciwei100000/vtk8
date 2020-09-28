@@ -1,3 +1,11 @@
+vtk8 (8.2.0+dfsg1-1+c3) unstable; urgency=medium
+
+  * Re-enable VTK_USE_SYSTEM_XDMF3
+
+  * Rename the library name xdmf3 to Xdmf to match the actual library name of libxdmf-dev
+
+ -- ciwei100000 <ciwei100000@gmail.com>  Sun, 27 Sep 2020 20:12:22 -0700
+
 vtk8 (8.2.0+dfsg1-1+c2) unstable; urgency=medium
 
   * Fixed vtk8-doc path
