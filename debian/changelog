@@ -1,3 +1,9 @@
+vtk8 (8.2.0+dfsg1-1+c4) unstable; urgency=medium
+
+  * fix the dependency issue of libxdmf3
+
+ -- ciwei100000 <ciwei100000@gmail.com>  Sun, 4 Oct 2020 02:55:37 -0700
+
 vtk8 (8.2.0+dfsg1-1+c3) unstable; urgency=medium
 
   * Re-enable VTK_USE_SYSTEM_XDMF3
