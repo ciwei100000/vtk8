@@ -113,6 +113,9 @@ override_dh_auto_build-indep:
 	find $(BUILDDIR)/Utilities/Doxygen/doc/html/ -name "*.md5" | xargs rm -f
 
 override_dh_auto_build-arch:
+	# fix the dependency issue of libxdmf3
+	sed -i -e "s/vtkxdmf3_LIBRARIES \"/vtkxdmf3_LIBRARIES \"\/usr\/lib\/$(DEB_HOST_MULTIARCH)\/libXdmf.so.3;/g" \
+	          $(BUILDDIR)/ThirdParty/xdmf3/CMakeFiles/vtkxdmf3.cmake
 	dh_auto_build
 
 override_dh_auto_install:
