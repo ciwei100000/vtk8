@@ -13,3 +13,4 @@
 112-Compatibility-for-Python-3.8.patch
 113-Exodus_gcc_10_support.patch
 114-freetype-2.10.3-provide-FT_CALLBACK_DEF.patch
+115-fix-cmake-detection-of-gcc-10.patch
