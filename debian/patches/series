@@ -15,3 +15,4 @@
 114-freetype-2.10.3-provide-FT_CALLBACK_DEF.patch
 115-fix-cmake-detection-of-gcc-10.patch
 116-qt-5.15-include-file-QPainterPath.patch
+117-add-libproj-6.0-compatibility.patch
