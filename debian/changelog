@@ -1,3 +1,25 @@
+vtk8 (8.2.0+dfsg1-1+c5) unstable; urgency=medium
+
+  * [PATCH] Compatibility for Python 3.8 from David Gobbi
+    https://gitlab.kitware.com/vtk/vtk/-/issues/17670
+
+  * [PATCH] Exodus gcc 10 support
+    https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6420
+
+  * [PATCH] Provide or replace `FT_CALLBACK_DEF` for freetype
+    https://gitlab.kitware.com/vtk/vtk/-/issues/18033
+
+  * [PATCH] Fix CMake detection of GCC 10
+    https://bugs.gentoo.org/723374
+
+  * [PATCH] Fix Qt 5.15 the include file QPainterPath
+    https://gitlab.kitware.com/vtk/vtk/-/merge_requests/6943
+
+  * [PATCH] Add libproj 6.0 compatibility
+    https://gitlab.kitware.com/vtk/vtk/-/merge_requests/5582
+
+ -- Xuqing Liu <ciwei100000@gmail.com>  Mon, 23 Aug 2021 09:58:34 -0700
+
 vtk8 (8.2.0+dfsg1-1+c4) unstable; urgency=medium
 
   * fix the dependency issue of libxdmf3
