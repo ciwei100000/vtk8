@@ -1,0 +1,29 @@
+From https://gitlab.kitware.com/vtk/vtk/-/issues/18033
+From: ccorn
+Date: Mon, 23 Aug 2021 11:45:00 -0700
+Subject: [PATCH] Provide or replace `FT_CALLBACK_DEF`
+
+freetype as of v2.10.3 no longer exports FT_CALLBACK_DEF
+https://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=bb66c8d8cf1eb86309273d7c53c44522d35941d4
+This patch provides the (unchanged) definition of FT_CALLBACK_DEF, unless already defined,
+in ThirdParty/freetype/vtk_freetype.h.in.
+
+
+--- a/ThirdParty/freetype/vtk_freetype.h.in
++++ b/ThirdParty/freetype/vtk_freetype.h.in
+@@ -20,6 +20,15 @@
+ 
+ #ifdef VTK_USE_SYSTEM_FREETYPE
+ # include <ft2build.h>
++/* FT_CALLBACK_DEF no longer exported since freetype-2.10.3 */
++/* has been moved to <freetype/internal/compiler-macros.h> */
++# ifndef FT_CALLBACK_DEF
++#  ifdef __cplusplus
++#   define FT_CALLBACK_DEF( x )  extern "C"  x
++#  else
++#   define FT_CALLBACK_DEF( x )  static  x
++#  endif
++# endif /* FT_CALLBACK_DEF */
+ #else
+ # include <vtkfreetype/include/ft2build.h>
+ #endif
