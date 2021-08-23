@@ -11,3 +11,4 @@
 110_do_not_link_against_socket.patch
 111_rename_xdmf3.diff
 112-Compatibility-for-Python-3.8.patch
+113-Exodus_gcc_10_support.patch
