@@ -1,7 +1,23 @@
 From: https://gitlab.kitware.com/vtk/vtk/-/merge_requests/5582
-Date: Mon, 23 Aug 2021 15:28:00 -0700
+      https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7731
+Date: Thu, 17 Feb 2022 06:28:50 -0800
 Subject: [PATCH] Add libproj 6.0 compatibility
 
+diff --git a/CMake/FindLibPROJ.cmake b/CMake/FindLibPROJ.cmake
+index 2d8301dc..b909bebb 100644
+--- a/CMake/FindLibPROJ.cmake
++++ b/CMake/FindLibPROJ.cmake
+@@ -30,7 +30,7 @@ if ( NOT LibPROJ_INCLUDE_DIR OR NOT LibPROJ_LIBRARIES OR NOT LibPROJ_FOUND )
+   )
+ 
+   find_path( LibPROJ_INCLUDE_DIR
+-    NAMES proj_api.h
++    NAMES proj.h
+     HINTS
+       ${_LibPROJ_DIR}
+       ${_LibPROJ_DIR}/include
+diff --git a/Geovis/Core/vtkGeoProjection.cxx b/Geovis/Core/vtkGeoProjection.cxx
+index f3a8852d..ca7fe1d4 100644
 --- a/Geovis/Core/vtkGeoProjection.cxx
 +++ b/Geovis/Core/vtkGeoProjection.cxx
 @@ -72,6 +72,7 @@ public:
@@ -39,6 +55,15 @@ Subject: [PATCH] Add libproj 6.0 compatibility
  }
  //-----------------------------------------------------------------------------
  vtkGeoProjection::vtkGeoProjection()
+@@ -120,7 +121,7 @@ vtkGeoProjection::~vtkGeoProjection()
+   this->SetPROJ4String( nullptr );
+   if ( this->Projection )
+   {
+-    pj_free( this->Projection );
++    proj_destroy( this->Projection );
+   }
+   delete this->Internals;
+   this->Internals = nullptr;
 @@ -144,7 +145,7 @@ void vtkGeoProjection::PrintSelf( ostream& os, vtkIndent indent )
  int vtkGeoProjection::GetIndex()
  {
@@ -57,7 +82,30 @@ Subject: [PATCH] Add libproj 6.0 compatibility
  }
  //-----------------------------------------------------------------------------
  projPJ vtkGeoProjection::GetProjection()
-@@ -232,6 +233,7 @@ int vtkGeoProjection::UpdateProjection()
+@@ -180,13 +181,13 @@ int vtkGeoProjection::UpdateProjection()
+ 
+   if ( this->Projection )
+   {
+-    pj_free( this->Projection );
++    proj_destroy( this->Projection );
+     this->Projection = nullptr;
+   }
+ 
+   if ( this->PROJ4String && strlen( this->PROJ4String ) )
+   {
+-    this->Projection = pj_init_plus( this->PROJ4String );
++    this->Projection = proj_create(PJ_DEFAULT_CTX, this->PROJ4String);
+   }
+   else
+   {
+@@ -226,12 +227,13 @@ int vtkGeoProjection::UpdateProjection()
+       pjArgs[3+i] = stringHolder[i].c_str();
+     }
+ 
+-    this->Projection = pj_init( argSize, const_cast<char**>( pjArgs ) );
++    this->Projection = proj_create_argv(PJ_DEFAULT_CTX, argSize, const_cast<char**>(pjArgs));
+     delete[] pjArgs;
+   }
    this->ProjectionMTime = this->GetMTime();
    if ( this->Projection )
    {
@@ -65,42 +113,60 @@ Subject: [PATCH] Add libproj 6.0 compatibility
      return 0;
    }
    return 1;
-
+diff --git a/Geovis/Core/vtkGeoTransform.cxx b/Geovis/Core/vtkGeoTransform.cxx
+index aeeabc10..9deb93a5 100644
 --- a/Geovis/Core/vtkGeoTransform.cxx
 +++ b/Geovis/Core/vtkGeoTransform.cxx
-@@ -167,9 +167,9 @@ void vtkGeoTransform::InternalTransformPoints( double* x, vtkIdType numPts, int
+@@ -159,17 +159,18 @@ void vtkGeoTransform::InternalTransformPoints( double* x, vtkIdType numPts, int
+   projPJ src = this->SourceProjection ? this->SourceProjection->GetProjection() : nullptr;
+   projPJ dst = this->DestinationProjection ? this->DestinationProjection->GetProjection() : nullptr;
+   int delta = stride - 2;
+-  projLP lp;
+-  projXY xy;
++  PJ_COORD c, c_out;
+   if ( src )
+   {
+     // Convert from src system to lat/long using inverse of src transform
      double* coord = x;
      for ( vtkIdType i = 0; i < numPts; ++ i )
      {
 -      xy.u = coord[0]; xy.v = coord[1];
-+      xy.x = coord[0]; xy.y = coord[1];
-       lp = pj_inv( xy, src );
+-      lp = pj_inv( xy, src );
 -      coord[0] = lp.u; coord[1] = lp.v;
-+      coord[0] = lp.lam; coord[1] = lp.phi;
++      c.xy.x = coord[0];
++      c.xy.y = coord[1];
++      c_out = proj_trans(src, PJ_INV, c);
++      coord[0] = c_out.lp.lam;
++      coord[1] = c_out.lp.phi;
        coord += stride;
      }
    }
-@@ -192,8 +192,8 @@ void vtkGeoTransform::InternalTransformPoints( double* x, vtkIdType numPts, int
+@@ -191,9 +192,11 @@ void vtkGeoTransform::InternalTransformPoints( double* x, vtkIdType numPts, int
+     double* coord = x;
      for ( vtkIdType i = 0; i < numPts; ++ i )
      {
 -      lp.u = coord[0]; lp.v = coord[1];
-+      lp.lam = coord[0]; lp.phi = coord[1];
-       xy = pj_fwd( lp, dst );
+-      xy = pj_fwd( lp, dst );
 -      coord[0] = xy.u; coord[1] = xy.v;
-+      coord[0] = xy.x; coord[1] = xy.y;
++      c.lp.lam = coord[0];
++      c.lp.phi = coord[1];
++      c_out = proj_trans(src, PJ_FWD, c);
++      coord[0] = c_out.xy.x;
++      coord[1] = c_out.xy.y;
        coord += stride;
      }
    }
-
+diff --git a/ThirdParty/libproj/vtk_libproj.h.in b/ThirdParty/libproj/vtk_libproj.h.in
+index cd9edc3a..08f2e3c4 100644
 --- a/ThirdParty/libproj/vtk_libproj.h.in
 +++ b/ThirdParty/libproj/vtk_libproj.h.in
-@@ -18,7 +18,8 @@
+@@ -18,8 +18,7 @@
  /* Use the libproj library configured for VTK.  */
  #cmakedefine VTK_USE_SYSTEM_LIBPROJ
  #ifdef VTK_USE_SYSTEM_LIBPROJ
 -# include <projects.h>
+-# include <proj_api.h>
 +# include <proj.h>
-+# define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H 1
- # include <proj_api.h>
  # include <geodesic.h>
  #else
+ # include <vtklibproj/src/projects.h>
