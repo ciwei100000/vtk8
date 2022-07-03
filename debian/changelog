@@ -1,3 +1,9 @@
+vtk8 (8.2.0+dfsg1-1+c7) unstable; urgency=medium
+
+  * [PATCH] Add ffmpeg 5.0 support
+
+ -- Xuqing Liu <ciwei100000@gmail.com>  Sun, 3 Jul 2022 16:04:47 -0700
+
 vtk8 (8.2.0+dfsg1-1+c6) unstable; urgency=medium
   * Update 117-add-libproj-6.0-compatibility.patch for PROJ 8
       See the following links for details:
