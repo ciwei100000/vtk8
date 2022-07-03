@@ -16,3 +16,4 @@
 115-fix-cmake-detection-of-gcc-10.patch
 116-qt-5.15-include-file-QPainterPath.patch
 117-add-libproj-6.0-compatibility.patch
+118-ffmpeg-5.0-support.patch

@@ -1,0 +1,2012 @@
+From: https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8863
+Date: Sun, 03 Jul 2022 16:00:00 -0700
+Subject: [PATCH] Add ffmpeg 5.0 support
+Description: Apply the IO/FFMPEG module directly from the upstream PR 8863 to resolve the build issue with ffmpeg > 5.0
+
+diff --git a/IO/FFMPEG/vtkFFMPEGVideoSource.cxx b/IO/FFMPEG/vtkFFMPEGVideoSource.cxx
+index 06506911..7cd2ca30 100644
+--- a/IO/FFMPEG/vtkFFMPEGVideoSource.cxx
++++ b/IO/FFMPEG/vtkFFMPEGVideoSource.cxx
+@@ -14,7 +14,6 @@
+ =========================================================================*/
+ #include "vtkFFMPEGVideoSource.h"
+ 
+-#include "vtkConditionVariable.h"
+ #include "vtkCriticalSection.h"
+ #include "vtkMultiThreader.h"
+ #include "vtkMutexLock.h"
+@@ -23,12 +22,17 @@
+ #include "vtkUnsignedCharArray.h"
+ #include "vtksys/SystemTools.hxx"
+ 
+-extern "C" {
++extern "C"
++{
++#include <libavcodec/avcodec.h>
+ #include <libavformat/avformat.h>
++#include <libavutil/stereo3d.h>
+ #include <libswscale/swscale.h>
+ }
+ 
+ #include <cctype>
++#include <condition_variable>
++#include <mutex>
+ 
+ /////////////////////////////////////////////////////////////////////////
+ // building ffmpeg on windows
+@@ -50,9 +54,10 @@ extern "C" {
+ //
+ // Then to build ffmpeg as follows
+ //
+-// ./configure --enable-asm --enable-x86asm --arch=amd64  --disable-avdevice --enable-swscale --disable-doc --disable-ffplay --disable-ffprobe --disable-ffmpeg --enable-shared --disable-static --disable-bzlib --disable-libopenjpeg --disable-iconv --disable-zlib --prefix=/c/ffmpeg --toolchain=msvc
+-// make
+-// make install
++// ./configure --enable-asm --enable-x86asm --arch=amd64  --disable-avdevice --enable-swscale
++// --disable-doc --disable-ffplay --disable-ffprobe --disable-ffmpeg --enable-shared
++// --disable-static --disable-bzlib --disable-libopenjpeg --disable-iconv --disable-zlib
++// --prefix=/c/ffmpeg --toolchain=msvc make make install
+ //
+ // add libs to vtk build, I just add them to the FFMPEG_LIBAVCODEC_LIBRARIES variable
+ //
+@@ -65,7 +70,7 @@ extern "C" {
+ class vtkFFMPEGVideoSourceInternal
+ {
+ public:
+-  vtkFFMPEGVideoSourceInternal() {}
++  vtkFFMPEGVideoSourceInternal() = default;
+   void ReleaseSystemResources()
+   {
+     if (this->Frame)
+@@ -100,22 +105,35 @@ public:
+     }
+   }
+ 
+-  AVFormatContext *FormatContext = nullptr;
+-  AVCodecContext *VideoDecodeContext = nullptr;
+-  AVCodecContext *AudioDecodeContext = nullptr;
+-  AVStream *VideoStream = nullptr;
+-  AVStream *AudioStream = nullptr;
++  AVFormatContext* FormatContext = nullptr;
++  AVCodecContext* VideoDecodeContext = nullptr;
++  AVCodecContext* AudioDecodeContext = nullptr;
++  AVStream* VideoStream = nullptr;
++  AVStream* AudioStream = nullptr;
+   int VideoStreamIndex = -1;
+   int AudioStreamIndex = -1;
+-  AVFrame *Frame = nullptr;
+-  AVFrame *AudioFrame = nullptr;
++  AVFrame* Frame = nullptr;
++  AVFrame* AudioFrame = nullptr;
+   AVPacket Packet;
+   struct SwsContext* RGBContext = nullptr;
+ };
+ 
+ vtkStandardNewMacro(vtkFFMPEGVideoSource);
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
++void vtkFFMPEGVideoSource::PrintSelf(ostream& os, vtkIndent indent)
++{
++  this->Superclass::PrintSelf(os, indent);
++  os << indent << "DecodingThreads: " << this->DecodingThreads << endl;
++  os << indent << "DrainAudioThreadId: " << this->DrainAudioThreadId << endl;
++  os << indent << "DrainThreadId: " << this->DrainThreadId << endl;
++  os << indent << "EndOfFile: " << this->EndOfFile << endl;
++  os << indent << "FeedThreadId: " << this->FeedThreadId << endl;
++  os << indent << "FileName: " << (this->FileName ? this->FileName : "(null)") << endl;
++  os << indent << "Stereo3D: " << this->Stereo3D << endl;
++}
++
++//------------------------------------------------------------------------------
+ vtkFFMPEGVideoSource::vtkFFMPEGVideoSource()
+   : AudioCallback(nullptr)
+   , AudioCallbackClientData(nullptr)
+@@ -133,17 +151,20 @@ vtkFFMPEGVideoSource::vtkFFMPEGVideoSource()
+   this->FrameBufferRowAlignment = 4;
+ 
+   this->Internal = new vtkFFMPEGVideoSourceInternal;
++
++  this->Stereo3D = false;
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ vtkFFMPEGVideoSource::~vtkFFMPEGVideoSource()
+ {
++  this->Stop();
+   this->vtkFFMPEGVideoSource::ReleaseSystemResources();
+-  delete [] this->FileName;
++  delete[] this->FileName;
+   delete this->Internal;
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGVideoSource::Initialize()
+ {
+   if (this->Initialized)
+@@ -167,7 +188,7 @@ void vtkFFMPEGVideoSource::Initialize()
+   }
+ 
+   // local var to keep the code shorter
+-  AVFormatContext *fcontext = this->Internal->FormatContext;
++  AVFormatContext* fcontext = this->Internal->FormatContext;
+ 
+   /* retrieve stream information */
+   if (avformat_find_stream_info(fcontext, nullptr) < 0)
+@@ -184,11 +205,9 @@ void vtkFFMPEGVideoSource::Initialize()
+     return;
+   }
+ 
+-  this->Internal->VideoStream =
+-    fcontext->streams[this->Internal->VideoStreamIndex];
++  this->Internal->VideoStream = fcontext->streams[this->Internal->VideoStreamIndex];
+ 
+-  AVCodec *dec =
+-    avcodec_find_decoder(this->Internal->VideoStream->codecpar->codec_id);
++  const AVCodec* dec = avcodec_find_decoder(this->Internal->VideoStream->codecpar->codec_id);
+   if (!dec)
+   {
+     vtkErrorMacro("Failed to find codec for video");
+@@ -199,12 +218,29 @@ void vtkFFMPEGVideoSource::Initialize()
+   this->Internal->VideoDecodeContext->thread_count = this->DecodingThreads;
+   // this->Internal->VideoDecodeContext->thread_type = FF_THREAD_FRAME;
+ 
++  // examine the video stream side data for additional information
++  this->Stereo3D = false;
++  if (this->Internal->VideoStream->nb_side_data > 0)
++  {
++    for (int i = 0; i < this->Internal->VideoStream->nb_side_data; ++i)
++    {
++      AVPacketSideData sd = this->Internal->VideoStream->side_data[i];
++      if (sd.type == AV_PKT_DATA_STEREO3D)
++      {
++        AVStereo3D* stereo = reinterpret_cast<AVStereo3D*>(sd.data);
++        if (stereo->type == AV_STEREO3D_TOPBOTTOM)
++        {
++          this->Stereo3D = true;
++        }
++      }
++    }
++  }
++
+   avcodec_parameters_to_context(
+-    this->Internal->VideoDecodeContext,
+-    this->Internal->VideoStream->codecpar);
++    this->Internal->VideoDecodeContext, this->Internal->VideoStream->codecpar);
+   avcodec_open2(this->Internal->VideoDecodeContext, dec, nullptr);
+ 
+-  AVDictionary *opts = nullptr;
++  AVDictionary* opts = nullptr;
+   /* Init the decoders, with or without reference counting */
+   av_dict_set(&opts, "refcounted_frames", "1", 0);
+   if (avcodec_open2(this->Internal->VideoDecodeContext, dec, &opts) < 0)
+@@ -213,22 +249,17 @@ void vtkFFMPEGVideoSource::Initialize()
+     return;
+   }
+ 
+-  this->SetFrameRate(static_cast<double>(this->Internal->VideoStream->r_frame_rate.num)/
++  this->SetFrameRate(static_cast<double>(this->Internal->VideoStream->r_frame_rate.num) /
+     this->Internal->VideoStream->r_frame_rate.den);
+ 
+   this->SetFrameSize(
+-    this->Internal->VideoDecodeContext->width,
+-    this->Internal->VideoDecodeContext->height,
+-    1);
++    this->Internal->VideoDecodeContext->width, this->Internal->VideoDecodeContext->height, 1);
+ 
+   // create a something to RGB converter
+-  this->Internal->RGBContext = sws_getContext(
+-     this->Internal->VideoDecodeContext->width,
+-     this->Internal->VideoDecodeContext->height,
+-     this->Internal->VideoDecodeContext->pix_fmt,
+-     this->Internal->VideoDecodeContext->width,
+-     this->Internal->VideoDecodeContext->height,
+-     AV_PIX_FMT_RGB24, SWS_FAST_BILINEAR, NULL, NULL, NULL);
++  this->Internal->RGBContext = sws_getContext(this->Internal->VideoDecodeContext->width,
++    this->Internal->VideoDecodeContext->height, this->Internal->VideoDecodeContext->pix_fmt,
++    this->Internal->VideoDecodeContext->width, this->Internal->VideoDecodeContext->height,
++    AV_PIX_FMT_RGB24, SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
+   if (!this->Internal->RGBContext)
+   {
+     vtkErrorMacro("Failed to create RGB context");
+@@ -240,11 +271,9 @@ void vtkFFMPEGVideoSource::Initialize()
+   // do we have an audio stream?
+   if (this->Internal->AudioStreamIndex >= 0)
+   {
+-    this->Internal->AudioStream =
+-      fcontext->streams[this->Internal->AudioStreamIndex];
++    this->Internal->AudioStream = fcontext->streams[this->Internal->AudioStreamIndex];
+ 
+-    AVCodec *adec =
+-      avcodec_find_decoder(this->Internal->AudioStream->codecpar->codec_id);
++    const AVCodec* adec = avcodec_find_decoder(this->Internal->AudioStream->codecpar->codec_id);
+     if (!adec)
+     {
+       vtkErrorMacro("Failed to find codec for audio");
+@@ -253,11 +282,10 @@ void vtkFFMPEGVideoSource::Initialize()
+ 
+     this->Internal->AudioDecodeContext = avcodec_alloc_context3(adec);
+     avcodec_parameters_to_context(
+-      this->Internal->AudioDecodeContext,
+-      this->Internal->AudioStream->codecpar);
++      this->Internal->AudioDecodeContext, this->Internal->AudioStream->codecpar);
+     avcodec_open2(this->Internal->AudioDecodeContext, adec, nullptr);
+ 
+-    AVDictionary *aopts = nullptr;
++    AVDictionary* aopts = nullptr;
+     /* Init the decoders, with or without reference counting */
+     av_dict_set(&aopts, "refcounted_frames", "1", 0);
+     if (avcodec_open2(this->Internal->AudioDecodeContext, adec, &aopts) < 0)
+@@ -283,7 +311,7 @@ void vtkFFMPEGVideoSource::Initialize()
+     return;
+   }
+ 
+-  /* initialize packet, set data to NULL, let the demuxer fill it */
++  /* initialize packet, set data to nullptr, let the demuxer fill it */
+   av_init_packet(&this->Internal->Packet);
+   this->Internal->Packet.data = nullptr;
+   this->Internal->Packet.size = 0;
+@@ -295,18 +323,18 @@ void vtkFFMPEGVideoSource::Initialize()
+   this->Initialized = 1;
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ // Feed frames to the decoder
+-void *vtkFFMPEGVideoSource::FeedThread(vtkMultiThreader::ThreadInfo *data)
++void* vtkFFMPEGVideoSource::FeedThread(vtkMultiThreader::ThreadInfo* data)
+ {
+-  vtkFFMPEGVideoSource *self = static_cast<vtkFFMPEGVideoSource *>(data->UserData);
++  vtkFFMPEGVideoSource* self = static_cast<vtkFFMPEGVideoSource*>(data->UserData);
+   return self->Feed(data);
+ }
+ 
+ //
+ // based off of https://blogs.gentoo.org/lu_zero/2016/03/29/new-avcodec-api/
+ //
+-void *vtkFFMPEGVideoSource::Feed(vtkMultiThreader::ThreadInfo *data)
++void* vtkFFMPEGVideoSource::Feed(vtkMultiThreader::ThreadInfo* data)
+ {
+   bool done = false;
+ 
+@@ -324,65 +352,59 @@ void *vtkFFMPEGVideoSource::Feed(vtkMultiThreader::ThreadInfo *data)
+     }
+     retryPacket = false;
+     // feed video
+-    if (fret >= 0 &&
+-        this->Internal->Packet.stream_index == this->Internal->VideoStreamIndex)
++    if (fret >= 0 && this->Internal->Packet.stream_index == this->Internal->VideoStreamIndex)
+     {
+       // lock the decoder
+-      this->FeedMutex->Lock();
++      this->FeedMutex.lock();
+ 
+-      int sret = avcodec_send_packet(
+-        this->Internal->VideoDecodeContext,
+-        &this->Internal->Packet);
++      int sret = avcodec_send_packet(this->Internal->VideoDecodeContext, &this->Internal->Packet);
+       if (sret == 0) // good decode
+       {
+-        this->FeedCondition->Signal();
++        this->FeedCondition.notify_one();
+       }
+       else if (sret == AVERROR(EAGAIN))
+       {
+         // Signal the draining loop
+-        this->FeedCondition->Signal();
++        this->FeedCondition.notify_one();
+         // Wait here
+-        this->FeedCondition->Wait(this->FeedMutex);
++        this->FeedCondition.wait(this->FeedMutex);
+         retryPacket = true;
+       }
+       else if (sret < 0) // error
+       {
+-        this->FeedMutex->Unlock();
++        this->FeedMutex.unlock();
+         return nullptr;
+       }
+ 
+-      this->FeedMutex->Unlock();
++      this->FeedMutex.unlock();
+     }
+ 
+     // feed audio
+-    if (fret >= 0 &&
+-        this->Internal->Packet.stream_index == this->Internal->AudioStreamIndex)
++    if (fret >= 0 && this->Internal->Packet.stream_index == this->Internal->AudioStreamIndex)
+     {
+       // lock the decoder
+-      this->FeedAudioMutex->Lock();
++      this->FeedAudioMutex.lock();
+ 
+-      int sret = avcodec_send_packet(
+-        this->Internal->AudioDecodeContext,
+-        &this->Internal->Packet);
++      int sret = avcodec_send_packet(this->Internal->AudioDecodeContext, &this->Internal->Packet);
+       if (sret == 0) // good decode
+       {
+-        this->FeedAudioCondition->Signal();
++        this->FeedAudioCondition.notify_one();
+       }
+       else if (sret == AVERROR(EAGAIN))
+       {
+         // Signal the draining loop
+-        this->FeedAudioCondition->Signal();
++        this->FeedAudioCondition.notify_one();
+         // Wait here
+-        this->FeedAudioCondition->Wait(this->FeedAudioMutex);
++        this->FeedAudioCondition.wait(this->FeedAudioMutex);
+         retryPacket = true;
+       }
+       else if (sret < 0) // error
+       {
+-        this->FeedAudioMutex->Unlock();
++        this->FeedAudioMutex.unlock();
+         return nullptr;
+       }
+ 
+-      this->FeedAudioMutex->Unlock();
++      this->FeedAudioMutex.unlock();
+     }
+ 
+     // are we out of data?
+@@ -402,25 +424,25 @@ void *vtkFFMPEGVideoSource::Feed(vtkMultiThreader::ThreadInfo *data)
+     count++;
+   }
+ 
+-  // flush remaning data
+-  this->FeedMutex->Lock();
++  // flush remaining data
++  this->FeedMutex.lock();
+   avcodec_send_packet(this->Internal->VideoDecodeContext, nullptr);
+-  this->FeedCondition->Signal();
+-  this->FeedMutex->Unlock();
++  this->FeedCondition.notify_one();
++  this->FeedMutex.unlock();
+ 
+   if (this->Internal->AudioDecodeContext)
+   {
+-    this->FeedAudioMutex->Lock();
++    this->FeedAudioMutex.lock();
+     avcodec_send_packet(this->Internal->AudioDecodeContext, nullptr);
+-    this->FeedAudioCondition->Signal();
+-    this->FeedAudioMutex->Unlock();
++    this->FeedAudioCondition.notify_one();
++    this->FeedAudioMutex.unlock();
+   }
+ 
+   this->EndOfFile = true;
+   return nullptr;
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ // Sleep until the specified absolute time has arrived.
+ // You must pass a handle to the current thread.
+ // If '0' is returned, then the thread was aborted before or during the wait.
+@@ -435,9 +457,9 @@ static void vtkThreadSleep(double time)
+     double remaining = time - vtkTimerLog::GetUniversalTime();
+ 
+     // check to see if we are being told to quit
+-    // data->ActiveFlagLock->Lock();
++    // data->ActiveFlagLock.lock();
+     // int activeFlag = *(data->ActiveFlag);
+-    // data->ActiveFlagLock->Unlock();
++    // data->ActiveFlagLock.unlock();
+ 
+     // if (activeFlag == 0)
+     // {
+@@ -449,7 +471,7 @@ static void vtkThreadSleep(double time)
+     {
+       if (i == 0 && count % 100 == 0)
+       {
+-        cerr << "dropped frames, now beind by " << remaining << " seconds\n";
++        cerr << "dropped frames, now behind by " << remaining << " seconds\n";
+       }
+       break;
+     }
+@@ -464,13 +486,13 @@ static void vtkThreadSleep(double time)
+   }
+ }
+ 
+-void *vtkFFMPEGVideoSource::DrainThread(vtkMultiThreader::ThreadInfo *data)
++void* vtkFFMPEGVideoSource::DrainThread(vtkMultiThreader::ThreadInfo* data)
+ {
+-  vtkFFMPEGVideoSource *self = static_cast<vtkFFMPEGVideoSource *>(data->UserData);
++  vtkFFMPEGVideoSource* self = static_cast<vtkFFMPEGVideoSource*>(data->UserData);
+   return self->Drain(data);
+ }
+ 
+-void *vtkFFMPEGVideoSource::Drain(vtkMultiThreader::ThreadInfo *data)
++void* vtkFFMPEGVideoSource::Drain(vtkMultiThreader::ThreadInfo* data)
+ {
+   bool done = false;
+   unsigned short count = 0;
+@@ -481,38 +503,56 @@ void *vtkFFMPEGVideoSource::Drain(vtkMultiThreader::ThreadInfo *data)
+ 
+   while (!done)
+   {
+-    this->FeedMutex->Lock();
++    this->FeedMutex.lock();
+ 
+-    int ret = avcodec_receive_frame(this->Internal->VideoDecodeContext,
+-              this->Internal->Frame);
++    int ret = avcodec_receive_frame(this->Internal->VideoDecodeContext, this->Internal->Frame);
+     if (ret == 0)
+     {
+-      this->FeedCondition->Signal();
++      this->FeedCondition.notify_one();
+     }
+     else if (ret == AVERROR(EAGAIN))
+     {
+       // Signal the feeding loop
+-      this->FeedCondition->Signal();
++      this->FeedCondition.notify_one();
+       // Wait here
+-      this->FeedCondition->Wait(this->FeedMutex);
++      this->FeedCondition.wait(this->FeedMutex);
+     }
+     else if (ret == AVERROR_EOF)
+     {
++      this->FeedMutex.unlock();
+       return nullptr;
+     }
+     else if (ret < 0) // error code
+     {
+-      this->FeedMutex->Unlock();
++      this->FeedMutex.unlock();
+       cerr << "video drain thread exiting on error!\n";
+       return nullptr;
+     }
+ 
+-    this->FeedMutex->Unlock();
++    this->FeedMutex.unlock();
+ 
+     if (ret == 0)
+     {
+-      vtkThreadSleep(startTime + frame/rate);
+-      this->InternalGrab();
++      vtkThreadSleep(startTime + frame / rate);
++      if (this->VideoCallback)
++      {
++        vtkFFMPEGVideoSourceVideoCallbackData cbd;
++        cbd.Height = this->Internal->Frame->height;
++        int p = 0;
++        while (this->Internal->Frame->data[p] != nullptr && p < 8)
++        {
++          cbd.LineSize[p] = this->Internal->Frame->linesize[p];
++          cbd.Data[p] = this->Internal->Frame->data[p];
++          ++p;
++        }
++        cbd.Caller = this;
++        cbd.ClientData = this->VideoCallbackClientData;
++        this->VideoCallback(cbd);
++      }
++      else
++      {
++        this->InternalGrab();
++      }
+       frame++;
+     }
+ 
+@@ -530,13 +570,13 @@ void *vtkFFMPEGVideoSource::Drain(vtkMultiThreader::ThreadInfo *data)
+   return nullptr;
+ }
+ 
+-void *vtkFFMPEGVideoSource::DrainAudioThread(vtkMultiThreader::ThreadInfo *data)
++void* vtkFFMPEGVideoSource::DrainAudioThread(vtkMultiThreader::ThreadInfo* data)
+ {
+-  vtkFFMPEGVideoSource *self = static_cast<vtkFFMPEGVideoSource *>(data->UserData);
++  vtkFFMPEGVideoSource* self = static_cast<vtkFFMPEGVideoSource*>(data->UserData);
+   return self->DrainAudio(data);
+ }
+ 
+-void *vtkFFMPEGVideoSource::DrainAudio(vtkMultiThreader::ThreadInfo *data)
++void* vtkFFMPEGVideoSource::DrainAudio(vtkMultiThreader::ThreadInfo* data)
+ {
+   bool done = false;
+   unsigned short count = 0;
+@@ -545,33 +585,33 @@ void *vtkFFMPEGVideoSource::DrainAudio(vtkMultiThreader::ThreadInfo *data)
+ 
+   while (!done)
+   {
+-    this->FeedAudioMutex->Lock();
++    this->FeedAudioMutex.lock();
+ 
+-    int ret = avcodec_receive_frame(this->Internal->AudioDecodeContext,
+-              this->Internal->AudioFrame);
++    int ret = avcodec_receive_frame(this->Internal->AudioDecodeContext, this->Internal->AudioFrame);
+     if (ret == 0)
+     {
+-      this->FeedAudioCondition->Signal();
++      this->FeedAudioCondition.notify_one();
+     }
+     else if (ret == AVERROR(EAGAIN))
+     {
+       // Signal the feeding loop
+-      this->FeedAudioCondition->Signal();
++      this->FeedAudioCondition.notify_one();
+       // Wait here
+-      this->FeedAudioCondition->Wait(this->FeedAudioMutex);
++      this->FeedAudioCondition.wait(this->FeedAudioMutex);
+     }
+     else if (ret == AVERROR_EOF)
+     {
++      this->FeedAudioMutex.unlock();
+       return nullptr;
+     }
+     else if (ret < 0) // error code
+     {
+-      this->FeedAudioMutex->Unlock();
++      this->FeedAudioMutex.unlock();
+       cerr << "audio drain thread exiting on error!\n";
+       return nullptr;
+     }
+ 
+-    this->FeedAudioMutex->Unlock();
++    this->FeedAudioMutex.unlock();
+ 
+     if (ret == 0)
+     {
+@@ -656,14 +696,12 @@ void vtkFFMPEGVideoSource::ReadFrame()
+ {
+   // first try to grab a frame from data we already have
+   bool gotFrame = false;
+-  while (!gotFrame &&
+-    (!this->EndOfFile || this->Internal->Packet.size > 0))
++  while (!gotFrame && (!this->EndOfFile || this->Internal->Packet.size > 0))
+   {
+     int ret = AVERROR(EAGAIN);
+     if (this->Internal->Packet.size > 0)
+     {
+-      ret = avcodec_receive_frame(this->Internal->VideoDecodeContext,
+-              this->Internal->Frame);
++      ret = avcodec_receive_frame(this->Internal->VideoDecodeContext, this->Internal->Frame);
+       if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF)
+       {
+         vtkErrorMacro("codec did not receive video frame");
+@@ -686,8 +724,7 @@ void vtkFFMPEGVideoSource::ReadFrame()
+       // if the packet is empty read more data from the file
+       av_packet_unref(&this->Internal->Packet);
+       int fret = av_read_frame(this->Internal->FormatContext, &this->Internal->Packet);
+-      if (fret >= 0 &&
+-          this->Internal->Packet.stream_index == this->Internal->VideoStreamIndex)
++      if (fret >= 0 && this->Internal->Packet.stream_index == this->Internal->VideoStreamIndex)
+       {
+         int sret = avcodec_send_packet(this->Internal->VideoDecodeContext, &this->Internal->Packet);
+         if (sret < 0 && sret != AVERROR(EAGAIN) && sret != AVERROR_EOF)
+@@ -723,40 +760,36 @@ void vtkFFMPEGVideoSource::InternalGrab()
+ 
+   this->FrameCount++;
+ 
+-  unsigned char *ptr = (unsigned char *)
+-    ((reinterpret_cast<vtkUnsignedCharArray*>(this->FrameBuffer[index])) \
+-      ->GetPointer(0));
++  unsigned char* ptr =
++    (unsigned char*)((reinterpret_cast<vtkUnsignedCharArray*>(this->FrameBuffer[index]))
++                       ->GetPointer(0));
+ 
+   // the DIB has rows which are multiples of 4 bytes
+-  int outBytesPerRow = ((this->FrameBufferExtent[1]-
+-                         this->FrameBufferExtent[0]+1)
+-                        * this->FrameBufferBitsPerPixel + 7)/8;
++  int outBytesPerRow =
++    ((this->FrameBufferExtent[1] - this->FrameBufferExtent[0] + 1) * this->FrameBufferBitsPerPixel +
++      7) /
++    8;
+   outBytesPerRow += outBytesPerRow % this->FrameBufferRowAlignment;
+   outBytesPerRow += outBytesPerRow % 4;
+-  int rows = this->FrameBufferExtent[3]-this->FrameBufferExtent[2]+1;
++  int rows = this->FrameBufferExtent[3] - this->FrameBufferExtent[2] + 1;
+ 
+   // update frame time
+-  this->FrameBufferTimeStamps[index] =
+-    this->StartTimeStamp + this->FrameCount / this->FrameRate;
++  this->FrameBufferTimeStamps[index] = this->StartTimeStamp + this->FrameCount / this->FrameRate;
+ 
+-  uint8_t * dst[4];
++  uint8_t* dst[4];
+   int dstStride[4];
+   // we flip y axis here
+   dstStride[0] = -outBytesPerRow;
+-  dst[0] = ptr + outBytesPerRow*(rows-1);
+-  sws_scale(this->Internal->RGBContext,
+-    this->Internal->Frame->data,
+-    this->Internal->Frame->linesize,
+-    0,
+-    this->Internal->Frame->height,
+-    dst, dstStride);
++  dst[0] = ptr + outBytesPerRow * (rows - 1);
++  sws_scale(this->Internal->RGBContext, this->Internal->Frame->data,
++    this->Internal->Frame->linesize, 0, this->Internal->Frame->height, dst, dstStride);
+ 
+   this->FrameBufferMutex->Unlock();
+ 
+   this->Modified();
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGVideoSource::ReleaseSystemResources()
+ {
+   if (this->Initialized)
+@@ -767,7 +800,7 @@ void vtkFFMPEGVideoSource::ReleaseSystemResources()
+   }
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGVideoSource::Grab()
+ {
+   if (this->Recording)
+@@ -786,13 +819,13 @@ void vtkFFMPEGVideoSource::Grab()
+   this->InternalGrab();
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGVideoSource::Play()
+ {
+   this->vtkVideoSource::Play();
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGVideoSource::Record()
+ {
+   if (this->Playing)
+@@ -808,17 +841,14 @@ void vtkFFMPEGVideoSource::Record()
+     this->Recording = 1;
+     this->FrameCount = 0;
+     this->Modified();
+-    this->FeedThreadId =
+-      this->PlayerThreader->SpawnThread((vtkThreadFunctionType)\
+-                                &vtkFFMPEGVideoSource::FeedThread,this);
+-    this->DrainThreadId =
+-      this->PlayerThreader->SpawnThread((vtkThreadFunctionType)\
+-                                &vtkFFMPEGVideoSource::DrainThread,this);
++    this->FeedThreadId = this->PlayerThreader->SpawnThread(
++      (vtkThreadFunctionType)&vtkFFMPEGVideoSource::FeedThread, this);
++    this->DrainThreadId = this->PlayerThreader->SpawnThread(
++      (vtkThreadFunctionType)&vtkFFMPEGVideoSource::DrainThread, this);
+     if (this->Internal->AudioDecodeContext)
+     {
+-      this->DrainAudioThreadId =
+-        this->PlayerThreader->SpawnThread((vtkThreadFunctionType)\
+-                                  &vtkFFMPEGVideoSource::DrainAudioThread,this);
++      this->DrainAudioThreadId = this->PlayerThreader->SpawnThread(
++        (vtkThreadFunctionType)&vtkFFMPEGVideoSource::DrainAudioThread, this);
+     }
+     else
+     {
+@@ -827,7 +857,7 @@ void vtkFFMPEGVideoSource::Record()
+   }
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGVideoSource::Stop()
+ {
+   if (this->Playing || this->Recording)
+@@ -844,13 +874,11 @@ void vtkFFMPEGVideoSource::Stop()
+   }
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ // try for the specified frame size
+ void vtkFFMPEGVideoSource::SetFrameSize(int x, int y, int z)
+ {
+-  if (x == this->FrameSize[0] &&
+-      y == this->FrameSize[1] &&
+-      z == this->FrameSize[2])
++  if (x == this->FrameSize[0] && y == this->FrameSize[1] && z == this->FrameSize[2])
+   {
+     return;
+   }
+@@ -874,7 +902,7 @@ void vtkFFMPEGVideoSource::SetFrameSize(int x, int y, int z)
+   }
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGVideoSource::SetFrameRate(float rate)
+ {
+   if (rate == this->FrameRate)
+@@ -886,7 +914,7 @@ void vtkFFMPEGVideoSource::SetFrameRate(float rate)
+   this->Modified();
+ }
+ 
+-//----------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGVideoSource::SetOutputFormat(int format)
+ {
+   if (format == this->OutputFormat)
+@@ -917,7 +945,7 @@ void vtkFFMPEGVideoSource::SetOutputFormat(int format)
+   }
+   this->NumberOfScalarComponents = numComponents;
+ 
+-  if (this->FrameBufferBitsPerPixel != numComponents*8)
++  if (this->FrameBufferBitsPerPixel != numComponents * 8)
+   {
+     this->FrameBufferMutex->Lock();
+     this->FrameBufferBitsPerPixel = numComponents*8;
+diff --git a/IO/FFMPEG/vtkFFMPEGVideoSource.h b/IO/FFMPEG/vtkFFMPEGVideoSource.h
+index f74ff7a2..2f9e3de8 100644
+--- a/IO/FFMPEG/vtkFFMPEGVideoSource.h
++++ b/IO/FFMPEG/vtkFFMPEGVideoSource.h
+@@ -22,21 +22,20 @@
+  *
+  * @sa
+  * vtkVideoSource
+-*/
++ */
+ 
+ #ifndef vtkFFMPEGVideoSource_h
+ #define vtkFFMPEGVideoSource_h
+ 
+ #include "vtkIOFFMPEGModule.h" // For export macro
++#include "vtkMultiThreader.h"  // for ivar
++#include "vtkNew.h"            // for ivar
+ #include "vtkVideoSource.h"
+-#include "vtkMultiThreader.h" // for ivar
+-#include "vtkNew.h" // for ivar
+-#include <functional> // for audio callback
++#include <condition_variable> // for std::condition_variable_any
++#include <functional>         // for audio callback
++#include <mutex>              // for std::mutex
+ 
+ class vtkFFMPEGVideoSourceInternal;
+-
+-class vtkConditionVariable;
+-class vtkMutexLock;
+ class vtkFFMPEGVideoSource;
+ 
+ // audio callback struct, outside the class so that we
+@@ -50,15 +49,27 @@ struct vtkFFMPEGVideoSourceAudioCallbackData
+   int DataType;
+   bool Packed;
+   unsigned char** Data;
+-  vtkFFMPEGVideoSource *Caller;
+-  void *ClientData;
++  vtkFFMPEGVideoSource* Caller;
++  void* ClientData;
++};
++
++// video callback struct, outside the class so that we
++// can forward ref it
++struct vtkFFMPEGVideoSourceVideoCallbackData
++{
++  int Height;
++  int LineSize[8];
++  unsigned char* Data[8]; // nullptr for empty planes
++  vtkFFMPEGVideoSource* Caller;
++  void* ClientData;
+ };
+ 
+ class VTKIOFFMPEG_EXPORT vtkFFMPEGVideoSource : public vtkVideoSource
+ {
+ public:
+-  static vtkFFMPEGVideoSource *New();
+-  vtkTypeMacro(vtkFFMPEGVideoSource,vtkVideoSource);
++  static vtkFFMPEGVideoSource* New();
++  vtkTypeMacro(vtkFFMPEGVideoSource, vtkVideoSource);
++  void PrintSelf(ostream& os, vtkIndent indent) override;
+ 
+   /**
+    * Standard VCR functionality: Record incoming video.
+@@ -80,14 +91,13 @@ public:
+    */
+   void Grab() override;
+ 
+-  //@{
++  ///@{
+   /**
+    * Request a particular frame size (set the third value to 1).
+    */
+   void SetFrameSize(int x, int y, int z) override;
+-  void SetFrameSize(int dim[3]) override {
+-    this->SetFrameSize(dim[0], dim[1], dim[2]); };
+-  //@}
++  void SetFrameSize(int dim[3]) override { this->SetFrameSize(dim[0], dim[1], dim[2]); }
++  ///@}
+ 
+   /**
+    * Request a particular frame rate (default 30 frames per second).
+@@ -111,7 +121,7 @@ public:
+    */
+   void ReleaseSystemResources() override;
+ 
+-  //@{
++  ///@{
+   /**
+    * Specify file name of the video
+    */
+@@ -127,8 +137,11 @@ public:
+   void InternalGrab() override;
+ 
+   // is the video at the end of file?
+-  // Usefull for while loops
+-  vtkGetMacro(EndOfFile,bool);
++  // Useful for while loops
++  vtkGetMacro(EndOfFile, bool);
++
++  // Is the video stream stereo 3d
++  vtkGetMacro(Stereo3D, bool);
+ 
+   // we do not use Invoke Observers here because this callback
+   // will happen in a different thread that could conflict
+@@ -137,14 +150,27 @@ public:
+   // instead you should have enough buffering that you can consume
+   // the provided data and return. Typically even 1 second of
+   // buffer storage is enough to prevent blocking.
+-  typedef std::function<void(vtkFFMPEGVideoSourceAudioCallbackData &data)> AudioCallbackType;
+-  void SetAudioCallback(AudioCallbackType cb, void *clientData)
++  typedef std::function<void(vtkFFMPEGVideoSourceAudioCallbackData const& data)> AudioCallbackType;
++  void SetAudioCallback(AudioCallbackType cb, void* clientData)
+   {
+     this->AudioCallback = cb;
+     this->AudioCallbackClientData = clientData;
+   }
+ 
+-  //@{
++  // we do not use Invoke Observers here because this callback
++  // will happen in a different thread that could conflict
++  // with events from other threads. In this function you should
++  // not block the thread (for example waiting for video to play)
++  // instead you should have enough buffering that you can consume
++  // the provided data and return.
++  typedef std::function<void(vtkFFMPEGVideoSourceVideoCallbackData const& data)> VideoCallbackType;
++  void SetVideoCallback(VideoCallbackType cb, void* clientData)
++  {
++    this->VideoCallback = cb;
++    this->VideoCallbackClientData = clientData;
++  }
++
++  ///@{
+   /**
+    * How many threads to use for the decoding codec
+    * this will be in addition to the feed and drain threads.
+@@ -152,44 +178,46 @@ public:
+    */
+   vtkSetMacro(DecodingThreads, int);
+   vtkGetMacro(DecodingThreads, int);
+-  //@}
++  ///@}
+ 
+ protected:
+   vtkFFMPEGVideoSource();
+-  ~vtkFFMPEGVideoSource();
++  ~vtkFFMPEGVideoSource() override;
+ 
+   AudioCallbackType AudioCallback;
+-  void *AudioCallbackClientData;
++  void* AudioCallbackClientData;
+ 
+   int DecodingThreads;
+ 
+-  static void *DrainAudioThread(
+-    vtkMultiThreader::ThreadInfo *data);
+-  void *DrainAudio(vtkMultiThreader::ThreadInfo *data);
++  static void* DrainAudioThread(vtkMultiThreader::ThreadInfo* data);
++  void* DrainAudio(vtkMultiThreader::ThreadInfo* data);
+   int DrainAudioThreadId;
+ 
+-  static void *DrainThread(
+-    vtkMultiThreader::ThreadInfo *data);
+-  void *Drain(vtkMultiThreader::ThreadInfo *data);
++  static void* DrainThread(vtkMultiThreader::ThreadInfo* data);
++  void* Drain(vtkMultiThreader::ThreadInfo* data);
+   int DrainThreadId;
+ 
+   bool EndOfFile;
+ 
+-  vtkNew<vtkConditionVariable> FeedCondition;
+-  vtkNew<vtkMutexLock> FeedMutex;
+-  vtkNew<vtkConditionVariable> FeedAudioCondition;
+-  vtkNew<vtkMutexLock> FeedAudioMutex;
+-  static void *FeedThread(
+-    vtkMultiThreader::ThreadInfo *data);
+-  void *Feed(vtkMultiThreader::ThreadInfo *data);
++  std::condition_variable_any FeedCondition;
++  std::mutex FeedMutex;
++  std::condition_variable_any FeedAudioCondition;
++  std::mutex FeedAudioMutex;
++  static void* FeedThread(vtkMultiThreader::ThreadInfo* data);
++  void* Feed(vtkMultiThreader::ThreadInfo* data);
+   int FeedThreadId;
+ 
+-  char *FileName;
++  char* FileName;
+ 
+-  vtkFFMPEGVideoSourceInternal *Internal;
++  vtkFFMPEGVideoSourceInternal* Internal;
+ 
+   void ReadFrame();
+ 
++  bool Stereo3D;
++
++  VideoCallbackType VideoCallback;
++  void* VideoCallbackClientData;
++
+ private:
+   vtkFFMPEGVideoSource(const vtkFFMPEGVideoSource&) = delete;
+   void operator=(const vtkFFMPEGVideoSource&) = delete;
+diff --git a/IO/FFMPEG/vtkFFMPEGWriter.cxx b/IO/FFMPEG/vtkFFMPEGWriter.cxx
+index 9d88a71b..5d284b08 100644
+--- a/IO/FFMPEG/vtkFFMPEGWriter.cxx
++++ b/IO/FFMPEG/vtkFFMPEGWriter.cxx
+@@ -15,83 +15,64 @@
+ 
+ #include "vtkFFMPEGWriter.h"
+ 
++#include "vtkErrorCode.h"
+ #include "vtkImageData.h"
+ #include "vtkObjectFactory.h"
+-#include "vtkErrorCode.h"
+-#include "vtkFFMPEGConfig.h"
+-
+-extern "C" {
+-#ifdef VTK_FFMPEG_HAS_OLD_HEADER
+-# include <ffmpeg/avformat.h>
+-#else
+-# include <libavformat/avformat.h>
+-#endif
+ 
+-#ifndef VTK_FFMPEG_HAS_IMG_CONVERT
+-# ifdef VTK_FFMPEG_HAS_OLD_HEADER
+-#  include <ffmpeg/swscale.h>
+-# else
+-#  include <libswscale/swscale.h>
+-# endif
+-#endif
++extern "C"
++{
++#include <libavcodec/avcodec.h>
++#include <libavformat/avformat.h>
++#include <libswscale/swscale.h>
+ }
+ 
+-#ifdef __GNUC__
+-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+-#endif
+-
+-#if LIBAVCODEC_VERSION_MAJOR < 55
+-# define AV_CODEC_ID_MJPEG CODEC_ID_MJPEG
+-# define AV_CODEC_ID_RAWVIDEO CODEC_ID_RAWVIDEO
+-# define AV_PIX_FMT_BGR24 PIX_FMT_BGR24
+-# define AV_PIX_FMT_RGB24 PIX_FMT_RGB24
+-# define AV_PIX_FMT_YUVJ422P PIX_FMT_YUVJ422P
++#if LIBAVFORMAT_VERSION_MAJOR < 59
++#define vtk_ff_const59
++#else
++#define vtk_ff_const59 const
+ #endif
+ 
+-#if LIBAVCODEC_VERSION_MAJOR < 56 || \
+-    LIBAVCODEC_VERSION_MAJOR == 55 && LIBAVCODEC_VERSION_MINOR < 28 || \
+-    LIBAVCODEC_VERSION_MAJOR == 55 && LIBAVCODEC_VERSION_MINOR == 28 && LIBAVCODEC_VERSION_MICRO < 1
+-# define av_frame_alloc avcodec_alloc_frame
++#if defined(LIBAVFORMAT_VERSION_MAJOR) && LIBAVFORMAT_VERSION_MAJOR >= 57
++extern "C"
++{
++#include <libavutil/imgutils.h>
++}
+ #endif
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ class vtkFFMPEGWriterInternal
+-    {
++{
+ public:
+-  vtkFFMPEGWriterInternal(vtkFFMPEGWriter *creator);
++  vtkFFMPEGWriterInternal(vtkFFMPEGWriter* creator);
+   ~vtkFFMPEGWriterInternal();
+ 
+   int Start();
+-  int Write(vtkImageData *id);
++  int Write(vtkImageData* id);
+   void End();
+ 
+   int Dim[2];
+   int FrameRate;
+ 
+ private:
++  vtkFFMPEGWriter* Writer;
+ 
+-  vtkFFMPEGWriter *Writer;
++  AVFormatContext* avFormatContext;
+ 
+-  AVFormatContext *avFormatContext;
++  vtk_ff_const59 AVOutputFormat* avOutputFormat;
+ 
+-  AVOutputFormat *avOutputFormat;
++  AVStream* avStream;
+ 
+-  AVStream *avStream;
++  AVFrame* rgbInput;
++  AVFrame* yuvOutput;
+ 
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  unsigned char *codecBuf;
+-  int codecBufSize;
+-#endif
+-
+-  AVFrame *rgbInput;
+-  AVFrame *yuvOutput;
++  AVCodecContext* avCodecContext;
+ 
+   int openedFile;
+   int closedFile;
+-    };
++};
+ 
+-//---------------------------------------------------------------------------
+-vtkFFMPEGWriterInternal::vtkFFMPEGWriterInternal(vtkFFMPEGWriter *creator)
++//------------------------------------------------------------------------------
++vtkFFMPEGWriterInternal::vtkFFMPEGWriterInternal(vtkFFMPEGWriter* creator)
+ {
+   this->Writer = creator;
+   this->Dim[0] = 0;
+@@ -103,9 +84,6 @@ vtkFFMPEGWriterInternal::vtkFFMPEGWriterInternal(vtkFFMPEGWriter *creator)
+ 
+   this->avStream = nullptr;
+ 
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  this->codecBuf = nullptr;
+-#endif
+   this->rgbInput = nullptr;
+   this->yuvOutput = nullptr;
+ 
+@@ -115,7 +93,7 @@ vtkFFMPEGWriterInternal::vtkFFMPEGWriterInternal(vtkFFMPEGWriter *creator)
+   this->FrameRate = 25;
+ }
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ vtkFFMPEGWriterInternal::~vtkFFMPEGWriterInternal()
+ {
+   if (!this->closedFile)
+@@ -124,41 +102,316 @@ vtkFFMPEGWriterInternal::~vtkFFMPEGWriterInternal()
+   }
+ }
+ 
+-//---------------------------------------------------------------------------
++// for newer versions of ffmpeg use the new API as the old has been deprecated
++#if defined(LIBAVFORMAT_VERSION_MAJOR) && LIBAVFORMAT_VERSION_MAJOR >= 57
++
++//------------------------------------------------------------------------------
+ int vtkFFMPEGWriterInternal::Start()
+ {
+   this->closedFile = 0;
+ 
+-  //initialize libavcodec, and register all codecs and formats
++#ifdef NDEBUG
++  av_log_set_level(AV_LOG_ERROR);
++#endif
++
++  // choose avi media file format
++  this->avOutputFormat = av_guess_format("avi", nullptr, nullptr);
++  if (!this->avOutputFormat)
++  {
++    vtkGenericWarningMacro(<< "Could not open the avi media file format.");
++    return 0;
++  }
++
++  enum AVCodecID video_codec = this->Writer->GetCompression()
++    ? AV_CODEC_ID_MJPEG // choose a codec that is easily playable on windows
++    : AV_CODEC_ID_RAWVIDEO;
++
++  // create the format context that wraps all of the media output structures
++  if (avformat_alloc_output_context2(
++        &this->avFormatContext, this->avOutputFormat, nullptr, this->Writer->GetFileName()) < 0)
++  {
++    vtkGenericWarningMacro(<< "Could not open the format context.");
++    return 0;
++  }
++
++  vtk_ff_const59 AVCodec* codec;
++  if (!(codec = avcodec_find_encoder(video_codec)))
++  {
++    vtkGenericWarningMacro(<< "Failed to get video codec.");
++    return 0;
++  }
++
++  // create a stream for that file
++  this->avStream = avformat_new_stream(this->avFormatContext, codec);
++  if (!this->avStream)
++  {
++    vtkGenericWarningMacro(<< "Could not create video stream.");
++    return 0;
++  }
++
++  // Set up the codec.
++  if (!(this->avCodecContext = avcodec_alloc_context3(codec)))
++  {
++    vtkGenericWarningMacro(<< "Failed to allocate codec context.");
++    return 0;
++  }
++
++  this->avStream->codecpar->codec_id = video_codec;
++  this->avStream->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
++  this->avStream->codecpar->width = this->Dim[0];
++  this->avStream->codecpar->height = this->Dim[1];
++  if (this->Writer->GetCompression())
++  {
++    this->avStream->codecpar->format = AV_PIX_FMT_YUVJ420P;
++  }
++  else
++  {
++    this->avStream->codecpar->format = AV_PIX_FMT_BGR24;
++  }
++  this->avStream->time_base.den = this->FrameRate;
++  this->avStream->time_base.num = 1;
++
++  if (!this->Writer->GetBitRate())
++  {
++    // allow a variable quality/size tradeoff
++    switch (this->Writer->GetQuality())
++    {
++      case 0:
++        this->avStream->codecpar->bit_rate = 3 * 1024 * 1024;
++        break;
++      case 1:
++        this->avStream->codecpar->bit_rate = 6 * 1024 * 1024;
++        break;
++      default:
++        this->avStream->codecpar->bit_rate = 12 * 1024 * 1024;
++        break;
++    }
++  }
++  else
++  {
++    this->avStream->codecpar->bit_rate = this->Writer->GetBitRate();
++  }
++
++  // to do playback at actual recorded rate, this will need more work see also below
++  avcodec_parameters_to_context(this->avCodecContext, this->avStream->codecpar);
++  this->avCodecContext->time_base.den = this->FrameRate;
++  this->avCodecContext->time_base.num = 1;
++  // this->avCodecContext->max_b_frames = 2;
++  // about one full frame per second
++  this->avCodecContext->gop_size = this->FrameRate;
++  if (this->avFormatContext->oformat->flags & AVFMT_GLOBALHEADER)
++  {
++    this->avCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
++  }
++  if (!this->Writer->GetBitRateTolerance())
++  {
++    this->avCodecContext->bit_rate_tolerance =
++      this->avCodecContext->bit_rate; // ffmpeg won't create a codec if brt<br
++  }
++  else
++  {
++    this->avCodecContext->bit_rate_tolerance = this->Writer->GetBitRateTolerance();
++  }
++  avcodec_parameters_from_context(this->avStream->codecpar, this->avCodecContext);
++
++  if (avcodec_open2(this->avCodecContext, codec, nullptr) < 0)
++  {
++    vtkGenericWarningMacro(<< "Could not open codec.");
++    return 0;
++  }
++
++  // for the output of the writer's input...
++  this->rgbInput = av_frame_alloc();
++  if (!this->rgbInput)
++  {
++    vtkGenericWarningMacro(<< "Could not make rgbInput avframe.");
++    return 0;
++  }
++  this->rgbInput->format = AV_PIX_FMT_RGB24;
++  this->rgbInput->width = this->avCodecContext->width;
++  this->rgbInput->height = this->avCodecContext->height;
++  av_frame_get_buffer(this->rgbInput, 1);
++
++  // and for the output to the codec's input.
++  this->yuvOutput = av_frame_alloc();
++  if (!this->yuvOutput)
++  {
++    vtkGenericWarningMacro(<< "Could not make yuvOutput avframe.");
++    return 0;
++  }
++  this->yuvOutput->format = this->avCodecContext->pix_fmt;
++  this->yuvOutput->width = this->avCodecContext->width;
++  this->yuvOutput->height = this->avCodecContext->height;
++  this->yuvOutput->pts = 0;
++  av_frame_get_buffer(this->yuvOutput, 1);
++
++  // Finally, open the file and start it off.
++  if (!(this->avOutputFormat->flags & AVFMT_NOFILE))
++  {
++    if (avio_open(&this->avFormatContext->pb, this->Writer->GetFileName(), AVIO_FLAG_WRITE) < 0)
++    {
++      vtkGenericWarningMacro(<< "Could not open " << this->Writer->GetFileName() << ".");
++      return 0;
++    }
++  }
++  this->openedFile = 1;
++
++  if (avformat_write_header(this->avFormatContext, nullptr) < 0)
++  {
++    vtkGenericWarningMacro(<< "Could not allocate avcodec private data.");
++    return 0;
++  }
++  return 1;
++}
++
++//------------------------------------------------------------------------------
++int vtkFFMPEGWriterInternal::Write(vtkImageData* id)
++{
++  this->Writer->GetInputAlgorithm(0, 0)->UpdateWholeExtent();
++
++  // copy the image from the input to the RGB buffer while flipping Y
++  unsigned char* rgb = (unsigned char*)id->GetScalarPointer();
++  unsigned char* src;
++  for (int y = 0; y < this->avCodecContext->height; y++)
++  {
++    src = rgb + (this->avCodecContext->height - y - 1) * this->avCodecContext->width * 3; // flip Y
++    unsigned char* dest = &this->rgbInput->data[0][y * this->rgbInput->linesize[0]];
++    memcpy((void*)dest, (void*)src, this->avCodecContext->width * 3);
++  }
++
++  // convert that to YUV for input to the codec
++  SwsContext* convert_ctx =
++    sws_getContext(this->avCodecContext->width, this->avCodecContext->height, AV_PIX_FMT_RGB24,
++      this->avCodecContext->width, this->avCodecContext->height, this->avCodecContext->pix_fmt,
++      SWS_BICUBIC, nullptr, nullptr, nullptr);
++
++  if (convert_ctx == nullptr)
++  {
++    vtkGenericWarningMacro(<< "swscale context initialization failed");
++    return 0;
++  }
++
++  int result = sws_scale(convert_ctx, this->rgbInput->data, this->rgbInput->linesize, 0,
++    this->avCodecContext->height, this->yuvOutput->data, this->yuvOutput->linesize);
++
++  sws_freeContext(convert_ctx);
++
++  if (!result)
++  {
++    vtkGenericWarningMacro(<< "sws_scale() failed");
++    return 0;
++  }
++
++  int ret = avcodec_send_frame(this->avCodecContext, this->yuvOutput);
++  this->yuvOutput->pts++;
++
++  if (ret < 0)
++  {
++    return 1;
++  }
++
++  // run the encoder
++  AVPacket pkt;
++  av_init_packet(&pkt);
++  pkt.data = nullptr;
++  pkt.size = 0;
++
++  while (!ret)
++  {
++    // dump the compressed result to file
++    ret = avcodec_receive_packet(this->avCodecContext, &pkt);
++    if (!ret)
++    {
++      pkt.stream_index = this->avStream->index;
++      int wret = av_write_frame(this->avFormatContext, &pkt);
++      if (wret < 0)
++      {
++        vtkGenericWarningMacro(<< "Problem encoding frame.");
++        return 0;
++      }
++    }
++  }
++
++  return 1;
++}
++
++//------------------------------------------------------------------------------
++void vtkFFMPEGWriterInternal::End()
++{
++  if (this->yuvOutput)
++  {
++    av_frame_free(&this->yuvOutput);
++    this->yuvOutput = nullptr;
++  }
++
++  if (this->rgbInput)
++  {
++    av_frame_free(&this->rgbInput);
++    this->rgbInput = nullptr;
++  }
++
++  if (this->avFormatContext)
++  {
++    if (this->openedFile)
++    {
++      av_write_trailer(this->avFormatContext);
++      avio_close(this->avFormatContext->pb);
++      this->openedFile = 0;
++    }
++
++    avformat_free_context(this->avFormatContext);
++    this->avFormatContext = nullptr;
++  }
++
++  if (this->avOutputFormat)
++  {
++    // Next line was done inside av_free(this->avFormatContext).
++    // av_free(this->avOutputFormat);
++
++    this->avOutputFormat = nullptr;
++  }
++
++  if (this->avCodecContext)
++  {
++    avcodec_close(this->avCodecContext);
++    avcodec_free_context(&this->avCodecContext);
++    this->avCodecContext = nullptr;
++  }
++
++  this->closedFile = 1;
++}
++
++// for old versions of ffmpeg use the old API, eventually remove this code
++// The new API was introduced around 2016
++#else
++
++//------------------------------------------------------------------------------
++int vtkFFMPEGWriterInternal::Start()
++{
++  this->closedFile = 0;
++
++  // initialize libavcodec, and register all codecs and formats
+   av_register_all();
+ 
+-  //create the format context that wraps all of the media output structures
+-#if LIBAVFORMAT_VERSION_MAJOR >= 52
++  // create the format context that wraps all of the media output structures
+   this->avFormatContext = avformat_alloc_context();
+-#else
+-  this->avFormatContext = av_alloc_format_context();
+-#endif
+   if (!this->avFormatContext)
+   {
+-    vtkGenericWarningMacro (<< "Could not open the format context.");
++    vtkGenericWarningMacro(<< "Could not open the format context.");
+     return 0;
+   }
+ 
+-  //choose avi media file format
+-#ifdef VTK_FFMPEG_HAS_OLD_HEADER
+-  this->avOutputFormat = guess_format("avi", nullptr, nullptr);
+-#else
++  // choose avi media file format
+   this->avOutputFormat = av_guess_format("avi", nullptr, nullptr);
+-#endif
+   if (!this->avOutputFormat)
+   {
+-    vtkGenericWarningMacro (<< "Could not open the avi media file format.");
++    vtkGenericWarningMacro(<< "Could not open the avi media file format.");
+     return 0;
+   }
+ 
+   if (this->Writer->GetCompression())
+   {
+-    //choose a codec that is easily playable on windows
++    // choose a codec that is easily playable on windows
+     this->avOutputFormat->video_codec = AV_CODEC_ID_MJPEG;
+   }
+   else
+@@ -166,36 +419,24 @@ int vtkFFMPEGWriterInternal::Start()
+     this->avOutputFormat->video_codec = AV_CODEC_ID_RAWVIDEO;
+   }
+ 
+-  //assign the format to the context
++  // assign the format to the context
+   this->avFormatContext->oformat = this->avOutputFormat;
+ 
+-  //choose a filename for the output
++  // choose a filename for the output
+   strcpy(this->avFormatContext->filename, this->Writer->GetFileName());
+ 
+-  //create a stream for that file
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  this->avStream = av_new_stream(this->avFormatContext, 0);
+-#else
++  // create a stream for that file
+   this->avStream = avformat_new_stream(this->avFormatContext, 0);
+-#endif
+   if (!this->avStream)
+   {
+-    vtkGenericWarningMacro (<< "Could not create video stream.");
++    vtkGenericWarningMacro(<< "Could not create video stream.");
+     return 0;
+   }
+ 
+-  //Set up the codec.
+-  AVCodecContext *c = this->avStream->codec;
+-#ifdef VTK_FFMPEG_AVCODECID
++  // Set up the codec.
++  AVCodecContext* c = this->avStream->codec;
+   c->codec_id = static_cast<AVCodecID>(this->avOutputFormat->video_codec);
+-#else
+-  c->codec_id = static_cast<CodecID>(this->avOutputFormat->video_codec);
+-#endif
+-#ifdef VTK_FFMPEG_HAS_OLD_HEADER
+-  c->codec_type = CODEC_TYPE_VIDEO;
+-#else
+- c->codec_type = AVMEDIA_TYPE_VIDEO;
+-#endif
++  c->codec_type = AVMEDIA_TYPE_VIDEO;
+   c->width = this->Dim[0];
+   c->height = this->Dim[1];
+   if (this->Writer->GetCompression())
+@@ -207,25 +448,25 @@ int vtkFFMPEGWriterInternal::Start()
+     c->pix_fmt = AV_PIX_FMT_BGR24;
+   }
+ 
+-  //to do playback at actual recorded rate, this will need more work see also below
++  // to do playback at actual recorded rate, this will need more work see also below
+   c->time_base.den = this->FrameRate;
+   c->time_base.num = 1;
+-  //about one full frame per second
++  // about one full frame per second
+   c->gop_size = this->FrameRate;
+ 
+-  if( !this->Writer->GetBitRate() )
++  if (!this->Writer->GetBitRate())
+   {
+-    //allow a variable quality/size tradeoff
++    // allow a variable quality/size tradeoff
+     switch (this->Writer->GetQuality())
+     {
+       case 0:
+-        c->bit_rate = 3*1024*1024;
++        c->bit_rate = 3 * 1024 * 1024;
+         break;
+       case 1:
+-        c->bit_rate = 6*1024*1024;
++        c->bit_rate = 6 * 1024 * 1024;
+         break;
+       default:
+-        c->bit_rate = 12*1024*1024;
++        c->bit_rate = 12 * 1024 * 1024;
+         break;
+     }
+   }
+@@ -234,227 +475,142 @@ int vtkFFMPEGWriterInternal::Start()
+     c->bit_rate = this->Writer->GetBitRate();
+   }
+ 
+-  if(!this->Writer->GetBitRateTolerance())
++  if (!this->Writer->GetBitRateTolerance())
+   {
+-    c->bit_rate_tolerance = c->bit_rate; //ffmpeg won't create a codec if brt<br
++    c->bit_rate_tolerance = c->bit_rate; // ffmpeg won't create a codec if brt<br
+   }
+   else
+   {
+     c->bit_rate_tolerance = this->Writer->GetBitRateTolerance();
+   }
+ 
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  //apply the chosen parameters
+-  if (av_set_parameters(this->avFormatContext, nullptr) < 0)
+-  {
+-    vtkGenericWarningMacro (<< "Invalid output format parameters." );
+-    return 0;
+-  }
+-#endif
+-
+-  //manufacture a codec with the chosen parameters
+-  AVCodec *codec = avcodec_find_encoder(c->codec_id);
++  // manufacture a codec with the chosen parameters
++  AVCodec* codec = avcodec_find_encoder(c->codec_id);
+   if (!codec)
+   {
+-    vtkGenericWarningMacro (<< "Codec not found." );
++    vtkGenericWarningMacro(<< "Codec not found.");
+     return 0;
+   }
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  if (avcodec_open(c, codec) < 0)
+-#else
+   if (avcodec_open2(c, codec, nullptr) < 0)
+-#endif
+   {
+-    vtkGenericWarningMacro (<< "Could not open codec.");
++    vtkGenericWarningMacro(<< "Could not open codec.");
+     return 0;
+   }
+ 
+-  //create buffers for the codec to work with.
+-
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  //working compression space
+-  this->codecBufSize = 2*c->width*c->height*4; //hopefully this is enough
+-  this->codecBuf = new unsigned char[this->codecBufSize];
+-  if (!this->codecBuf)
+-  {
+-    vtkGenericWarningMacro (<< "Could not make codec working space." );
+-    return 0;
+-  }
+-#endif
+-
+-  //for the output of the writer's input...
++  // for the output of the writer's input...
+   this->rgbInput = av_frame_alloc();
+   if (!this->rgbInput)
+   {
+-    vtkGenericWarningMacro (<< "Could not make rgbInput avframe." );
++    vtkGenericWarningMacro(<< "Could not make rgbInput avframe.");
+     return 0;
+   }
+   int RGBsize = avpicture_get_size(AV_PIX_FMT_RGB24, c->width, c->height);
+-  unsigned char *rgb = (unsigned char *)av_malloc(sizeof(unsigned char) * RGBsize);
++  unsigned char* rgb = (unsigned char*)av_malloc(sizeof(unsigned char) * RGBsize);
+   if (!rgb)
+   {
+-    vtkGenericWarningMacro (<< "Could not make rgbInput's buffer." );
++    vtkGenericWarningMacro(<< "Could not make rgbInput's buffer.");
+     return 0;
+   }
+-  //The rgb buffer should get deleted when this->rgbInput is.
+-  avpicture_fill((AVPicture *)this->rgbInput, rgb, AV_PIX_FMT_RGB24, c->width, c->height);
++  // The rgb buffer should get deleted when this->rgbInput is.
++  avpicture_fill((AVPicture*)this->rgbInput, rgb, AV_PIX_FMT_RGB24, c->width, c->height);
+ 
+-  //and for the output to the codec's input.
++  // and for the output to the codec's input.
+   this->yuvOutput = av_frame_alloc();
+   if (!this->yuvOutput)
+   {
+-    vtkGenericWarningMacro (<< "Could not make yuvOutput avframe." );
++    vtkGenericWarningMacro(<< "Could not make yuvOutput avframe.");
+     return 0;
+   }
+   int YUVsize = avpicture_get_size(c->pix_fmt, c->width, c->height);
+-  unsigned char *yuv = (unsigned char *)av_malloc(sizeof(unsigned char) * YUVsize);
++  unsigned char* yuv = (unsigned char*)av_malloc(sizeof(unsigned char) * YUVsize);
+   if (!yuv)
+   {
+-    vtkGenericWarningMacro (<< "Could not make yuvOutput's buffer." );
++    vtkGenericWarningMacro(<< "Could not make yuvOutput's buffer.");
+     return 0;
+   }
+-  //The yuv buffer should get deleted when this->yuv_input is.
+-  avpicture_fill((AVPicture *)this->yuvOutput, yuv, c->pix_fmt, c->width, c->height);
++  // The yuv buffer should get deleted when this->yuv_input is.
++  avpicture_fill((AVPicture*)this->yuvOutput, yuv, c->pix_fmt, c->width, c->height);
+ 
+-
+-  //Finally, open the file and start it off.
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  if (url_fopen(&this->avFormatContext->pb, this->avFormatContext->filename, URL_WRONLY) < 0)
+-#else
++  // Finally, open the file and start it off.
+   if (avio_open(&this->avFormatContext->pb, this->avFormatContext->filename, AVIO_FLAG_WRITE) < 0)
+-#endif
+   {
+-    vtkGenericWarningMacro (<< "Could not open " << this->Writer->GetFileName() << "." );
++    vtkGenericWarningMacro(<< "Could not open " << this->Writer->GetFileName() << ".");
+     return 0;
+   }
+   this->openedFile = 1;
+ 
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  av_write_header(this->avFormatContext);
+-#else
+   if (avformat_write_header(this->avFormatContext, nullptr) < 0)
+   {
+-    vtkGenericWarningMacro (<< "Could not allocate avcodec private data.");
++    vtkGenericWarningMacro(<< "Could not allocate avcodec private data.");
+     return 0;
+   }
+-#endif
+   return 1;
+ }
+ 
+-//---------------------------------------------------------------------------
+-int vtkFFMPEGWriterInternal::Write(vtkImageData *id)
++//------------------------------------------------------------------------------
++int vtkFFMPEGWriterInternal::Write(vtkImageData* id)
+ {
+   this->Writer->GetInputAlgorithm(0, 0)->UpdateWholeExtent();
+ 
+-  AVCodecContext *cc = this->avStream->codec;
++  AVCodecContext* cc = this->avStream->codec;
+ 
+-  //copy the image from the input to the RGB buffer while flipping Y
+-  unsigned char *rgb = (unsigned char*)id->GetScalarPointer();
+-  unsigned char *src;
++  // copy the image from the input to the RGB buffer while flipping Y
++  unsigned char* rgb = (unsigned char*)id->GetScalarPointer();
++  unsigned char* src;
+   for (int y = 0; y < cc->height; y++)
+   {
+-    src = rgb + (cc->height-y-1) * cc->width * 3; //flip Y
+-    unsigned char *dest =
+-      &this->rgbInput->data[0][y*this->rgbInput->linesize[0]];
+-    memcpy((void*)dest, (void*)src, cc->width*3);
++    src = rgb + (cc->height - y - 1) * cc->width * 3; // flip Y
++    unsigned char* dest = &this->rgbInput->data[0][y * this->rgbInput->linesize[0]];
++    memcpy((void*)dest, (void*)src, cc->width * 3);
+   }
+ 
+-  //convert that to YUV for input to the codec
+-#ifdef VTK_FFMPEG_HAS_IMG_CONVERT
+-  img_convert((AVPicture *)this->yuvOutput, cc->pix_fmt,
+-              (AVPicture *)this->rgbInput, AV_PIX_FMT_RGB24,
+-              cc->width, cc->height);
+-#else
+-  //convert that to YUV for input to the codec
+-  SwsContext* convert_ctx = sws_getContext(
+-    cc->width, cc->height, AV_PIX_FMT_RGB24,
+-    cc->width, cc->height, cc->pix_fmt,
+-    SWS_BICUBIC, nullptr, nullptr, nullptr);
++  // convert that to YUV for input to the codec
++  SwsContext* convert_ctx = sws_getContext(cc->width, cc->height, AV_PIX_FMT_RGB24, cc->width,
++    cc->height, cc->pix_fmt, SWS_BICUBIC, nullptr, nullptr, nullptr);
+ 
+-  if(convert_ctx == nullptr)
++  if (convert_ctx == nullptr)
+   {
+     vtkGenericWarningMacro(<< "swscale context initialization failed");
+     return 0;
+   }
+ 
+-  int result = sws_scale(convert_ctx,
+-    this->rgbInput->data, this->rgbInput->linesize,
+-    0, cc->height,
+-    this->yuvOutput->data, this->yuvOutput->linesize
+-    );
++  int result = sws_scale(convert_ctx, this->rgbInput->data, this->rgbInput->linesize, 0, cc->height,
++    this->yuvOutput->data, this->yuvOutput->linesize);
+ 
+   sws_freeContext(convert_ctx);
+ 
+-  if(!result)
++  if (!result)
+   {
+     vtkGenericWarningMacro(<< "sws_scale() failed");
+     return 0;
+   }
+-#endif
+ 
+-  //run the encoder
++  // run the encoder
+   AVPacket pkt;
+   av_init_packet(&pkt);
+   pkt.data = nullptr;
+   pkt.size = 0;
+ 
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  int toAdd = avcodec_encode_video(cc,
+-                                   this->codecBuf,
+-                                   this->codecBufSize,
+-                                   this->yuvOutput);
+-  if (toAdd)
+-  {
+-    //to do playback at actual recorded rate, this will need more work
+-    pkt.pts = cc->coded_frame->pts;
+-    //pkt.dts = ?; not dure what decompression time stamp should be
+-    pkt.data = this->codecBuf;
+-    pkt.size = toAdd;
+-    pkt.stream_index = this->avStream->index;
+-    if (cc->coded_frame->key_frame) //treat keyframes well
+-    {
+-#ifdef VTK_FFMPEG_HAS_OLD_HEADER
+-      pkt.flags |= PKT_FLAG_KEY;
+-#else
+-      pkt.flags |= AV_PKT_FLAG_KEY;
+-#endif
+-    }
+-    pkt.duration = 0; //presentation duration in time_base units or 0 if NA
+-    pkt.pos = -1; //byte position in stream or -1 if NA
+-
+-    toAdd = av_write_frame(this->avFormatContext, &pkt);
+-  }
+-  if (toAdd) //should not have anything left over
+-  {
+-    vtkGenericWarningMacro (<< "Problem encoding frame." );
+-    return 0;
+-  }
+-
+-#else
+   int got_frame;
+-  int ret = avcodec_encode_video2(cc,
+-                                  &pkt,
+-                                  this->yuvOutput,
+-                                  &got_frame);
++  int ret = avcodec_encode_video2(cc, &pkt, this->yuvOutput, &got_frame);
+ 
+-  //dump the compressed result to file
++  // dump the compressed result to file
+   if (got_frame)
+   {
+     pkt.stream_index = this->avStream->index;
+     ret = av_write_frame(this->avFormatContext, &pkt);
+   }
+ 
+-  if (ret<0)
++  if (ret < 0)
+   {
+-    vtkGenericWarningMacro (<< "Problem encoding frame." );
++    vtkGenericWarningMacro(<< "Problem encoding frame.");
+     return 0;
+   }
+-#endif
+ 
+   return 1;
+ }
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGWriterInternal::End()
+ {
+   if (this->yuvOutput)
+@@ -471,25 +627,12 @@ void vtkFFMPEGWriterInternal::End()
+     this->rgbInput = nullptr;
+   }
+ 
+-
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-  if (this->codecBuf)
+-  {
+-    av_free(this->codecBuf);
+-    this->codecBuf = nullptr;
+-  }
+-#endif
+-
+   if (this->avFormatContext)
+   {
+     if (this->openedFile)
+     {
+       av_write_trailer(this->avFormatContext);
+-#if LIBAVFORMAT_VERSION_MAJOR < 54
+-      url_fclose(this->avFormatContext->pb);
+-#else
+       avio_close(this->avFormatContext->pb);
+-#endif
+       this->openedFile = 0;
+     }
+ 
+@@ -505,8 +648,8 @@ void vtkFFMPEGWriterInternal::End()
+ 
+   if (this->avOutputFormat)
+   {
+-    //Next line was done inside av_free(this->avFormatContext).
+-    //av_free(this->avOutputFormat);
++    // Next line was done inside av_free(this->avFormatContext).
++    // av_free(this->avOutputFormat);
+ 
+     this->avOutputFormat = 0;
+   }
+@@ -514,14 +657,15 @@ void vtkFFMPEGWriterInternal::End()
+   this->closedFile = 1;
+ }
+ 
++#endif
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ vtkStandardNewMacro(vtkFFMPEGWriter);
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ vtkFFMPEGWriter::vtkFFMPEGWriter()
+ {
+-  this->Internals = 0;
++  this->Internals = nullptr;
+   this->Quality = 2;
+   this->Compression = true;
+   this->Rate = 25;
+@@ -529,24 +673,24 @@ vtkFFMPEGWriter::vtkFFMPEGWriter()
+   this->BitRateTolerance = 0;
+ }
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ vtkFFMPEGWriter::~vtkFFMPEGWriter()
+ {
+   delete this->Internals;
+ }
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGWriter::Start()
+ {
+   this->Error = 1;
+ 
+-  if ( this->Internals )
++  if (this->Internals)
+   {
+     vtkErrorMacro("Movie already started.");
+     this->SetErrorCode(vtkGenericMovieWriter::InitError);
+     return;
+   }
+-  if ( this->GetInput() == nullptr )
++  if (this->GetInput() == nullptr)
+   {
+     vtkErrorMacro("Please specify an input.");
+     this->SetErrorCode(vtkGenericMovieWriter::NoInputError);
+@@ -566,7 +710,7 @@ void vtkFFMPEGWriter::Start()
+   this->Initialized = 0;
+ }
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGWriter::Write()
+ {
+   if (this->Error)
+@@ -574,7 +718,7 @@ void vtkFFMPEGWriter::Write()
+     return;
+   }
+ 
+-  if ( !this->Internals )
++  if (!this->Internals)
+   {
+     vtkErrorMacro("Movie not started.");
+     this->Error = 1;
+@@ -588,13 +732,13 @@ void vtkFFMPEGWriter::Write()
+ 
+   int dim[4];
+   input->GetDimensions(dim);
+-  if ( this->Internals->Dim[0] == 0 && this->Internals->Dim[1] == 0 )
++  if (this->Internals->Dim[0] == 0 && this->Internals->Dim[1] == 0)
+   {
+     this->Internals->Dim[0] = dim[0];
+     this->Internals->Dim[1] = dim[1];
+   }
+ 
+-  if (this->Internals->Dim[0]!= dim[0] || this->Internals->Dim[1]!= dim[1])
++  if (this->Internals->Dim[0] != dim[0] || this->Internals->Dim[1] != dim[1])
+   {
+     vtkErrorMacro("Image not of the same size.");
+     this->Error = 1;
+@@ -602,7 +746,7 @@ void vtkFFMPEGWriter::Write()
+     return;
+   }
+ 
+-  if ( !this->Initialized )
++  if (!this->Initialized)
+   {
+     this->Internals->FrameRate = this->Rate;
+     if (!this->Internals->Start())
+@@ -623,21 +767,21 @@ void vtkFFMPEGWriter::Write()
+   }
+ }
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGWriter::End()
+ {
+   this->Internals->End();
+ 
+   delete this->Internals;
+-  this->Internals = 0;
++  this->Internals = nullptr;
+ }
+ 
+-//---------------------------------------------------------------------------
++//------------------------------------------------------------------------------
+ void vtkFFMPEGWriter::PrintSelf(ostream& os, vtkIndent indent)
+ {
+   this->Superclass::PrintSelf(os, indent);
+   os << indent << "Quality: " << this->Quality << endl;
+-  os << indent << "Compression: " << (this->Compression?"true":"false") << endl;
++  os << indent << "Compression: " << (this->Compression ? "true" : "false") << endl;
+   os << indent << "Rate: " << this->Rate << endl;
+   os << indent << "BitRate: " << this->BitRate << endl;
+   os << indent << "BitRateTolerance: " << this->BitRateTolerance << endl;
+diff --git a/IO/FFMPEG/vtkFFMPEGWriter.h b/IO/FFMPEG/vtkFFMPEGWriter.h
+index ed9d37e0..25ab080f 100644
+--- a/IO/FFMPEG/vtkFFMPEGWriter.h
++++ b/IO/FFMPEG/vtkFFMPEGWriter.h
+@@ -27,24 +27,24 @@
+  * or is a tarball along with installation instructions at
+  * http://www.vtk.org/files/support/ffmpeg_source.tar.gz
+  *
+-*/
++ */
+ 
+ #ifndef vtkFFMPEGWriter_h
+ #define vtkFFMPEGWriter_h
+ 
+-#include "vtkIOFFMPEGModule.h" // For export macro
+ #include "vtkGenericMovieWriter.h"
++#include "vtkIOFFMPEGModule.h" // For export macro
+ 
+ class vtkFFMPEGWriterInternal;
+ 
+ class VTKIOFFMPEG_EXPORT vtkFFMPEGWriter : public vtkGenericMovieWriter
+ {
+ public:
+-  static vtkFFMPEGWriter *New();
+-  vtkTypeMacro(vtkFFMPEGWriter,vtkGenericMovieWriter);
++  static vtkFFMPEGWriter* New();
++  vtkTypeMacro(vtkFFMPEGWriter, vtkGenericMovieWriter);
+   void PrintSelf(ostream& os, vtkIndent indent) override;
+ 
+-  //@{
++  ///@{
+   /**
+    * These methods start writing an Movie file, write a frame to the file
+    * and then end the writing process.
+@@ -52,9 +52,9 @@ public:
+   void Start() override;
+   void Write() override;
+   void End() override;
+-  //@}
++  ///@}
+ 
+-  //@{
++  ///@{
+   /**
+    * Set/Get the compression quality.
+    * 0 means worst quality and smallest file size
+@@ -62,9 +62,9 @@ public:
+    */
+   vtkSetClampMacro(Quality, int, 0, 2);
+   vtkGetMacro(Quality, int);
+-  //@}
++  ///@}
+ 
+-  //@{
++  ///@{
+   /**
+    * Turns on(the default) or off compression.
+    * Turning off compression overrides quality setting.
+@@ -72,37 +72,37 @@ public:
+   vtkSetMacro(Compression, bool);
+   vtkGetMacro(Compression, bool);
+   vtkBooleanMacro(Compression, bool);
+-  //@}
++  ///@}
+ 
+-  //@{
++  ///@{
+   /**
+    * Set/Get the frame rate, in frame/s.
+    */
+-  vtkSetClampMacro(Rate, int , 1, 5000);
++  vtkSetClampMacro(Rate, int, 1, 5000);
+   vtkGetMacro(Rate, int);
+-  //@}
++  ///@}
+ 
+-  //@{
++  ///@{
+   /**
+    * Set/Get the bit-rate
+    */
+   vtkSetMacro(BitRate, int);
+   vtkGetMacro(BitRate, int);
+-  //@}
++  ///@}
+ 
+-  //@{
++  ///@{
+   /**
+    * Set/Get the bit-rate tolerance
+    */
+   vtkSetMacro(BitRateTolerance, int);
+   vtkGetMacro(BitRateTolerance, int);
+-  //@}
++  ///@}
+ 
+ protected:
+   vtkFFMPEGWriter();
+-  ~vtkFFMPEGWriter();
++  ~vtkFFMPEGWriter() override;
+ 
+-  vtkFFMPEGWriterInternal *Internals;
++  vtkFFMPEGWriterInternal* Internals;
+ 
+   int Initialized;
+   int Quality;
