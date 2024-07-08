@@ -1,3 +1,9 @@
+vtk8 (8.2.0+dfsg1-1+c9) unstable; urgency=medium
+
+  * add patch for ftbfs with Python 3.12+
+
+ -- Xuqing Liu <ciwei100000@gmail.com>  Sun, 7 Jul 2024 22:06:38 -0700
+
 vtk8 (8.2.0+dfsg1-1+c8) unstable; urgency=medium
 
   * use netcdf-cxx
