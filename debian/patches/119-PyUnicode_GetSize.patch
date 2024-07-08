@@ -1,0 +1,17 @@
+Date: Sun, 07 Jul 2024 10:04:54 -0700
+Subject: [PATCH] Fix FTBFS with Python (> 3.12)
+Description: 
+
+diff --git a/Wrapping/PythonCore/vtkPythonOverload.cxx b/Wrapping/PythonCore/vtkPythonOverload.cxx
+index 43df271c..5120e096 100644
+--- a/Wrapping/PythonCore/vtkPythonOverload.cxx
++++ b/Wrapping/PythonCore/vtkPythonOverload.cxx
+@@ -478,7 +478,7 @@ int vtkPythonOverload::CheckArg(
+ 
+     case 'c':
+       // penalize chars, they must be converted from strings
+-      if (PyUnicode_Check(arg) && PyUnicode_GetSize(arg) == 1)
++      if (PyUnicode_Check(arg) && PyUnicode_GetLength(arg) == 1)
+       {
+         penalty = VTK_PYTHON_NEEDS_CONVERSION;
+       }
